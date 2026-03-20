@@ -212,7 +212,8 @@ function get_category_flat(): array {
 
 function get_breadcrumb(int $category_id): array {
     $crumbs = [];
-    $all = db()->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE);
+    $all = db()->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC);
+    $all = array_column($all, null, 'id');
     $current = $all[$category_id] ?? null;
     while ($current) {
         array_unshift($crumbs, $current);
