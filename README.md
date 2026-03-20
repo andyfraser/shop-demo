@@ -1,4 +1,4 @@
-# Meridian Shop
+# Demo Shop
 
 A demo e-commerce application written in PHP with SQLite. No frameworks, no Composer, no build step — just PHP 8 and a browser.
 
@@ -67,7 +67,7 @@ To access the admin panel, log in as admin and visit `/admin/` — or simply nav
 ## Project Structure
 
 ```
-meridian-shop/
+shop-demo/
 │
 ├── public/css/
 │   ├── shop.css            # Storefront styles

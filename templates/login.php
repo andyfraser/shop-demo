@@ -2,7 +2,7 @@
 <div class="container">
   <div class="auth-wrap">
     <h1 class="auth-title">Welcome back</h1>
-    <p class="auth-sub">Sign in to your Meridian account</p>
+    <p class="auth-sub">Sign in to your Demoshop account</p>
 
     <?php if ($errors): ?>
       <div class="alert alert-error"><?= h($errors[0]) ?></div>

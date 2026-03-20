@@ -2,7 +2,7 @@
 <div class="container">
   <div class="auth-wrap">
     <h1 class="auth-title">Create account</h1>
-    <p class="auth-sub">Join Meridian to start shopping</p>
+    <p class="auth-sub">Join Demoshop to start shopping</p>
 
     <?php if ($errors): ?>
       <div class="alert alert-error">

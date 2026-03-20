@@ -1,7 +1,7 @@
 <?php
 // ─── Configuration ────────────────────────────────────────────────────────────
 define('DB_PATH', __DIR__ . '/shop.db');
-define('SITE_NAME', 'Meridian Shop');
+define('SITE_NAME', 'Demoshop');
 
 define('BASE_URL', '');
 

@@ -15,7 +15,7 @@
 
 <aside class="sidebar">
   <div class="sidebar-logo">
-    Meridian
+    Demoshop
     <small>Admin Panel</small>
   </div>
 
