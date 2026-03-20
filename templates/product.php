@@ -18,11 +18,7 @@
 
   <div class="product-detail">
     <div class="product-img">
-      <?php if ($product['image_url']): ?>
-        <img src="<?= h($product['image_url']) ?>" alt="<?= h($product['name']) ?>">
-      <?php else: ?>
-        <div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">📦</div>
-      <?php endif; ?>
+      <?php product_img($product['image_url'] ?? '', $product['name']) ?>
     </div>
 
     <div class="product-meta">
@@ -79,9 +75,7 @@
         <?php foreach ($related_products as $r): ?>
           <a href="product.php?slug=<?= h($r['slug']) ?>" class="product-card">
             <div class="img-wrap">
-              <?php if ($r['image_url']): ?>
-                <img src="<?= h($r['image_url']) ?>" alt="<?= h($r['name']) ?>" loading="lazy">
-              <?php endif; ?>
+              <?php product_img($r['image_url'] ?? '', $r['name']) ?>
             </div>
             <div class="card-body">
               <div class="card-name"><?= h($r['name']) ?></div>

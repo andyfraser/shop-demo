@@ -41,6 +41,13 @@
       </div>
 
       <div class="form-group">
+        <label>Icon <small style="color:var(--ink-2);font-weight:400;">— paste any emoji</small></label>
+        <input type="text" name="icon" class="form-control"
+               value="<?= h($category['icon'] ?? '') ?>"
+               placeholder="e.g. 💻" style="max-width:120px;">
+      </div>
+
+      <div class="form-group">
         <label>Description</label>
         <textarea name="description" class="form-control"><?= h($category['description'] ?? '') ?></textarea>
       </div>

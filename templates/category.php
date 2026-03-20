@@ -38,9 +38,7 @@
       <?php foreach ($products as $p): ?>
         <a href="product.php?slug=<?= h($p['slug']) ?>" class="product-card">
           <div class="img-wrap">
-            <?php if ($p['image_url']): ?>
-              <img src="<?= h($p['image_url']) ?>" alt="<?= h($p['name']) ?>" loading="lazy">
-            <?php endif; ?>
+            <?php product_img($p['image_url'] ?? '', $p['name']) ?>
           </div>
           <div class="card-body">
             <?php if ($p['cat_name'] !== $category['name']): ?>

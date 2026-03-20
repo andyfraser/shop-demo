@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS categories (
     slug TEXT NOT NULL UNIQUE,
     parent_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
     description TEXT,
+    icon TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -50,17 +51,17 @@ CREATE TABLE IF NOT EXISTS order_items (
 );
 
 -- Seed Categories
-INSERT OR IGNORE INTO categories (id, name, slug, parent_id, description) VALUES
-(1, 'Electronics', 'electronics', NULL, 'Gadgets, devices and tech'),
-(2, 'Clothing', 'clothing', NULL, 'Apparel for all occasions'),
-(3, 'Home & Garden', 'home-garden', NULL, 'For the home and garden'),
-(4, 'Laptops', 'laptops', 1, 'Portable computers'),
-(5, 'Phones', 'phones', 1, 'Smartphones and accessories'),
-(6, 'Audio', 'audio', 1, 'Headphones, speakers and more'),
-(7, 'Mens', 'mens', 2, 'Menswear'),
-(8, 'Womens', 'womens', 2, 'Womenswear'),
-(9, 'Kitchen', 'kitchen', 3, 'Kitchen appliances and tools'),
-(10, 'Garden Tools', 'garden-tools', 3, 'Tools for the garden');
+INSERT OR IGNORE INTO categories (id, name, slug, parent_id, description, icon) VALUES
+(1, 'Electronics', 'electronics', NULL, 'Gadgets, devices and tech', '💻'),
+(2, 'Clothing', 'clothing', NULL, 'Apparel for all occasions', '👕'),
+(3, 'Home & Garden', 'home-garden', NULL, 'For the home and garden', '🏠'),
+(4, 'Laptops', 'laptops', 1, 'Portable computers', '💻'),
+(5, 'Phones', 'phones', 1, 'Smartphones and accessories', '📱'),
+(6, 'Audio', 'audio', 1, 'Headphones, speakers and more', '🎧'),
+(7, 'Mens', 'mens', 2, 'Menswear', '👔'),
+(8, 'Womens', 'womens', 2, 'Womenswear', '👗'),
+(9, 'Kitchen', 'kitchen', 3, 'Kitchen appliances and tools', '🍳'),
+(10, 'Garden Tools', 'garden-tools', 3, 'Tools for the garden', '🌱');
 
 -- Seed Products
 INSERT OR IGNORE INTO products (id, name, slug, description, price, stock, category_id, image_url, active) VALUES

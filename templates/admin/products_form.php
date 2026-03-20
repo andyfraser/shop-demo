@@ -69,8 +69,7 @@
                    placeholder="https://...">
           </div>
           <?php if (!empty($product['image_url'])): ?>
-            <img src="<?= h($product['image_url']) ?>"
-                 style="height:120px;object-fit:cover;border-radius:3px;margin-top:.5rem;" alt="">
+            <?php product_img($product['image_url'], '', '', 'height:120px;object-fit:cover;border-radius:3px;margin-top:.5rem;') ?>
           <?php endif; ?>
         </div>
 

@@ -28,9 +28,7 @@
       <?php foreach ($products as $p): ?>
         <tr>
           <td>
-            <?php if ($p['image_url']): ?>
-              <img src="<?= h($p['image_url']) ?>" class="thumb" alt="">
-            <?php endif; ?>
+            <?php product_img($p['image_url'] ?? '', $p['name'], 'thumb') ?>
           </td>
           <td><strong><?= h($p['name']) ?></strong></td>
           <td><?= h($p['cat_name'] ?? '—') ?></td>

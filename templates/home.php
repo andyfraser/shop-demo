@@ -15,12 +15,9 @@
   <section class="section">
     <h2 class="section-title">Shop by Category</h2>
     <div class="cat-grid">
-      <?php
-      $icons = ['electronics' => '💻', 'clothing' => '👕', 'home-garden' => '🏠'];
-      foreach ($nav_tree as $cat):
-      ?>
+      <?php foreach ($nav_tree as $cat): ?>
         <a href="category.php?slug=<?= h($cat['slug']) ?>" class="cat-card">
-          <div class="cat-icon"><?= $icons[$cat['slug']] ?? '📦' ?></div>
+          <div class="cat-icon"><?= $cat['icon'] ? h($cat['icon']) : '📦' ?></div>
           <?= h($cat['name']) ?>
           <?php if ($cat['children']): ?>
             <div class="cat-sub"><?= count($cat['children']) ?> subcategories</div>
@@ -36,11 +33,7 @@
       <?php foreach ($featured_products as $p): ?>
         <a href="product.php?slug=<?= h($p['slug']) ?>" class="product-card">
           <div class="img-wrap">
-            <?php if ($p['image_url']): ?>
-              <img src="<?= h($p['image_url']) ?>" alt="<?= h($p['name']) ?>" loading="lazy">
-            <?php else: ?>
-              <div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">📦</div>
-            <?php endif; ?>
+            <?php product_img($p['image_url'] ?? '', $p['name'], '', 'loading:lazy') ?>
           </div>
           <div class="card-body">
             <div class="card-cat"><?= h($p['cat_name'] ?? 'Uncategorised') ?></div>

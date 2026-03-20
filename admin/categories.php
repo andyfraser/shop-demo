@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $name        = trim($_POST['name'] ?? '');
     $parent_id   = $_POST['parent_id'] ? (int)$_POST['parent_id'] : null;
     $description = trim($_POST['description'] ?? '');
+    $icon        = trim($_POST['icon'] ?? '');
 
     if (!$name)                          $errors[] = 'Name is required.';
     if ($parent_id && $parent_id === $category_id) $errors[] = 'A category cannot be its own parent.';
@@ -36,16 +37,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
             $check->execute([$slug, $category_id]);
             if ($check->fetch()) $slug .= '-' . $category_id;
 
-            $db->prepare("UPDATE categories SET name=?, slug=?, parent_id=?, description=? WHERE id=?")
-               ->execute([$name, $slug, $parent_id, $description, $category_id]);
+            $db->prepare("UPDATE categories SET name=?, slug=?, parent_id=?, description=?, icon=? WHERE id=?")
+               ->execute([$name, $slug, $parent_id, $description, $icon, $category_id]);
             flash('msg', 'Category updated.');
         } else {
             $check = $db->prepare("SELECT id FROM categories WHERE slug = ?");
             $check->execute([$slug]);
             if ($check->fetch()) $slug .= '-' . time();
 
-            $db->prepare("INSERT INTO categories (name, slug, parent_id, description) VALUES (?, ?, ?, ?)")
-               ->execute([$name, $slug, $parent_id, $description]);
+            $db->prepare("INSERT INTO categories (name, slug, parent_id, description, icon) VALUES (?, ?, ?, ?, ?)")
+               ->execute([$name, $slug, $parent_id, $description, $icon]);
             flash('msg', 'Category created.');
         }
         redirect('categories.php');
@@ -57,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         'name'        => $name,
         'parent_id'   => $parent_id,
         'description' => $description,
+        'icon'        => $icon,
     ];
     $action = $category_id ? 'edit' : 'new';
 }
