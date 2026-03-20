@@ -22,7 +22,7 @@
 
 <header class="site-header">
   <div class="header-inner">
-    <a href="<?= BASE_URL ?>/index.php" class="logo">Meridi<span>an</span></a>
+    <a href="<?= BASE_URL ?>/index.php" class="logo">Demo<span>shop</span></a>
 
     <form class="header-search" action="<?= BASE_URL ?>/search.php" method="GET">
       <input type="text" name="q" placeholder="Search products…"
