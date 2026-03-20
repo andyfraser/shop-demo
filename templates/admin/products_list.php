@@ -28,7 +28,7 @@
       <?php foreach ($products as $p): ?>
         <tr>
           <td>
-            <?php product_img($p['image_url'] ?? '', $p['name'], 'thumb') ?>
+            <?php product_img($p['image'] ?? '', $p['name'], 'thumb') ?>
           </td>
           <td><strong><?= h($p['name']) ?></strong></td>
           <td><?= h($p['cat_name'] ?? '—') ?></td>

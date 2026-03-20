@@ -15,7 +15,7 @@
   <?php endif; ?>
 
   <div class="card" style="max-width:800px;">
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <?php if ($product_id): ?>
         <input type="hidden" name="id" value="<?= $product_id ?>">
       <?php endif; ?>
@@ -63,14 +63,29 @@
 
         <div class="span-2">
           <div class="form-group">
-            <label>Image URL</label>
-            <input type="url" name="image_url" class="form-control"
-                   value="<?= h($product['image_url'] ?? '') ?>"
-                   placeholder="https://...">
+            <label>Product Image</label>
+            <?php
+              $img_file = $product['image'] ?? null;
+              $img_url  = $img_file ? BASE_URL . '/public/images/' . h($img_file) : null;
+            ?>
+            <?php if ($img_url): ?>
+              <div style="margin-bottom:.75rem;">
+                <img src="<?= $img_url ?>" alt=""
+                     style="height:140px;object-fit:cover;border-radius:var(--radius);display:block;">
+                <label style="display:flex;align-items:center;gap:.4rem;margin-top:.5rem;font-weight:400;cursor:pointer;">
+                  <input type="checkbox" name="remove_image" value="1">
+                  Remove current image
+                </label>
+              </div>
+              <input type="hidden" name="existing_image" value="<?= h($img_file) ?>">
+            <?php endif; ?>
+            <input type="file" name="image" class="form-control"
+                   accept="image/jpeg,image/png,image/gif,image/webp"
+                   style="padding:.4rem;">
+            <div style="font-size:.75rem;color:var(--ink-2);margin-top:.35rem;">
+              JPEG, PNG, GIF or WebP — max 5MB
+            </div>
           </div>
-          <?php if (!empty($product['image_url'])): ?>
-            <?php product_img($product['image_url'], '', '', 'height:120px;object-fit:cover;border-radius:3px;margin-top:.5rem;') ?>
-          <?php endif; ?>
         </div>
 
         <div class="span-2">

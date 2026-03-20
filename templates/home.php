@@ -33,7 +33,7 @@
       <?php foreach ($featured_products as $p): ?>
         <a href="product.php?slug=<?= h($p['slug']) ?>" class="product-card">
           <div class="img-wrap">
-            <?php product_img($p['image_url'] ?? '', $p['name'], '', 'loading:lazy') ?>
+            <?php product_img($p['image'] ?? '', $p['name'], '', 'loading:lazy') ?>
           </div>
           <div class="card-body">
             <div class="card-cat"><?= h($p['cat_name'] ?? 'Uncategorised') ?></div>

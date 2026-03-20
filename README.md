@@ -37,6 +37,20 @@ On Ubuntu / Linux Mint:
 sudo apt install php php-sqlite3
 ```
 
+## Images
+
+Product images are stored in `public/images/`. When you add or edit a product in the admin panel you can upload a JPEG, PNG, GIF or WebP image (max 5MB). If no image is set a placeholder is shown automatically.
+
+### Downloading the demo images
+
+The demo products reference image files that aren't included in the repository. To fetch them run:
+
+```bash
+php download_images.php
+```
+
+This downloads the original images from Unsplash into `public/images/` with the correct filenames. Delete the script once done.
+
 ---
 
 ## Quick Start

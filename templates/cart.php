@@ -33,7 +33,7 @@
                 <?php foreach ($items as $item): ?>
                   <tr>
                     <td style="width:80px;">
-                      <?php product_img($item['image_url'] ?? '', $item['name'], 'cart-thumb') ?>
+                      <?php product_img($item['image'] ?? '', $item['name'], 'cart-thumb') ?>
                     </td>
                     <td>
                       <a href="product.php?slug=<?= h($item['slug']) ?>" class="cart-product-name">

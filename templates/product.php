@@ -18,7 +18,7 @@
 
   <div class="product-detail">
     <div class="product-img">
-      <?php product_img($product['image_url'] ?? '', $product['name']) ?>
+      <?php product_img($product['image'] ?? '', $product['name']) ?>
     </div>
 
     <div class="product-meta">
@@ -75,7 +75,7 @@
         <?php foreach ($related_products as $r): ?>
           <a href="product.php?slug=<?= h($r['slug']) ?>" class="product-card">
             <div class="img-wrap">
-              <?php product_img($r['image_url'] ?? '', $r['name']) ?>
+              <?php product_img($r['image'] ?? '', $r['name']) ?>
             </div>
             <div class="card-body">
               <div class="card-name"><?= h($r['name']) ?></div>

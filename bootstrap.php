@@ -23,6 +23,14 @@ function init_db(PDO $pdo): void {
     if ($done) return;
     $done = true;
 
+    // Migration: rename image_url -> image and clear old remote URLs
+    $pcols = $pdo->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_COLUMN, 1);
+    if (in_array('image_url', $pcols) && !in_array('image', $pcols)) {
+        $pdo->exec("ALTER TABLE products RENAME COLUMN image_url TO image");
+        // Clear Unsplash URLs — they'll show placeholder until images are uploaded
+        $pdo->exec("UPDATE products SET image = NULL WHERE image LIKE '%unsplash%'");
+    }
+
     // Migration: add icon column before running schema so seed INSERT can use it
     $cols = $pdo->query("PRAGMA table_info(categories)")->fetchAll(PDO::FETCH_COLUMN, 1);
     if ($cols && !in_array('icon', $cols)) {
@@ -144,16 +152,14 @@ function h(string $s): string {
 }
 
 // Placeholder data URI shown when no image URL is set or the URL fails to load
-define('IMG_PLACEHOLDER', 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22400%22%20height%3D%22300%22%20viewBox%3D%220%200%20400%20300%22%3E%3Crect%20width%3D%22400%22%20height%3D%22300%22%20fill%3D%22%23e8dfd0%22/%3E%3Crect%20x%3D%22150%22%20y%3D%2290%22%20width%3D%22100%22%20height%3D%2280%22%20rx%3D%226%22%20fill%3D%22%23c8c0b0%22/%3E%3Ccircle%20cx%3D%22165%22%20cy%3D%22107%22%20r%3D%228%22%20fill%3D%22%23e8dfd0%22/%3E%3Cpath%20d%3D%22M150%20150%20l30-35%2025%2030%2020-20%2025%2025%22%20fill%3D%22none%22%20stroke%3D%22%23e8dfd0%22%20stroke-width%3D%223%22%20stroke-linejoin%3D%22round%22/%3E%3Ctext%20x%3D%22200%22%20y%3D%22205%22%20font-family%3D%22sans-serif%22%20font-size%3D%2213%22%20fill%3D%22%23a09080%22%20text-anchor%3D%22middle%22%3ENo%20image%20available%3C/text%3E%3C/svg%3E');
-
-// Render a product image tag — shows placeholder if no URL or the URL fails
-function product_img(string $url = '', string $alt = '', string $class = '', string $style = ''): void {
-    $src   = $url ? h($url) : IMG_PLACEHOLDER;
+// Render a product image tag — shows placeholder if no image or load fails
+function product_img(string $filename = '', string $alt = '', string $class = '', string $style = ''): void {
+    $placeholder = BASE_URL . '/public/images/placeholder.svg';
+    $src   = $filename ? h(BASE_URL . '/public/images/' . $filename) : $placeholder;
     $alt   = h($alt);
     $class = $class ? ' class="' . h($class) . '"' : '';
     $style = $style ? ' style="' . h($style) . '"' : '';
-    $ph    = IMG_PLACEHOLDER;
-    echo "<img src=\"{$src}\" alt=\"{$alt}\"{$class}{$style} onerror=\"this.onerror=null;this.src='{$ph}'\">";
+    echo "<img src=\"{$src}\" alt=\"{$alt}\"{$class}{$style} onerror=\"this.onerror=null;this.src='{$placeholder}'\">";
 }
 
 function slugify(string $s): string {

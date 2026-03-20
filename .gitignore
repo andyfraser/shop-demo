@@ -1,3 +1,5 @@
 .vscode/
 *.code-workspace
 shop.db
+public/images/*
+!public/images/placeholder.svg
