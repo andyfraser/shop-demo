@@ -1,0 +1,50 @@
+<?php // templates/order_confirm.php ?>
+<div class="container" style="max-width:700px;">
+  <div style="text-align:center;padding:3rem 0 2rem;">
+    <div style="font-size:4rem;margin-bottom:1rem;">✅</div>
+    <h1 style="font-family:var(--font-display);font-size:2rem;margin-bottom:.5rem;">Order Confirmed!</h1>
+    <p style="color:var(--ink-2);">Thank you for your order. We'll have it on its way soon.</p>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:.5rem;">
+      <div>
+        <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);">Order #</div>
+        <strong><?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?></strong>
+      </div>
+      <div>
+        <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);">Date</div>
+        <strong><?= date('d M Y', strtotime($order['created_at'])) ?></strong>
+      </div>
+      <div>
+        <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);">Status</div>
+        <span class="badge badge-warning"><?= h(ucfirst($order['status'])) ?></span>
+      </div>
+      <div>
+        <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);">Total</div>
+        <strong style="color:var(--accent-2)"><?= money($order['total']) ?></strong>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-display);margin-bottom:.75rem;">Items</h3>
+    <?php foreach ($order_items as $item): ?>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);font-size:.875rem;">
+        <span>
+          <a href="product.php?slug=<?= h($item['slug']) ?>"><?= h($item['name']) ?></a>
+          × <?= $item['quantity'] ?>
+        </span>
+        <strong><?= money($item['unit_price'] * $item['quantity']) ?></strong>
+      </div>
+    <?php endforeach; ?>
+
+    <div style="margin-top:1.2rem;">
+      <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin-bottom:.3rem;">Shipping to</div>
+      <div style="font-size:.875rem;"><?= nl2br(h($order['shipping_address'])) ?></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:1rem;margin-top:1.5rem;justify-content:center;">
+    <a href="account.php" class="btn btn-outline">View My Orders</a>
+    <a href="index.php" class="btn btn-primary">Continue Shopping</a>
+  </div>
+</div>
