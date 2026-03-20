@@ -42,8 +42,8 @@ sudo apt install php php-sqlite3
 ## Quick Start
 
 ```bash
-git clone https://github.com/yourname/meridian-shop.git
-cd meridian-shop
+git clone https://github.com/yourname/shop-demo.git
+cd shop-demo
 php -S localhost:8080 router.php
 ```
 
