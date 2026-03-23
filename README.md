@@ -58,12 +58,10 @@ This downloads the original images from Unsplash into `public/images/` with the 
 ```bash
 git clone https://github.com/yourname/shop-demo.git
 cd shop-demo
-php -S localhost:8080 router.php
+php -S localhost:8080
 ```
 
 Open **http://localhost:8080** in your browser. The SQLite database is created and seeded automatically on first run.
-
-> **Note:** Use `router.php` with the built-in server so static files (CSS, images) are served correctly.
 
 ---
 
