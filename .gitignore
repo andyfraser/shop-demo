@@ -3,3 +3,4 @@
 shop.db
 public/images/*
 !public/images/placeholder.svg
+.DS_Store
