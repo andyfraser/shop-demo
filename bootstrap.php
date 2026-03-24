@@ -177,7 +177,7 @@ function redirect(string $url): void {
     exit;
 }
 
-function flash(string $key, string $msg = null): ?string {
+function flash(string $key, ?string $msg = null): ?string {
     session();
     if ($msg !== null) {
         $_SESSION['flash'][$key] = $msg;
