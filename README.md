@@ -121,7 +121,6 @@ shop-demo/
 │
 ├── bootstrap.php           # Database, session, cart, helpers
 ├── render.php              # Template renderer
-├── router.php              # Built-in server router
 ├── schema.sql              # Schema and seed data
 │
 ├── index.php               # Homepage
