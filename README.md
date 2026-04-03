@@ -68,12 +68,6 @@ To access the admin panel, log in as admin and visit `/admin/` — or navigate t
 
 Product images are stored in `public/images/`. When adding or editing a product in the admin panel you can upload a JPEG, PNG, GIF, or WebP image (max 5 MB). A placeholder is shown automatically when no image is set.
 
-The demo products reference image files not included in the repository. To fetch them from Unsplash:
-
-```bash
-php download_images.php
-```
-
 ---
 
 ## Project Structure
