@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Database;
 use App\Core\Renderer;
+use App\Core\Validator;
 use App\Services\SecurityService;
 
 class AdminCategoriesController {
@@ -63,9 +64,9 @@ class AdminCategoriesController {
         $parent_id   = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
         $description = trim($_POST['description'] ?? '');
         $icon        = trim($_POST['icon'] ?? '');
-        $errors      = [];
-
-        if (!$name) $errors[] = 'Name is required.';
+        $errors = Validator::check($_POST, [
+            'name' => 'required',
+        ]);
         if ($parent_id && $parent_id === $category_id) $errors[] = 'A category cannot be its own parent.';
 
         if (!$errors) {

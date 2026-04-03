@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Database;
 use App\Core\Renderer;
+use App\Core\Validator;
 use App\Services\SecurityService;
 use RuntimeException;
 
@@ -110,10 +111,11 @@ class AdminProductsController {
             'active'      => isset($_POST['active']) ? 1 : 0,
         ];
         $product_id = (int)($_POST['id'] ?? 0);
-        $errors     = [];
 
-        if (!$product['name'])      $errors[] = 'Name is required.';
-        if ($product['price'] <= 0) $errors[] = 'Price must be positive.';
+        $errors = Validator::check($_POST, [
+            'name'  => 'required',
+            'price' => 'required|positive',
+        ]);
 
         if (!$errors) {
             try {

@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Database;
 use App\Core\Renderer;
+use App\Core\Validator;
 use App\Services\CartService;
 use App\Services\AuthService;
 use App\Services\SecurityService;
@@ -34,11 +35,10 @@ class CheckoutController {
 
         $address = trim($_POST['address'] ?? '');
         $notes   = trim($_POST['notes'] ?? '');
-        $errors  = [];
 
-        if (!$address) {
-            $errors[] = 'Please enter a shipping address.';
-        }
+        $errors = Validator::check($_POST, [
+            'address' => 'required',
+        ]);
 
         if (!$errors) {
             $user  = AuthService::currentUser();

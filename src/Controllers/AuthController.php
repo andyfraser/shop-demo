@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Database;
 use App\Core\Renderer;
+use App\Core\Validator;
 use App\Services\AuthService;
 use App\Services\SecurityService;
 
@@ -74,12 +75,15 @@ class AuthController {
         $email = trim($_POST['email'] ?? '');
         $pass  = $_POST['password'] ?? '';
         $pass2 = $_POST['password2'] ?? '';
-        $errors = [];
 
-        if (!$name)                                      $errors[] = 'Name is required.';
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL))  $errors[] = 'Valid email required.';
-        if (strlen($pass) < 6)                           $errors[] = 'Password must be at least 6 characters.';
-        if ($pass !== $pass2)                            $errors[] = 'Passwords do not match.';
+        $errors = Validator::check($_POST, [
+            'name'     => 'required',
+            'email'    => 'required|email',
+            'password' => 'required|min_length:6',
+        ]);
+        if (!$errors && $pass !== $pass2) {
+            $errors[] = 'Passwords do not match.';
+        }
 
         if (!$errors) {
             $stmt = Database::getConnection()->prepare("SELECT id FROM users WHERE email = ?");
