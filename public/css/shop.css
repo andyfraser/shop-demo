@@ -377,3 +377,21 @@ select.form-control  { cursor: pointer; }
     .checkout-grid    { grid-template-columns: 1fr; }
     .product-detail   { grid-template-columns: 1fr; }
 }
+
+/* ── AJAX / loading states ────────────────────────────────────────────────── */
+.btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(1rem); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(1rem); }
+}
+.toast-enter { animation: toast-in .2s ease forwards; }
+.toast-exit  { animation: toast-out .25s ease forwards; }

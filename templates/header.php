@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/shop.css?v=<?= filemtime(__DIR__ . '/../public/css/shop.css') ?>">
+<meta name="csrf-token" content="<?= h(csrf_token()) ?>">
 <style>
 /* Critical nav override — ensures sub-menus are hidden even if external CSS is stale */
 .sub-menu { display: none !important; }
@@ -41,7 +42,7 @@
         <a href="<?= BASE_URL ?>/login">Sign in</a>
         <a href="<?= BASE_URL ?>/register">Register</a>
       <?php endif; ?>
-      <a href="<?= BASE_URL ?>/cart">
+      <a href="<?= BASE_URL ?>/cart" id="cart-link">
         🛒 Cart
         <?php if ($cart_count > 0): ?>
           <span class="cart-badge"><?= $cart_count ?></span>

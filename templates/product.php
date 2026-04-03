@@ -52,7 +52,8 @@
       </div>
 
       <?php if ($product['stock'] > 0): ?>
-        <form method="POST">
+        <div id="cart-message"></div>
+        <form method="POST" id="add-to-cart-form">
             <?= csrf_field() ?>
             <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
             <input type="hidden" name="slug" value="<?= h($product['slug']) ?>">

@@ -18,7 +18,7 @@
     <div class="two-col">
       <div>
         <div class="card" style="padding:0;overflow:hidden;">
-          <form method="POST">
+          <form method="POST" id="cart-form">
             <?= csrf_field() ?>
             <table class="cart-table">
               <thead>
@@ -32,7 +32,7 @@
               </thead>
               <tbody>
                 <?php foreach ($items as $item): ?>
-                  <tr>
+                  <tr data-item-id="<?= $item['id'] ?>">
                     <td style="width:80px;">
                       <?php product_img($item['image'] ?? '', $item['name'], 'cart-thumb') ?>
                     </td>
@@ -46,7 +46,7 @@
                       <input type="number" name="qty[<?= $item['id'] ?>]" value="<?= $item['qty'] ?>" min="0"
                         max="<?= $item['stock'] ?>" class="form-control qty-ctrl">
                     </td>
-                    <td><strong><?= money($item['subtotal']) ?></strong></td>
+                    <td class="item-subtotal" data-item-id="<?= $item['id'] ?>"><strong><?= money($item['subtotal']) ?></strong></td>
                     <td>
                       <button type="submit" name="remove" value="<?= $item['id'] ?>" class="btn btn-outline btn-sm"
                         style="padding:.3rem .7rem;color:var(--accent)">✕</button>
@@ -75,7 +75,7 @@
           </div>
           <div
             style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.2rem;font-weight:700;margin-bottom:1.2rem;">
-            <span>Total</span><span style="color:var(--accent-2)"><?= money($total) ?></span>
+            <span>Total</span><span id="cart-total" style="color:var(--accent-2)"><?= money($total) ?></span>
           </div>
           <a href="/checkout" class="btn btn-primary" style="width:100%;justify-content:center;">
             Proceed to Checkout

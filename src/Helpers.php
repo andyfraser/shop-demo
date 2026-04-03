@@ -46,6 +46,14 @@ function csrf_field(): string {
     return SecurityService::csrfField();
 }
 
+function csrf_token(): string {
+    return SecurityService::csrfToken();
+}
+
+function is_ajax(): bool {
+    return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
+}
+
 function current_user(): ?array {
     return AuthService::currentUser();
 }
