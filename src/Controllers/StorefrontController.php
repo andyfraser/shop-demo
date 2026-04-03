@@ -27,9 +27,18 @@ class StorefrontController {
         $products = [];
         $total_products = 0;
         $total_pages    = 1;
-        $per_page       = 12;
         $current_page   = max(1, (int)($_GET['page'] ?? 1));
-        $offset         = ($current_page - 1) * $per_page;
+
+        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc']) ? $_GET['sort'] : 'name';
+        $per_page_raw = $_GET['per_page'] ?? '12';
+        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
+        $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
+
+        $order_by = match($sort) {
+            'price_asc'  => 'p.price ASC',
+            'price_desc' => 'p.price DESC',
+            default      => 'p.name',
+        };
 
         if ($query) {
             $db   = Database::getConnection();
@@ -41,17 +50,29 @@ class StorefrontController {
             );
             $stmt->execute([$like, $like]);
             $total_products = (int)$stmt->fetchColumn();
-            $total_pages    = (int)ceil($total_products / $per_page);
 
-            $stmt = $db->prepare(
-                "SELECT p.*, c.name as cat_name
-                 FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)
-                 ORDER BY p.name
-                 LIMIT ? OFFSET ?"
-            );
-            $stmt->execute([$like, $like, $per_page, $offset]);
+            if ($per_page !== null) {
+                $total_pages = (int)ceil($total_products / $per_page);
+                $offset = ($current_page - 1) * $per_page;
+                $stmt = $db->prepare(
+                    "SELECT p.*, c.name as cat_name
+                     FROM products p
+                     LEFT JOIN categories c ON p.category_id = c.id
+                     WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)
+                     ORDER BY $order_by
+                     LIMIT ? OFFSET ?"
+                );
+                $stmt->execute([$like, $like, $per_page, $offset]);
+            } else {
+                $stmt = $db->prepare(
+                    "SELECT p.*, c.name as cat_name
+                     FROM products p
+                     LEFT JOIN categories c ON p.category_id = c.id
+                     WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)
+                     ORDER BY $order_by"
+                );
+                $stmt->execute([$like, $like]);
+            }
             $products = $stmt->fetchAll();
         }
 
@@ -63,6 +84,8 @@ class StorefrontController {
             'total_products' => $total_products,
             'total_pages'    => $total_pages,
             'current_page'   => $current_page,
+            'sort'           => $sort,
+            'per_page_param' => $per_page_param,
         ]);
     }
 
@@ -94,26 +117,48 @@ class StorefrontController {
         }
         $placeholders = implode(',', array_fill(0, count($cat_ids), '?'));
 
-        $per_page = 12;
+        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc']) ? $_GET['sort'] : 'name';
+        $per_page_raw = $_GET['per_page'] ?? '12';
+        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
+        $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
+
+        $order_by = match($sort) {
+            'price_asc'  => 'p.price ASC',
+            'price_desc' => 'p.price DESC',
+            default      => 'p.name',
+        };
+
         $current_page = max(1, (int)($_GET['page'] ?? 1));
-        $offset = ($current_page - 1) * $per_page;
 
         $stmt = $db->prepare(
             "SELECT COUNT(*) FROM products WHERE category_id IN ($placeholders) AND active = 1"
         );
         $stmt->execute($cat_ids);
         $total_products = (int)$stmt->fetchColumn();
-        $total_pages = (int)ceil($total_products / $per_page);
 
-        $stmt = $db->prepare(
-            "SELECT p.*, c.name as cat_name
-             FROM products p
-             LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.category_id IN ($placeholders) AND p.active = 1
-             ORDER BY p.name
-             LIMIT ? OFFSET ?"
-        );
-        $stmt->execute([...$cat_ids, $per_page, $offset]);
+        if ($per_page !== null) {
+            $total_pages = (int)ceil($total_products / $per_page);
+            $offset = ($current_page - 1) * $per_page;
+            $stmt = $db->prepare(
+                "SELECT p.*, c.name as cat_name
+                 FROM products p
+                 LEFT JOIN categories c ON p.category_id = c.id
+                 WHERE p.category_id IN ($placeholders) AND p.active = 1
+                 ORDER BY $order_by
+                 LIMIT ? OFFSET ?"
+            );
+            $stmt->execute([...$cat_ids, $per_page, $offset]);
+        } else {
+            $total_pages = 1;
+            $stmt = $db->prepare(
+                "SELECT p.*, c.name as cat_name
+                 FROM products p
+                 LEFT JOIN categories c ON p.category_id = c.id
+                 WHERE p.category_id IN ($placeholders) AND p.active = 1
+                 ORDER BY $order_by"
+            );
+            $stmt->execute($cat_ids);
+        }
         $products = $stmt->fetchAll();
 
         $breadcrumb = get_breadcrumb($category['id']);
@@ -127,6 +172,8 @@ class StorefrontController {
             'total_products' => $total_products,
             'total_pages'    => $total_pages,
             'current_page'   => $current_page,
+            'sort'           => $sort,
+            'per_page_param' => $per_page_param,
         ]);
     }
 

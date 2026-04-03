@@ -31,9 +31,24 @@
   <?php endif; ?>
 
   <?php if ($products): ?>
-    <p style="color:var(--ink-2);font-size:.85rem;margin-bottom:1rem;">
-      <?= $total_products ?> product<?= $total_products != 1 ? 's' : '' ?>
-    </p>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;">
+      <p style="color:var(--ink-2);font-size:.85rem;margin:0;">
+        <?= $total_products ?> product<?= $total_products != 1 ? 's' : '' ?>
+      </p>
+      <form method="get" action="/category" style="display:flex;gap:.5rem;align-items:center;">
+        <input type="hidden" name="slug" value="<?= h($category['slug']) ?>">
+        <select name="sort" onchange="this.form.submit()" style="padding:.3rem .5rem;border:1px solid var(--border);border-radius:4px;font-size:.85rem;">
+          <option value="name"       <?= $sort === 'name'       ? 'selected' : '' ?>>Name</option>
+          <option value="price_asc"  <?= $sort === 'price_asc'  ? 'selected' : '' ?>>Price: Low to High</option>
+          <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>>Price: High to Low</option>
+        </select>
+        <select name="per_page" onchange="this.form.submit()" style="padding:.3rem .5rem;border:1px solid var(--border);border-radius:4px;font-size:.85rem;">
+          <option value="12"  <?= $per_page_param === '12'  ? 'selected' : '' ?>>12 per page</option>
+          <option value="24"  <?= $per_page_param === '24'  ? 'selected' : '' ?>>24 per page</option>
+          <option value="all" <?= $per_page_param === 'all' ? 'selected' : '' ?>>All</option>
+        </select>
+      </form>
+    </div>
     <div class="product-grid">
       <?php foreach ($products as $p): ?>
         <a href="/product?slug=<?= h($p['slug']) ?>" class="product-card">
@@ -57,7 +72,7 @@
     <?php if ($total_pages > 1): ?>
       <div style="display:flex;gap:.5rem;justify-content:center;margin-top:2rem;">
         <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-          <a href="?slug=<?= h($category['slug']) ?>&page=<?= $i ?>"
+          <a href="?slug=<?= h($category['slug']) ?>&sort=<?= h($sort) ?>&per_page=<?= h($per_page_param) ?>&page=<?= $i ?>"
              class="btn <?= $i === $current_page ? 'btn-primary' : 'btn-outline' ?> btn-sm">
             <?= $i ?>
           </a>
