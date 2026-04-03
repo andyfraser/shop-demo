@@ -57,6 +57,27 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Indexes
+-- categories: parent_id for subcategory hierarchy queries
+CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
+
+-- products: category_id + active together cover the most common storefront query pattern
+CREATE INDEX IF NOT EXISTS idx_products_category_active ON products(category_id, active);
+
+-- orders: user_id + created_at for account history; status + created_at for admin list/filter
+CREATE INDEX IF NOT EXISTS idx_orders_user_created ON orders(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_status_created ON orders(status, created_at);
+
+-- order_items: FK columns used in JOINs
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_id);
+
+-- users: role for admin dashboard counts
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+-- rate_limits: composite covering action + ip_address lookup and created_at window filter
+CREATE INDEX IF NOT EXISTS idx_rate_limits_lookup ON rate_limits(action, ip_address, created_at);
+
 -- Seed Categories
 INSERT OR IGNORE INTO categories (id, name, slug, parent_id, description, icon) VALUES
 (1, 'Electronics', 'electronics', NULL, 'Gadgets, devices and tech', '💻'),
