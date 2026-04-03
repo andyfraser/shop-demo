@@ -29,33 +29,6 @@ class Database {
             $pdo->exec($schema);
         }
 
-        // Migrations
-        $pcols = $pdo->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_COLUMN, 1);
-        if (in_array('image_url', $pcols) && !in_array('image', $pcols)) {
-            $pdo->exec("ALTER TABLE products RENAME COLUMN image_url TO image");
-            $pdo->exec("UPDATE products SET image = NULL WHERE image LIKE '%unsplash%'");
-        }
-
-        $ucols = $pdo->query("PRAGMA table_info(users)")->fetchAll(PDO::FETCH_COLUMN, 1);
-        if ($ucols && !in_array('address', $ucols)) {
-            $pdo->exec("ALTER TABLE users ADD COLUMN address TEXT");
-        }
-
-        $cols = $pdo->query("PRAGMA table_info(categories)")->fetchAll(PDO::FETCH_COLUMN, 1);
-        if ($cols && !in_array('icon', $cols)) {
-            $pdo->exec("ALTER TABLE categories ADD COLUMN icon TEXT");
-            $icons = [
-                'electronics'  => '💻', 'clothing'     => '👕', 'home-garden'  => '🏠',
-                'laptops'      => '💻', 'phones'       => '📱', 'audio'        => '🎧',
-                'mens'         => '👔', 'womens'       => '👗', 'kitchen'      => '🍳',
-                'garden-tools' => '🌱',
-            ];
-            $stmt = $pdo->prepare("UPDATE categories SET icon = ? WHERE slug = ?");
-            foreach ($icons as $slug => $icon) {
-                $stmt->execute([$icon, $slug]);
-            }
-        }
-
         $hash = password_hash('password', PASSWORD_DEFAULT);
         $pdo->prepare(
             "INSERT OR IGNORE INTO users (id, name, email, password_hash, role)
