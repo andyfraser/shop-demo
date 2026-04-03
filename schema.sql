@@ -58,6 +58,11 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
 -- Indexes
 -- categories: parent_id for subcategory hierarchy queries
 CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);

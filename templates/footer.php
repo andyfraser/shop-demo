@@ -2,7 +2,7 @@
 </main>
 
 <footer class="site-footer">
-  <p>&copy; <?= date('Y') ?> <?= SITE_NAME ?>. A demo e-commerce application.</p>
+  <p>&copy; <?= date('Y') ?> <?= SITE_NAME_PLAIN ?>. A demo e-commerce application.</p>
 </footer>
 
 <div id="toast-container" aria-live="polite" aria-atomic="false"

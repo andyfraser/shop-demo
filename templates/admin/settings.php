@@ -1,0 +1,80 @@
+<?php // templates/admin/settings.php ?>
+
+<div class="admin-topbar">
+  <h1>Settings</h1>
+</div>
+
+<div class="content">
+  <?php if ($flash_msg): ?>
+    <div class="alert alert-success"><?= h($flash_msg) ?></div>
+  <?php endif; ?>
+  <?php if ($errors): ?>
+    <div class="alert alert-error">
+      <?php foreach ($errors as $e): ?><div><?= h($e) ?></div><?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+
+  <form method="POST" action="/admin/settings">
+    <?= csrf_field() ?>
+
+    <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
+      <h3 style="margin:0 0 1rem;font-size:1rem;">Store</h3>
+
+      <div class="form-group">
+        <label>Site Name</label>
+        <input type="text" name="site_name" class="form-control"
+               value="<?= h($settings['site_name']) ?>" required>
+        <small style="color:var(--ink-2);">Use <code>|</code> to split the logo into two parts, e.g. <code>Demo|shop</code> — the second part is styled differently in the header.</small>
+      </div>
+
+      <div class="form-group">
+        <label>Currency Symbol</label>
+        <input type="text" name="currency_symbol" class="form-control"
+               value="<?= h($settings['currency_symbol']) ?>" required style="max-width:6rem;">
+      </div>
+    </div>
+
+    <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
+      <h3 style="margin:0 0 1rem;font-size:1rem;">Security</h3>
+
+      <div class="form-group">
+        <label>Minimum Password Length</label>
+        <input type="number" name="password_min_length" class="form-control"
+               value="<?= h($settings['password_min_length']) ?>" min="1" required style="max-width:8rem;">
+      </div>
+    </div>
+
+    <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
+      <h3 style="margin:0 0 1rem;font-size:1rem;">Rate Limiting</h3>
+
+      <p style="font-size:.85rem;color:var(--ink-2);margin:0 0 1rem;">
+        Limits apply per IP address. Accounts are temporarily blocked after the specified number of failed attempts within the time window.
+      </p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="form-group">
+          <label>Login — Max Attempts</label>
+          <input type="number" name="login_max_attempts" class="form-control"
+                 value="<?= h($settings['login_max_attempts']) ?>" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Login — Window (minutes)</label>
+          <input type="number" name="login_window_minutes" class="form-control"
+                 value="<?= h($settings['login_window_minutes']) ?>" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Registration — Max Attempts</label>
+          <input type="number" name="register_max_attempts" class="form-control"
+                 value="<?= h($settings['register_max_attempts']) ?>" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Registration — Window (minutes)</label>
+          <input type="number" name="register_window_minutes" class="form-control"
+                 value="<?= h($settings['register_window_minutes']) ?>" min="1" required>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Settings</button>
+  </form>
+</div>

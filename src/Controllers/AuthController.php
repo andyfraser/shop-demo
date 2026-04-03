@@ -6,6 +6,7 @@ use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\AuthService;
 use App\Services\SecurityService;
+use App\Services\SettingsService;
 
 class AuthController {
     public function showLogin() {
@@ -25,7 +26,10 @@ class AuthController {
         }
         
         SecurityService::verifyCsrf();
-        SecurityService::checkRateLimit('login', $_SERVER['REMOTE_ADDR'], 5, 900);
+        SecurityService::checkRateLimit('login', $_SERVER['REMOTE_ADDR'],
+            (int)SettingsService::get('login_max_attempts'),
+            (int)SettingsService::get('login_window_minutes') * 60
+        );
 
         $email = trim($_POST['email'] ?? '');
         $pass  = $_POST['password'] ?? '';
@@ -69,7 +73,10 @@ class AuthController {
         }
 
         SecurityService::verifyCsrf();
-        SecurityService::checkRateLimit('register', $_SERVER['REMOTE_ADDR'], 10, 3600);
+        SecurityService::checkRateLimit('register', $_SERVER['REMOTE_ADDR'],
+            (int)SettingsService::get('register_max_attempts'),
+            (int)SettingsService::get('register_window_minutes') * 60
+        );
 
         $name  = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -79,7 +86,7 @@ class AuthController {
         $errors = Validator::check($_POST, [
             'name'     => 'required',
             'email'    => 'required|email',
-            'password' => 'required|min_length:6',
+            'password' => 'required|min_length:' . SettingsService::get('password_min_length'),
         ]);
         if (!$errors && $pass !== $pass2) {
             $errors[] = 'Passwords do not match.';

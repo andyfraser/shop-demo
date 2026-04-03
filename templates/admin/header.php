@@ -6,7 +6,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= h($page_title) ?> — Admin — <?= SITE_NAME ?></title>
+<title><?= h($page_title) ?> — Admin — <?= SITE_NAME_PLAIN ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/public/css/admin.css">
@@ -15,7 +15,7 @@
 
 <aside class="sidebar">
   <div class="sidebar-logo">
-    Demoshop
+    <?= h(SITE_NAME_PLAIN) ?>
     <small>Admin Panel</small>
   </div>
 
@@ -36,6 +36,10 @@
     <div class="sidebar-section">Users</div>
     <a href="/admin/users"      class="<?= $active === 'users'      ? 'active' : '' ?>">
       <span class="ico">👥</span> Users
+    </a>
+    <div class="sidebar-section">Config</div>
+    <a href="/admin/settings"   class="<?= $active === 'settings'   ? 'active' : '' ?>">
+      <span class="ico">⚙️</span> Settings
     </a>
   </nav>
 

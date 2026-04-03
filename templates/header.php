@@ -8,7 +8,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= h($page_title ?? '') ?> — <?= SITE_NAME ?></title>
+<title><?= h($page_title ?? '') ?> — <?= SITE_NAME_PLAIN ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/shop.css?v=<?= filemtime(__DIR__ . '/../public/css/shop.css') ?>">
@@ -23,7 +23,12 @@
 
 <header class="site-header">
   <div class="header-inner">
-    <a href="<?= BASE_URL ?>/" class="logo">Demo<span>shop</span></a>
+    <?php
+      $logo_parts = explode('|', SITE_NAME, 2);
+      $logo_prefix = $logo_parts[0];
+      $logo_suffix = $logo_parts[1] ?? '';
+    ?>
+    <a href="<?= BASE_URL ?>/" class="logo"><?= h($logo_prefix) ?><?php if ($logo_suffix !== ''): ?><span><?= h($logo_suffix) ?></span><?php endif ?></a>
 
     <form class="header-search" action="<?= BASE_URL ?>/search" method="GET">
       <input type="text" name="q" placeholder="Search products…"

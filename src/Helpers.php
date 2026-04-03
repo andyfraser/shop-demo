@@ -8,7 +8,11 @@ function h(string $s): string {
 }
 
 function money(float $v): string {
-    return '£' . number_format($v, 2);
+    return \App\Services\SettingsService::get('currency_symbol') . number_format($v, 2);
+}
+
+function setting(string $key): string {
+    return \App\Services\SettingsService::get($key);
 }
 
 function product_img(string $filename = '', string $alt = '', string $class = '', string $style = ''): void {

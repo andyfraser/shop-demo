@@ -50,7 +50,7 @@
       <div class="form-group">
         <label>Password <?= $user_id ? '(leave blank to keep current)' : '*' ?></label>
         <input type="password" name="password" class="form-control"
-               <?= $is_new ? 'required' : '' ?> minlength="6">
+               <?= $is_new ? 'required' : '' ?> minlength="<?= $password_min_len ?>">
       </div>
 
       <div style="display:flex;gap:.75rem;margin-top:.5rem;">

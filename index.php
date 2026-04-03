@@ -3,8 +3,10 @@ require_once __DIR__ . '/src/Core/Autoloader.php';
 \App\Core\Autoloader::register();
 require_once __DIR__ . '/src/Helpers.php';
 
-define('SITE_NAME', 'Demoshop');
+define('DB_PATH', __DIR__ . '/shop.db');
 define('BASE_URL', '');
+define('SITE_NAME', \App\Services\SettingsService::get('site_name'));
+define('SITE_NAME_PLAIN', str_replace('|', '', SITE_NAME));
 
 use App\Core\Router;
 use App\Controllers\StorefrontController;
@@ -16,6 +18,7 @@ use App\Controllers\AdminCategoriesController;
 use App\Controllers\AdminProductsController;
 use App\Controllers\AdminOrdersController;
 use App\Controllers\AdminUsersController;
+use App\Controllers\AdminSettingsController;
 use App\Controllers\AccountController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
@@ -75,6 +78,9 @@ $router->get('/admin/users/edit', [AdminUsersController::class, 'edit'], $adminM
 $router->post('/admin/users/new', [AdminUsersController::class, 'save'], $adminMiddleware);
 $router->post('/admin/users/edit', [AdminUsersController::class, 'save'], $adminMiddleware);
 $router->get('/admin/users/delete', [AdminUsersController::class, 'delete'], $adminMiddleware);
+
+$router->get('/admin/settings',  [AdminSettingsController::class, 'show'], $adminMiddleware);
+$router->post('/admin/settings', [AdminSettingsController::class, 'save'], $adminMiddleware);
 
 // Handle request
 $uri = $_SERVER['REQUEST_URI'] ?? '/';

@@ -8,7 +8,7 @@ class Database {
 
     public static function getConnection(): PDO {
         if (self::$pdo === null) {
-            $dbPath = __DIR__ . "/../../shop.db";
+            $dbPath = defined('DB_PATH') ? DB_PATH : __DIR__ . '/../../shop.db';
             $isNewDatabase = !file_exists($dbPath);
 
             self::$pdo = new PDO('sqlite:' . $dbPath);
@@ -46,6 +46,7 @@ class Database {
     }
 
     private static function migrations(): void {
-        // Migrations go here.
+        $pdo = self::$pdo;
+        $pdo->exec("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
     }
 }

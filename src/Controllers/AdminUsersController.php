@@ -5,6 +5,7 @@ use App\Core\Database;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\SecurityService;
+use App\Services\SettingsService;
 
 class AdminUsersController {
     public function list() {
@@ -28,12 +29,13 @@ class AdminUsersController {
 
     public function create() {
         Renderer::adminRender('users_form', [
-            'page_title' => 'Add User',
-            'active'     => 'users',
-            'is_new'     => true,
-            'user'       => [],
-            'user_id'    => 0,
-            'errors'     => [],
+            'page_title'       => 'Add User',
+            'active'           => 'users',
+            'is_new'           => true,
+            'user'             => [],
+            'user_id'          => 0,
+            'errors'           => [],
+            'password_min_len' => (int)SettingsService::get('password_min_length'),
         ]);
     }
 
@@ -46,12 +48,13 @@ class AdminUsersController {
         $user = $stmt->fetch() ?: [];
 
         Renderer::adminRender('users_form', [
-            'page_title' => 'Edit User',
-            'active'     => 'users',
-            'is_new'     => !$user_id,
-            'user'       => $user,
-            'user_id'    => $user_id,
-            'errors'     => [],
+            'page_title'       => 'Edit User',
+            'active'           => 'users',
+            'is_new'           => !$user_id,
+            'user'             => $user,
+            'user_id'          => $user_id,
+            'errors'           => [],
+            'password_min_len' => (int)SettingsService::get('password_min_length'),
         ]);
     }
 
@@ -65,10 +68,11 @@ class AdminUsersController {
         $address = trim($_POST['address'] ?? '');
         $pass    = $_POST['password'] ?? '';
 
+        $minLen = SettingsService::get('password_min_length');
         $errors = Validator::check($_POST, [
             'name'     => 'required',
             'email'    => 'required|email',
-            'password' => $user_id ? 'min_length:6' : 'required|min_length:6',
+            'password' => $user_id ? "min_length:$minLen" : "required|min_length:$minLen",
         ]);
 
         if (!$errors) {
@@ -101,12 +105,13 @@ class AdminUsersController {
         }
 
         Renderer::adminRender('users_form', [
-            'page_title' => ($user_id ? 'Edit' : 'Add') . ' User',
-            'active'     => 'users',
-            'is_new'     => !$user_id,
-            'user'       => compact('name', 'email', 'role', 'address'),
-            'user_id'    => $user_id,
-            'errors'     => $errors,
+            'page_title'       => ($user_id ? 'Edit' : 'Add') . ' User',
+            'active'           => 'users',
+            'is_new'           => !$user_id,
+            'user'             => compact('name', 'email', 'role', 'address'),
+            'user_id'          => $user_id,
+            'errors'           => $errors,
+            'password_min_len' => (int)SettingsService::get('password_min_length'),
         ]);
     }
 
