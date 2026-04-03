@@ -89,8 +89,7 @@ class StorefrontController {
         ]);
     }
 
-    public function category() {
-        $slug = $_GET['slug'] ?? '';
+    public function category($slug = '') {
         $db = Database::getConnection();
         $stmt = $db->prepare("SELECT * FROM categories WHERE slug = ?");
         $stmt->execute([$slug]);
@@ -177,8 +176,7 @@ class StorefrontController {
         ]);
     }
 
-    public function product() {
-        $slug = $_GET['slug'] ?? '';
+    public function product($slug = '') {
         $db = Database::getConnection();
         $stmt = $db->prepare(
             "SELECT p.*, c.name as cat_name, c.slug as cat_slug

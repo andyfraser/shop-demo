@@ -30,7 +30,7 @@
     <?php foreach ($order_items as $item): ?>
       <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);font-size:.875rem;">
         <span>
-          <a href="/product?slug=<?= h($item['slug']) ?>"><?= h($item['name']) ?></a>
+          <a href="/product/<?= h($item['slug']) ?>"><?= h($item['name']) ?></a>
           × <?= $item['quantity'] ?>
         </span>
         <strong><?= money($item['unit_price'] * $item['quantity']) ?></strong>

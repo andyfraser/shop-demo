@@ -58,7 +58,7 @@
       <li><a href="<?= BASE_URL ?>/">Home</a></li>
       <?php foreach ($nav_tree as $cat): ?>
         <li class="<?= $cat['children'] ? 'has-sub' : '' ?>">
-          <a href="<?= BASE_URL ?>/category?slug=<?= h($cat['slug']) ?>">
+          <a href="<?= BASE_URL ?>/category/<?= h($cat['slug']) ?>">
             <?= h($cat['name']) ?>
             <?php if ($cat['children']): ?><span class="arrow">›</span><?php endif; ?>
           </a>
@@ -66,7 +66,7 @@
             <ul class="sub-menu">
               <?php foreach ($cat['children'] as $sub): ?>
                 <li>
-                  <a href="<?= BASE_URL ?>/category?slug=<?= h($sub['slug']) ?>">
+                  <a href="<?= BASE_URL ?>/category/<?= h($sub['slug']) ?>">
                     <?= h($sub['name']) ?>
                   </a>
                 </li>

@@ -6,7 +6,7 @@
     <a href="/admin/categories">Home</a>
     <?php foreach ($breadcrumb as $c): ?>
       <span class="sep">›</span>
-      <a href="/category?slug=<?= h($c['slug']) ?>"><?= h($c['name']) ?></a>
+      <a href="/category/<?= h($c['slug']) ?>"><?= h($c['name']) ?></a>
     <?php endforeach; ?>
     <span class="sep">›</span>
     <span><?= h($product['name']) ?></span>
@@ -24,7 +24,7 @@
     <div class="product-meta">
       <?php if ($product['cat_name']): ?>
         <div>
-          <a href="/category?slug=<?= h($product['cat_slug']) ?>"
+          <a href="/category/<?= h($product['cat_slug']) ?>"
              style="color:var(--accent);font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">
             <?= h($product['cat_name']) ?>
           </a>
@@ -77,7 +77,7 @@
       <h2 class="page-title" style="font-size:1.4rem;">Related Products</h2>
       <div class="product-grid">
         <?php foreach ($related_products as $r): ?>
-          <a href="/product?slug=<?= h($r['slug']) ?>" class="product-card">
+          <a href="/product/<?= h($r['slug']) ?>" class="product-card">
             <div class="img-wrap">
               <?php product_img($r['image'] ?? '', $r['name']) ?>
             </div>

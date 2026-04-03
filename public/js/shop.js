@@ -66,7 +66,8 @@ if (addToCartForm) {
         const msgEl = document.getElementById('cart-message');
 
         try {
-            const data = await postAjax('/product', {
+            const slug = addToCartForm.querySelector('[name=slug]').value;
+            const data = await postAjax('/product/' + encodeURIComponent(slug), {
                 product_id: addToCartForm.querySelector('[name=product_id]').value,
                 slug:       addToCartForm.querySelector('[name=slug]').value,
                 qty:        addToCartForm.querySelector('[name=qty]').value,

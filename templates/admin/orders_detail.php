@@ -30,7 +30,7 @@ $badges = ['pending'=>'badge-warning','confirmed'=>'badge-info','shipped'=>'badg
           <tbody>
             <?php foreach ($order_items as $item): ?>
               <tr>
-                <td><a href="/product?slug=<?= h($item['slug']) ?>"><?= h($item['product_name']) ?></a></td>
+                <td><a href="/product/<?= h($item['slug']) ?>"><?= h($item['product_name']) ?></a></td>
                 <td>£<?= number_format($item['unit_price'], 2) ?></td>
                 <td><?= $item['quantity'] ?></td>
                 <td><strong>£<?= number_format($item['unit_price'] * $item['quantity'], 2) ?></strong></td>

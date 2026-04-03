@@ -37,7 +37,7 @@
                       <?php product_img($item['image'] ?? '', $item['name'], 'cart-thumb') ?>
                     </td>
                     <td>
-                      <a href="/product?slug=<?= h($item['slug']) ?>" class="cart-product-name">
+                      <a href="/product/<?= h($item['slug']) ?>" class="cart-product-name">
                         <?= h($item['name']) ?>
                       </a>
                     </td>

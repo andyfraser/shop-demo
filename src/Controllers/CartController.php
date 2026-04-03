@@ -61,7 +61,7 @@ class CartController
         redirect('/cart');
     }
 
-    public function add()
+    public function add($slug = '')
     {
         if (is_ajax()) {
             $this->verifyCsrfAjax();
@@ -70,7 +70,7 @@ class CartController
         }
 
         $productId = (int) ($_POST['product_id'] ?? 0);
-        $slug = $_POST['slug'] ?? '';
+        $slug = $slug ?: ($_POST['slug'] ?? '');
         $qty = max(1, (int) ($_POST['qty'] ?? 1));
 
         CartService::add($productId, $qty);
@@ -86,7 +86,7 @@ class CartController
         }
 
         flash('success', 'Items added to your cart.');
-        redirect('/product?slug=' . urlencode($slug));
+        redirect('/product/' . urlencode($slug));
     }
 
     private function verifyCsrfAjax(): void

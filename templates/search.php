@@ -31,7 +31,7 @@
     </div>
     <div class="product-grid">
       <?php foreach ($products as $p): ?>
-        <a href="/product?slug=<?= h($p['slug']) ?>" class="product-card">
+        <a href="/product/<?= h($p['slug']) ?>" class="product-card">
           <div class="img-wrap">
             <?php product_img($p['image'] ?? '', $p['name']) ?>
           </div>

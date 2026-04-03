@@ -25,9 +25,9 @@ $router = new Router();
 // Storefront routes
 $router->get('/', [StorefrontController::class, 'index']);
 $router->get('/search', [StorefrontController::class, 'search']);
-$router->get('/category', [StorefrontController::class, 'category']);
-$router->get('/product', [StorefrontController::class, 'product']);
-$router->post('/product', [CartController::class, 'add']); // Add to cart form posts here
+$router->get('/category/:slug', [StorefrontController::class, 'category']);
+$router->get('/product/:slug', [StorefrontController::class, 'product']);
+$router->post('/product/:slug', [CartController::class, 'add']); // Add to cart form posts here
 
 // Auth routes
 $router->get('/login', [AuthController::class, 'showLogin']);
