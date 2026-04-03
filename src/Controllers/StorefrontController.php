@@ -25,25 +25,44 @@ class StorefrontController {
     public function search() {
         $query    = trim($_GET['q'] ?? '');
         $products = [];
+        $total_products = 0;
+        $total_pages    = 1;
+        $per_page       = 12;
+        $current_page   = max(1, (int)($_GET['page'] ?? 1));
+        $offset         = ($current_page - 1) * $per_page;
 
         if ($query) {
-            $stmt = Database::getConnection()->prepare(
+            $db   = Database::getConnection();
+            $like = '%' . $query . '%';
+
+            $stmt = $db->prepare(
+                "SELECT COUNT(*) FROM products p
+                 WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)"
+            );
+            $stmt->execute([$like, $like]);
+            $total_products = (int)$stmt->fetchColumn();
+            $total_pages    = (int)ceil($total_products / $per_page);
+
+            $stmt = $db->prepare(
                 "SELECT p.*, c.name as cat_name
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
                  WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)
-                 ORDER BY p.name"
+                 ORDER BY p.name
+                 LIMIT ? OFFSET ?"
             );
-            $like = '%' . $query . '%';
-            $stmt->execute([$like, $like]);
+            $stmt->execute([$like, $like, $per_page, $offset]);
             $products = $stmt->fetchAll();
         }
 
         Renderer::render('search', [
-            'page_title'   => $query ? 'Search: ' . $query : 'Search',
-            'search_query' => $query,
-            'query'        => $query,
-            'products'     => $products,
+            'page_title'     => $query ? 'Search: ' . $query : 'Search',
+            'search_query'   => $query,
+            'query'          => $query,
+            'products'       => $products,
+            'total_products' => $total_products,
+            'total_pages'    => $total_pages,
+            'current_page'   => $current_page,
         ]);
     }
 
