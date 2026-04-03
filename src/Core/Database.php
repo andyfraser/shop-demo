@@ -8,20 +8,25 @@ class Database {
 
     public static function getConnection(): PDO {
         if (self::$pdo === null) {
-            self::$pdo = new PDO('sqlite:' . __DIR__ . '/../../shop.db');
+            $dbPath = __DIR__ . "/../../shop.db";
+            $isNewDatabase = !file_exists($dbPath);
+
+            self::$pdo = new PDO('sqlite:' . $dbPath);
             self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             self::$pdo->exec('PRAGMA foreign_keys = ON');
-            self::initDatabase();
+
+            // Only initialise schema if DB didn't exist before
+            if ($isNewDatabase) {
+                self::initDatabase();
+            }
+
+            self::migrations();
         }
         return self::$pdo;
     }
 
     private static function initDatabase(): void {
-        static $done = false;
-        if ($done) return;
-        $done = true;
-
         $pdo = self::$pdo;
         $schemaPath = __DIR__ . '/../../schema.sql';
         if (file_exists($schemaPath)) {
@@ -38,5 +43,9 @@ class Database {
             "INSERT OR IGNORE INTO users (id, name, email, password_hash, role)
              VALUES (2, 'Jane Smith', 'jane@example.com', ?, 'customer')"
         )->execute([$hash]);
+    }
+
+    private static function migrations(): void {
+        // Migrations go here.
     }
 }
