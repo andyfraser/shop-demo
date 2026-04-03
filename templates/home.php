@@ -4,7 +4,7 @@
   <div class="hero-inner">
     <h1>Quality goods,<br>curated for you.</h1>
     <p>Browse our thoughtfully selected collection of electronics, clothing, and more.</p>
-    <a href="index.php" class="btn btn-primary" style="font-size:1rem;padding:.8rem 2rem;">
+    <a href="/admin/categories" class="btn btn-primary" style="font-size:1rem;padding:.8rem 2rem;">
       Shop All Products
     </a>
   </div>
@@ -16,7 +16,7 @@
     <h2 class="section-title">Shop by Category</h2>
     <div class="cat-grid">
       <?php foreach ($nav_tree as $cat): ?>
-        <a href="category.php?slug=<?= h($cat['slug']) ?>" class="cat-card">
+        <a href="/category?slug=<?= h($cat['slug']) ?>" class="cat-card">
           <div class="cat-icon"><?= $cat['icon'] ? h($cat['icon']) : '📦' ?></div>
           <?= h($cat['name']) ?>
           <?php if ($cat['children']): ?>
@@ -31,7 +31,7 @@
     <h2 class="section-title">Featured Products</h2>
     <div class="product-grid">
       <?php foreach ($featured_products as $p): ?>
-        <a href="product.php?slug=<?= h($p['slug']) ?>" class="product-card">
+        <a href="/product?slug=<?= h($p['slug']) ?>" class="product-card">
           <div class="img-wrap">
             <?php product_img($p['image'] ?? '', $p['name'], '', 'loading:lazy') ?>
           </div>

@@ -3,7 +3,7 @@
 <div class="admin-topbar">
   <h1><?= $is_new ? 'Add Product' : 'Edit Product' ?></h1>
   <div class="actions">
-    <a href="products.php" class="btn btn-outline">← Back</a>
+    <a href="/admin/products" class="btn btn-outline">← Back</a>
   </div>
 </div>
 
@@ -102,7 +102,7 @@
         <button type="submit" name="save" class="btn btn-primary">
           <?= $is_new ? 'Create Product' : 'Save Changes' ?>
         </button>
-        <a href="products.php" class="btn btn-outline">Cancel</a>
+        <a href="/admin/products" class="btn btn-outline">Cancel</a>
       </div>
     </form>
   </div>

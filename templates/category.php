@@ -3,13 +3,13 @@
 <div class="container">
 
   <div class="breadcrumb">
-    <a href="index.php">Home</a>
+    <a href="/admin/categories">Home</a>
     <?php foreach ($breadcrumb as $c): ?>
       <span class="sep">›</span>
       <?php if ($c['id'] === $category['id']): ?>
         <span><?= h($c['name']) ?></span>
       <?php else: ?>
-        <a href="category.php?slug=<?= h($c['slug']) ?>"><?= h($c['name']) ?></a>
+        <a href="/category?slug=<?= h($c['slug']) ?>"><?= h($c['name']) ?></a>
       <?php endif; ?>
     <?php endforeach; ?>
   </div>
@@ -23,7 +23,7 @@
   <?php if ($subcategories): ?>
     <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:2rem;">
       <?php foreach ($subcategories as $s): ?>
-        <a href="category.php?slug=<?= h($s['slug']) ?>" class="btn btn-outline btn-sm">
+        <a href="/category?slug=<?= h($s['slug']) ?>" class="btn btn-outline btn-sm">
           <?= h($s['name']) ?>
         </a>
       <?php endforeach; ?>
@@ -36,7 +36,7 @@
     </p>
     <div class="product-grid">
       <?php foreach ($products as $p): ?>
-        <a href="product.php?slug=<?= h($p['slug']) ?>" class="product-card">
+        <a href="/product?slug=<?= h($p['slug']) ?>" class="product-card">
           <div class="img-wrap">
             <?php product_img($p['image'] ?? '', $p['name']) ?>
           </div>

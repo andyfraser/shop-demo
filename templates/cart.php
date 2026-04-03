@@ -11,7 +11,7 @@
       <div class="icon">🛒</div>
       <h3>Your cart is empty</h3>
       <p style="margin-bottom:1.5rem;">Add some products to get started.</p>
-      <a href="index.php" class="btn btn-primary">Browse Products</a>
+      <a href="/" class="btn btn-primary">Browse Products</a>
     </div>
 
   <?php else: ?>
@@ -37,22 +37,19 @@
                       <?php product_img($item['image'] ?? '', $item['name'], 'cart-thumb') ?>
                     </td>
                     <td>
-                      <a href="product.php?slug=<?= h($item['slug']) ?>" class="cart-product-name">
+                      <a href="/product?slug=<?= h($item['slug']) ?>" class="cart-product-name">
                         <?= h($item['name']) ?>
                       </a>
                     </td>
                     <td><?= money($item['price']) ?></td>
                     <td>
-                      <input type="number" name="qty[<?= $item['id'] ?>]"
-                             value="<?= $item['qty'] ?>"
-                             min="0" max="<?= $item['stock'] ?>"
-                             class="form-control qty-ctrl">
+                      <input type="number" name="qty[<?= $item['id'] ?>]" value="<?= $item['qty'] ?>" min="0"
+                        max="<?= $item['stock'] ?>" class="form-control qty-ctrl">
                     </td>
                     <td><strong><?= money($item['subtotal']) ?></strong></td>
                     <td>
-                      <button type="submit" name="remove" value="<?= $item['id'] ?>"
-                              class="btn btn-outline btn-sm"
-                              style="padding:.3rem .7rem;color:var(--accent)">✕</button>
+                      <button type="submit" name="remove" value="<?= $item['id'] ?>" class="btn btn-outline btn-sm"
+                        style="padding:.3rem .7rem;color:var(--accent)">✕</button>
                     </td>
                   </tr>
                 <?php endforeach; ?>
@@ -68,20 +65,23 @@
       <div class="order-summary">
         <div class="card">
           <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem;">Order Summary</h2>
-          <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);margin-bottom:.5rem;">
+          <div
+            style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);margin-bottom:.5rem;">
             <span>Subtotal</span><strong><?= money($total) ?></strong>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);margin-bottom:.5rem;">
+          <div
+            style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);margin-bottom:.5rem;">
             <span>Shipping</span><span style="color:var(--accent)">Free</span>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.2rem;font-weight:700;margin-bottom:1.2rem;">
+          <div
+            style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.2rem;font-weight:700;margin-bottom:1.2rem;">
             <span>Total</span><span style="color:var(--accent-2)"><?= money($total) ?></span>
           </div>
-          <a href="checkout.php" class="btn btn-primary" style="width:100%;justify-content:center;">
+          <a href="/checkout" class="btn btn-primary" style="width:100%;justify-content:center;">
             Proceed to Checkout
           </a>
-          <a href="index.php" class="btn btn-outline btn-sm"
-             style="width:100%;justify-content:center;margin-top:.75rem;">
+          <a href="/admin/categories" class="btn btn-outline btn-sm"
+            style="width:100%;justify-content:center;margin-top:.75rem;">
             Continue Shopping
           </a>
         </div>

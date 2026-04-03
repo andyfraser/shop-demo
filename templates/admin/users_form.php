@@ -3,7 +3,7 @@
 <div class="admin-topbar">
   <h1><?= $is_new ? 'Add User' : 'Edit: ' . h($user['name'] ?? '') ?></h1>
   <div class="actions">
-    <a href="users.php" class="btn btn-outline">← Back</a>
+    <a href="/admin/users" class="btn btn-outline">← Back</a>
   </div>
 </div>
 
@@ -51,7 +51,7 @@
         <button type="submit" name="save" class="btn btn-primary">
           <?= $is_new ? 'Create User' : 'Save Changes' ?>
         </button>
-        <a href="users.php" class="btn btn-outline">Cancel</a>
+        <a href="/admin/users" class="btn btn-outline">Cancel</a>
       </div>
     </form>
   </div>

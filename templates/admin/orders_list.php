@@ -35,7 +35,7 @@
               </span>
             </td>
             <td><?= date('d M Y, H:i', strtotime($o['created_at'])) ?></td>
-            <td><a href="?id=<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a></td>
+            <td><a href="/admin/orders/detail?id=<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a></td>
           </tr>
         <?php endforeach; ?>
       <?php else: ?>

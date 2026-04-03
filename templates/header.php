@@ -22,9 +22,9 @@
 
 <header class="site-header">
   <div class="header-inner">
-    <a href="<?= BASE_URL ?>/index.php" class="logo">Demo<span>shop</span></a>
+    <a href="<?= BASE_URL ?>/" class="logo">Demo<span>shop</span></a>
 
-    <form class="header-search" action="<?= BASE_URL ?>/search.php" method="GET">
+    <form class="header-search" action="<?= BASE_URL ?>/search" method="GET">
       <input type="text" name="q" placeholder="Search products…"
              value="<?= h($search_query ?? '') ?>">
       <button type="submit">Search</button>
@@ -32,16 +32,16 @@
 
     <nav class="header-actions">
       <?php if ($current_user): ?>
-        <a href="<?= BASE_URL ?>/account.php">👤 <?= h($current_user['name']) ?></a>
+        <a href="<?= BASE_URL ?>/account">👤 <?= h($current_user['name']) ?></a>
         <?php if ($current_user['role'] === 'admin'): ?>
-          <a href="<?= BASE_URL ?>/admin/index.php">⚙ Admin</a>
+          <a href="<?= BASE_URL ?>/admin">⚙ Admin</a>
         <?php endif; ?>
-        <a href="<?= BASE_URL ?>/logout.php">Sign out</a>
+        <a href="<?= BASE_URL ?>/logout">Sign out</a>
       <?php else: ?>
-        <a href="<?= BASE_URL ?>/login.php">Sign in</a>
-        <a href="<?= BASE_URL ?>/register.php">Register</a>
+        <a href="<?= BASE_URL ?>/login">Sign in</a>
+        <a href="<?= BASE_URL ?>/register">Register</a>
       <?php endif; ?>
-      <a href="<?= BASE_URL ?>/cart.php">
+      <a href="<?= BASE_URL ?>/cart">
         🛒 Cart
         <?php if ($cart_count > 0): ?>
           <span class="cart-badge"><?= $cart_count ?></span>
@@ -54,10 +54,10 @@
 <nav class="site-nav">
   <div class="nav-inner">
     <ul>
-      <li><a href="<?= BASE_URL ?>/index.php">Home</a></li>
+      <li><a href="<?= BASE_URL ?>/">Home</a></li>
       <?php foreach ($nav_tree as $cat): ?>
         <li class="<?= $cat['children'] ? 'has-sub' : '' ?>">
-          <a href="<?= BASE_URL ?>/category.php?slug=<?= h($cat['slug']) ?>">
+          <a href="<?= BASE_URL ?>/category?slug=<?= h($cat['slug']) ?>">
             <?= h($cat['name']) ?>
             <?php if ($cat['children']): ?><span class="arrow">›</span><?php endif; ?>
           </a>
@@ -65,7 +65,7 @@
             <ul class="sub-menu">
               <?php foreach ($cat['children'] as $sub): ?>
                 <li>
-                  <a href="<?= BASE_URL ?>/category.php?slug=<?= h($sub['slug']) ?>">
+                  <a href="<?= BASE_URL ?>/category?slug=<?= h($sub['slug']) ?>">
                     <?= h($sub['name']) ?>
                   </a>
                 </li>

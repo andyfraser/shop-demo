@@ -3,7 +3,7 @@
 <div class="admin-topbar">
   <h1>Dashboard</h1>
   <div class="actions">
-    <a href="products.php?action=new" class="btn btn-primary">+ Add Product</a>
+    <a href="/admin/products/new" class="btn btn-primary">+ Add Product</a>
   </div>
 </div>
 
@@ -31,7 +31,7 @@
     <div>
       <div class="page-actions" style="margin-bottom:1rem;">
         <strong style="font-size:.9rem;">Recent Orders</strong>
-        <a href="orders.php" class="btn btn-outline btn-sm">View All</a>
+        <a href="/admin/orders" class="btn btn-outline btn-sm">View All</a>
       </div>
       <table class="data-table">
         <thead>
@@ -43,7 +43,7 @@
           <?php if ($recent_orders): ?>
             <?php foreach ($recent_orders as $o): ?>
               <tr>
-                <td><a href="orders.php?id=<?= $o['id'] ?>">#<?= str_pad($o['id'], 6, '0', STR_PAD_LEFT) ?></a></td>
+                <td><a href="/admin/orders?id=<?= $o['id'] ?>">#<?= str_pad($o['id'], 6, '0', STR_PAD_LEFT) ?></a></td>
                 <td><?= h($o['user_name'] ?? 'Guest') ?></td>
                 <td><strong>£<?= number_format($o['total'], 2) ?></strong></td>
                 <td>

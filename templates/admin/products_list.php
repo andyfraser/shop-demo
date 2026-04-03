@@ -3,7 +3,15 @@
 <div class="admin-topbar">
   <h1>Products</h1>
   <div class="actions">
-    <a href="?action=new" class="btn btn-primary">+ Add Product</a>
+    <form method="get" action="/admin/products" style="display:inline-flex;gap:.5rem;">
+      <input type="text" name="search" value="<?= h($search ?? '') ?>"
+             placeholder="Filter by name…" class="form-control" style="width:220px;">
+      <button type="submit" class="btn btn-outline">Filter</button>
+      <?php if (!empty($search)): ?>
+        <a href="/admin/products" class="btn btn-outline">Clear</a>
+      <?php endif; ?>
+    </form>
+    <a href="/admin/products/new" class="btn btn-primary">+ Add Product</a>
   </div>
 </div>
 
@@ -48,8 +56,8 @@
             </span>
           </td>
           <td>
-            <a href="?action=edit&id=<?= $p['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
-            <a href="?action=delete&id=<?= $p['id'] ?>" class="btn btn-danger btn-sm"
+            <a href="/admin/products/edit?id=<?= $p['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
+            <a href="/admin/products/delete?id=<?= $p['id'] ?>" class="btn btn-danger btn-sm"
                onclick="return confirm('Deactivate this product?')">Delete</a>
           </td>
         </tr>

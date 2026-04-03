@@ -24,7 +24,7 @@ $status_badges = [
         Member since <?= date('M Y', strtotime($current_user['created_at'])) ?>
       </div>
       <hr style="margin:1.2rem 0;border:none;border-top:1px solid var(--line);">
-      <a href="logout.php" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">Sign Out</a>
+      <a href="/logout" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">Sign Out</a>
     </div>
 
     <div>
@@ -35,7 +35,7 @@ $status_badges = [
           <div class="icon">📦</div>
           <h3>No orders yet</h3>
           <p>
-            <a href="index.php" class="btn btn-primary" style="margin-top:.75rem;">Start Shopping</a>
+            <a href="/admin/categories" class="btn btn-primary" style="margin-top:.75rem;">Start Shopping</a>
           </p>
         </div>
       <?php else: ?>
@@ -58,7 +58,7 @@ $status_badges = [
                       <?= ucfirst($o['status']) ?>
                     </span>
                   </td>
-                  <td><a href="order_confirm.php?id=<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a></td>
+                  <td><a href="/order/confirm?id=<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>

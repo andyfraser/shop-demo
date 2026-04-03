@@ -3,7 +3,7 @@
 <div class="admin-topbar">
   <h1>Users</h1>
   <div class="actions">
-    <a href="?action=new" class="btn btn-primary">+ Add User</a>
+    <a href="/admin/users/new" class="btn btn-primary">+ Add User</a>
   </div>
 </div>
 
@@ -34,9 +34,9 @@
           <td><?= $u['order_count'] ?></td>
           <td><?= date('d M Y', strtotime($u['created_at'])) ?></td>
           <td>
-            <a href="?action=edit&id=<?= $u['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
+            <a href="/admin/users/edit?id=<?= $u['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
             <?php if ($u['id'] != $current_user['id']): ?>
-              <a href="?action=delete&id=<?= $u['id'] ?>" class="btn btn-danger btn-sm"
+              <a href="/admin/users/delete?id=<?= $u['id'] ?>" class="btn btn-danger btn-sm"
                  onclick="return confirm('Delete user <?= h(addslashes($u['name'])) ?>?')">Delete</a>
             <?php endif; ?>
           </td>

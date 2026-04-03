@@ -40,7 +40,7 @@
     </div>
     <p style="text-align:center;margin-top:1rem;font-size:.875rem;color:var(--ink-2);">
       Already have an account?
-      <a href="login.php" style="color:var(--accent);">Sign in</a>
+      <a href="/login" style="color:var(--accent);">Sign in</a>
     </p>
   </div>
 </div>

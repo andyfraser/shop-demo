@@ -3,7 +3,7 @@
 <div class="admin-topbar">
   <h1>Categories</h1>
   <div class="actions">
-    <a href="?action=new" class="btn btn-primary">+ Add Category</a>
+    <a href="/admin/categories/new" class="btn btn-primary">+ Add Category</a>
   </div>
 </div>
 
@@ -38,8 +38,8 @@
             <?= h($c['description'] ?? '') ?>
           </td>
           <td>
-            <a href="?action=edit&id=<?= $c['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
-            <a href="?action=delete&id=<?= $c['id'] ?>" class="btn btn-danger btn-sm"
+            <a href="/admin/categories/edit?id=<?= $c['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
+            <a href="/admin/categories/delete?id=<?= $c['id'] ?>" class="btn btn-danger btn-sm"
                onclick="return confirm('Delete this category? Products will become uncategorised.')">Delete</a>
           </td>
         </tr>

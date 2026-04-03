@@ -34,7 +34,7 @@
     </div>
     <p style="text-align:center;margin-top:1rem;font-size:.875rem;color:var(--ink-2);">
       Don't have an account?
-      <a href="register.php" style="color:var(--accent);">Register here</a>
+      <a href="/register" style="color:var(--accent);">Register here</a>
     </p>
   </div>
 </div>

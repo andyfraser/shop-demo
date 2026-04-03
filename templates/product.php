@@ -3,10 +3,10 @@
 <div class="container">
 
   <div class="breadcrumb">
-    <a href="index.php">Home</a>
+    <a href="/admin/categories">Home</a>
     <?php foreach ($breadcrumb as $c): ?>
       <span class="sep">›</span>
-      <a href="category.php?slug=<?= h($c['slug']) ?>"><?= h($c['name']) ?></a>
+      <a href="/category?slug=<?= h($c['slug']) ?>"><?= h($c['name']) ?></a>
     <?php endforeach; ?>
     <span class="sep">›</span>
     <span><?= h($product['name']) ?></span>
@@ -24,7 +24,7 @@
     <div class="product-meta">
       <?php if ($product['cat_name']): ?>
         <div>
-          <a href="category.php?slug=<?= h($product['cat_slug']) ?>"
+          <a href="/category?slug=<?= h($product['cat_slug']) ?>"
              style="color:var(--accent);font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">
             <?= h($product['cat_name']) ?>
           </a>
@@ -54,6 +54,8 @@
       <?php if ($product['stock'] > 0): ?>
         <form method="POST">
             <?= csrf_field() ?>
+            <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
+            <input type="hidden" name="slug" value="<?= h($product['slug']) ?>">
           <div class="qty-row">
             <div class="form-group" style="margin:0">
               <label for="qty">Quantity</label>
@@ -74,7 +76,7 @@
       <h2 class="page-title" style="font-size:1.4rem;">Related Products</h2>
       <div class="product-grid">
         <?php foreach ($related_products as $r): ?>
-          <a href="product.php?slug=<?= h($r['slug']) ?>" class="product-card">
+          <a href="/product?slug=<?= h($r['slug']) ?>" class="product-card">
             <div class="img-wrap">
               <?php product_img($r['image'] ?? '', $r['name']) ?>
             </div>

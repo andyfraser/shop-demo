@@ -1,17 +1,94 @@
 <?php
-require_once __DIR__ . '/bootstrap.php';
-require_once __DIR__ . '/render.php';
+require_once __DIR__ . '/src/Core/Autoloader.php';
+\App\Core\Autoloader::register();
+require_once __DIR__ . '/src/Helpers.php';
 
-$featured_products = db()->query(
-    "SELECT p.*, c.name as cat_name
-     FROM products p
-     LEFT JOIN categories c ON p.category_id = c.id
-     WHERE p.active = 1
-     ORDER BY p.id
-     LIMIT 8"
-)->fetchAll();
+define('SITE_NAME', 'Demoshop');
+define('BASE_URL', '');
 
-render('home', [
-    'page_title'       => 'Welcome',
-    'featured_products' => $featured_products,
-]);
+use App\Core\Router;
+use App\Controllers\StorefrontController;
+use App\Controllers\AuthController;
+use App\Controllers\CartController;
+use App\Controllers\CheckoutController;
+use App\Controllers\AdminDashboardController;
+use App\Controllers\AdminCategoriesController;
+use App\Controllers\AdminProductsController;
+use App\Controllers\AdminOrdersController;
+use App\Controllers\AdminUsersController;
+use App\Controllers\AccountController;
+use App\Middleware\AuthMiddleware;
+use App\Middleware\AdminMiddleware;
+
+$router = new Router();
+
+// Storefront routes
+$router->get('/', [StorefrontController::class, 'index']);
+$router->get('/search', [StorefrontController::class, 'search']);
+$router->get('/category', [StorefrontController::class, 'category']);
+$router->get('/product', [StorefrontController::class, 'product']);
+$router->post('/product', [CartController::class, 'add']); // Add to cart form posts here
+
+// Auth routes
+$router->get('/login', [AuthController::class, 'showLogin']);
+$router->post('/login', [AuthController::class, 'login']);
+$router->get('/register', [AuthController::class, 'showRegister']);
+$router->post('/register', [AuthController::class, 'register']);
+$router->get('/logout', [AuthController::class, 'logout']);
+$router->get('/account', [AccountController::class, 'show'], [AuthMiddleware::class]);
+
+// Cart routes
+$router->get('/cart', [CartController::class, 'show']);
+$router->post('/cart', [CartController::class, 'update']);
+
+// Checkout routes
+$router->get('/checkout', [CheckoutController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/checkout', [CheckoutController::class, 'process'], [AuthMiddleware::class]);
+$router->get('/order/confirm', [CheckoutController::class, 'confirm'], [AuthMiddleware::class]);
+
+// Admin routes
+$adminMiddleware = [AdminMiddleware::class];
+$router->get('/admin', [AdminDashboardController::class, 'index'], $adminMiddleware);
+$router->get('/admin/', [AdminDashboardController::class, 'index'], $adminMiddleware);
+$router->get('/admin/categories', [AdminCategoriesController::class, 'list'], $adminMiddleware);
+$router->get('/admin/categories/new', [AdminCategoriesController::class, 'create'], $adminMiddleware);
+$router->get('/admin/categories/edit', [AdminCategoriesController::class, 'edit'], $adminMiddleware);
+$router->post('/admin/categories/new', [AdminCategoriesController::class, 'save'], $adminMiddleware);
+$router->post('/admin/categories/edit', [AdminCategoriesController::class, 'save'], $adminMiddleware);
+$router->get('/admin/categories/delete', [AdminCategoriesController::class, 'delete'], $adminMiddleware);
+
+$router->get('/admin/products', [AdminProductsController::class, 'list'], $adminMiddleware);
+$router->get('/admin/products/new', [AdminProductsController::class, 'create'], $adminMiddleware);
+$router->get('/admin/products/edit', [AdminProductsController::class, 'edit'], $adminMiddleware);
+$router->post('/admin/products/new', [AdminProductsController::class, 'save'], $adminMiddleware);
+$router->post('/admin/products/edit', [AdminProductsController::class, 'save'], $adminMiddleware);
+$router->get('/admin/products/delete', [AdminProductsController::class, 'delete'], $adminMiddleware);
+
+$router->get('/admin/orders', [AdminOrdersController::class, 'list'], $adminMiddleware);
+$router->get('/admin/orders/detail', [AdminOrdersController::class, 'detail'], $adminMiddleware);
+$router->post('/admin/orders/detail', [AdminOrdersController::class, 'updateStatus'], $adminMiddleware);
+
+$router->get('/admin/users', [AdminUsersController::class, 'list'], $adminMiddleware);
+$router->get('/admin/users/new', [AdminUsersController::class, 'create'], $adminMiddleware);
+$router->get('/admin/users/edit', [AdminUsersController::class, 'edit'], $adminMiddleware);
+$router->post('/admin/users/new', [AdminUsersController::class, 'save'], $adminMiddleware);
+$router->post('/admin/users/edit', [AdminUsersController::class, 'save'], $adminMiddleware);
+$router->get('/admin/users/delete', [AdminUsersController::class, 'delete'], $adminMiddleware);
+
+// Handle request
+$uri = $_SERVER['REQUEST_URI'] ?? '/';
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+// Serve static files via built-in server correctly
+if (php_sapi_name() === 'cli-server') {
+    $path = parse_url($uri, PHP_URL_PATH);
+    if ($path !== '/' && file_exists(__DIR__ . '/public' . $path)) {
+        return false;
+    }
+    // Also check if they mistakenly request the root file directly
+    if (file_exists(__DIR__ . $path) && is_file(__DIR__ . $path) && $path !== '/index.php') {
+        return false;
+    }
+}
+
+$router->dispatch($uri, $method);

@@ -5,7 +5,7 @@ $badges = ['pending'=>'badge-warning','confirmed'=>'badge-info','shipped'=>'badg
 <div class="admin-topbar">
   <h1>Order #<?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?></h1>
   <div class="actions">
-    <a href="orders.php" class="btn btn-outline">← All Orders</a>
+    <a href="/admin/orders" class="btn btn-outline">← All Orders</a>
   </div>
 </div>
 
@@ -30,7 +30,7 @@ $badges = ['pending'=>'badge-warning','confirmed'=>'badge-info','shipped'=>'badg
           <tbody>
             <?php foreach ($order_items as $item): ?>
               <tr>
-                <td><a href="../product.php?slug=<?= h($item['slug']) ?>"><?= h($item['product_name']) ?></a></td>
+                <td><a href="/product?slug=<?= h($item['slug']) ?>"><?= h($item['product_name']) ?></a></td>
                 <td>£<?= number_format($item['unit_price'], 2) ?></td>
                 <td><?= $item['quantity'] ?></td>
                 <td><strong>£<?= number_format($item['unit_price'] * $item['quantity'], 2) ?></strong></td>
@@ -82,6 +82,7 @@ $badges = ['pending'=>'badge-warning','confirmed'=>'badge-info','shipped'=>'badg
         </h3>
         <form method="POST">
             <?= csrf_field() ?>
+            <input type="hidden" name="id" value="<?= (int)$order['id'] ?>">
           <div class="form-group">
             <select name="status" class="form-control">
               <?php foreach (['pending','confirmed','shipped','delivered','cancelled'] as $s): ?>
