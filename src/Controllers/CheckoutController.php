@@ -15,12 +15,14 @@ class CheckoutController {
             redirect('/cart');
         }
 
+        $user = AuthService::currentUser();
+
         Renderer::render('checkout', [
             'page_title' => 'Checkout',
             'items'      => $items,
             'total'      => CartService::total(),
             'errors'     => [],
-            'address'    => '',
+            'address'    => $user['address'] ?? '',
             'notes'      => '',
         ]);
     }

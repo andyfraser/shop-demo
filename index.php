@@ -36,6 +36,7 @@ $router->get('/register', [AuthController::class, 'showRegister']);
 $router->post('/register', [AuthController::class, 'register']);
 $router->get('/logout', [AuthController::class, 'logout']);
 $router->get('/account', [AccountController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/account/address', [AccountController::class, 'saveAddress'], [AuthMiddleware::class]);
 
 // Cart routes
 $router->get('/cart', [CartController::class, 'show']);

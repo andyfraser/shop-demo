@@ -24,6 +24,23 @@ $status_badges = [
         Member since <?= date('M Y', strtotime($current_user['created_at'])) ?>
       </div>
       <hr style="margin:1.2rem 0;border:none;border-top:1px solid var(--line);">
+
+      <?php if (flash('address_saved')): ?>
+        <div class="alert alert-success" style="margin-bottom:1rem;font-size:.8rem;">Address saved.</div>
+      <?php endif; ?>
+
+      <form method="POST" action="/account/address">
+        <?= csrf_field() ?>
+        <div class="form-group" style="margin-bottom:.75rem;">
+          <label style="font-size:.8rem;font-weight:600;">Shipping Address</label>
+          <textarea name="address" class="form-control" rows="4"
+                    placeholder="Enter your default shipping address"
+                    style="font-size:.85rem;"><?= h($current_user['address'] ?? '') ?></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">Save Address</button>
+      </form>
+
+      <hr style="margin:1.2rem 0;border:none;border-top:1px solid var(--line);">
       <a href="/logout" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">Sign Out</a>
     </div>
 

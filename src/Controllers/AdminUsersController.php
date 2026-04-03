@@ -62,6 +62,7 @@ class AdminUsersController {
         $name    = trim($_POST['name'] ?? '');
         $email   = trim($_POST['email'] ?? '');
         $role    = in_array($_POST['role'] ?? '', ['admin', 'customer']) ? $_POST['role'] : 'customer';
+        $address = trim($_POST['address'] ?? '');
         $pass    = $_POST['password'] ?? '';
 
         $errors = Validator::check($_POST, [
@@ -84,16 +85,16 @@ class AdminUsersController {
         if (!$errors) {
             if ($user_id) {
                 if ($pass) {
-                    $db->prepare("UPDATE users SET name=?, email=?, role=?, password_hash=? WHERE id=?")
-                       ->execute([$name, $email, $role, password_hash($pass, PASSWORD_DEFAULT), $user_id]);
+                    $db->prepare("UPDATE users SET name=?, email=?, role=?, address=?, password_hash=? WHERE id=?")
+                       ->execute([$name, $email, $role, $address, password_hash($pass, PASSWORD_DEFAULT), $user_id]);
                 } else {
-                    $db->prepare("UPDATE users SET name=?, email=?, role=? WHERE id=?")
-                       ->execute([$name, $email, $role, $user_id]);
+                    $db->prepare("UPDATE users SET name=?, email=?, role=?, address=? WHERE id=?")
+                       ->execute([$name, $email, $role, $address, $user_id]);
                 }
                 flash('msg', 'User updated.');
             } else {
-                $db->prepare("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)")
-                   ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role]);
+                $db->prepare("INSERT INTO users (name, email, password_hash, role, address) VALUES (?, ?, ?, ?, ?)")
+                   ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role, $address]);
                 flash('msg', 'User created.');
             }
             redirect('/admin/users');
@@ -103,7 +104,7 @@ class AdminUsersController {
             'page_title' => ($user_id ? 'Edit' : 'Add') . ' User',
             'active'     => 'users',
             'is_new'     => !$user_id,
-            'user'       => compact('name', 'email', 'role'),
+            'user'       => compact('name', 'email', 'role', 'address'),
             'user_id'    => $user_id,
             'errors'     => $errors,
         ]);

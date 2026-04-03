@@ -36,6 +36,11 @@ class Database {
             $pdo->exec("UPDATE products SET image = NULL WHERE image LIKE '%unsplash%'");
         }
 
+        $ucols = $pdo->query("PRAGMA table_info(users)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        if ($ucols && !in_array('address', $ucols)) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN address TEXT");
+        }
+
         $cols = $pdo->query("PRAGMA table_info(categories)")->fetchAll(PDO::FETCH_COLUMN, 1);
         if ($cols && !in_array('icon', $cols)) {
             $pdo->exec("ALTER TABLE categories ADD COLUMN icon TEXT");

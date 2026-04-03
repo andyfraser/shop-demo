@@ -42,6 +42,12 @@
       </div>
 
       <div class="form-group">
+        <label>Shipping Address</label>
+        <textarea name="address" class="form-control" rows="3"
+                  placeholder="Customer's default shipping address"><?= h($user['address'] ?? '') ?></textarea>
+      </div>
+
+      <div class="form-group">
         <label>Password <?= $user_id ? '(leave blank to keep current)' : '*' ?></label>
         <input type="password" name="password" class="form-control"
                <?= $is_new ? 'required' : '' ?> minlength="6">
