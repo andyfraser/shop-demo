@@ -25,6 +25,7 @@ A demo e-commerce application written in PHP with SQLite. No frameworks, no Comp
 - Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
 - Hierarchical category management with parent/child relationships
 - Role-based access control (admin / customer)
+- Configurable site settings: name, currency symbol, password policy, and rate-limit thresholds
 
 ---
 
@@ -97,7 +98,8 @@ shop-demo/
 │   │   ├── AdminCategoriesController.php
 │   │   ├── AdminProductsController.php
 │   │   ├── AdminOrdersController.php
-│   │   └── AdminUsersController.php
+│   │   ├── AdminUsersController.php
+│   │   └── AdminSettingsController.php
 │   │
 │   ├── Middleware/
 │   │   ├── AuthMiddleware.php          # Requires authenticated session
@@ -106,10 +108,12 @@ shop-demo/
 │   ├── Services/
 │   │   ├── AuthService.php             # Session login / logout / current user
 │   │   ├── CartService.php             # Session-based cart operations
-│   │   └── SecurityService.php         # CSRF tokens and rate limiting
+│   │   ├── SecurityService.php         # CSRF tokens and rate limiting
+│   │   └── SettingsService.php         # DB-backed key/value settings with defaults
 │   │
-│   └── Helpers.php         # Global helpers: h(), money(), redirect(), flash(),
-│                           #   csrf_field(), current_user(), product_img(), get_category_tree()
+│   └── Helpers.php         # Global helpers: h(), money(), setting(), redirect(), flash(),
+│                           #   csrf_field(), current_user(), cart_count(), product_img(),
+│                           #   slugify(), get_category_tree(), get_category_flat(), get_breadcrumb()
 │
 ├── templates/              # HTML-only templates — no queries or redirects
 │   ├── header.php
@@ -130,7 +134,8 @@ shop-demo/
 │       ├── categories_list.php / categories_form.php
 │       ├── products_list.php / products_form.php
 │       ├── orders_list.php / orders_detail.php
-│       └── users_list.php / users_form.php
+│       ├── users_list.php / users_form.php
+│       └── settings.php
 │
 └── public/
     ├── css/
@@ -149,7 +154,7 @@ All requests enter through `index.php` (front controller), which registers the a
 
 **Rendering:** Controllers fetch data and call `Renderer::render('template_name', ['var' => $val])`. The renderer extracts the data array, auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`), and wraps the template with `header.php` / `footer.php`. Admin pages use `Renderer::adminRender()`.
 
-**Database:** SQLite via PDO. `Database::getConnection()` returns the singleton; the schema runs automatically on first connection. Additive column migrations also run on init so existing databases are upgraded without data loss.
+**Database:** SQLite via PDO. `Database::getConnection()` returns the singleton; the schema runs automatically on first connection. Additive column migrations also run on init so existing databases are upgraded without data loss. A `settings` table stores editable key/value pairs read via `SettingsService`, which falls back to built-in defaults if a key is not yet in the database.
 
 **Session cart:** Stored in `$_SESSION['cart']` as `[product_id => quantity]`, managed entirely by `CartService`.
 
