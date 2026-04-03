@@ -12,16 +12,18 @@ A demo e-commerce application written in PHP with SQLite. No frameworks, no Comp
 
 **Storefront**
 - Hierarchical product categories with dropdown navigation
-- Product listings, detail pages, search
-- Session-based shopping cart
-- Checkout and order placement (no payment required)
-- Customer accounts with order history
+- Product listings with breadcrumbs, related products, and detail pages
+- Full-text product search with sorting and configurable pagination (12 / 24 / all)
+- Session-based shopping cart with AJAX add/update/remove and live badge counter
+- Checkout with saved shipping address pre-fill
+- Customer accounts with order history and saved shipping address
 - User registration and login
 
 **Admin panel** (`/admin/`)
-- Dashboard with live stats and low-stock alerts
-- Full CRUD for products, categories, and users
-- Order management with status updates
+- Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
+- Full CRUD for products (including image upload), categories, users, and orders
+- Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
+- Hierarchical category management with parent/child relationships
 - Role-based access control (admin / customer)
 
 ---
@@ -31,25 +33,11 @@ A demo e-commerce application written in PHP with SQLite. No frameworks, no Comp
 - PHP 8.0 or higher
 - Extensions: `pdo_sqlite` — enabled by default in most PHP installs
 
-On Ubuntu / Linux Mint:
+On Ubuntu / Debian:
 
 ```bash
 sudo apt install php php-sqlite3
 ```
-
-## Images
-
-Product images are stored in `public/images/`. When you add or edit a product in the admin panel you can upload a JPEG, PNG, GIF or WebP image (max 5MB). If no image is set a placeholder is shown automatically.
-
-### Downloading the demo images
-
-The demo products reference image files that aren't included in the repository. To fetch them run:
-
-```bash
-php download_images.php
-```
-
-This downloads the original images from Unsplash into `public/images/` with the correct filenames. Delete the script once done.
 
 ---
 
@@ -61,7 +49,7 @@ cd shop-demo
 php -S localhost:8080
 ```
 
-Open **http://localhost:8080** in your browser. The SQLite database is created and seeded automatically on first run.
+Open **http://localhost:8080** in your browser. The SQLite database (`shop.db`) is created and seeded automatically on first run.
 
 ---
 
@@ -72,7 +60,19 @@ Open **http://localhost:8080** in your browser. The SQLite database is created a
 | Admin    | `admin@shop.local`  | `password` |
 | Customer | `jane@example.com`  | `password` |
 
-To access the admin panel, log in as admin and visit `/admin/` — or simply navigate there directly and you'll be redirected to the login page first.
+To access the admin panel, log in as admin and visit `/admin/` — or navigate there directly and you'll be redirected to login first.
+
+---
+
+## Product Images
+
+Product images are stored in `public/images/`. When adding or editing a product in the admin panel you can upload a JPEG, PNG, GIF, or WebP image (max 5 MB). A placeholder is shown automatically when no image is set.
+
+The demo products reference image files not included in the repository. To fetch them from Unsplash:
+
+```bash
+php download_images.php
+```
 
 ---
 
@@ -81,16 +81,48 @@ To access the admin panel, log in as admin and visit `/admin/` — or simply nav
 ```
 shop-demo/
 │
-├── public/css/
-│   ├── shop.css            # Storefront styles
-│   └── admin.css           # Admin panel styles
+├── index.php               # Front controller — bootstraps app and registers all routes
+├── schema.sql              # Database schema and seed data
+├── shop.db                 # SQLite database (auto-created on first run)
 │
-├── templates/              # HTML templates — no business logic
+├── src/
+│   ├── Core/
+│   │   ├── Autoloader.php  # PSR-4 style class autoloader
+│   │   ├── Database.php    # SQLite PDO singleton + migrations
+│   │   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
+│   │   ├── Router.php      # HTTP router with middleware support
+│   │   └── Validator.php   # Field validation helpers
+│   │
+│   ├── Controllers/
+│   │   ├── StorefrontController.php   # Home, search, category, product pages
+│   │   ├── AuthController.php         # Login, register, logout
+│   │   ├── CartController.php         # Cart view, add, update (AJAX + form)
+│   │   ├── CheckoutController.php     # Checkout form and order processing
+│   │   ├── AccountController.php      # Customer account, order history, address
+│   │   ├── AdminDashboardController.php
+│   │   ├── AdminCategoriesController.php
+│   │   ├── AdminProductsController.php
+│   │   ├── AdminOrdersController.php
+│   │   └── AdminUsersController.php
+│   │
+│   ├── Middleware/
+│   │   ├── AuthMiddleware.php          # Requires authenticated session
+│   │   └── AdminMiddleware.php         # Requires admin role
+│   │
+│   ├── Services/
+│   │   ├── AuthService.php             # Session login / logout / current user
+│   │   ├── CartService.php             # Session-based cart operations
+│   │   └── SecurityService.php         # CSRF tokens and rate limiting
+│   │
+│   └── Helpers.php         # Global helpers: h(), money(), redirect(), flash(),
+│                           #   csrf_field(), current_user(), product_img(), get_category_tree()
+│
+├── templates/              # HTML-only templates — no queries or redirects
 │   ├── header.php
 │   ├── footer.php
 │   ├── home.php
-│   ├── product.php
 │   ├── category.php
+│   ├── product.php
 │   ├── search.php
 │   ├── cart.php
 │   ├── checkout.php
@@ -99,83 +131,46 @@ shop-demo/
 │   ├── login.php
 │   ├── register.php
 │   └── admin/
-│       ├── header.php
-│       ├── footer.php
+│       ├── header.php / footer.php
 │       ├── dashboard.php
-│       ├── products_list.php
-│       ├── products_form.php
-│       ├── categories_list.php
-│       ├── categories_form.php
-│       ├── orders_list.php
-│       ├── orders_detail.php
-│       ├── users_list.php
-│       └── users_form.php
+│       ├── categories_list.php / categories_form.php
+│       ├── products_list.php / products_form.php
+│       ├── orders_list.php / orders_detail.php
+│       └── users_list.php / users_form.php
 │
-├── admin/                  # Admin controllers
-│   ├── render.php
-│   ├── index.php
-│   ├── products.php
-│   ├── categories.php
-│   ├── orders.php
-│   └── users.php
-│
-├── bootstrap.php           # Database, session, cart, helpers
-├── render.php              # Template renderer
-├── schema.sql              # Schema and seed data
-│
-├── index.php               # Homepage
-├── product.php             # Product detail
-├── category.php            # Category listing
-├── search.php              # Search results
-├── cart.php                # Shopping cart
-├── checkout.php            # Checkout
-├── order_confirm.php       # Order confirmation
-├── account.php             # Account and order history
-├── login.php               # Sign in
-├── register.php            # Register
-└── logout.php              # Sign out
+└── public/
+    ├── css/
+    │   ├── shop.css        # Storefront styles (design tokens, responsive layout)
+    │   └── admin.css       # Admin panel styles
+    ├── js/
+    │   └── shop.js         # AJAX cart, toast notifications, dynamic UI
+    └── images/             # Uploaded and demo product images
 ```
 
 ---
 
 ## Architecture
 
-Controllers and templates are kept strictly separate:
+All requests enter through `index.php` (front controller), which registers the autoloader, defines constants, and dispatches to `src/Core/Router`. The router matches `REQUEST_URI` / `REQUEST_METHOD` against registered routes, runs any middleware, then calls the controller action.
 
-| Layer | Files | Responsibility |
-|---|---|---|
-| Controllers | `*.php`, `admin/*.php` | Database queries, validation, redirects |
-| Templates | `templates/**/*.php` | HTML output only — no queries or redirects |
-| Styles | `public/css/*.css` | CSS only |
+**Rendering:** Controllers fetch data and call `Renderer::render('template_name', ['var' => $val])`. The renderer extracts the data array, auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`), and wraps the template with `header.php` / `footer.php`. Admin pages use `Renderer::adminRender()`.
 
-### How rendering works
+**Database:** SQLite via PDO. `Database::getConnection()` returns the singleton; the schema runs automatically on first connection. Additive column migrations also run on init so existing databases are upgraded without data loss.
 
-Each controller fetches its data, then hands it to `render()`:
+**Session cart:** Stored in `$_SESSION['cart']` as `[product_id => quantity]`, managed entirely by `CartService`.
 
-```php
-// product.php
-$product = db()->prepare("SELECT ...")->fetch();
-$breadcrumb = get_breadcrumb($product['category_id']);
-
-render('product', [
-    'page_title' => $product['name'],
-    'product'    => $product,
-    'breadcrumb' => $breadcrumb,
-]);
-```
-
-`render()` injects shared variables (`$current_user`, `$cart_count`, `$nav_tree`) and includes `header.php`, the named template, then `footer.php`. Templates receive variables via `extract()` and contain only HTML.
-
-The admin panel works the same way via `admin_render()` in `admin/render.php`.
+**Security:** Every POST form includes a CSRF token (`csrf_field()`), verified by `SecurityService::validateCsrf()`. Login and registration are rate-limited (5 attempts / 15 min and 10 attempts / hour respectively). Admin routes are protected by `AdminMiddleware`.
 
 ---
 
-## Security Notes
+## Adding a New Route
 
-This is a demonstration project. For production use you would need to:
+1. Register the route in `index.php` with `$router->get()` or `$router->post()`, passing middleware as the third argument if needed.
+2. Add the action method to the appropriate controller in `src/Controllers/`.
+3. Create a template in `templates/` and call `Renderer::render()` from the controller.
 
-- Move `shop.db` outside the web root
-- Add CSRF tokens to all forms
-- Add rate limiting on login and registration
-- Enforce HTTPS
-- Add `Content-Security-Policy` and other security headers
+---
+
+## No External Dependencies
+
+Do not add Composer packages or any external libraries. Use only PHP 8 built-ins.
