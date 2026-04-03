@@ -19,6 +19,7 @@ if (!$product) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+    verify_csrf();
     $qty = max(1, (int)($_POST['qty'] ?? 1));
     cart_add($product['id'], $qty);
     flash('success', money($qty * $product['price']) . ' added to your cart.');

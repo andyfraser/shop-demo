@@ -23,6 +23,7 @@ if ($action === 'delete' && $user_id) {
 
 // ── Save ──────────────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
+    verify_csrf();
     $user_id = (int)($_POST['id'] ?? 0);
     $name    = trim($_POST['name'] ?? '');
     $email   = trim($_POST['email'] ?? '');

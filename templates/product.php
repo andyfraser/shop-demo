@@ -53,6 +53,7 @@
 
       <?php if ($product['stock'] > 0): ?>
         <form method="POST">
+            <?= csrf_field() ?>
           <div class="qty-row">
             <div class="form-group" style="margin:0">
               <label for="qty">Quantity</label>

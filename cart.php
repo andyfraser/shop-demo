@@ -3,6 +3,7 @@ require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/render.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
     if (isset($_POST['update'])) {
         foreach (($_POST['qty'] ?? []) as $id => $qty) {
             cart_update((int)$id, (int)$qty);

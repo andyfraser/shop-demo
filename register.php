@@ -12,6 +12,9 @@ $name   = '';
 $email  = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
+    check_rate_limit('register', $_SERVER['REMOTE_ADDR'], 10, 3600);
+
     $name  = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $pass  = $_POST['password'] ?? '';
@@ -34,9 +37,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt = db()->prepare("SELECT * FROM users WHERE email = ?");
             $stmt->execute([$email]);
+            session_regenerate_id(true);
             $_SESSION['user'] = $stmt->fetch();
             redirect('index.php');
         }
+    }
+    
+    if ($errors) {
+        record_rate_limit('register', $_SERVER['REMOTE_ADDR']);
     }
 }
 

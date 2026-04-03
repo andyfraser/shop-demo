@@ -9,6 +9,7 @@
   <?php endif; ?>
 
   <form method="POST">
+    <?= csrf_field() ?>
     <div class="checkout-grid">
       <div>
         <div class="card">

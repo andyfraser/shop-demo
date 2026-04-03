@@ -16,6 +16,7 @@
 
     <div class="card">
       <form method="POST">
+        <?= csrf_field() ?>
         <div class="form-group">
           <label for="email">Email address</label>
           <input type="email" id="email" name="email" class="form-control"

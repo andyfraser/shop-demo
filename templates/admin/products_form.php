@@ -16,6 +16,7 @@
 
   <div class="card" style="max-width:800px;">
     <form method="POST" enctype="multipart/form-data">
+        <?= csrf_field() ?>
       <?php if ($product_id): ?>
         <input type="hidden" name="id" value="<?= $product_id ?>">
       <?php endif; ?>

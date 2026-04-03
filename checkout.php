@@ -14,6 +14,7 @@ $address = '';
 $notes   = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
     $address = trim($_POST['address'] ?? '');
     $notes   = trim($_POST['notes'] ?? '');
 

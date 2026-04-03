@@ -50,6 +50,13 @@ CREATE TABLE IF NOT EXISTS order_items (
     unit_price REAL NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS rate_limits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    action TEXT NOT NULL,
+    ip_address TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Seed Categories
 INSERT OR IGNORE INTO categories (id, name, slug, parent_id, description, icon) VALUES
 (1, 'Electronics', 'electronics', NULL, 'Gadgets, devices and tech', '💻'),

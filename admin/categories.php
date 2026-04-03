@@ -20,6 +20,7 @@ if ($action === 'delete' && $category_id) {
 
 // ── Save ──────────────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
+    verify_csrf();
     $category_id = (int)($_POST['id'] ?? 0);
     $name        = trim($_POST['name'] ?? '');
     $parent_id   = $_POST['parent_id'] ? (int)$_POST['parent_id'] : null;

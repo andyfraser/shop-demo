@@ -45,6 +45,7 @@ function handle_upload(): ?string {
 
 // ── Save (create or update) ───────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
+    verify_csrf();
     $product = [
         'name'        => trim($_POST['name'] ?? ''),
         'description' => trim($_POST['description'] ?? ''),

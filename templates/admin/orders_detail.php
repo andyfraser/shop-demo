@@ -81,6 +81,7 @@ $badges = ['pending'=>'badge-warning','confirmed'=>'badge-info','shipped'=>'badg
           Update Status
         </h3>
         <form method="POST">
+            <?= csrf_field() ?>
           <div class="form-group">
             <select name="status" class="form-control">
               <?php foreach (['pending','confirmed','shipped','delivered','cancelled'] as $s): ?>

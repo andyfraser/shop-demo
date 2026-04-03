@@ -11,6 +11,9 @@ $errors = [];
 $email  = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
+    check_rate_limit('login', $_SERVER['REMOTE_ADDR'], 5, 900);
+
     $email = trim($_POST['email'] ?? '');
     $pass  = $_POST['password'] ?? '';
 
@@ -19,8 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($pass, $user['password_hash'])) {
+        record_rate_limit('login', $_SERVER['REMOTE_ADDR']);
         $errors[] = 'Invalid email or password.';
     } else {
+        clear_rate_limit('login', $_SERVER['REMOTE_ADDR']);
+        session_regenerate_id(true);
         $_SESSION['user'] = $user;
         redirect($_SESSION['redirect_after_login'] ?? 'index.php');
     }

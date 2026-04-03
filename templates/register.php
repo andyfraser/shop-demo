@@ -12,6 +12,7 @@
 
     <div class="card">
       <form method="POST">
+        <?= csrf_field() ?>
         <div class="form-group">
           <label for="name">Full Name</label>
           <input type="text" id="name" name="name" class="form-control"

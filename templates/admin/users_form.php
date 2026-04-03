@@ -16,6 +16,7 @@
 
   <div class="card" style="max-width:480px;">
     <form method="POST">
+        <?= csrf_field() ?>
       <?php if ($user_id): ?>
         <input type="hidden" name="id" value="<?= $user_id ?>">
       <?php endif; ?>

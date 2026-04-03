@@ -221,3 +221,54 @@ function get_breadcrumb(int $category_id): array {
     }
     return $crumbs;
 }
+
+// ─── Security ─────────────────────────────────────────────────────────────────
+function csrf_token(): string {
+    session();
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_field(): string {
+    $token = h(csrf_token());
+    return '<input type="hidden" name="csrf_token" value="' . $token . '">';
+}
+
+function verify_csrf(): void {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        session();
+        $passed = $_POST['csrf_token'] ?? '';
+        $stored = $_SESSION['csrf_token'] ?? '';
+        if (empty($passed) || !hash_equals($stored, $passed)) {
+            http_response_code(403);
+            die('Invalid CSRF token. Please go back and try again.');
+        }
+    }
+}
+
+function check_rate_limit(string $action, string $ip, int $limit, int $window_seconds): void {
+    $db = db();
+    $stmt = $db->prepare(
+        "SELECT COUNT(*) FROM rate_limits 
+         WHERE action = ? AND ip_address = ? AND created_at >= datetime('now', ?)"
+    );
+    $stmt->execute([$action, $ip, "-$window_seconds seconds"]);
+    $count = (int)$stmt->fetchColumn();
+    
+    if ($count >= $limit) {
+        http_response_code(429);
+        die('Too many attempts. Please try again later.');
+    }
+}
+
+function record_rate_limit(string $action, string $ip): void {
+    db()->prepare("INSERT INTO rate_limits (action, ip_address) VALUES (?, ?)")
+      ->execute([$action, $ip]);
+}
+
+function clear_rate_limit(string $action, string $ip): void {
+    db()->prepare("DELETE FROM rate_limits WHERE action = ? AND ip_address = ?")
+      ->execute([$action, $ip]);
+}

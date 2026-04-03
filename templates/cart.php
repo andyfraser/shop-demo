@@ -19,6 +19,7 @@
       <div>
         <div class="card" style="padding:0;overflow:hidden;">
           <form method="POST">
+            <?= csrf_field() ?>
             <table class="cart-table">
               <thead>
                 <tr>

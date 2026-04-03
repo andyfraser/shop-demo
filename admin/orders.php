@@ -9,6 +9,7 @@ $order_id   = (int)($_GET['id'] ?? 0);
 
 // ── Update status ─────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
+    verify_csrf();
     $allowed = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
     $status  = in_array($_POST['status'], $allowed) ? $_POST['status'] : 'pending';
     $db->prepare("UPDATE orders SET status = ? WHERE id = ?")->execute([$status, $order_id]);
