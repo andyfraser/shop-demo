@@ -31,17 +31,31 @@ $badges = ['pending'=>'badge-warning','confirmed'=>'badge-info','shipped'=>'badg
             <?php foreach ($order_items as $item): ?>
               <tr>
                 <td><a href="/product/<?= h($item['slug']) ?>"><?= h($item['product_name']) ?></a></td>
-                <td>£<?= number_format($item['unit_price'], 2) ?></td>
+                <td><?= money($item['unit_price']) ?></td>
                 <td><?= $item['quantity'] ?></td>
-                <td><strong>£<?= number_format($item['unit_price'] * $item['quantity'], 2) ?></strong></td>
+                <td><strong><?= money($item['unit_price'] * $item['quantity']) ?></strong></td>
               </tr>
             <?php endforeach; ?>
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="3" style="text-align:right;font-weight:600;padding:.8rem 1rem;">Total</td>
+              <td colspan="3" style="text-align:right;font-weight:600;padding:.8rem 1rem;">Subtotal</td>
               <td style="padding:.8rem 1rem;">
-                <strong style="font-size:1.05rem;">£<?= number_format($order['total'], 2) ?></strong>
+                <strong><?= money($order['total'] - ($order['delivery_cost'] ?? 0)) ?></strong>
+              </td>
+            </tr>
+            <?php if ($order['delivery_method']): ?>
+            <tr>
+              <td colspan="3" style="text-align:right;font-weight:600;padding:.8rem 1rem;">Delivery (<?= h($order['delivery_method']) ?>)</td>
+              <td style="padding:.8rem 1rem;">
+                <strong><?= money($order['delivery_cost']) ?></strong>
+              </td>
+            </tr>
+            <?php endif; ?>
+            <tr>
+              <td colspan="3" style="text-align:right;font-weight:700;padding:.8rem 1rem;font-size:1.1rem;">Total</td>
+              <td style="padding:.8rem 1rem;">
+                <strong style="font-size:1.2rem;color:var(--accent-2);"><?= money($order['total']) ?></strong>
               </td>
             </tr>
           </tfoot>

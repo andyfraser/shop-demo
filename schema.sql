@@ -40,7 +40,17 @@ CREATE TABLE IF NOT EXISTS orders (
     total REAL NOT NULL,
     shipping_address TEXT,
     notes TEXT,
+    delivery_method TEXT,
+    delivery_cost REAL DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS delivery_options (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    price REAL NOT NULL,
+    active INTEGER DEFAULT 1,
+    min_order_total REAL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS order_items (
@@ -130,5 +140,11 @@ Bring games to life with a larger 1080p screen—or connect to a TV and play in 
 (19, 'Petface House Scratcher', 'petface-house-scratcher', 'This Cat house scratcher gives your cat a place to have fun, exercise, explore, scratch and just relax. It features three different locations for them to relax including a house and a ladder.', 70.00, 14, 20, 'img_69bd632bc82e28.46608911.webp', 1),
 (20, 'Cat Lounge and Play Scratcher', 'cat-lounge-and-play-scratcher', 'This cozy home they can call their own features a roomy condo, relaxing lounge basket, and two perfectly placed perches. Partially wrapped jute posts encourage satisfying cat-scratching sessions that can help maintain healthy nails. This cat tree is designed with overall stability in mind so you can feel good letting your fur friend climb, scratch, play, and nap to their heart''s content.', 88.00, 6, 20, 'img_69bd63cfc64980.14864876.webp', 1),
 (21, 'Ninja 7.6L Foodi Dual Zone Air Fryer and Dehydrator', 'ninja-7-6l-foodi-dual-zone-air-fryer-and-dehydrator', 'The air fryer that cooks 2 foods, 2 ways, and finishes at the same time. With 2 independent cooking zones, Sync to use different programs and times in each drawer - both finish cooking at the same time! Enjoy freshly cooked mains and sides together or cater to two different tastes. More people to feed? Match to make double the amount of food in the same amount of time! Uses little to no oil. 6 cooking functions. Cook from frozen. Extra-large 7.6L capacity. Dishwasher-safe parts.', 200.00, 22, 9, 'img_69cfa1d4e5f6c3.95570107.jpg', 1);
+
+-- Seed Delivery Options
+INSERT OR IGNORE INTO delivery_options (id, name, price, active, min_order_total) VALUES
+(1, 'Standard Delivery', 3.99, 1, 0),
+(2, 'Next Day Delivery', 6.99, 1, 0),
+(3, 'Free Shipping (Over £50)', 0.00, 1, 50.00);
 
 -- Users are seeded in bootstrap.php so passwords are properly hashed at runtime

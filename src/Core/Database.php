@@ -46,7 +46,5 @@ class Database {
     }
 
     private static function migrations(): void {
-        $pdo = self::$pdo;
-        $pdo->exec("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
     }
 }

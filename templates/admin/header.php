@@ -33,6 +33,9 @@
     <a href="/admin/orders"     class="<?= $active === 'orders'     ? 'active' : '' ?>">
       <span class="ico">🧾</span> Orders
     </a>
+    <a href="/admin/delivery"   class="<?= $active === 'delivery'   ? 'active' : '' ?>">
+      <span class="ico">🚚</span> Delivery
+    </a>
     <div class="sidebar-section">Users</div>
     <a href="/admin/users"      class="<?= $active === 'users'      ? 'active' : '' ?>">
       <span class="ico">👥</span> Users

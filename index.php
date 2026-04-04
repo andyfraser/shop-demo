@@ -17,6 +17,7 @@ use App\Controllers\AdminDashboardController;
 use App\Controllers\AdminCategoriesController;
 use App\Controllers\AdminProductsController;
 use App\Controllers\AdminOrdersController;
+use App\Controllers\AdminDeliveryController;
 use App\Controllers\AdminUsersController;
 use App\Controllers\AdminSettingsController;
 use App\Controllers\AccountController;
@@ -71,6 +72,13 @@ $router->get('/admin/products/delete', [AdminProductsController::class, 'delete'
 $router->get('/admin/orders', [AdminOrdersController::class, 'list'], $adminMiddleware);
 $router->get('/admin/orders/detail', [AdminOrdersController::class, 'detail'], $adminMiddleware);
 $router->post('/admin/orders/detail', [AdminOrdersController::class, 'updateStatus'], $adminMiddleware);
+
+$router->get('/admin/delivery', [AdminDeliveryController::class, 'list'], $adminMiddleware);
+$router->get('/admin/delivery/new', [AdminDeliveryController::class, 'create'], $adminMiddleware);
+$router->get('/admin/delivery/edit', [AdminDeliveryController::class, 'edit'], $adminMiddleware);
+$router->post('/admin/delivery/new', [AdminDeliveryController::class, 'save'], $adminMiddleware);
+$router->post('/admin/delivery/edit', [AdminDeliveryController::class, 'save'], $adminMiddleware);
+$router->get('/admin/delivery/delete', [AdminDeliveryController::class, 'delete'], $adminMiddleware);
 
 $router->get('/admin/users', [AdminUsersController::class, 'list'], $adminMiddleware);
 $router->get('/admin/users/new', [AdminUsersController::class, 'create'], $adminMiddleware);

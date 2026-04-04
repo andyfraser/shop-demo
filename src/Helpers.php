@@ -70,6 +70,10 @@ function cart_count(): int {
     return CartService::count();
 }
 
+function delivery_options(): array {
+    return \App\Services\DeliveryService::active();
+}
+
 function get_category_tree(): array {
     $all = App\Core\Database::getConnection()->query("SELECT * FROM categories ORDER BY name")->fetchAll();
     $tree = [];

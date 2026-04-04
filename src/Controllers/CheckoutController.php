@@ -7,6 +7,7 @@ use App\Core\Validator;
 use App\Services\CartService;
 use App\Services\AuthService;
 use App\Services\SecurityService;
+use App\Services\DeliveryService;
 
 class CheckoutController {
     public function show() {
@@ -24,6 +25,8 @@ class CheckoutController {
             'errors'     => [],
             'address'    => $user['address'] ?? '',
             'notes'      => '',
+            'delivery_options' => DeliveryService::active(CartService::total()),
+            'delivery_id' => null,
         ]);
     }
 
@@ -35,22 +38,29 @@ class CheckoutController {
 
         SecurityService::verifyCsrf();
 
-        $address = trim($_POST['address'] ?? '');
-        $notes   = trim($_POST['notes'] ?? '');
+        $address    = trim($_POST['address'] ?? '');
+        $notes      = trim($_POST['notes'] ?? '');
+        $deliveryId = (int)($_POST['delivery_option_id'] ?? 0);
 
         $errors = Validator::check($_POST, [
-            'address' => 'required',
+            'address'            => 'required',
+            'delivery_option_id' => 'required',
         ]);
+
+        $delivery = DeliveryService::get($deliveryId);
+        if (!$delivery || !$delivery['active']) {
+            $errors['delivery_option_id'] = 'Please select a valid delivery method.';
+        }
 
         if (!$errors) {
             $user  = AuthService::currentUser();
-            $total = CartService::total();
+            $total = CartService::total() + $delivery['price'];
             $db    = Database::getConnection();
 
             $db->prepare(
-                "INSERT INTO orders (user_id, total, shipping_address, notes, status)
-                 VALUES (?, ?, ?, ?, 'pending')"
-            )->execute([$user['id'], $total, $address, $notes]);
+                "INSERT INTO orders (user_id, total, shipping_address, notes, status, delivery_method, delivery_cost)
+                 VALUES (?, ?, ?, ?, 'pending', ?, ?)"
+            )->execute([$user['id'], $total, $address, $notes, $delivery['name'], $delivery['price']]);
 
             $order_id = $db->lastInsertId();
 
@@ -75,6 +85,8 @@ class CheckoutController {
             'errors'     => $errors,
             'address'    => $address,
             'notes'      => $notes,
+            'delivery_options' => DeliveryService::active(CartService::total()),
+            'delivery_id' => $deliveryId,
         ]);
     }
 

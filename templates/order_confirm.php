@@ -27,8 +27,8 @@
     </div>
 
     <h3 style="font-family:var(--font-display);margin-bottom:.75rem;">Items</h3>
-    <?php foreach ($order_items as $item): ?>
-      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);font-size:.875rem;">
+    <?php foreach ($order_items as $i => $item): ?>
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;<?= $i < count($order_items) - 1 ? 'border-bottom:1px solid var(--line);' : '' ?>font-size:.875rem;">
         <span>
           <a href="/product/<?= h($item['slug']) ?>"><?= h($item['name']) ?></a>
           × <?= $item['quantity'] ?>
@@ -36,6 +36,23 @@
         <strong><?= money($item['unit_price'] * $item['quantity']) ?></strong>
       </div>
     <?php endforeach; ?>
+
+    <div style="margin-top:1.2rem;border-top:2px solid var(--line);padding-top:1rem;">
+      <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;">
+        <span>Subtotal</span>
+        <strong><?= money($order['total'] - ($order['delivery_cost'] ?? 0)) ?></strong>
+      </div>
+      <?php if ($order['delivery_method']): ?>
+      <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;">
+        <span>Delivery (<?= h($order['delivery_method']) ?>)</span>
+        <strong><?= money($order['delivery_cost']) ?></strong>
+      </div>
+      <?php endif; ?>
+      <div style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.15rem;font-weight:700;margin-top:.5rem;">
+        <span>Total</span>
+        <span style="color:var(--accent-2)"><?= money($order['total']) ?></span>
+      </div>
+    </div>
 
     <div style="margin-top:1.2rem;">
       <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin-bottom:.3rem;">Shipping to</div>
