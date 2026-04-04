@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS orders (
     notes TEXT,
     delivery_method TEXT,
     delivery_cost REAL DEFAULT 0,
+    customer_email TEXT,
+    customer_name TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

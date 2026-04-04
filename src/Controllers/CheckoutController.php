@@ -23,10 +23,13 @@ class CheckoutController {
             'items'      => $items,
             'total'      => CartService::total(),
             'errors'     => [],
+            'name'       => $user['name'] ?? '',
+            'email'      => $user['email'] ?? '',
             'address'    => $user['address'] ?? '',
             'notes'      => '',
             'delivery_options' => DeliveryService::active(CartService::total()),
             'delivery_id' => null,
+            'is_guest'   => $user === null,
         ]);
     }
 
@@ -38,14 +41,20 @@ class CheckoutController {
 
         SecurityService::verifyCsrf();
 
+        $name       = trim($_POST['name'] ?? '');
+        $email      = trim($_POST['email'] ?? '');
         $address    = trim($_POST['address'] ?? '');
         $notes      = trim($_POST['notes'] ?? '');
         $deliveryId = (int)($_POST['delivery_option_id'] ?? 0);
 
-        $errors = Validator::check($_POST, [
+        $rules = [
+            'name'               => 'required',
+            'email'              => 'required|email',
             'address'            => 'required',
             'delivery_option_id' => 'required',
-        ]);
+        ];
+
+        $errors = Validator::check($_POST, $rules);
 
         $delivery = DeliveryService::get($deliveryId);
         if (!$delivery || !$delivery['active']) {
@@ -58,9 +67,18 @@ class CheckoutController {
             $db    = Database::getConnection();
 
             $db->prepare(
-                "INSERT INTO orders (user_id, total, shipping_address, notes, status, delivery_method, delivery_cost)
-                 VALUES (?, ?, ?, ?, 'pending', ?, ?)"
-            )->execute([$user['id'], $total, $address, $notes, $delivery['name'], $delivery['price']]);
+                "INSERT INTO orders (user_id, customer_name, customer_email, total, shipping_address, notes, status, delivery_method, delivery_cost)
+                 VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)"
+            )->execute([
+                $user['id'] ?? null,
+                $name,
+                $email,
+                $total,
+                $address,
+                $notes,
+                $delivery['name'],
+                $delivery['price']
+            ]);
 
             $order_id = $db->lastInsertId();
 
@@ -75,6 +93,11 @@ class CheckoutController {
             }
 
             CartService::clear();
+            
+            // Allow guest to see confirmation
+            AuthService::sessionStart();
+            $_SESSION['last_order_id'] = (int)$order_id;
+            
             redirect('/order/confirm?id=' . $order_id);
         }
 
@@ -83,10 +106,13 @@ class CheckoutController {
             'items'      => $items,
             'total'      => CartService::total(),
             'errors'     => $errors,
+            'name'       => $name,
+            'email'      => $email,
             'address'    => $address,
             'notes'      => $notes,
             'delivery_options' => DeliveryService::active(CartService::total()),
             'delivery_id' => $deliveryId,
+            'is_guest'   => AuthService::currentUser() === null,
         ]);
     }
 
@@ -98,8 +124,13 @@ class CheckoutController {
         $stmt->execute([$order_id]);
         $order = $stmt->fetch();
 
-        if (!$order || $order['user_id'] !== AuthService::currentUser()['id']) {
-            redirect('/account');
+        $user = AuthService::currentUser();
+        AuthService::sessionStart();
+        $is_owner = ($user && $order && $order['user_id'] === $user['id']) || 
+                    (isset($_SESSION['last_order_id']) && $_SESSION['last_order_id'] === $order_id);
+
+        if (!$order || !$is_owner) {
+            redirect('/');
         }
 
         $stmt = $db->prepare(

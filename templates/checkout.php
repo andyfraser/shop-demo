@@ -15,12 +15,12 @@
         <div class="card">
           <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1.2rem;">Delivery Details</h2>
           <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" class="form-control" value="<?= h($current_user['name']) ?>" disabled>
+            <label for="name">Full Name <span style="color:var(--accent)">*</span></label>
+            <input type="text" id="name" name="name" class="form-control" value="<?= h($name ?? '') ?>" <?= !$is_guest ? 'readonly' : '' ?> required>
           </div>
           <div class="form-group">
-            <label>Email</label>
-            <input type="email" class="form-control" value="<?= h($current_user['email']) ?>" disabled>
+            <label for="email">Email <span style="color:var(--accent)">*</span></label>
+            <input type="email" id="email" name="email" class="form-control" value="<?= h($email ?? '') ?>" <?= !$is_guest ? 'readonly' : '' ?> required>
           </div>
           <div class="form-group">
             <label for="address">Shipping Address <span style="color:var(--accent)">*</span></label>

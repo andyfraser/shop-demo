@@ -55,13 +55,20 @@
     </div>
 
     <div style="margin-top:1.2rem;">
+      <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin-bottom:.3rem;">Customer</div>
+      <div style="font-size:.875rem;"><strong><?= h($order['customer_name']) ?></strong> (<?= h($order['customer_email']) ?>)</div>
+    </div>
+
+    <div style="margin-top:1.2rem;">
       <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin-bottom:.3rem;">Shipping to</div>
       <div style="font-size:.875rem;"><?= nl2br(h($order['shipping_address'])) ?></div>
     </div>
   </div>
 
   <div style="display:flex;gap:1rem;margin-top:1.5rem;justify-content:center;">
-    <a href="/account" class="btn btn-outline">View My Orders</a>
+    <?php if ($current_user): ?>
+      <a href="/account" class="btn btn-outline">View My Orders</a>
+    <?php endif; ?>
     <a href="/" class="btn btn-primary">Continue Shopping</a>
   </div>
 </div>

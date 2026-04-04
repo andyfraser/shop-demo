@@ -15,7 +15,9 @@ class AdminOrdersController {
                     : '';
 
         $orders = $db->query(
-            "SELECT o.*, u.name as user_name
+            "SELECT o.*, 
+                    COALESCE(u.name, o.customer_name) as user_name,
+                    COALESCE(u.email, o.customer_email) as user_email
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
              $where
@@ -39,7 +41,9 @@ class AdminOrdersController {
         }
 
         $stmt = $db->prepare(
-            "SELECT o.*, u.name as user_name, u.email as user_email
+            "SELECT o.*, 
+                    COALESCE(u.name, o.customer_name) as user_name,
+                    COALESCE(u.email, o.customer_email) as user_email
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
              WHERE o.id = ?"

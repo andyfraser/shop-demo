@@ -46,5 +46,15 @@ class Database {
     }
 
     private static function migrations(): void {
+        $pdo = self::$pdo;
+        
+        // Add customer_email and customer_name columns if they don't exist
+        $cols = $pdo->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        if (!in_array('customer_email', $cols)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN customer_email TEXT");
+        }
+        if (!in_array('customer_name', $cols)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN customer_name TEXT");
+        }
     }
 }

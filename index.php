@@ -47,9 +47,9 @@ $router->get('/cart', [CartController::class, 'show']);
 $router->post('/cart', [CartController::class, 'update']);
 
 // Checkout routes
-$router->get('/checkout', [CheckoutController::class, 'show'], [AuthMiddleware::class]);
-$router->post('/checkout', [CheckoutController::class, 'process'], [AuthMiddleware::class]);
-$router->get('/order/confirm', [CheckoutController::class, 'confirm'], [AuthMiddleware::class]);
+$router->get('/checkout', [CheckoutController::class, 'show']);
+$router->post('/checkout', [CheckoutController::class, 'process']);
+$router->get('/order/confirm', [CheckoutController::class, 'confirm']);
 
 // Admin routes
 $adminMiddleware = [AdminMiddleware::class];
