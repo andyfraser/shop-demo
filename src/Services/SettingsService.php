@@ -28,7 +28,7 @@ class SettingsService {
 
     public static function set(string $key, string $value): void {
         Database::getConnection()
-            ->prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)")
+            ->prepare("REPLACE INTO settings (key, value) VALUES (?, ?)")
             ->execute([$key, $value]);
         self::$cache = null;
     }

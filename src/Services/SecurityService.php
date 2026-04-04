@@ -30,11 +30,12 @@ class SecurityService {
 
     public static function checkRateLimit(string $action, string $ip, int $limit, int $windowSeconds): void {
         $db = Database::getConnection();
+        $since = date('Y-m-d H:i:s', time() - $windowSeconds);
         $stmt = $db->prepare(
             "SELECT COUNT(*) FROM rate_limits 
-             WHERE action = ? AND ip_address = ? AND created_at >= datetime('now', ?)"
+             WHERE action = ? AND ip_address = ? AND created_at >= ?"
         );
-        $stmt->execute([$action, $ip, "-$windowSeconds seconds"]);
+        $stmt->execute([$action, $ip, $since]);
         $count = (int)$stmt->fetchColumn();
         
         if ($count >= $limit) {
