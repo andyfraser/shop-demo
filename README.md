@@ -77,8 +77,9 @@ Product images are stored in `public/images/`. When adding or editing a product 
 shop-demo/
 │
 ├── index.php               # Front controller — bootstraps app and registers all routes
-├── schema.sql              # Database schema and seed data
-├── shop.db                 # SQLite database (auto-created on first run)
+├── sqlite_schema.sql      # SQLite database schema and seed data
+├── mysql_schema.sql       # MySQL database schema and seed data
+├── shop.db                # SQLite database (auto-created on first run)
 │
 ├── src/
 │   ├── Core/

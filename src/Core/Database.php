@@ -2,23 +2,61 @@
 namespace App\Core;
 
 use PDO;
+use PDOException;
 
 class Database {
     private static ?PDO $pdo = null;
 
     public static function getConnection(): PDO {
         if (self::$pdo === null) {
-            $dbPath = defined('DB_PATH') ? DB_PATH : __DIR__ . '/../../shop.db';
-            $isNewDatabase = !file_exists($dbPath);
+            $config = defined('DB_CONFIG') ? DB_CONFIG : [
+                'driver' => 'sqlite',
+                'path'   => __DIR__ . '/../../shop.db',
+            ];
 
-            self::$pdo = new PDO('sqlite:' . $dbPath);
-            self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-            self::$pdo->exec('PRAGMA foreign_keys = ON');
+            $driver = $config['driver'] ?? 'sqlite';
 
-            // Only initialise schema if DB didn't exist before
-            if ($isNewDatabase) {
-                self::initDatabase();
+            if ($driver === 'sqlite') {
+                $dbPath = $config['path'] ?? __DIR__ . '/../../shop.db';
+                $isNewDatabase = !file_exists($dbPath);
+
+                self::$pdo = new PDO('sqlite:' . $dbPath);
+                self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+                self::$pdo->exec('PRAGMA foreign_keys = ON');
+
+                if ($isNewDatabase) {
+                    self::initDatabase();
+                }
+            } else if ($driver === 'mysql') {
+                $host    = $config['host'] ?? 'localhost';
+                $dbname  = $config['dbname'] ?? 'shop_demo';
+                $user    = $config['user'] ?? 'root';
+                $pass    = $config['pass'] ?? '';
+                $charset = $config['charset'] ?? 'utf8mb4';
+
+                try {
+                    $dsn = "mysql:host={$host};dbname={$dbname};charset={$charset}";
+                    self::$pdo = new PDO($dsn, $user, $pass);
+                    
+                    // Check if database is empty
+                    $tables = self::$pdo->query("SHOW TABLES")->fetchAll();
+                    if (empty($tables)) {
+                        self::initDatabase();
+                    }
+                } catch (PDOException $e) {
+                    // If database doesn't exist (Error code 1049)
+                    if ($e->getCode() == 1049) {
+                        self::createMySQLDatabase($host, $dbname, $user, $pass, $charset);
+                    } else {
+                        throw $e;
+                    }
+                }
+
+                self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            } else {
+                throw new \Exception("Unsupported database driver: " . $driver);
             }
 
             self::migrations();
@@ -26,30 +64,69 @@ class Database {
         return self::$pdo;
     }
 
+    private static function createMySQLDatabase($host, $dbname, $user, $pass, $charset): void {
+        $dsn = "mysql:host={$host};charset={$charset}";
+        $pdo = new PDO($dsn, $user, $pass);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        
+        $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbname}` CHARACTER SET {$charset}");
+        
+        $dsnWithDb = "mysql:host={$host};dbname={$dbname};charset={$charset}";
+        self::$pdo = new PDO($dsnWithDb, $user, $pass);
+        self::initDatabase();
+    }
+
     private static function initDatabase(): void {
         $pdo = self::$pdo;
-        $schemaPath = __DIR__ . '/../../schema.sql';
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        
+        $schemaFile = ($driver === 'mysql') ? 'mysql_schema.sql' : 'sqlite_schema.sql';
+        $schemaPath = __DIR__ . '/../../' . $schemaFile;
+        
         if (file_exists($schemaPath)) {
             $schema = file_get_contents($schemaPath);
-            $pdo->exec($schema);
+            
+            if ($driver === 'mysql') {
+                // Split by ; and execute one by one for MySQL
+                $statements = array_filter(array_map('trim', explode(';', $schema)));
+                foreach ($statements as $sql) {
+                    if (empty($sql)) continue;
+                    try {
+                        $pdo->exec($sql);
+                    } catch (PDOException $e) {
+                        // Ignore "index already exists" errors for MySQL if we were re-running
+                        if (str_contains($e->getMessage(), 'Duplicate key name')) continue;
+                        throw $e;
+                    }
+                }
+            } else {
+                $pdo->exec($schema);
+            }
         }
 
         $hash = password_hash('password', PASSWORD_DEFAULT);
+        $ignoreStr = ($driver === 'mysql') ? 'IGNORE' : 'OR IGNORE';
+        
         $pdo->prepare(
-            "INSERT OR IGNORE INTO users (id, name, email, password_hash, role)
+            "INSERT {$ignoreStr} INTO users (id, name, email, password_hash, role)
              VALUES (1, 'Admin', 'admin@shop.local', ?, 'admin')"
         )->execute([$hash]);
         $pdo->prepare(
-            "INSERT OR IGNORE INTO users (id, name, email, password_hash, role)
+            "INSERT {$ignoreStr} INTO users (id, name, email, password_hash, role)
              VALUES (2, 'Jane Smith', 'jane@example.com', ?, 'customer')"
         )->execute([$hash]);
     }
 
     private static function migrations(): void {
         $pdo = self::$pdo;
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         
-        // Add customer_email and customer_name columns if they don't exist
-        $cols = $pdo->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        if ($driver === 'sqlite') {
+            $cols = $pdo->query("PRAGMA table_info(orders)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        } else {
+            $cols = $pdo->query("SHOW COLUMNS FROM orders")->fetchAll(PDO::FETCH_COLUMN, 0);
+        }
+
         if (!in_array('customer_email', $cols)) {
             $pdo->exec("ALTER TABLE orders ADD COLUMN customer_email TEXT");
         }

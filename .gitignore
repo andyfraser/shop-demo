@@ -1,6 +1,7 @@
 .vscode/
 *.code-workspace
 shop.db
+/config.php
 public/images/*
 !public/images/placeholder.svg
 .DS_Store

@@ -3,8 +3,21 @@ require_once __DIR__ . '/src/Core/Autoloader.php';
 \App\Core\Autoloader::register();
 require_once __DIR__ . '/src/Helpers.php';
 
-define('DB_PATH', __DIR__ . '/shop.db');
-define('BASE_URL', '');
+// Load configuration
+$config = [];
+if (file_exists(__DIR__ . '/config.php')) {
+    $config = require __DIR__ . '/config.php';
+}
+
+// Database configuration
+$dbConfig = $config['db'] ?? [
+    'driver' => 'sqlite',
+    'path'   => __DIR__ . '/shop.db',
+];
+define('DB_CONFIG', $dbConfig);
+
+// Other constants
+define('BASE_URL', $config['site']['base_url'] ?? '');
 define('SITE_NAME', \App\Services\SettingsService::get('site_name'));
 define('SITE_NAME_PLAIN', str_replace('|', '', SITE_NAME));
 
