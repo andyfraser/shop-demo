@@ -1,9 +1,10 @@
 # Demo Shop
 
-A demo e-commerce application written in PHP with SQLite. No frameworks, no Composer, no build step — just PHP 8 and a browser.
+A demo e-commerce application written in PHP with support for SQLite and MySQL. No frameworks, no Composer, no build step — just PHP 8 and a browser.
 
 ![PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
@@ -32,13 +33,24 @@ A demo e-commerce application written in PHP with SQLite. No frameworks, no Comp
 ## Requirements
 
 - PHP 8.0 or higher
-- Extensions: `pdo_sqlite` — enabled by default in most PHP installs
+- Extensions: `pdo_sqlite` (for SQLite) or `pdo_mysql` (for MySQL)
 
-On Ubuntu / Debian:
+---
 
-```bash
-sudo apt install php php-sqlite3
-```
+## Configuration
+
+The application uses a `config.php` file for database and site settings. 
+
+1. Copy `config.example.php` to `config.php`.
+2. Update the `db` settings with your preferred driver (`sqlite` or `mysql`) and credentials.
+
+### SQLite Setup
+By default, the application is configured to use SQLite with a database file named `shop.db`. This file will be created and seeded automatically on the first run.
+
+### MySQL / MariaDB Setup
+1. Ensure your MySQL server is running.
+2. Provide your server host, user, and password in `config.php`.
+3. The application will automatically create the database (if it doesn't exist), apply the schema, and seed the initial data.
 
 ---
 
@@ -47,10 +59,11 @@ sudo apt install php php-sqlite3
 ```bash
 git clone https://github.com/yourname/shop-demo.git
 cd shop-demo
+cp config.example.php config.php
 php -S localhost:8080
 ```
 
-Open **http://localhost:8080** in your browser. The SQLite database (`shop.db`) is created and seeded automatically on first run.
+Open **http://localhost:8080** in your browser.
 
 ---
 
@@ -77,14 +90,16 @@ Product images are stored in `public/images/`. When adding or editing a product 
 shop-demo/
 │
 ├── index.php               # Front controller — bootstraps app and registers all routes
-├── sqlite_schema.sql      # SQLite database schema and seed data
-├── mysql_schema.sql       # MySQL database schema and seed data
-├── shop.db                # SQLite database (auto-created on first run)
+├── config.php              # Local configuration (ignored by Git)
+├── config.example.php      # Configuration template
+├── sqlite_schema.sql       # SQLite database schema and seed data
+├── mysql_schema.sql        # MySQL database schema and seed data
+├── shop.db                 # SQLite database (auto-created if using SQLite)
 │
 ├── src/
 │   ├── Core/
 │   │   ├── Autoloader.php  # PSR-4 style class autoloader
-│   │   ├── Database.php    # SQLite PDO singleton + migrations
+│   │   ├── Database.php    # Multi-driver PDO singleton + migrations
 │   │   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
 │   │   ├── Router.php      # HTTP router with middleware support
 │   │   └── Validator.php   # Field validation helpers
@@ -155,7 +170,7 @@ All requests enter through `index.php` (front controller), which registers the a
 
 **Rendering:** Controllers fetch data and call `Renderer::render('template_name', ['var' => $val])`. The renderer extracts the data array, auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`), and wraps the template with `header.php` / `footer.php`. Admin pages use `Renderer::adminRender()`.
 
-**Database:** SQLite via PDO. `Database::getConnection()` returns the singleton; the schema runs automatically on first connection. Additive column migrations also run on init so existing databases are upgraded without data loss. A `settings` table stores editable key/value pairs read via `SettingsService`, which falls back to built-in defaults if a key is not yet in the database.
+**Database:** Support for SQLite and MySQL via PDO. `Database::getConnection()` returns the singleton; the appropriate schema (`sqlite_schema.sql` or `mysql_schema.sql`) runs automatically on first connection. Additive column migrations also run on init so existing databases are upgraded without data loss. A `settings` table stores editable key/value pairs read via `SettingsService`, which falls back to built-in defaults if a key is not yet in the database.
 
 **Session cart:** Stored in `$_SESSION['cart']` as `[product_id => quantity]`, managed entirely by `CartService`.
 
