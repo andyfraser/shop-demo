@@ -28,14 +28,14 @@ class SettingsService {
 
     public static function set(string $key, string $value): void {
         Database::getConnection()
-            ->prepare("REPLACE INTO settings (key, value) VALUES (?, ?)")
+            ->prepare("REPLACE INTO settings (`key`, value) VALUES (?, ?)")
             ->execute([$key, $value]);
         self::$cache = null;
     }
 
     private static function load(): void {
         $rows = Database::getConnection()
-            ->query("SELECT key, value FROM settings")
+            ->query("SELECT `key`, value FROM settings")
             ->fetchAll();
         self::$cache = array_column($rows, 'value', 'key');
     }
