@@ -23,9 +23,11 @@ class AdminDashboardController {
              LIMIT 10"
         )->fetchAll();
 
-        $low_stock = $db->query(
-            "SELECT name, stock FROM products WHERE active = 1 AND stock <= 5 ORDER BY stock ASC LIMIT 10"
-        )->fetchAll();
+        $low_stock = $db->prepare(
+            "SELECT name, stock FROM products WHERE active = 1 AND stock <= ? ORDER BY stock ASC LIMIT 10"
+        );
+        $low_stock->execute([(int)\App\Services\SettingsService::get('low_stock_threshold')]);
+        $low_stock = $low_stock->fetchAll();
 
         Renderer::adminRender('dashboard', [
             'page_title'    => 'Dashboard',

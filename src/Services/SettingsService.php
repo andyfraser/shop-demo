@@ -14,6 +14,7 @@ class SettingsService {
         'login_window_minutes'    => '15',
         'register_max_attempts'   => '10',
         'register_window_minutes' => '60',
+        'low_stock_threshold'     => '10',
     ];
 
     public static function get(string $key): string {

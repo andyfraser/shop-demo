@@ -49,7 +49,7 @@
           <td>
             <?php if ($p['stock'] == 0): ?>
               <span class="badge badge-danger"><?= $p['stock'] ?></span>
-            <?php elseif ($p['stock'] <= 5): ?>
+            <?php elseif ($p['stock'] <= (int)\App\Services\SettingsService::get('low_stock_threshold')): ?>
               <span class="badge badge-warning"><?= $p['stock'] ?></span>
             <?php else: ?>
               <span class="badge badge-success"><?= $p['stock'] ?></span>

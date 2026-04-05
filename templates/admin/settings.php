@@ -32,6 +32,13 @@
         <input type="text" name="currency_symbol" class="form-control"
                value="<?= h($settings['currency_symbol']) ?>" required style="max-width:6rem;">
       </div>
+
+      <div class="form-group">
+        <label>Low Stock Threshold</label>
+        <input type="number" name="low_stock_threshold" class="form-control"
+               value="<?= h($settings['low_stock_threshold']) ?>" min="0" required style="max-width:6rem;">
+        <small style="color:var(--ink-2);">Products with stock at or below this level will trigger low stock warnings.</small>
+      </div>
     </div>
 
     <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
