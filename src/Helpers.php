@@ -1,7 +1,6 @@
 <?php
 use App\Services\SecurityService;
 use App\Services\AuthService;
-use App\Services\CartService;
 
 function h(string $s): string {
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
@@ -60,18 +59,6 @@ function is_ajax(): bool {
 
 function current_user(): ?array {
     return AuthService::currentUser();
-}
-
-function is_admin(): bool {
-    return AuthService::isAdmin();
-}
-
-function cart_count(): int {
-    return CartService::count();
-}
-
-function delivery_options(): array {
-    return \App\Services\DeliveryService::active();
 }
 
 function get_category_tree(): array {

@@ -3,7 +3,6 @@ namespace App\Controllers;
 
 use App\Core\Renderer;
 use App\Core\Validator;
-use App\Core\Database;
 use App\Services\DeliveryService;
 use App\Services\SecurityService;
 
