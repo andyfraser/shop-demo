@@ -61,6 +61,11 @@ function current_user(): ?array {
     return AuthService::currentUser();
 }
 
+function is_new_product(string $created_at): bool {
+    $ts = strtotime($created_at);
+    return (time() - $ts) < (7 * 24 * 60 * 60); // 7 days
+}
+
 function get_category_tree(): array {
     $all = App\Core\Database::getConnection()->query("SELECT * FROM categories ORDER BY name")->fetchAll();
     $tree = [];

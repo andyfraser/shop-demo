@@ -33,6 +33,11 @@
       <?php foreach ($featured_products as $p): ?>
         <a href="/product/<?= h($p['slug']) ?>" class="product-card">
           <div class="img-wrap">
+            <?php if ($p['featured']): ?>
+              <span class="product-badge badge-featured">Featured</span>
+            <?php elseif (is_new_product($p['created_at'])): ?>
+              <span class="product-badge badge-new">New</span>
+            <?php endif; ?>
             <?php product_img($p['image'] ?? '', $p['name'], '', 'loading:lazy') ?>
           </div>
           <div class="card-body">

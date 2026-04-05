@@ -133,5 +133,18 @@ class Database {
         if (!in_array('customer_name', $cols)) {
             $pdo->exec("ALTER TABLE orders ADD COLUMN customer_name TEXT");
         }
+
+        // Products table migrations
+        if ($driver === 'sqlite') {
+            $p_cols = $pdo->query("PRAGMA table_info(products)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        } else {
+            $p_cols = $pdo->query("SHOW COLUMNS FROM products")->fetchAll(PDO::FETCH_COLUMN, 0);
+        }
+
+        if (!in_array('featured', $p_cols)) {
+            $default = ($driver === 'mysql') ? '0' : '0';
+            $type = ($driver === 'mysql') ? 'TINYINT(1)' : 'INTEGER';
+            $pdo->exec("ALTER TABLE products ADD COLUMN featured $type DEFAULT $default");
+        }
     }
 }

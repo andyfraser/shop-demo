@@ -109,6 +109,7 @@ class AdminProductsController {
             'category_id' => !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null,
             'image'       => $_POST['existing_image'] ?? null,
             'active'      => isset($_POST['active']) ? 1 : 0,
+            'featured'    => isset($_POST['featured']) ? 1 : 0,
         ];
         $product_id = (int)($_POST['id'] ?? 0);
 
@@ -148,12 +149,12 @@ class AdminProductsController {
 
                 $db->prepare(
                     "UPDATE products
-                     SET name=?, slug=?, description=?, price=?, stock=?, category_id=?, image=?, active=?
+                     SET name=?, slug=?, description=?, price=?, stock=?, category_id=?, image=?, active=?, featured=?
                      WHERE id=?"
                 )->execute([
                     $product['name'], $slug, $product['description'], $product['price'],
                     $product['stock'], $product['category_id'], $product['image'],
-                    $product['active'], $product_id,
+                    $product['active'], $product['featured'], $product_id,
                 ]);
                 flash('msg', 'Product updated.');
             } else {
@@ -162,12 +163,12 @@ class AdminProductsController {
                 if ($check->fetch()) $slug .= '-' . time();
 
                 $db->prepare(
-                    "INSERT INTO products (name, slug, description, price, stock, category_id, image, active)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO products (name, slug, description, price, stock, category_id, image, active, featured)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 )->execute([
                     $product['name'], $slug, $product['description'], $product['price'],
                     $product['stock'], $product['category_id'], $product['image'],
-                    $product['active'],
+                    $product['active'], $product['featured'],
                 ]);
                 flash('msg', 'Product created.');
             }

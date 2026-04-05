@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS products (
     category_id INT REFERENCES categories(id) ON DELETE SET NULL,
     image VARCHAR(255),
     active TINYINT(1) DEFAULT 1,
+    featured TINYINT(1) DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 

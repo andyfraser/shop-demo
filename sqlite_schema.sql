@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS products (
     category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
     image TEXT,
     active INTEGER DEFAULT 1,
+    featured INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

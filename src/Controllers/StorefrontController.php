@@ -12,7 +12,7 @@ class StorefrontController {
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
              WHERE p.active = 1
-             ORDER BY p.id
+             ORDER BY p.featured DESC, p.created_at DESC
              LIMIT 8"
         )->fetchAll();
 
@@ -29,7 +29,7 @@ class StorefrontController {
         $total_pages    = 1;
         $current_page   = max(1, (int)($_GET['page'] ?? 1));
 
-        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc']) ? $_GET['sort'] : 'name';
+        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
         $per_page_raw = $_GET['per_page'] ?? '12';
         $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
@@ -37,6 +37,7 @@ class StorefrontController {
         $order_by = match($sort) {
             'price_asc'  => 'p.price ASC',
             'price_desc' => 'p.price DESC',
+            'featured'   => 'p.featured DESC, p.created_at DESC',
             default      => 'p.name',
         };
 
@@ -116,7 +117,7 @@ class StorefrontController {
         }
         $placeholders = implode(',', array_fill(0, count($cat_ids), '?'));
 
-        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc']) ? $_GET['sort'] : 'name';
+        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
         $per_page_raw = $_GET['per_page'] ?? '12';
         $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
@@ -124,6 +125,7 @@ class StorefrontController {
         $order_by = match($sort) {
             'price_asc'  => 'p.price ASC',
             'price_desc' => 'p.price DESC',
+            'featured'   => 'p.featured DESC, p.created_at DESC',
             default      => 'p.name',
         };
 
@@ -199,6 +201,7 @@ class StorefrontController {
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
              WHERE p.category_id = ? AND p.id != ? AND p.active = 1
+             ORDER BY p.featured DESC, p.created_at DESC
              LIMIT 4"
         );
         $stmt->execute([$product['category_id'], $product['id']]);

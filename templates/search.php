@@ -19,6 +19,7 @@
         <input type="hidden" name="q" value="<?= h($query) ?>">
         <select name="sort" onchange="this.form.submit()" style="padding:.3rem .5rem;border:1px solid var(--border);border-radius:4px;font-size:.85rem;">
           <option value="name"       <?= $sort === 'name'       ? 'selected' : '' ?>>Name</option>
+          <option value="featured"   <?= $sort === 'featured'   ? 'selected' : '' ?>>Featured</option>
           <option value="price_asc"  <?= $sort === 'price_asc'  ? 'selected' : '' ?>>Price: Low to High</option>
           <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>>Price: High to Low</option>
         </select>
@@ -33,6 +34,11 @@
       <?php foreach ($products as $p): ?>
         <a href="/product/<?= h($p['slug']) ?>" class="product-card">
           <div class="img-wrap">
+            <?php if ($p['featured']): ?>
+              <span class="product-badge badge-featured">Featured</span>
+            <?php elseif (is_new_product($p['created_at'])): ?>
+              <span class="product-badge badge-new">New</span>
+            <?php endif; ?>
             <?php product_img($p['image'] ?? '', $p['name']) ?>
           </div>
           <div class="card-body">

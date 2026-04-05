@@ -38,7 +38,12 @@
           <td>
             <?php product_img($p['image'] ?? '', $p['name'], 'thumb') ?>
           </td>
-          <td><strong><?= h($p['name']) ?></strong></td>
+          <td>
+            <strong><?= h($p['name']) ?></strong>
+            <?php if ($p['featured']): ?>
+              <span title="Featured Product" style="color:var(--gold);margin-left:.25rem;">★</span>
+            <?php endif; ?>
+          </td>
           <td><?= h($p['cat_name'] ?? '—') ?></td>
           <td>£<?= number_format($p['price'], 2) ?></td>
           <td>
