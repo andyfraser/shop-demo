@@ -52,7 +52,7 @@ $status_badges = [
           <div class="icon">📦</div>
           <h3>No orders yet</h3>
           <p>
-            <a href="/admin/categories" class="btn btn-primary" style="margin-top:.75rem;">Start Shopping</a>
+            <a href="<?= BASE_URL ?>/" class="btn btn-primary" style="margin-top:.75rem;">Start Shopping</a>
           </p>
         </div>
       <?php else: ?>

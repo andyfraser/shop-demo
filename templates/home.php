@@ -4,7 +4,7 @@
   <div class="hero-inner">
     <h1>Quality goods,<br>curated for you.</h1>
     <p>Browse our thoughtfully selected collection of electronics, clothing, and more.</p>
-    <a href="/admin/categories" class="btn btn-primary" style="font-size:1rem;padding:.8rem 2rem;">
+    <a href="<?= BASE_URL ?>/" class="btn btn-primary" style="font-size:1rem;padding:.8rem 2rem;">
       Shop All Products
     </a>
   </div>

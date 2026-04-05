@@ -3,7 +3,7 @@
 <div class="container">
 
   <div class="breadcrumb">
-    <a href="/admin/categories">Home</a>
+    <a href="<?= BASE_URL ?>/">Home</a>
     <?php foreach ($breadcrumb as $c): ?>
       <span class="sep">›</span>
       <a href="/category/<?= h($c['slug']) ?>"><?= h($c['name']) ?></a>

@@ -80,7 +80,7 @@
           <a href="/checkout" class="btn btn-primary" style="width:100%;justify-content:center;">
             Proceed to Checkout
           </a>
-          <a href="/admin/categories" class="btn btn-outline btn-sm"
+          <a href="<?= BASE_URL ?>/" class="btn btn-outline btn-sm"
             style="width:100%;justify-content:center;margin-top:.75rem;">
             Continue Shopping
           </a>
