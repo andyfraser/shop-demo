@@ -11,7 +11,7 @@ class StorefrontController {
             "SELECT p.*, c.name as cat_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.active = 1
+             WHERE p.active = 1 AND p.stock > 0
              ORDER BY p.featured DESC, p.created_at DESC
              LIMIT 8"
         )->fetchAll();
