@@ -22,7 +22,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
-- Full CRUD for products (including image upload), categories, users, and orders
+- Full CRUD for products (including image upload and featured status), categories, users, delivery options, and orders
 - Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
 - Hierarchical category management with parent/child relationships
 - Role-based access control (admin / customer)
