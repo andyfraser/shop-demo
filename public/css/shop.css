@@ -375,6 +375,33 @@ select.form-control  { cursor: pointer; }
 /* ── Checkout ─────────────────────────────────────────────────────────────── */
 .checkout-grid { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start; }
 
+/* ── Cookie Banner ────────────────────────────────────────────────────────── */
+.cookie-banner {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 900;
+    background: var(--ink); color: rgba(255,255,255,.85);
+    border-top: 2px solid var(--accent);
+    box-shadow: 0 -4px 24px rgba(26,20,16,.18);
+    padding: 1rem 2rem;
+}
+.cookie-banner-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; align-items: center; gap: 1.5rem;
+    flex-wrap: wrap;
+}
+.cookie-banner-text {
+    flex: 1; font-size: .875rem; line-height: 1.6;
+    min-width: 200px;
+}
+.cookie-banner-actions {
+    display: flex; gap: .75rem; flex-shrink: 0;
+}
+.cookie-banner .btn-outline {
+    border-color: rgba(255,255,255,.4); color: rgba(255,255,255,.7);
+}
+.cookie-banner .btn-outline:hover {
+    background: rgba(255,255,255,.1); color: var(--white); border-color: rgba(255,255,255,.7);
+}
+
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .site-footer {
     background: var(--ink); color: rgba(255,255,255,.5);

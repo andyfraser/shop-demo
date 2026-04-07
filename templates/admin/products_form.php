@@ -90,14 +90,16 @@
         </div>
 
         <div class="span-2" style="display:flex;gap:1.5rem;">
-          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;font-weight:500;color:var(--ink-2);">
+          <label class="toggle-label">
             <input type="checkbox" name="active" value="1"
                    <?= ($product['active'] ?? 1) ? 'checked' : '' ?>>
+            <span class="toggle-track"></span>
             Active (visible in store)
           </label>
-          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;font-weight:500;color:var(--ink-2);">
+          <label class="toggle-label">
             <input type="checkbox" name="featured" value="1"
                    <?= ($product['featured'] ?? 0) ? 'checked' : '' ?>>
+            <span class="toggle-track"></span>
             Featured Product (shown on homepage)
           </label>
         </div>

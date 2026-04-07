@@ -174,3 +174,25 @@ if (cartForm) {
         }
     });
 }
+
+// ── Cookie Consent Banner ─────────────────────────────────────────────────────
+
+const cookieBanner = document.getElementById('cookie-banner');
+if (cookieBanner) {
+    function dismissBanner() {
+        cookieBanner.style.transition = 'opacity .25s, transform .25s';
+        cookieBanner.style.opacity = '0';
+        cookieBanner.style.transform = 'translateY(100%)';
+        setTimeout(() => cookieBanner.remove(), 260);
+    }
+
+    document.getElementById('cookie-accept')?.addEventListener('click', () => {
+        const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+        document.cookie = `cookie_consent=1; expires=${expires}; path=/; SameSite=Lax`;
+        dismissBanner();
+    });
+
+    document.getElementById('cookie-decline')?.addEventListener('click', () => {
+        dismissBanner();
+    });
+}
