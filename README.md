@@ -186,6 +186,23 @@ All requests enter through `index.php` (front controller), which registers the a
 
 ---
 
+## Browser Compatibility
+
+This application uses modern CSS (Grid, Flexbox gap, CSS variables, `aspect-ratio`) and JavaScript (Optional chaining `?.`).
+
+| Browser | Minimum Version | Release Date |
+| :--- | :--- | :--- |
+| **Chrome** | 88+ | Jan 2021 |
+| **Edge** | 88+ | Jan 2021 |
+| **Firefox** | 84+ | Dec 2020 |
+| **Safari** | 14.1+ | Apr 2021 |
+| **Opera** | 74+ | Feb 2021 |
+
+**Internet Explorer is not supported.**
+
+---
+
 ## No External Dependencies
 
 Do not add Composer packages or any external libraries. Use only PHP 8 built-ins.
+
