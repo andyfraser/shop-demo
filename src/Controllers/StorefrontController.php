@@ -215,4 +215,9 @@ class StorefrontController {
             'flash_success'   => flash('success'),
         ]);
     }
+
+    public function handleIcon() {
+        header('Location: ' . BASE_URL . '/public/images/favicon.svg');
+        exit;
+    }
 }

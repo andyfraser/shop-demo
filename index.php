@@ -59,6 +59,11 @@ $router->get('/logout', [AuthController::class, 'logout']);
 $router->get('/account', [AccountController::class, 'show'], [AuthMiddleware::class]);
 $router->post('/account/address', [AccountController::class, 'saveAddress'], [AuthMiddleware::class]);
 
+// Common icon routes to prevent 404 errors
+$router->get('/favicon.ico', [StorefrontController::class, 'handleIcon']);
+$router->get('/apple-touch-icon.png', [StorefrontController::class, 'handleIcon']);
+$router->get('/apple-touch-icon-precomposed.png', [StorefrontController::class, 'handleIcon']);
+
 // Cart routes
 $router->get('/cart', [CartController::class, 'show']);
 $router->post('/cart', [CartController::class, 'update']);

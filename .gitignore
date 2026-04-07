@@ -4,5 +4,6 @@ shop.db
 /config.php
 public/images/*
 !public/images/placeholder.svg
+!public/images/favicon.svg
 .DS_Store
 .htaccess
