@@ -39,9 +39,12 @@
         <small style="color:var(--ink-2)">Option only shows if order subtotal is at least this much. 0 for always.</small>
       </div>
 
-      <div class="form-group" style="display:flex;align-items:center;gap:.5rem;margin-top:1.5rem;">
-        <input type="checkbox" id="active" name="active" value="1" <?= ($option['active'] ?? 1) ? 'checked' : '' ?>>
-        <label for="active" style="margin:0;font-weight:400;">Visible in checkout</label>
+      <div style="margin-top:1.5rem;">
+        <label class="toggle-label">
+          <input type="checkbox" name="active" value="1" <?= ($option['active'] ?? 1) ? 'checked' : '' ?>>
+          <span class="toggle-track"></span>
+          Visible in checkout
+        </label>
       </div>
 
       <div style="display:flex;gap:.75rem;margin-top:2rem;">

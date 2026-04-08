@@ -178,6 +178,60 @@ class StorefrontController {
         ]);
     }
 
+    public function products() {
+        $db = Database::getConnection();
+
+        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
+        $per_page_raw = $_GET['per_page'] ?? '12';
+        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
+        $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
+
+        $order_by = match($sort) {
+            'price_asc'  => 'p.price ASC',
+            'price_desc' => 'p.price DESC',
+            'featured'   => 'p.featured DESC, p.created_at DESC',
+            default      => 'p.name',
+        };
+
+        $current_page = max(1, (int)($_GET['page'] ?? 1));
+
+        $total_products = (int)$db->query("SELECT COUNT(*) FROM products WHERE active = 1")->fetchColumn();
+
+        if ($per_page !== null) {
+            $total_pages = (int)ceil($total_products / $per_page);
+            $offset = ($current_page - 1) * $per_page;
+            $stmt = $db->prepare(
+                "SELECT p.*, c.name as cat_name
+                 FROM products p
+                 LEFT JOIN categories c ON p.category_id = c.id
+                 WHERE p.active = 1
+                 ORDER BY $order_by
+                 LIMIT ? OFFSET ?"
+            );
+            $stmt->execute([$per_page, $offset]);
+        } else {
+            $total_pages = 1;
+            $stmt = $db->query(
+                "SELECT p.*, c.name as cat_name
+                 FROM products p
+                 LEFT JOIN categories c ON p.category_id = c.id
+                 WHERE p.active = 1
+                 ORDER BY $order_by"
+            );
+        }
+        $products = $stmt->fetchAll();
+
+        Renderer::render('products', [
+            'page_title'     => 'All Products',
+            'products'       => $products,
+            'total_products' => $total_products,
+            'total_pages'    => $total_pages,
+            'current_page'   => $current_page,
+            'sort'           => $sort,
+            'per_page_param' => $per_page_param,
+        ]);
+    }
+
     public function product($slug = '') {
         $db = Database::getConnection();
         $stmt = $db->prepare(

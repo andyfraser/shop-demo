@@ -45,6 +45,7 @@ $router = new Router();
 
 // Storefront routes
 $router->get('/', [StorefrontController::class, 'index']);
+$router->get('/products', [StorefrontController::class, 'products']);
 $router->get('/search', [StorefrontController::class, 'search']);
 $router->get('/category/:slug', [StorefrontController::class, 'category']);
 $router->get('/product/:slug', [StorefrontController::class, 'product']);
