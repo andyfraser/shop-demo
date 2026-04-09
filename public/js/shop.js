@@ -145,13 +145,12 @@ if (cartForm) {
                         }
                     }, 260);
                 }
-                // Update total
+                // Update totals
                 const totalEl = document.getElementById('cart-total');
                 if (totalEl) totalEl.textContent = data.total;
 
-                // Update the subtotals sidebar too
-                const subtotalEls = document.querySelectorAll('.order-summary strong');
-                if (subtotalEls.length >= 1) subtotalEls[0].textContent = data.total;
+                const subtotalEl = document.getElementById('cart-subtotal');
+                if (subtotalEl) subtotalEl.textContent = data.total;
             }
 
             if (isUpdate) {
@@ -163,6 +162,9 @@ if (cartForm) {
                 // Update totals
                 const totalEl = document.getElementById('cart-total');
                 if (totalEl) totalEl.textContent = data.total;
+
+                const subtotalEl = document.getElementById('cart-subtotal');
+                if (subtotalEl) subtotalEl.textContent = data.total;
 
                 showToast(data.message, 'success');
             }

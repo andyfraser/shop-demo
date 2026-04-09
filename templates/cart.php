@@ -67,11 +67,7 @@
           <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem;">Order Summary</h2>
           <div
             style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);margin-bottom:.5rem;">
-            <span>Subtotal</span><strong><?= money($total) ?></strong>
-          </div>
-          <div
-            style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);margin-bottom:.5rem;">
-            <span>Shipping</span><span style="color:var(--accent)">Free</span>
+            <span>Subtotal</span><strong id="cart-subtotal"><?= money($total) ?></strong>
           </div>
           <div
             style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.2rem;font-weight:700;margin-bottom:1.2rem;">

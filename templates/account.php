@@ -25,8 +25,16 @@ $status_badges = [
       </div>
       <hr style="margin:1.2rem 0;border:none;border-top:1px solid var(--line);">
 
-      <?php if (flash('address_saved')): ?>
+      <?php if (!empty($address_saved)): ?>
         <div class="alert alert-success" style="margin-bottom:1rem;font-size:.8rem;">Address saved.</div>
+      <?php endif; ?>
+
+      <?php if (!empty($msg)): ?>
+        <div class="alert alert-info" style="margin-bottom:1rem;font-size:.8rem;"><?= h($msg) ?></div>
+      <?php endif; ?>
+
+      <?php if (!empty($msg_error)): ?>
+        <div class="alert alert-danger" style="margin-bottom:1rem;font-size:.8rem;"><?= h($msg_error) ?></div>
       <?php endif; ?>
 
       <form method="POST" action="/account/address">

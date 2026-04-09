@@ -5,10 +5,12 @@ class EmailService {
     private static ?EmailService $instance = null;
     private string $fromEmail;
     private string $siteName;
+    private string $cleanSiteName;
 
     private function __construct() {
         $this->fromEmail = SettingsService::get('email_from') ?: 'noreply@shop.local';
         $this->siteName = SettingsService::get('site_name') ?: 'Demoshop';
+        $this->cleanSiteName = str_replace('|', '', $this->siteName);
     }
 
     public static function getInstance(): EmailService {
@@ -19,88 +21,75 @@ class EmailService {
     }
 
     public function sendVerificationEmail(string $toEmail, string $name, string $token): bool {
-        $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+        $baseUrl = $this->getBaseUrl();
         $verifyUrl = $baseUrl . "/verify-email?token=" . $token;
 
-        $subject = "Verify your email - " . $this->siteName;
-        $message = "
-            <html>
-            <head>
-                <title>Verify your email</title>
-            </head>
-            <body>
-                <h1>Hello, " . htmlspecialchars($name) . "!</h1>
-                <p>Thank you for registering at " . htmlspecialchars($this->siteName) . ".</p>
-                <p>Please click the link below to verify your email address before you can make a purchase:</p>
-                <p><a href='" . $verifyUrl . "'>" . $verifyUrl . "</a></p>
-                <p>If you didn't create an account, you can safely ignore this email.</p>
-            </body>
-            </html>
-        ";
+        $subject = "Verify your email - " . $this->cleanSiteName;
+        $message = $this->renderTemplate('verification', [
+            'name' => $name,
+            'verifyUrl' => $verifyUrl,
+            'subject' => $subject
+        ]);
 
         return $this->sendHtmlEmail($toEmail, $subject, $message);
     }
 
     public function sendOrderConfirmation(array $order, array $items): bool {
-        $subject = "Order Confirmation #" . $order['id'] . " - " . $this->siteName;
+        $subject = "Order Confirmation #" . $order['id'] . " - " . $this->cleanSiteName;
         
-        $itemsHtml = "";
-        foreach ($items as $item) {
-            $itemsHtml .= "<li>" . htmlspecialchars($item['name']) . " x " . $item['quantity'] . " - £" . number_format($item['unit_price'] * $item['quantity'], 2) . "</li>";
-        }
-
-        $message = "
-            <html>
-            <head>
-                <title>Order Confirmation</title>
-            </head>
-            <body>
-                <h1>Thank you for your order!</h1>
-                <p>Order ID: #" . $order['id'] . "</p>
-                <p>Total: £" . number_format($order['total'], 2) . "</p>
-                <p>Status: " . ucfirst($order['status']) . "</p>
-                <h3>Items:</h3>
-                <ul>" . $itemsHtml . "</ul>
-                <p>We'll notify you when your order status changes.</p>
-            </body>
-            </html>
-        ";
+        $message = $this->renderTemplate('order_confirmation', [
+            'order' => $order,
+            'items' => $items,
+            'subject' => $subject
+        ]);
 
         return $this->sendHtmlEmail($order['customer_email'], $subject, $message);
     }
 
     public function sendStatusUpdateEmail(string $toEmail, int $orderId, string $status): bool {
-        $subject = "Order Status Updated #" . $orderId . " - " . $this->siteName;
+        $subject = "Order Status Updated #" . $orderId . " - " . $this->cleanSiteName;
         
-        $statusText = "";
-        if ($status === 'shipped') {
-            $statusText = "Your order has been shipped and is on its way!";
-        } else if ($status === 'cancelled') {
-            $statusText = "Your order has been cancelled.";
-        } else {
-            $statusText = "Your order status has been updated to: " . ucfirst($status);
-        }
-
-        $message = "
-            <html>
-            <head>
-                <title>Order Status Update</title>
-            </head>
-            <body>
-                <h1>Order Status Update</h1>
-                <p>Order ID: #" . $orderId . "</p>
-                <p>" . $statusText . "</p>
-            </body>
-            </html>
-        ";
+        $message = $this->renderTemplate('order_status', [
+            'orderId' => $orderId,
+            'status' => $status,
+            'subject' => $subject
+        ]);
 
         return $this->sendHtmlEmail($toEmail, $subject, $message);
+    }
+
+    private function getBaseUrl(): string {
+        if (isset($_SERVER['HTTP_HOST'])) {
+            return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+        }
+        return SettingsService::get('site_url') ?: 'http://localhost';
+    }
+
+    private function renderTemplate(string $template, array $vars = []): string {
+        $vars['siteName'] = $this->siteName;
+        $vars['cleanSiteName'] = $this->cleanSiteName;
+        $vars['baseUrl'] = $this->getBaseUrl();
+        
+        extract($vars);
+        
+        ob_start();
+        $templateFile = __DIR__ . '/../../templates/emails/' . $template . '.php';
+        if (file_exists($templateFile)) {
+            require $templateFile;
+        } else {
+            echo "Template not found: {$template}";
+        }
+        $content = ob_get_clean();
+        
+        ob_start();
+        require __DIR__ . '/../../templates/emails/layout.php';
+        return ob_get_clean();
     }
 
     private function sendHtmlEmail(string $to, string $subject, string $message): bool {
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-        $headers .= "From: " . $this->siteName . " <" . $this->fromEmail . ">" . "\r\n";
+        $headers .= "From: " . $this->cleanSiteName . " <" . $this->fromEmail . ">" . "\r\n";
 
         return mail($to, $subject, $message, $headers);
     }
