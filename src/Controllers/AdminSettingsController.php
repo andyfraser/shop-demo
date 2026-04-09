@@ -23,6 +23,7 @@ class AdminSettingsController {
 
         $site_name = trim($_POST['site_name'] ?? '');
         $currency  = trim($_POST['currency_symbol'] ?? '');
+        $email_from = trim($_POST['email_from'] ?? '');
         $pass_min  = (int)($_POST['password_min_length'] ?? 0);
         $login_att = (int)($_POST['login_max_attempts'] ?? 0);
         $login_win = (int)($_POST['login_window_minutes'] ?? 0);
@@ -43,6 +44,7 @@ class AdminSettingsController {
         if (!$errors) {
             SettingsService::set('site_name',               $site_name);
             SettingsService::set('currency_symbol',         $currency);
+            SettingsService::set('email_from',              $email_from);
             SettingsService::set('password_min_length',     (string)$pass_min);
             SettingsService::set('login_max_attempts',      (string)$login_att);
             SettingsService::set('login_window_minutes',    (string)$login_win);
@@ -60,6 +62,7 @@ class AdminSettingsController {
             'settings'   => [
                 'site_name'               => $site_name,
                 'currency_symbol'         => $currency,
+                'email_from'              => $email_from,
                 'password_min_length'     => (string)$pass_min,
                 'login_max_attempts'      => (string)$login_att,
                 'login_window_minutes'    => (string)$login_win,

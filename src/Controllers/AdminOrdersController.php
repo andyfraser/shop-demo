@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\Renderer;
 use App\Services\SecurityService;
+use App\Services\EmailService;
 
 class AdminOrdersController {
     public function list() {
