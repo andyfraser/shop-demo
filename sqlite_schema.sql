@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT DEFAULT 'customer',
+    is_verified INTEGER DEFAULT 0,
+    verification_token TEXT,
     address TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

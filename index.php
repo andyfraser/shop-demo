@@ -56,9 +56,11 @@ $router->get('/login', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login']);
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->post('/register', [AuthController::class, 'register']);
+$router->get('/verify-email', [AuthController::class, 'verifyEmail']);
 $router->get('/logout', [AuthController::class, 'logout']);
 $router->get('/account', [AccountController::class, 'show'], [AuthMiddleware::class]);
 $router->post('/account/address', [AccountController::class, 'saveAddress'], [AuthMiddleware::class]);
+$router->post('/account/cancel-order', [AccountController::class, 'cancelOrder'], [AuthMiddleware::class]);
 
 // Common icon routes to prevent 404 errors
 $router->get('/favicon.ico', [StorefrontController::class, 'handleIcon']);

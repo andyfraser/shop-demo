@@ -32,6 +32,7 @@ class AdminSettingsController {
 
         if ($site_name === '') $errors[] = 'Site name is required.';
         if ($currency === '')  $errors[] = 'Currency symbol is required.';
+        if ($email_from === '') $errors[] = 'Email from address is required.';
         if ($pass_min < 1)    $errors[] = 'Password minimum length must be at least 1.';
         if ($login_att < 1)   $errors[] = 'Login max attempts must be at least 1.';
         if ($login_win < 1)   $errors[] = 'Login window must be at least 1 minute.';

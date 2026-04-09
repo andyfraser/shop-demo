@@ -34,6 +34,13 @@
       </div>
 
       <div class="form-group">
+        <label>Email From Address</label>
+        <input type="email" name="email_from" class="form-control"
+               value="<?= h($settings['email_from'] ?? 'noreply@shop.local') ?>" required>
+        <small style="color:var(--ink-2);">The email address used for all outgoing system emails.</small>
+      </div>
+
+      <div class="form-group">
         <label>Low Stock Threshold</label>
         <input type="number" name="low_stock_threshold" class="form-control"
                value="<?= h($settings['low_stock_threshold']) ?>" min="0" required style="max-width:6rem;">

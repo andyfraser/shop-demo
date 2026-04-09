@@ -86,3 +86,28 @@
 </nav>
 
 <main>
+  <?php if ($current_user && empty($current_user['is_verified'])): ?>
+    <div class="alert alert-warning" style="margin: 0; text-align: center; border-radius: 0; border: none; border-bottom: 1px solid var(--warning-ink); background: var(--warning-bg); color: var(--warning-ink); padding: 0.75rem;">
+      <strong>Verify your email:</strong> Please check your inbox to verify your account before you can make a purchase.
+    </div>
+  <?php endif; ?>
+
+  <?php
+  $msg = $_GET['msg'] ?? '';
+  if ($msg === 'verify_sent'): ?>
+    <div class="alert alert-info" style="margin: 1rem auto; max-width: 1200px; width: 95%;">
+      Verification email sent! Please check your inbox.
+    </div>
+  <?php elseif ($msg === 'verified'): ?>
+    <div class="alert alert-success" style="margin: 1rem auto; max-width: 1200px; width: 95%;">
+      Email successfully verified! You can now make purchases.
+    </div>
+  <?php elseif ($msg === 'verify_invalid'): ?>
+    <div class="alert alert-danger" style="margin: 1rem auto; max-width: 1200px; width: 95%;">
+      Invalid or expired verification token.
+    </div>
+  <?php elseif ($msg === 'verify_required'): ?>
+    <div class="alert alert-warning" style="margin: 1rem auto; max-width: 1200px; width: 95%;">
+      Please verify your email address before checking out.
+    </div>
+  <?php endif; ?>

@@ -108,12 +108,12 @@ class Database {
         $ignoreStr = ($driver === 'mysql') ? 'IGNORE' : 'OR IGNORE';
         
         $pdo->prepare(
-            "INSERT {$ignoreStr} INTO users (id, name, email, password_hash, role)
-             VALUES (1, 'Admin', 'admin@shop.local', ?, 'admin')"
+            "INSERT {$ignoreStr} INTO users (id, name, email, password_hash, role, is_verified)
+             VALUES (1, 'Admin', 'admin@shop.local', ?, 'admin', 1)"
         )->execute([$hash]);
         $pdo->prepare(
-            "INSERT {$ignoreStr} INTO users (id, name, email, password_hash, role)
-             VALUES (2, 'Jane Smith', 'jane@example.com', ?, 'customer')"
+            "INSERT {$ignoreStr} INTO users (id, name, email, password_hash, role, is_verified)
+             VALUES (2, 'Jane Smith', 'jane@example.com', ?, 'customer', 1)"
         )->execute([$hash]);
     }
 
@@ -146,5 +146,24 @@ class Database {
             $type = ($driver === 'mysql') ? 'TINYINT(1)' : 'INTEGER';
             $pdo->exec("ALTER TABLE products ADD COLUMN featured $type DEFAULT $default");
         }
+
+        // Users table migrations
+        if ($driver === 'sqlite') {
+            $u_cols = $pdo->query("PRAGMA table_info(users)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        } else {
+            $u_cols = $pdo->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN, 0);
+        }
+
+        if (!in_array('is_verified', $u_cols)) {
+            $default = ($driver === 'mysql') ? '0' : '0';
+            $type = ($driver === 'mysql') ? 'TINYINT(1)' : 'INTEGER';
+            $pdo->exec("ALTER TABLE users ADD COLUMN is_verified $type DEFAULT $default");
+        }
+        if (!in_array('verification_token', $u_cols)) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN verification_token TEXT");
+        }
+
+        // Force verify seeded accounts if they were already there
+        $pdo->exec("UPDATE users SET is_verified = 1 WHERE id IN (1, 2)");
     }
 }

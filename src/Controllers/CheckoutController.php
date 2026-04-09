@@ -8,6 +8,7 @@ use App\Services\CartService;
 use App\Services\AuthService;
 use App\Services\SecurityService;
 use App\Services\DeliveryService;
+use App\Services\EmailService;
 
 class CheckoutController {
     public function show() {
@@ -137,6 +138,24 @@ class CheckoutController {
             "SELECT oi.*, p.name, p.slug
              FROM order_items oi
              LEFT JOIN products p ON oi.product_id = p.id
+             WHERE oi.order_id = ?"
+        );
+        $stmt->execute([$order_id]);
+        $order_items = $stmt->fetchAll();
+
+        Renderer::render('order_confirm', [
+            'page_title'  => 'Order Confirmed',
+            'order'       => $order,
+            'order_items' => $order_items,
+        ]);
+    }
+}
+'       => $order,
+            'order_items' => $order_items,
+        ]);
+    }
+}
+cts p ON oi.product_id = p.id
              WHERE oi.order_id = ?"
         );
         $stmt->execute([$order_id]);

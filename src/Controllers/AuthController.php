@@ -7,6 +7,7 @@ use App\Core\Validator;
 use App\Services\AuthService;
 use App\Services\SecurityService;
 use App\Services\SettingsService;
+use App\Services\EmailService;
 
 class AuthController {
     public function showLogin() {
@@ -117,6 +118,36 @@ class AuthController {
                 'name'       => $name,
                 'email'      => $email,
             ]);
+        }
+    }
+
+    public function logout() {
+        AuthService::logout();
+        redirect('/');
+    }
+}
+
+        }
+
+        $stmt = Database::getConnection()->prepare("SELECT * FROM users WHERE verification_token = ?");
+        $stmt->execute([$token]);
+        $user = $stmt->fetch();
+
+        if ($user) {
+            Database::getConnection()->prepare("UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?")
+               ->execute([$user['id']]);
+            
+            // If logged in as this user, update session
+            $current = AuthService::currentUser();
+            if ($current && $current['id'] === $user['id']) {
+                $user['is_verified'] = 1;
+                $user['verification_token'] = null;
+                AuthService::login($user);
+            }
+            
+            redirect('/?msg=verified');
+        } else {
+            redirect('/?msg=verify_invalid');
         }
     }
 

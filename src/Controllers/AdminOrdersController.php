@@ -83,6 +83,16 @@ class AdminOrdersController {
         
         if ($order_id) {
             $db->prepare("UPDATE orders SET status = ? WHERE id = ?")->execute([$status, $order_id]);
+            
+            if ($status === 'shipped' || $status === 'cancelled') {
+                $stmt = $db->prepare("SELECT customer_email FROM orders WHERE id = ?");
+                $stmt->execute([$order_id]);
+                $order = $stmt->fetch();
+                if ($order && $order['customer_email']) {
+                    EmailService::getInstance()->sendStatusUpdateEmail($order['customer_email'], $order_id, $status);
+                }
+            }
+            
             flash('msg', 'Order status updated.');
         }
         

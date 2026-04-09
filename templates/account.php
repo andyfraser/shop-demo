@@ -75,7 +75,16 @@ $status_badges = [
                       <?= ucfirst($o['status']) ?>
                     </span>
                   </td>
-                  <td><a href="/order/confirm?id=<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a></td>
+                  <td style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                    <a href="/order/confirm?id=<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a>
+                    <?php if ($o['status'] === 'pending'): ?>
+                      <form method="POST" action="/account/cancel-order" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= $o['id'] ?>">
+                        <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger-ink);border-color:var(--danger-ink);">Cancel</button>
+                      </form>
+                    <?php endif; ?>
+                  </td>
                 </tr>
               <?php endforeach; ?>
             </tbody>

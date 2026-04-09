@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'customer',
+    is_verified TINYINT(1) DEFAULT 0,
+    verification_token TEXT,
     address TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

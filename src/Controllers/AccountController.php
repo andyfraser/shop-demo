@@ -5,6 +5,7 @@ use App\Core\Database;
 use App\Core\Renderer;
 use App\Services\AuthService;
 use App\Services\SecurityService;
+use App\Services\EmailService;
 
 class AccountController {
     public function show() {
@@ -23,7 +24,9 @@ class AccountController {
         Renderer::render('account', [
             'page_title'      => 'My Account',
             'orders'          => $orders->fetchAll(),
-            'address_saved'   => false,
+            'address_saved'   => flash('address_saved'),
+            'msg'             => flash('msg'),
+            'msg_error'       => flash('msg_error'),
         ]);
     }
 
@@ -41,6 +44,28 @@ class AccountController {
         $_SESSION['user']['address'] = $address;
 
         flash('address_saved', '1');
+        redirect('/account');
+    }
+
+    public function cancelOrder() {
+        SecurityService::verifyCsrf();
+        $user = AuthService::currentUser();
+        $order_id = (int)($_POST['id'] ?? 0);
+
+        if ($order_id) {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?");
+            $stmt->execute([$order_id, $user['id']]);
+            $order = $stmt->fetch();
+
+            if ($order && $order['status'] === 'pending') {
+                $db->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?")->execute([$order_id]);
+                EmailService::getInstance()->sendStatusUpdateEmail($order['customer_email'], $order_id, 'cancelled');
+                flash('msg', 'Order successfully cancelled.');
+            } else {
+                flash('msg_error', 'Order cannot be cancelled.');
+            }
+        }
         redirect('/account');
     }
 }
