@@ -18,6 +18,9 @@ class CheckoutController {
         }
 
         $user = AuthService::currentUser();
+        if ($user && empty($user['is_verified'])) {
+            redirect('/cart?msg=verify_required');
+        }
 
         Renderer::render('checkout', [
             'page_title' => 'Checkout',
@@ -87,11 +90,22 @@ class CheckoutController {
                 "INSERT INTO order_items (order_id, product_id, quantity, unit_price)
                  VALUES (?, ?, ?, ?)"
             );
+            $orderItems = [];
             foreach ($items as $item) {
                 $ins->execute([$order_id, $item['id'], $item['qty'], $item['price']]);
                 $db->prepare("UPDATE products SET stock = stock - ? WHERE id = ?")
                    ->execute([$item['qty'], $item['id']]);
+                $orderItems[] = [
+                    'name' => $item['name'],
+                    'quantity' => $item['qty'],
+                    'unit_price' => $item['price']
+                ];
             }
+
+            $stmt = $db->prepare("SELECT * FROM orders WHERE id = ?");
+            $stmt->execute([$order_id]);
+            $order = $stmt->fetch();
+            EmailService::getInstance()->sendOrderConfirmation($order, $orderItems);
 
             CartService::clear();
             
@@ -138,24 +152,6 @@ class CheckoutController {
             "SELECT oi.*, p.name, p.slug
              FROM order_items oi
              LEFT JOIN products p ON oi.product_id = p.id
-             WHERE oi.order_id = ?"
-        );
-        $stmt->execute([$order_id]);
-        $order_items = $stmt->fetchAll();
-
-        Renderer::render('order_confirm', [
-            'page_title'  => 'Order Confirmed',
-            'order'       => $order,
-            'order_items' => $order_items,
-        ]);
-    }
-}
-'       => $order,
-            'order_items' => $order_items,
-        ]);
-    }
-}
-cts p ON oi.product_id = p.id
              WHERE oi.order_id = ?"
         );
         $stmt->execute([$order_id]);

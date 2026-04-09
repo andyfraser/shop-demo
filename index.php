@@ -57,6 +57,7 @@ $router->post('/login', [AuthController::class, 'login']);
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->post('/register', [AuthController::class, 'register']);
 $router->get('/verify-email', [AuthController::class, 'verifyEmail']);
+$router->get('/verify-email/resend', [AuthController::class, 'resendVerification']);
 $router->get('/logout', [AuthController::class, 'logout']);
 $router->get('/account', [AccountController::class, 'show'], [AuthMiddleware::class]);
 $router->post('/account/address', [AccountController::class, 'saveAddress'], [AuthMiddleware::class]);

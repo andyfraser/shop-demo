@@ -100,13 +100,17 @@ class AuthController {
                 $errors[] = 'This email is already registered.';
             } else {
                 $hash = password_hash($pass, PASSWORD_DEFAULT);
-                Database::getConnection()->prepare("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'customer')")
-                   ->execute([$name, $email, $hash]);
+                $token = bin2hex(random_bytes(32));
+                
+                Database::getConnection()->prepare("INSERT INTO users (name, email, password_hash, role, verification_token, is_verified) VALUES (?, ?, ?, 'customer', ?, 0)")
+                   ->execute([$name, $email, $hash, $token]);
+
+                EmailService::getInstance()->sendVerificationEmail($email, $name, $token);
 
                 $stmt = Database::getConnection()->prepare("SELECT * FROM users WHERE email = ?");
                 $stmt->execute([$email]);
                 AuthService::login($stmt->fetch());
-                redirect('/');
+                redirect('/?msg=verify_sent');
             }
         }
         
@@ -121,12 +125,10 @@ class AuthController {
         }
     }
 
-    public function logout() {
-        AuthService::logout();
-        redirect('/');
-    }
-}
-
+    public function verifyEmail() {
+        $token = $_GET['token'] ?? '';
+        if (!$token) {
+            redirect('/');
         }
 
         $stmt = Database::getConnection()->prepare("SELECT * FROM users WHERE verification_token = ?");
@@ -149,6 +151,21 @@ class AuthController {
         } else {
             redirect('/?msg=verify_invalid');
         }
+    }
+
+    public function resendVerification() {
+        $user = AuthService::currentUser();
+        if (!$user || !empty($user['is_verified'])) {
+            redirect('/');
+        }
+
+        $token = bin2hex(random_bytes(32));
+        Database::getConnection()->prepare("UPDATE users SET verification_token = ? WHERE id = ?")
+           ->execute([$token, $user['id']]);
+
+        EmailService::getInstance()->sendVerificationEmail($user['email'], $user['name'], $token);
+
+        redirect('/?msg=verify_sent');
     }
 
     public function logout() {

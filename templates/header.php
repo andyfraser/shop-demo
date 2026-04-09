@@ -89,6 +89,7 @@
   <?php if ($current_user && empty($current_user['is_verified'])): ?>
     <div class="alert alert-warning" style="margin: 0; text-align: center; border-radius: 0; border: none; border-bottom: 1px solid var(--warning-ink); background: var(--warning-bg); color: var(--warning-ink); padding: 0.75rem;">
       <strong>Verify your email:</strong> Please check your inbox to verify your account before you can make a purchase.
+      <a href="/verify-email/resend" style="text-decoration: underline; margin-left: 0.5rem;">Resend email</a>
     </div>
   <?php endif; ?>
 
