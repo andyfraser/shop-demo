@@ -13,12 +13,13 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 
 **Storefront**
 - Hierarchical product categories with dropdown navigation
-- Product listings with breadcrumbs, related products, and detail pages
+- Product listings with breadcrumbs, related products, and detail pages. **Note:** Out-of-stock products are automatically hidden from the featured homepage list.
 - Full-text product search with sorting and configurable pagination (12 / 24 / all)
 - Session-based shopping cart with AJAX add/update/remove and live badge counter
 - Checkout with saved shipping address pre-fill and dynamic delivery options
-- Customer accounts with order history and saved shipping address
-- User registration with email verification and login
+- Customer accounts with order history, saved shipping address, and **order cancellation for pending orders**
+- User registration with email verification, **resend verification functionality**, and login
+- Privacy-compliant cookie consent banner with persistence logic
 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
@@ -26,7 +27,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
 - Hierarchical category management with parent/child relationships
 - Role-based access control (admin / customer)
-- Configurable site settings: name, currency symbol, password policy, and rate-limit thresholds
+- Configurable site settings: name, currency symbol, password policy, rate-limit thresholds, and low-stock threshold for inventory badges and alerts
 
 ---
 
@@ -171,7 +172,7 @@ shop-demo/
 
 ## Architecture
 
-All requests enter through `index.php` (front controller), which registers the autoloader, defines constants, and dispatches to `src/Core/Router`. The router matches `REQUEST_URI` / `REQUEST_METHOD` against registered routes, runs any middleware, then calls the controller action.
+All requests enter through `index.php` (front controller), which registers the autoloader, defines constants, and dispatches to `src/Core/Router`. Common icon routes (like `/favicon.ico` or `/apple-touch-icon.png`) are explicitly handled to prevent 404 errors by redirecting to a centralized SVG favicon. The router matches `REQUEST_URI` / `REQUEST_METHOD` against registered routes, runs any middleware, then calls the controller action.
 
 **Rendering:** Controllers fetch data and call `Renderer::render('template_name', ['var' => $val])`. The renderer extracts the data array, auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`), and wraps the template with `header.php` / `footer.php`. Admin pages use `Renderer::adminRender()`.
 
@@ -179,7 +180,7 @@ All requests enter through `index.php` (front controller), which registers the a
 
 **Session cart:** Stored in `$_SESSION['cart']` as `[product_id => quantity]`, managed entirely by `CartService`.
 
-**Security:** Every POST form includes a CSRF token (`csrf_field()`), verified by `SecurityService::validateCsrf()`. Login and registration are rate-limited (5 attempts / 15 min and 10 attempts / hour respectively). Admin routes are protected by `AdminMiddleware`.
+**Security:** Every POST form includes a CSRF token (`csrf_field()`), verified by `SecurityService::validateCsrf()`. Login and registration are rate-limited (5 attempts / 15 min and 10 attempts / hour respectively). Admin routes are protected by `AdminMiddleware`. A cookie consent banner and JavaScript implementation handle session/cart cookie persistence in compliance with privacy standards.
 
 ---
 
