@@ -16,13 +16,13 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - Product listings with breadcrumbs, related products, and detail pages
 - Full-text product search with sorting and configurable pagination (12 / 24 / all)
 - Session-based shopping cart with AJAX add/update/remove and live badge counter
-- Checkout with saved shipping address pre-fill
+- Checkout with saved shipping address pre-fill and dynamic delivery options
 - Customer accounts with order history and saved shipping address
-- User registration and login
+- User registration with email verification and login
 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
-- Full CRUD for products (including image upload and featured status), categories, users, delivery options, and orders
+- Full CRUD for products (including image upload and featured status), categories, users, delivery options (with minimum order thresholds), and orders
 - Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
 - Hierarchical category management with parent/child relationships
 - Role-based access control (admin / customer)
@@ -34,6 +34,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 
 - PHP 8.0 or higher
 - Extensions: `pdo_sqlite` (for SQLite) or `pdo_mysql` (for MySQL)
+- A local mail server or `mail()` support (for verification and order emails)
 
 ---
 
@@ -106,7 +107,7 @@ shop-demo/
 │   │
 │   ├── Controllers/
 │   │   ├── StorefrontController.php   # Home, search, category, product pages
-│   │   ├── AuthController.php         # Login, register, logout
+│   │   ├── AuthController.php         # Login, register, logout, email verification
 │   │   ├── CartController.php         # Cart view, add, update (AJAX + form)
 │   │   ├── CheckoutController.php     # Checkout form and order processing
 │   │   ├── AccountController.php      # Customer account, order history, address
@@ -115,7 +116,8 @@ shop-demo/
 │   │   ├── AdminProductsController.php
 │   │   ├── AdminOrdersController.php
 │   │   ├── AdminUsersController.php
-│   │   └── AdminSettingsController.php
+│   │   ├── AdminSettingsController.php
+│   │   └── AdminDeliveryController.php
 │   │
 │   ├── Middleware/
 │   │   ├── AuthMiddleware.php          # Requires authenticated session
@@ -124,12 +126,14 @@ shop-demo/
 │   ├── Services/
 │   │   ├── AuthService.php             # Session login / logout / current user
 │   │   ├── CartService.php             # Session-based cart operations
+│   │   ├── DeliveryService.php         # DB-backed delivery options management
+│   │   ├── EmailService.php            # Transactional emails (verification, orders)
 │   │   ├── SecurityService.php         # CSRF tokens and rate limiting
 │   │   └── SettingsService.php         # DB-backed key/value settings with defaults
 │   │
 │   └── Helpers.php         # Global helpers: h(), money(), setting(), redirect(), flash(),
-│                           #   csrf_field(), current_user(), cart_count(), product_img(),
-│                           #   slugify(), get_category_tree(), get_category_flat(), get_breadcrumb()
+│                           #   csrf_field(), csrf_token(), current_user(), is_ajax(), is_new_product(),
+│                           #   product_img(), slugify(), get_category_tree(), get_category_flat(), get_breadcrumb()
 │
 ├── templates/              # HTML-only templates — no queries or redirects
 │   ├── header.php
@@ -149,6 +153,7 @@ shop-demo/
 │       ├── dashboard.php
 │       ├── categories_list.php / categories_form.php
 │       ├── products_list.php / products_form.php
+│       ├── delivery_list.php / delivery_form.php
 │       ├── orders_list.php / orders_detail.php
 │       ├── users_list.php / users_form.php
 │       └── settings.php

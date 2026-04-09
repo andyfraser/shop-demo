@@ -1,7 +1,8 @@
 <?php
 // templates/layout.php
 // Variables expected: $page_title (string), $search_query (string, optional)
-// Uses: current_user(), is_admin(), cart_count(), get_category_tree(), BASE_URL, SITE_NAME
+// Shared via Renderer: $current_user, $cart_count, $nav_tree
+// Uses: h(), csrf_token(), BASE_URL, SITE_NAME, SITE_NAME_PLAIN
 ?>
 <!DOCTYPE html>
 <html lang="en">
