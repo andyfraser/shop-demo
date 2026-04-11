@@ -30,7 +30,7 @@
           <input type="checkbox" name="remember_me" value="1"
                  <?= !empty($_POST['remember_me']) ? 'checked' : '' ?>>
           <span class="toggle-track"></span>
-          <span class="toggle-label">Remember me for 30 days</span>
+          <span class="toggle-label">Remember me for <?= h(setting('remember_me_days')) ?> days</span>
         </label>
         <button type="submit" class="btn btn-primary"
                 style="width:100%;justify-content:center;padding:.7rem;">
