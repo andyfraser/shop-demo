@@ -14,6 +14,7 @@
 </head>
 <body>
 
+<div class="admin-wrap">
 <aside class="sidebar">
   <div class="sidebar-logo">
     <?= h(SITE_NAME_PLAIN) ?>
