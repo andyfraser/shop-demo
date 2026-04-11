@@ -96,6 +96,30 @@
       </div>
     </div>
 
+    <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
+      <h3 style="margin:0 0 1rem;font-size:1rem;">Mobile Navigation</h3>
+
+      <p style="font-size:.85rem;color:var(--ink-2);margin:0 0 1rem;">
+        Controls whether sub-categories are expanded by default in the mobile hamburger menu.
+        If either threshold is exceeded, only top-level categories are shown.
+      </p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="form-group">
+          <label>Max Top-Level Categories</label>
+          <input type="number" name="mobile_nav_max_top" class="form-control"
+                 value="<?= h($settings['mobile_nav_max_top']) ?>" min="1" required>
+          <small style="color:var(--ink-2);">Default: 10</small>
+        </div>
+        <div class="form-group">
+          <label>Max Combined Categories</label>
+          <input type="number" name="mobile_nav_max_combined" class="form-control"
+                 value="<?= h($settings['mobile_nav_max_combined']) ?>" min="1" required>
+          <small style="color:var(--ink-2);">Top-level + first-level total. Default: 20</small>
+        </div>
+      </div>
+    </div>
+
     <button type="submit" class="btn btn-primary">Save Settings</button>
   </form>
 </div>

@@ -21,16 +21,18 @@ class AdminSettingsController {
 
         $errors = [];
 
-        $site_name = trim($_POST['site_name'] ?? '');
-        $currency  = trim($_POST['currency_symbol'] ?? '');
-        $email_from = trim($_POST['email_from'] ?? '');
-        $pass_min  = (int)($_POST['password_min_length'] ?? 0);
-        $login_att = (int)($_POST['login_max_attempts'] ?? 0);
-        $login_win = (int)($_POST['login_window_minutes'] ?? 0);
-        $reg_att   = (int)($_POST['register_max_attempts'] ?? 0);
-        $reg_win   = (int)($_POST['register_window_minutes'] ?? 0);
+        $site_name      = trim($_POST['site_name'] ?? '');
+        $currency       = trim($_POST['currency_symbol'] ?? '');
+        $email_from     = trim($_POST['email_from'] ?? '');
+        $pass_min       = (int)($_POST['password_min_length'] ?? 0);
+        $login_att      = (int)($_POST['login_max_attempts'] ?? 0);
+        $login_win      = (int)($_POST['login_window_minutes'] ?? 0);
+        $reg_att        = (int)($_POST['register_max_attempts'] ?? 0);
+        $reg_win        = (int)($_POST['register_window_minutes'] ?? 0);
         $low_stock      = (int)($_POST['low_stock_threshold'] ?? 0);
         $remember_days  = (int)($_POST['remember_me_days'] ?? 0);
+        $nav_max_top      = (int)($_POST['mobile_nav_max_top'] ?? 0);
+        $nav_max_combined = (int)($_POST['mobile_nav_max_combined'] ?? 0);
 
         if ($site_name === '') $errors[] = 'Site name is required.';
         if ($currency === '')  $errors[] = 'Currency symbol is required.';
@@ -42,6 +44,8 @@ class AdminSettingsController {
         if ($reg_win < 1)     $errors[] = 'Registration window must be at least 1 minute.';
         if ($low_stock < 0)   $errors[] = 'Low stock threshold must be at least 0.';
         if ($remember_days < 1) $errors[] = 'Remember me duration must be at least 1 day.';
+        if ($nav_max_top < 1)      $errors[] = 'Mobile nav top-level threshold must be at least 1.';
+        if ($nav_max_combined < 1) $errors[] = 'Mobile nav combined threshold must be at least 1.';
 
         if (!$errors) {
             SettingsService::set('site_name',               $site_name);
@@ -54,6 +58,8 @@ class AdminSettingsController {
             SettingsService::set('register_window_minutes', (string)$reg_win);
             SettingsService::set('low_stock_threshold',     (string)$low_stock);
             SettingsService::set('remember_me_days',        (string)$remember_days);
+            SettingsService::set('mobile_nav_max_top',      (string)$nav_max_top);
+            SettingsService::set('mobile_nav_max_combined', (string)$nav_max_combined);
 
             flash('msg', 'Settings saved.');
             redirect('/admin/settings');
@@ -73,6 +79,8 @@ class AdminSettingsController {
                 'register_window_minutes' => (string)$reg_win,
                 'low_stock_threshold'     => (string)$low_stock,
                 'remember_me_days'        => (string)$remember_days,
+                'mobile_nav_max_top'      => (string)$nav_max_top,
+                'mobile_nav_max_combined' => (string)$nav_max_combined,
             ],
             'flash_msg'  => null,
             'errors'     => $errors,

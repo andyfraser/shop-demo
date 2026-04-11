@@ -15,11 +15,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/shop.css?v=<?= filemtime(__DIR__ . '/../public/css/shop.css') ?>">
 <meta name="csrf-token" content="<?= h(csrf_token()) ?>">
-<style>
-/* Critical nav override — ensures sub-menus are hidden even if external CSS is stale */
-.sub-menu { display: none !important; }
-.has-sub:hover > .sub-menu { display: flex !important; flex-direction: column; }
-</style>
+<?php
+$_top      = count($nav_tree);
+$_children = array_sum(array_map(fn($c) => count($c['children'] ?? []), $nav_tree));
+$mobile_nav_expanded = (
+    $_top      <= (int) setting('mobile_nav_max_top') &&
+    ($_top + $_children) <= (int) setting('mobile_nav_max_combined')
+);
+?>
 </head>
 <body>
 
@@ -38,28 +41,41 @@
       <button type="submit">Search</button>
     </form>
 
-    <nav class="header-actions">
-      <?php if ($current_user): ?>
-        <a href="<?= BASE_URL ?>/account">👤 <?= h($current_user['name']) ?></a>
-        <?php if ($current_user['role'] === 'admin'): ?>
-          <a href="<?= BASE_URL ?>/admin">⚙ Admin</a>
+    <div class="header-right">
+      <nav class="header-actions">
+        <?php if ($current_user): ?>
+          <a href="<?= BASE_URL ?>/account">👤 <span class="link-text"><?= h($current_user['name']) ?></span></a>
+          <?php if ($current_user['role'] === 'admin'): ?>
+            <a href="<?= BASE_URL ?>/admin">⚙ <span class="link-text">Admin</span></a>
+          <?php endif; ?>
+          <a href="<?= BASE_URL ?>/logout">🚪 <span class="link-text">Sign out</span></a>
+        <?php else: ?>
+          <a href="<?= BASE_URL ?>/login" data-tooltip="Sign in">🔑 <span class="link-text">Sign in</span></a>
+          <a href="<?= BASE_URL ?>/register" data-tooltip="Register">📝 <span class="link-text">Register</span></a>
         <?php endif; ?>
-        <a href="<?= BASE_URL ?>/logout">Sign out</a>
-      <?php else: ?>
-        <a href="<?= BASE_URL ?>/login">Sign in</a>
-        <a href="<?= BASE_URL ?>/register">Register</a>
-      <?php endif; ?>
-      <a href="<?= BASE_URL ?>/cart" id="cart-link">
-        🛒 Cart
-        <?php if ($cart_count > 0): ?>
-          <span class="cart-badge"><?= $cart_count ?></span>
-        <?php endif; ?>
-      </a>
-    </nav>
+        <a href="<?= BASE_URL ?>/cart" id="cart-link">
+          🛒 <span class="link-text">Cart</span>
+          <?php if ($cart_count > 0): ?>
+            <span class="cart-badge"><?= $cart_count ?></span>
+          <?php endif; ?>
+        </a>
+      </nav>
+
+      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-label="Toggle navigation" data-tooltip="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 </header>
 
-<nav class="site-nav">
+<div class="mobile-search-bar">
+  <form action="<?= BASE_URL ?>/search" method="GET">
+    <input type="text" name="q" placeholder="Search products…" value="<?= h($search_query ?? '') ?>">
+    <button type="submit">Search</button>
+  </form>
+</div>
+
+<nav class="site-nav<?= $mobile_nav_expanded ? '' : ' nav-collapsed' ?>" id="site-nav">
   <div class="nav-inner">
     <ul>
       <li><a href="<?= BASE_URL ?>/">Home</a></li>

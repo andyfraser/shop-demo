@@ -20,6 +20,7 @@
         <div class="card" style="padding:0;overflow:hidden;">
           <form method="POST" id="cart-form">
             <?= csrf_field() ?>
+            <div class="cart-table-scroll">
             <table class="cart-table">
               <thead>
                 <tr>
@@ -55,6 +56,7 @@
                 <?php endforeach; ?>
               </tbody>
             </table>
+            </div>
             <div style="padding:1rem;border-top:1px solid var(--line);">
               <button type="submit" name="update" class="btn btn-outline btn-sm">Update Cart</button>
             </div>

@@ -177,6 +177,32 @@ if (cartForm) {
     });
 }
 
+// ── Mobile nav toggle ────────────────────────────────────────────────────────
+
+const navToggle = document.getElementById('nav-toggle');
+const siteNav   = document.getElementById('site-nav');
+if (navToggle && siteNav) {
+    navToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = siteNav.classList.toggle('open');
+        navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    document.addEventListener('click', (e) => {
+        if (siteNav.classList.contains('open') &&
+            !siteNav.contains(e.target) && !navToggle.contains(e.target)) {
+            siteNav.classList.remove('open');
+            navToggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && siteNav.classList.contains('open')) {
+            siteNav.classList.remove('open');
+            navToggle.setAttribute('aria-expanded', 'false');
+            navToggle.focus();
+        }
+    });
+}
+
 // ── Cookie Consent Banner ─────────────────────────────────────────────────────
 
 const cookieBanner = document.getElementById('cookie-banner');
