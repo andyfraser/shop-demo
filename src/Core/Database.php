@@ -165,5 +165,30 @@ class Database {
 
         // Force verify seeded accounts if they were already there
         $pdo->exec("UPDATE users SET is_verified = 1 WHERE id IN (1, 2)");
+
+        // Remember-me tokens table
+        if ($driver === 'sqlite') {
+            $tables = $pdo->query("SELECT name FROM sqlite_master WHERE type='table'")->fetchAll(PDO::FETCH_COLUMN);
+        } else {
+            $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+        }
+        if (!in_array('remember_tokens', $tables)) {
+            if ($driver === 'mysql') {
+                $pdo->exec("CREATE TABLE remember_tokens (
+                    id         INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id    INT NOT NULL,
+                    token      VARCHAR(64) NOT NULL UNIQUE,
+                    expires_at INT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )");
+            } else {
+                $pdo->exec("CREATE TABLE remember_tokens (
+                    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    token      TEXT NOT NULL UNIQUE,
+                    expires_at INTEGER NOT NULL
+                )");
+            }
+        }
     }
 }

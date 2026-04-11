@@ -26,6 +26,12 @@
           <label for="password">Password</label>
           <input type="password" id="password" name="password" class="form-control" required>
         </div>
+        <label class="toggle-row">
+          <input type="checkbox" name="remember_me" value="1"
+                 <?= !empty($_POST['remember_me']) ? 'checked' : '' ?>>
+          <span class="toggle-track"></span>
+          <span class="toggle-label">Remember me for 30 days</span>
+        </label>
         <button type="submit" class="btn btn-primary"
                 style="width:100%;justify-content:center;padding:.7rem;">
           Sign In

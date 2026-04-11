@@ -51,7 +51,8 @@ class AuthController {
             ]);
         } else {
             SecurityService::clearRateLimit('login', $_SERVER['REMOTE_ADDR']);
-            AuthService::login($user);
+            $remember = !empty($_POST['remember_me']);
+            AuthService::login($user, $remember);
             redirect($_SESSION['redirect_after_login'] ?? '/');
         }
     }

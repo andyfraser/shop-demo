@@ -78,6 +78,13 @@ CREATE TABLE IF NOT EXISTS settings (
     value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS remember_tokens (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token      TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL
+);
+
 -- Indexes
 -- categories: parent_id for subcategory hierarchy queries
 CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);

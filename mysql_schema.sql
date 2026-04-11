@@ -78,6 +78,14 @@ CREATE TABLE IF NOT EXISTS settings (
     value TEXT NOT NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS remember_tokens (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NOT NULL,
+    token      VARCHAR(64) NOT NULL UNIQUE,
+    expires_at INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- Indexes
 CREATE INDEX idx_categories_parent ON categories(parent_id);
 CREATE INDEX idx_products_category_active ON products(category_id, active);

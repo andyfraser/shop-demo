@@ -56,6 +56,13 @@
         <input type="number" name="password_min_length" class="form-control"
                value="<?= h($settings['password_min_length']) ?>" min="1" required style="max-width:8rem;">
       </div>
+
+      <div class="form-group">
+        <label>Remember Me — Duration (days)</label>
+        <input type="number" name="remember_me_days" class="form-control"
+               value="<?= h($settings['remember_me_days']) ?>" min="1" required style="max-width:8rem;">
+        <small style="color:var(--ink-2);">How long a "Remember me" login persists before the user must sign in again.</small>
+      </div>
     </div>
 
     <div class="card" style="max-width:560px;margin-bottom:1.5rem;">

@@ -29,7 +29,8 @@ class AdminSettingsController {
         $login_win = (int)($_POST['login_window_minutes'] ?? 0);
         $reg_att   = (int)($_POST['register_max_attempts'] ?? 0);
         $reg_win   = (int)($_POST['register_window_minutes'] ?? 0);
-        $low_stock = (int)($_POST['low_stock_threshold'] ?? 0);
+        $low_stock      = (int)($_POST['low_stock_threshold'] ?? 0);
+        $remember_days  = (int)($_POST['remember_me_days'] ?? 0);
 
         if ($site_name === '') $errors[] = 'Site name is required.';
         if ($currency === '')  $errors[] = 'Currency symbol is required.';
@@ -40,6 +41,7 @@ class AdminSettingsController {
         if ($reg_att < 1)     $errors[] = 'Registration max attempts must be at least 1.';
         if ($reg_win < 1)     $errors[] = 'Registration window must be at least 1 minute.';
         if ($low_stock < 0)   $errors[] = 'Low stock threshold must be at least 0.';
+        if ($remember_days < 1) $errors[] = 'Remember me duration must be at least 1 day.';
 
         if (!$errors) {
             SettingsService::set('site_name',               $site_name);
@@ -51,6 +53,7 @@ class AdminSettingsController {
             SettingsService::set('register_max_attempts',   (string)$reg_att);
             SettingsService::set('register_window_minutes', (string)$reg_win);
             SettingsService::set('low_stock_threshold',     (string)$low_stock);
+            SettingsService::set('remember_me_days',        (string)$remember_days);
 
             flash('msg', 'Settings saved.');
             redirect('/admin/settings');
@@ -69,6 +72,7 @@ class AdminSettingsController {
                 'register_max_attempts'   => (string)$reg_att,
                 'register_window_minutes' => (string)$reg_win,
                 'low_stock_threshold'     => (string)$low_stock,
+                'remember_me_days'        => (string)$remember_days,
             ],
             'flash_msg'  => null,
             'errors'     => $errors,
