@@ -55,15 +55,17 @@ class StorefrontController {
             if ($per_page !== null) {
                 $total_pages = (int)ceil($total_products / $per_page);
                 $offset = ($current_page - 1) * $per_page;
+                $limit_int  = (int)$per_page;
+                $offset_int = (int)$offset;
                 $stmt = $db->prepare(
                     "SELECT p.*, c.name as cat_name
                      FROM products p
                      LEFT JOIN categories c ON p.category_id = c.id
                      WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)
                      ORDER BY $order_by
-                     LIMIT ? OFFSET ?"
+                     LIMIT $limit_int OFFSET $offset_int"
                 );
-                $stmt->execute([$like, $like, $per_page, $offset]);
+                $stmt->execute([$like, $like]);
             } else {
                 $stmt = $db->prepare(
                     "SELECT p.*, c.name as cat_name
@@ -140,15 +142,17 @@ class StorefrontController {
         if ($per_page !== null) {
             $total_pages = (int)ceil($total_products / $per_page);
             $offset = ($current_page - 1) * $per_page;
+            $limit_int  = (int)$per_page;
+            $offset_int = (int)$offset;
             $stmt = $db->prepare(
                 "SELECT p.*, c.name as cat_name
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
                  WHERE p.category_id IN ($placeholders) AND p.active = 1
                  ORDER BY $order_by
-                 LIMIT ? OFFSET ?"
+                 LIMIT $limit_int OFFSET $offset_int"
             );
-            $stmt->execute([...$cat_ids, $per_page, $offset]);
+            $stmt->execute($cat_ids);
         } else {
             $total_pages = 1;
             $stmt = $db->prepare(
@@ -200,15 +204,17 @@ class StorefrontController {
         if ($per_page !== null) {
             $total_pages = (int)ceil($total_products / $per_page);
             $offset = ($current_page - 1) * $per_page;
+            $limit_int  = (int)$per_page;
+            $offset_int = (int)$offset;
             $stmt = $db->prepare(
                 "SELECT p.*, c.name as cat_name
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
                  WHERE p.active = 1
                  ORDER BY $order_by
-                 LIMIT ? OFFSET ?"
+                 LIMIT $limit_int OFFSET $offset_int"
             );
-            $stmt->execute([$per_page, $offset]);
+            $stmt->execute([]);
         } else {
             $total_pages = 1;
             $stmt = $db->query(
