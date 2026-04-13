@@ -17,7 +17,7 @@
   <?php else: ?>
     <div class="two-col">
       <div>
-        <div class="card" style="padding:0;overflow:hidden;">
+        <div class="card" style="padding:0;">
           <form method="POST" id="cart-form">
             <?= csrf_field() ?>
             <div class="cart-table-scroll">

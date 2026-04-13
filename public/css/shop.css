@@ -578,12 +578,15 @@ select.form-control  { cursor: pointer; }
     .site-nav.nav-collapsed.open .sub-menu { display: none !important; }
     .site-nav.nav-collapsed .arrow         { display: none; }
 
+    /* Container: tighter padding on mobile */
+    .container { padding: 1rem; }
+
     /* Cart table: scrollable on narrow screens */
     .cart-table-scroll {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-    .cart-table { min-width: 480px; }
+    .cart-table { min-width: 420px; }
 }
 
 /* ── AJAX / loading states ────────────────────────────────────────────────── */
