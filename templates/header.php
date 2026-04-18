@@ -50,8 +50,8 @@ $mobile_nav_expanded = (
           <?php endif; ?>
           <a href="<?= BASE_URL ?>/logout">🚪 <span class="link-text">Sign out</span></a>
         <?php else: ?>
-          <a href="<?= BASE_URL ?>/login" data-tooltip="Sign in">🔑 <span class="link-text">Sign in</span></a>
-          <a href="<?= BASE_URL ?>/register" data-tooltip="Register">📝 <span class="link-text">Register</span></a>
+          <a href="<?= BASE_URL ?>/login">🔑 <span class="link-text">Sign in</span></a>
+          <a href="<?= BASE_URL ?>/register">📝 <span class="link-text">Register</span></a>
         <?php endif; ?>
         <a href="<?= BASE_URL ?>/cart" id="cart-link">
           🛒 <span class="link-text">Cart</span>
