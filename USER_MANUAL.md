@@ -11,6 +11,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 4. [Configuration & Settings](#4-configuration--settings)
 5. [Technical Architecture](#5-technical-architecture)
 6. [Security & Privacy](#6-security--privacy)
+7. [Running Tests](#7-running-tests)
 
 ---
 
@@ -132,6 +133,23 @@ Demoshop handles updates automatically. `src/Core/Database.php` contains a `migr
 ### Privacy Compliance
 *   **Cookie Consent:** A built-in, persistence-aware banner handles user consent for non-essential cookies.
 *   **Input Sanitization:** Rigorous use of `h()` for HTML escaping and PDO prepared statements for database queries.
+
+---
+
+## 7. Running Tests
+
+Demoshop includes a custom-built unit testing framework that requires no external dependencies. Developers can verify the integrity of core logic by running the test suite from the command line.
+
+### Executing Tests
+To run the full test suite, execute the following command from the project root:
+```bash
+php tests/run.php
+```
+
+### Framework Features
+*   **Automatic Discovery:** The runner automatically finds all `*Test.php` files in the `tests/Unit/` directory.
+*   **Isolation:** Each test method is executed with a fresh environment via the `setUp()` method.
+*   **Detailed Reporting:** The suite reports total tests, assertions, and detailed failure messages with file and line references.
 
 ---
 *For developer support or feature requests, please consult the `README.md` or contact the system administrator.*

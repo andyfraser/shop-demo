@@ -69,6 +69,18 @@ Open **http://localhost:8080** in your browser.
 
 ---
 
+## Testing
+
+The project includes a custom vanilla PHP unit testing framework (no external dependencies).
+
+```bash
+php tests/run.php
+```
+
+This will run all tests in the `tests/Unit/` directory and report on pass/fail status and assertion counts.
+
+---
+
 ## Demo Accounts
 
 | Role     | Email               | Password   |
@@ -97,6 +109,11 @@ shop-demo/
 ├── sqlite_schema.sql       # SQLite database schema and seed data
 ├── mysql_schema.sql        # MySQL database schema and seed data
 ├── shop.db                 # SQLite database (auto-created if using SQLite)
+│
+├── tests/                  # Custom unit testing framework
+│   ├── run.php             # CLI test runner
+│   ├── TestCase.php        # Base test class with assertions
+│   └── Unit/               # Unit test suites
 │
 ├── src/
 │   ├── Core/
