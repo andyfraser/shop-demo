@@ -3,6 +3,10 @@
 require_once __DIR__ . '/../src/Core/Autoloader.php';
 \App\Core\Autoloader::register();
 
+require_once __DIR__ . '/../src/Helpers.php';
+
+@session_start();
+
 require_once __DIR__ . '/TestCase.php';
 
 use Tests\AssertionFailedException;
@@ -33,6 +37,9 @@ foreach ($testFiles as $file) {
         foreach ($methods as $method) {
             if (strpos($method->name, 'test') === 0) {
                 try {
+                    if ($reflection->hasMethod('setUp')) {
+                        $instance->setUp();
+                    }
                     $instance->{$method->name}();
                     echo ".";
                     $passed++;

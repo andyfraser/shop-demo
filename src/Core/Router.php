@@ -17,6 +17,27 @@ class Router {
     }
 
     public function dispatch(string $uri, string $method) {
+        $route = $this->match($uri, $method);
+        
+        if ($route) {
+            // Run middlewares
+            foreach ($route['middlewares'] as $middleware) {
+                $middlewareInst = new $middleware();
+                $middlewareInst->handle();
+            }
+
+            $controllerClass = $route['handler'][0];
+            $action = $route['handler'][1];
+            
+            $controller = new $controllerClass();
+            return call_user_func_array([$controller, $action], $route['params']);
+        }
+
+        http_response_code(404);
+        echo "404 Not Found";
+    }
+
+    public function match(string $uri, string $method): ?array {
         $path = parse_url($uri, PHP_URL_PATH);
         
         foreach ($this->routes as $route) {
@@ -24,22 +45,11 @@ class Router {
             $pattern = preg_replace('/:[a-zA-Z0-9_]+/', '([a-zA-Z0-9_-]+)', $route['path']);
             if ($route['method'] === $method && preg_match('#^' . $pattern . '/?$#', $path, $matches)) {
                 array_shift($matches); // Remove the full path match
-                
-                // Run middlewares
-                foreach ($route['middlewares'] as $middleware) {
-                    $middlewareInst = new $middleware();
-                    $middlewareInst->handle();
-                }
-
-                $controllerClass = $route['handler'][0];
-                $action = $route['handler'][1];
-                
-                $controller = new $controllerClass();
-                return call_user_func_array([$controller, $action], $matches);
+                $route['params'] = $matches;
+                return $route;
             }
         }
-
-        http_response_code(404);
-        echo "404 Not Found";
+        
+        return null;
     }
 }
