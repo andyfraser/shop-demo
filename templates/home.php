@@ -17,10 +17,12 @@
     <div class="cat-grid">
       <?php foreach ($nav_tree as $cat): ?>
         <a href="/category/<?= h($cat['slug']) ?>" class="cat-card">
-          <div class="cat-icon"><?= $cat['icon'] ? h($cat['icon']) : '📦' ?></div>
-          <?= h($cat['name']) ?>
+          <div class="cat-icon-wrap">
+            <span class="cat-icon"><?= $cat['icon'] ? h($cat['icon']) : '📦' ?></span>
+          </div>
+          <span class="cat-name"><?= h($cat['name']) ?></span>
           <?php if ($cat['children']): ?>
-            <div class="cat-sub"><?= count($cat['children']) ?> subcategories</div>
+            <span class="cat-sub"><?= count($cat['children']) ?> subcategories</span>
           <?php endif; ?>
         </a>
       <?php endforeach; ?>
