@@ -64,6 +64,10 @@ class Database {
         return self::$pdo;
     }
 
+    public static function closeConnection(): void {
+        self::$pdo = null;
+    }
+
     private static function createMySQLDatabase($host, $dbname, $user, $pass, $charset): void {
         $dsn = "mysql:host={$host};charset={$charset}";
         $pdo = new PDO($dsn, $user, $pass);

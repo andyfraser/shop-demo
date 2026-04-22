@@ -46,6 +46,9 @@
     <a href="/admin/settings"   class="<?= $active === 'settings'   ? 'active' : '' ?>">
       <span class="ico">⚙️</span> Settings
     </a>
+    <a href="/admin/backup"     class="<?= $active === 'backup'     ? 'active' : '' ?>">
+      <span class="ico">💾</span> Database
+    </a>
   </nav>
 
   <div class="sidebar-foot">

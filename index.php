@@ -116,6 +116,10 @@ $router->get('/admin/users/delete', [AdminUsersController::class, 'delete'], $ad
 $router->get('/admin/settings',  [AdminSettingsController::class, 'show'], $adminMiddleware);
 $router->post('/admin/settings', [AdminSettingsController::class, 'save'], $adminMiddleware);
 
+$router->get('/admin/backup',    [App\Controllers\AdminBackupController::class, 'index'], $adminMiddleware);
+$router->post('/admin/backup/download', [App\Controllers\AdminBackupController::class, 'download'], $adminMiddleware);
+$router->post('/admin/backup/restore',  [App\Controllers\AdminBackupController::class, 'restore'], $adminMiddleware);
+
 // Handle request
 $uri = $_SERVER['REQUEST_URI'] ?? '/';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
