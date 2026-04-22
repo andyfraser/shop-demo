@@ -30,6 +30,7 @@ class AdminSettingsController {
         $reg_att        = (int)($_POST['register_max_attempts'] ?? 0);
         $reg_win        = (int)($_POST['register_window_minutes'] ?? 0);
         $low_stock      = (int)($_POST['low_stock_threshold'] ?? 0);
+        $vat_rate       = (float)($_POST['default_vat_rate'] ?? 0);
         $remember_days  = (int)($_POST['remember_me_days'] ?? 0);
         $nav_max_top      = (int)($_POST['mobile_nav_max_top'] ?? 0);
         $nav_max_combined = (int)($_POST['mobile_nav_max_combined'] ?? 0);
@@ -43,6 +44,7 @@ class AdminSettingsController {
         if ($reg_att < 1)     $errors[] = 'Registration max attempts must be at least 1.';
         if ($reg_win < 1)     $errors[] = 'Registration window must be at least 1 minute.';
         if ($low_stock < 0)   $errors[] = 'Low stock threshold must be at least 0.';
+        if ($vat_rate < 0)    $errors[] = 'Default VAT rate must be at least 0.';
         if ($remember_days < 1) $errors[] = 'Remember me duration must be at least 1 day.';
         if ($nav_max_top < 1)      $errors[] = 'Mobile nav top-level threshold must be at least 1.';
         if ($nav_max_combined < 1) $errors[] = 'Mobile nav combined threshold must be at least 1.';
@@ -57,6 +59,7 @@ class AdminSettingsController {
             SettingsService::set('register_max_attempts',   (string)$reg_att);
             SettingsService::set('register_window_minutes', (string)$reg_win);
             SettingsService::set('low_stock_threshold',     (string)$low_stock);
+            SettingsService::set('default_vat_rate',        (string)$vat_rate);
             SettingsService::set('remember_me_days',        (string)$remember_days);
             SettingsService::set('mobile_nav_max_top',      (string)$nav_max_top);
             SettingsService::set('mobile_nav_max_combined', (string)$nav_max_combined);
@@ -78,6 +81,7 @@ class AdminSettingsController {
                 'register_max_attempts'   => (string)$reg_att,
                 'register_window_minutes' => (string)$reg_win,
                 'low_stock_threshold'     => (string)$low_stock,
+                'default_vat_rate'        => (string)$vat_rate,
                 'remember_me_days'        => (string)$remember_days,
                 'mobile_nav_max_top'      => (string)$nav_max_top,
                 'mobile_nav_max_combined' => (string)$nav_max_combined,

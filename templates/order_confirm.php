@@ -52,6 +52,9 @@
         <span>Total</span>
         <span style="color:var(--accent-2)"><?= money($order['total']) ?></span>
       </div>
+      <div style="font-size:.85rem;color:var(--ink-2);text-align:right;">
+        Includes <?= money($order['total_vat_amount'] ?? 0) ?> VAT
+      </div>
     </div>
 
     <div style="margin-top:1.2rem;">

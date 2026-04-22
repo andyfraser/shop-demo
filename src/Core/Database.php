@@ -133,6 +133,9 @@ class Database {
         if (!in_array('customer_name', $cols)) {
             $pdo->exec("ALTER TABLE orders ADD COLUMN customer_name TEXT");
         }
+        if (!in_array('total_vat_amount', $cols)) {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN total_vat_amount REAL DEFAULT 0.0");
+        }
 
         // Products table migrations
         if ($driver === 'sqlite') {
@@ -145,6 +148,23 @@ class Database {
             $default = ($driver === 'mysql') ? '0' : '0';
             $type = ($driver === 'mysql') ? 'TINYINT(1)' : 'INTEGER';
             $pdo->exec("ALTER TABLE products ADD COLUMN featured $type DEFAULT $default");
+        }
+        if (!in_array('vat_rate', $p_cols)) {
+            $pdo->exec("ALTER TABLE products ADD COLUMN vat_rate REAL DEFAULT 20.0");
+        }
+
+        // Order Items table migrations
+        if ($driver === 'sqlite') {
+            $oi_cols = $pdo->query("PRAGMA table_info(order_items)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        } else {
+            $oi_cols = $pdo->query("SHOW COLUMNS FROM order_items")->fetchAll(PDO::FETCH_COLUMN, 0);
+        }
+
+        if (!in_array('vat_rate', $oi_cols)) {
+            $pdo->exec("ALTER TABLE order_items ADD COLUMN vat_rate REAL DEFAULT 0.0");
+        }
+        if (!in_array('vat_amount', $oi_cols)) {
+            $pdo->exec("ALTER TABLE order_items ADD COLUMN vat_amount REAL DEFAULT 0.0");
         }
 
         // Users table migrations

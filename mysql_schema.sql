@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS products (
     slug VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     price DOUBLE NOT NULL,
+    vat_rate DOUBLE DEFAULT 20.0,
     stock INT DEFAULT 0,
     category_id INT REFERENCES categories(id) ON DELETE SET NULL,
     image VARCHAR(255),
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id INT REFERENCES users(id),
     status VARCHAR(50) DEFAULT 'pending',
     total DOUBLE NOT NULL,
+    total_vat_amount DOUBLE DEFAULT 0.0,
     shipping_address TEXT,
     notes TEXT,
     delivery_method VARCHAR(255),
@@ -63,7 +65,9 @@ CREATE TABLE IF NOT EXISTS order_items (
     order_id INT REFERENCES orders(id) ON DELETE CASCADE,
     product_id INT REFERENCES products(id),
     quantity INT NOT NULL,
-    unit_price DOUBLE NOT NULL
+    unit_price DOUBLE NOT NULL,
+    vat_rate DOUBLE DEFAULT 0.0,
+    vat_amount DOUBLE DEFAULT 0.0
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS rate_limits (

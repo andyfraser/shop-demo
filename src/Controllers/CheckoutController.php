@@ -26,6 +26,7 @@ class CheckoutController {
             'page_title' => 'Checkout',
             'items'      => $items,
             'total'      => CartService::total(),
+            'total_item_vat' => CartService::totalVat(),
             'errors'     => [],
             'name'       => $user['name'] ?? '',
             'email'      => $user['email'] ?? '',
@@ -68,16 +69,22 @@ class CheckoutController {
         if (!$errors) {
             $user  = AuthService::currentUser();
             $total = CartService::total() + $delivery['price'];
+            
+            $defaultVatRate = (float)\App\Services\SettingsService::get('default_vat_rate');
+            $deliveryVat = $delivery['price'] * ($defaultVatRate / (100 + $defaultVatRate));
+            $totalVat = CartService::totalVat() + $deliveryVat;
+            
             $db    = Database::getConnection();
 
             $db->prepare(
-                "INSERT INTO orders (user_id, customer_name, customer_email, total, shipping_address, notes, status, delivery_method, delivery_cost)
-                 VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)"
+                "INSERT INTO orders (user_id, customer_name, customer_email, total, total_vat_amount, shipping_address, notes, status, delivery_method, delivery_cost)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)"
             )->execute([
                 $user['id'] ?? null,
                 $name,
                 $email,
                 $total,
+                $totalVat,
                 $address,
                 $notes,
                 $delivery['name'],
@@ -87,18 +94,20 @@ class CheckoutController {
             $order_id = $db->lastInsertId();
 
             $ins = $db->prepare(
-                "INSERT INTO order_items (order_id, product_id, quantity, unit_price)
-                 VALUES (?, ?, ?, ?)"
+                "INSERT INTO order_items (order_id, product_id, quantity, unit_price, vat_rate, vat_amount)
+                 VALUES (?, ?, ?, ?, ?, ?)"
             );
             $orderItems = [];
             foreach ($items as $item) {
-                $ins->execute([$order_id, $item['id'], $item['qty'], $item['price']]);
+                $ins->execute([$order_id, $item['id'], $item['qty'], $item['price'], $item['vat_rate'], $item['vat_amount']]);
                 $db->prepare("UPDATE products SET stock = stock - ? WHERE id = ?")
                    ->execute([$item['qty'], $item['id']]);
                 $orderItems[] = [
                     'name' => $item['name'],
                     'quantity' => $item['qty'],
-                    'unit_price' => $item['price']
+                    'unit_price' => $item['price'],
+                    'vat_rate' => $item['vat_rate'],
+                    'vat_amount' => $item['vat_amount']
                 ];
             }
 
@@ -120,6 +129,7 @@ class CheckoutController {
             'page_title' => 'Checkout',
             'items'      => $items,
             'total'      => CartService::total(),
+            'total_item_vat' => CartService::totalVat(),
             'errors'     => $errors,
             'name'       => $name,
             'email'      => $email,

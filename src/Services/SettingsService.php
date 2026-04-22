@@ -16,6 +16,7 @@ class SettingsService {
         'register_window_minutes' => '60',
         'low_stock_threshold'     => '10',
         'remember_me_days'        => '30',
+        'default_vat_rate'        => '20',
         'mobile_nav_max_top'      => '10',
         'mobile_nav_max_combined' => '20',
     ];

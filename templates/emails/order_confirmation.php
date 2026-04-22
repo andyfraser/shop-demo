@@ -35,6 +35,11 @@
             <td colspan="2" style="text-align: right; padding-top: 10px; font-weight: bold; font-size: 1.2em;">Order Total</td>
             <td style="text-align: right; padding-top: 10px; font-weight: bold; font-size: 1.2em;"><?= money($order['total']) ?></td>
         </tr>
+        <tr>
+            <td colspan="3" style="text-align: right; font-size: 0.85em; color: #666; padding-top: 5px;">
+                Includes <?= money($order['total_vat_amount'] ?? 0) ?> VAT
+            </td>
+        </tr>
     </tfoot>
 </table>
 

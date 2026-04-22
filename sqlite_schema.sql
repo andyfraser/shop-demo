@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS products (
     slug TEXT NOT NULL UNIQUE,
     description TEXT,
     price REAL NOT NULL,
+    vat_rate REAL DEFAULT 20.0,
     stock INTEGER DEFAULT 0,
     category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
     image TEXT,
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id INTEGER REFERENCES users(id),
     status TEXT DEFAULT 'pending',
     total REAL NOT NULL,
+    total_vat_amount REAL DEFAULT 0.0,
     shipping_address TEXT,
     notes TEXT,
     delivery_method TEXT,
@@ -63,7 +65,9 @@ CREATE TABLE IF NOT EXISTS order_items (
     order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id),
     quantity INTEGER NOT NULL,
-    unit_price REAL NOT NULL
+    unit_price REAL NOT NULL,
+    vat_rate REAL DEFAULT 0.0,
+    vat_amount REAL DEFAULT 0.0
 );
 
 CREATE TABLE IF NOT EXISTS rate_limits (

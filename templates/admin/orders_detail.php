@@ -25,37 +25,42 @@ $badges = ['pending'=>'badge-warning','confirmed'=>'badge-info','shipped'=>'badg
         </div>
         <table class="data-table" style="box-shadow:none;">
           <thead>
-            <tr><th>Product</th><th>Unit Price</th><th>Qty</th><th>Subtotal</th></tr>
+            <tr><th>Product</th><th>Unit Price</th><th>VAT Rate</th><th>Qty</th><th>Subtotal</th></tr>
           </thead>
           <tbody>
             <?php foreach ($order_items as $item): ?>
               <tr>
                 <td><a href="/product/<?= h($item['slug']) ?>"><?= h($item['product_name']) ?></a></td>
                 <td><?= money($item['unit_price']) ?></td>
+                <td><?= (float)($item['vat_rate'] ?? 0) ?>%</td>
                 <td><?= $item['quantity'] ?></td>
-                <td><strong><?= money($item['unit_price'] * $item['quantity']) ?></strong></td>
+                <td>
+                  <strong><?= money($item['unit_price'] * $item['quantity']) ?></strong><br>
+                  <small style="font-weight:400;color:var(--ink-2);">Incl. <?= money($item['vat_amount'] ?? 0) ?> VAT</small>
+                </td>
               </tr>
             <?php endforeach; ?>
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="3" style="text-align:right;font-weight:600;padding:.8rem 1rem;">Subtotal</td>
+              <td colspan="4" style="text-align:right;font-weight:600;padding:.8rem 1rem;">Subtotal</td>
               <td style="padding:.8rem 1rem;">
                 <strong><?= money($order['total'] - ($order['delivery_cost'] ?? 0)) ?></strong>
               </td>
             </tr>
             <?php if ($order['delivery_method']): ?>
             <tr>
-              <td colspan="3" style="text-align:right;font-weight:600;padding:.8rem 1rem;">Delivery (<?= h($order['delivery_method']) ?>)</td>
+              <td colspan="4" style="text-align:right;font-weight:600;padding:.8rem 1rem;">Delivery (<?= h($order['delivery_method']) ?>)</td>
               <td style="padding:.8rem 1rem;">
                 <strong><?= money($order['delivery_cost']) ?></strong>
               </td>
             </tr>
             <?php endif; ?>
             <tr>
-              <td colspan="3" style="text-align:right;font-weight:700;padding:.8rem 1rem;font-size:1.1rem;">Total</td>
+              <td colspan="4" style="text-align:right;font-weight:700;padding:.8rem 1rem;font-size:1.1rem;">Total</td>
               <td style="padding:.8rem 1rem;">
-                <strong style="font-size:1.2rem;color:var(--accent-2);"><?= money($order['total']) ?></strong>
+                <strong style="font-size:1.2rem;color:var(--accent-2);"><?= money($order['total']) ?></strong><br>
+                <div style="font-weight:400;font-size:.8rem;color:var(--ink-2);">Includes <?= money($order['total_vat_amount'] ?? 0) ?> VAT</div>
               </td>
             </tr>
           </tfoot>

@@ -37,6 +37,12 @@
         </div>
 
         <div class="form-group">
+          <label>VAT Rate (%) *</label>
+          <input type="number" name="vat_rate" step="0.01" min="0" class="form-control"
+                 value="<?= h($product['vat_rate'] ?? '20.00') ?>" required>
+        </div>
+
+        <div class="form-group">
           <label>Stock Quantity</label>
           <input type="number" name="stock" min="0" class="form-control"
                  value="<?= h($product['stock'] ?? 0) ?>">

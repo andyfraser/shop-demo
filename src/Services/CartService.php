@@ -42,11 +42,16 @@ class CartService {
         foreach ($rows as &$row) {
             $row['qty'] = $c[$row['id']];
             $row['subtotal'] = $row['price'] * $row['qty'];
+            $row['vat_amount'] = $row['subtotal'] * ($row['vat_rate'] / (100 + $row['vat_rate']));
         }
         return $rows;
     }
 
     public static function total(): float {
         return array_sum(array_column(self::items(), 'subtotal'));
+    }
+
+    public static function totalVat(): float {
+        return array_sum(array_column(self::items(), 'vat_amount'));
     }
 }

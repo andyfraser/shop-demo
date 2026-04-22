@@ -50,7 +50,9 @@ class AdminProductsController {
             'page_title' => 'Add Product',
             'active'     => 'products',
             'is_new'     => true,
-            'product'    => [],
+            'product'    => [
+                'vat_rate' => \App\Services\SettingsService::get('default_vat_rate')
+            ],
             'product_id' => 0,
             'categories' => get_category_flat(),
             'errors'     => [],
@@ -105,6 +107,7 @@ class AdminProductsController {
             'name'        => trim($_POST['name'] ?? ''),
             'description' => trim($_POST['description'] ?? ''),
             'price'       => (float)($_POST['price'] ?? 0),
+            'vat_rate'    => (float)($_POST['vat_rate'] ?? 0),
             'stock'       => (int)($_POST['stock'] ?? 0),
             'category_id' => !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null,
             'image'       => $_POST['existing_image'] ?? null,
@@ -149,10 +152,10 @@ class AdminProductsController {
 
                 $db->prepare(
                     "UPDATE products
-                     SET name=?, slug=?, description=?, price=?, stock=?, category_id=?, image=?, active=?, featured=?
+                     SET name=?, slug=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?
                      WHERE id=?"
                 )->execute([
-                    $product['name'], $slug, $product['description'], $product['price'],
+                    $product['name'], $slug, $product['description'], $product['price'], $product['vat_rate'],
                     $product['stock'], $product['category_id'], $product['image'],
                     $product['active'], $product['featured'], $product_id,
                 ]);
@@ -163,10 +166,10 @@ class AdminProductsController {
                 if ($check->fetch()) $slug .= '-' . time();
 
                 $db->prepare(
-                    "INSERT INTO products (name, slug, description, price, stock, category_id, image, active, featured)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO products (name, slug, description, price, vat_rate, stock, category_id, image, active, featured)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 )->execute([
-                    $product['name'], $slug, $product['description'], $product['price'],
+                    $product['name'], $slug, $product['description'], $product['price'], $product['vat_rate'],
                     $product['stock'], $product['category_id'], $product['image'],
                     $product['active'], $product['featured'],
                 ]);

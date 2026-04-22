@@ -77,6 +77,9 @@
             <span>Total</span>
             <span id="final-total" style="color:var(--accent-2)"><?= money($total) ?></span>
           </div>
+          <div id="vat-row" style="font-size:.85rem;color:var(--ink-2);text-align:right;margin-top:.25rem;">
+            Includes <span id="vat-amount"><?= money($total_item_vat) ?></span> VAT
+          </div>
           <div class="alert alert-info" style="margin-top:1rem;font-size:.8rem;">
             🔒 No payment required — this is a demo store.
           </div>
@@ -92,12 +95,18 @@
 
 <script>
 const baseTotal = <?= (float)$total ?>;
+const baseVat = <?= (float)$total_item_vat ?>;
+const defaultVatRate = <?= (float)setting('default_vat_rate') ?>;
 const currencySymbol = '<?= setting('currency_symbol') ?>';
 
 function updateTotal(price) {
+  const deliveryVat = price * (defaultVatRate / (100 + defaultVatRate));
+  const totalVat = baseVat + deliveryVat;
+
   document.getElementById('delivery-row').style.display = 'flex';
   document.getElementById('delivery-cost').innerText = currencySymbol + price.toFixed(2);
   document.getElementById('final-total').innerText = currencySymbol + (baseTotal + price).toFixed(2);
+  document.getElementById('vat-amount').innerText = currencySymbol + totalVat.toFixed(2);
   document.getElementById('place-order-btn').disabled = false;
 }
 

@@ -46,6 +46,13 @@
                value="<?= h($settings['low_stock_threshold']) ?>" min="0" required style="max-width:6rem;">
         <small style="color:var(--ink-2);">Products with stock at or below this level will trigger low stock warnings.</small>
       </div>
+
+      <div class="form-group">
+        <label>Default VAT Rate (%)</label>
+        <input type="number" name="default_vat_rate" class="form-control"
+               value="<?= h($settings['default_vat_rate']) ?>" min="0" step="0.01" required style="max-width:6rem;">
+        <small style="color:var(--ink-2);">The default VAT percentage for new products and delivery costs.</small>
+      </div>
     </div>
 
     <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
