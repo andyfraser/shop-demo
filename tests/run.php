@@ -36,11 +36,17 @@ foreach ($testFiles as $file) {
         
         foreach ($methods as $method) {
             if (strpos($method->name, 'test') === 0) {
+                $instance->clearExpectedException();
                 try {
                     if ($reflection->hasMethod('setUp')) {
                         $instance->setUp();
                     }
                     $instance->{$method->name}();
+                    
+                    if ($instance->getExpectedException()) {
+                        throw new AssertionFailedException("Expected exception " . $instance->getExpectedException() . " was not thrown.");
+                    }
+
                     echo ".";
                     $passed++;
                 } catch (AssertionFailedException $e) {
@@ -53,16 +59,21 @@ foreach ($testFiles as $file) {
                         'file' => $file->getPathname(),
                         'line' => $e->getLine()
                     ];
-                } catch (Exception $e) {
-                    echo "E";
-                    $failed++;
-                    $failures[] = [
-                        'class' => $testClass,
-                        'method' => $method->name,
-                        'message' => "Unhandled Exception: " . $e->getMessage(),
-                        'file' => $file->getPathname(),
-                        'line' => $e->getLine()
-                    ];
+                } catch (Throwable $e) {
+                    if ($instance->getExpectedException() && $e instanceof ($instance->getExpectedException())) {
+                        echo ".";
+                        $passed++;
+                    } else {
+                        echo "E";
+                        $failed++;
+                        $failures[] = [
+                            'class' => $testClass,
+                            'method' => $method->name,
+                            'message' => "Unhandled Exception/Error: " . get_class($e) . ": " . $e->getMessage(),
+                            'file' => $file->getPathname(),
+                            'line' => $e->getLine()
+                        ];
+                    }
                 }
             }
         }

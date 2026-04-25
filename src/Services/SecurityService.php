@@ -11,7 +11,7 @@ class SecurityService {
     }
 
     public function csrfToken(): string {
-        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (session_status() === PHP_SESSION_NONE) @session_start();
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
@@ -24,7 +24,7 @@ class SecurityService {
 
     public function verifyCsrf(): void {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (session_status() === PHP_SESSION_NONE) session_start();
+            if (session_status() === PHP_SESSION_NONE) @session_start();
             $passed = $_POST['csrf_token'] ?? '';
             $stored = $_SESSION['csrf_token'] ?? '';
             if (empty($passed) || !hash_equals($stored, $passed)) {

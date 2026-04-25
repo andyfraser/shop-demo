@@ -13,6 +13,14 @@ class RouterTest extends TestCase {
         $this->router->get('/', ['HomeController', 'index']);
         $this->router->get('/products/:slug', ['ProductController', 'show']);
         $this->router->post('/cart/add', ['CartController', 'add']);
+        $this->router->get('/account/orders/:id', ['AccountController', 'orderDetail']);
+    }
+
+    public function testNumericDynamicRouteMatch() {
+        $route = $this->router->match('/account/orders/123', 'GET');
+        $this->assertNotNull($route);
+        $this->assertEquals(['AccountController', 'orderDetail'], $route['handler']);
+        $this->assertEquals(['123'], $route['params']);
     }
 
     public function testStaticRouteMatch() {

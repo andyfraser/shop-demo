@@ -15,7 +15,7 @@ class AuthService {
 
     public function sessionStart(): void {
         if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+            @session_start();
         }
     }
 
@@ -36,7 +36,7 @@ class AuthService {
             $stmt->execute([$token, time()]);
             $row = $stmt->fetch();
             if ($row) {
-                session_regenerate_id(true);
+                @session_regenerate_id(true);
                 $_SESSION['user'] = $row;
                 // Rotate the token
                 $this->setRememberCookie($row['user_id'], $token);
@@ -55,7 +55,7 @@ class AuthService {
 
     public function login(array $user, bool $remember = false): void {
         $this->sessionStart();
-        session_regenerate_id(true);
+        @session_regenerate_id(true);
         $_SESSION['user'] = $user;
         if ($remember) {
             $this->setRememberCookie($user['id']);
@@ -68,8 +68,9 @@ class AuthService {
         if ($token) {
             $this->clearRememberCookie($token);
         }
-        session_regenerate_id(true);
-        session_destroy();
+        @session_regenerate_id(true);
+        unset($_SESSION['user']);
+        @session_destroy();
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
