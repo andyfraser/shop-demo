@@ -19,6 +19,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - Checkout with saved shipping address pre-fill and dynamic delivery options
 - Customer accounts with order history, saved shipping address, and **order cancellation for pending orders**
 - User registration with email verification, **resend verification functionality**, and login
+- **PSR-3 compliant logging** with file-based output and conditional debug mode
 - Privacy-compliant cookie consent banner with persistence logic
 
 **Admin panel** (`/admin/`)
@@ -109,6 +110,8 @@ shop-demo/
 ├── sqlite_schema.sql       # SQLite database schema and seed data
 ├── mysql_schema.sql        # MySQL database schema and seed data
 ├── shop.db                 # SQLite database (auto-created if using SQLite)
+├── logs/                   # Application log files (ignored by Git)
+│   └── app.log             # Main application log
 │
 ├── tests/                  # Custom unit testing framework
 │   ├── run.php             # CLI test runner
@@ -116,15 +119,19 @@ shop-demo/
 │   └── Unit/               # Unit test suites
 │
 ├── src/
-│   ├── Core/
-│   │   ├── Autoloader.php  # PSR-4 style class autoloader
-│   │   ├── Container.php   # Dependency Injection container with autowiring
-│   │   ├── Database.php    # Multi-driver PDO connection factory + migrations
-│   │   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
-│   │   ├── Router.php      # HTTP router with middleware and DI support
-│   │   └── Validator.php   # Field validation logic
-│   │
-│   ├── Controllers/
+├── Core/
+│   ├── Autoloader.php  # PSR-4 style class autoloader (supports App\ and Psr\)
+│   ├── Container.php   # Dependency Injection container with autowiring
+│   ├── Database.php    # Multi-driver PDO connection factory + migrations
+│   ├── FileLogger.php  # PSR-3 compliant file-based logger
+│   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
+│   ├── Router.php      # HTTP router with middleware and DI support
+│   └── Validator.php   # Field validation logic
+│
+├── Psr/
+│   └── Log/            # Standard PSR-3 logging interfaces
+│
+├── Controllers/
 │   │   ├── StorefrontController.php   # Home, search, category, product pages
 │   │   ├── AuthController.php         # Login, register, logout, email verification
 │   │   ├── CartController.php         # Cart view, add, update (AJAX + form)

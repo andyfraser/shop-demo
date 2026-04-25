@@ -7,3 +7,5 @@ public/images/*
 !public/images/favicon.svg
 .DS_Store
 .htaccess
+/logs/*.log
+*.log

@@ -14,7 +14,8 @@ class AdminProductsController {
         private Renderer $renderer,
         private Validator $validator,
         private SecurityService $security,
-        private SettingsService $settings
+        private SettingsService $settings,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
     
     private function getUploadDir() {
@@ -164,6 +165,12 @@ class AdminProductsController {
                     $product['stock'], $product['category_id'], $product['image'],
                     $product['active'], $product['featured'], $product_id,
                 ]);
+
+                $this->logger->info("Admin updated product: {name} (ID: {id})", [
+                    'name' => $product['name'],
+                    'id' => $product_id
+                ]);
+
                 flash('msg', 'Product updated.');
             } else {
                 $check = $this->db->prepare("SELECT id FROM products WHERE slug = ?");
@@ -178,6 +185,13 @@ class AdminProductsController {
                     $product['stock'], $product['category_id'], $product['image'],
                     $product['active'], $product['featured'],
                 ]);
+
+                $new_id = $this->db->lastInsertId();
+                $this->logger->info("Admin created product: {name} (ID: {id})", [
+                    'name' => $product['name'],
+                    'id' => $new_id
+                ]);
+
                 flash('msg', 'Product created.');
             }
             redirect('/admin/products');
@@ -198,6 +212,9 @@ class AdminProductsController {
         $product_id = (int)($_GET['id'] ?? 0);
         if ($product_id) {
             $this->db->prepare("UPDATE products SET active = 0 WHERE id = ?")->execute([$product_id]);
+            $this->logger->info("Admin deactivated product: (ID: {id})", [
+                'id' => $product_id
+            ]);
             flash('msg', 'Product deactivated.');
         }
         redirect('/admin/products');

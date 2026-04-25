@@ -4,7 +4,10 @@ namespace App\Services;
 use App\Core\Database;
 
 class SecurityService {
-    public function __construct(private \PDO $db) {}
+    public function __construct(
+        private \PDO $db,
+        private \Psr\Log\LoggerInterface $logger
+    ) {}
 
     public function csrfToken(): string {
         if (session_status() === PHP_SESSION_NONE) @session_start();
@@ -24,6 +27,10 @@ class SecurityService {
             $passed = $_POST['csrf_token'] ?? '';
             $stored = $_SESSION['csrf_token'] ?? '';
             if (empty($passed) || !hash_equals($stored, $passed)) {
+                $this->logger->error("CSRF token verification failed for {method} {uri}", [
+                    'method' => $_SERVER['REQUEST_METHOD'],
+                    'uri' => $_SERVER['REQUEST_URI']
+                ]);
                 http_response_code(403);
                 die('Invalid CSRF token. Please go back and try again.');
             }
@@ -40,6 +47,10 @@ class SecurityService {
         $count = (int)$stmt->fetchColumn();
         
         if ($count >= $limit) {
+            $this->logger->warning("Rate limit hit for action '{action}' from IP {ip}", [
+                'action' => $action,
+                'ip' => $ip
+            ]);
             http_response_code(429);
             die('Too many attempts. Please try again later.');
         }

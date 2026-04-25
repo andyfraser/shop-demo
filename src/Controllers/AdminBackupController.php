@@ -10,7 +10,8 @@ class AdminBackupController {
     public function __construct(
         private Renderer $renderer,
         private SecurityService $securityService,
-        private BackupService $backupService
+        private BackupService $backupService,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function index() {
@@ -36,6 +37,7 @@ class AdminBackupController {
             header('Pragma: public');
             header('Content-Length: ' . filesize($backup['path']));
             
+            $this->logger->info("Admin downloaded database backup");
             readfile($backup['path']);
             
             if ($backup['temp']) {
@@ -59,11 +61,13 @@ class AdminBackupController {
 
         try {
             if ($this->backupService->import($file)) {
+                $this->logger->info("Admin restored database from backup file: {filename}", ['filename' => $file['name']]);
                 flash('msg', 'Database restored successfully.');
             } else {
                 flash('error', 'Restore failed.');
             }
         } catch (Exception $e) {
+            $this->logger->error("Admin database restore failed: {error}", ['error' => $e->getMessage()]);
             flash('error', 'Restore failed: ' . $e->getMessage());
         }
 

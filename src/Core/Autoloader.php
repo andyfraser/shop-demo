@@ -4,15 +4,21 @@ namespace App\Core;
 class Autoloader {
     public static function register() {
         spl_autoload_register(function ($class) {
-            $prefix = 'App\\';
+            $prefixApp = 'App\\';
+            $prefixPsr = 'Psr\\';
             $base_dir = __DIR__ . '/../';
-            $len = strlen($prefix);
-            if (strncmp($prefix, $class, $len) !== 0) {
+
+            if (strncmp($prefixApp, $class, strlen($prefixApp)) === 0) {
+                $relative_class = substr($class, strlen($prefixApp));
+                $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+            } elseif (strncmp($prefixPsr, $class, strlen($prefixPsr)) === 0) {
+                $relative_class = substr($class, strlen($prefixPsr));
+                $file = $base_dir . 'Psr/' . str_replace('\\', '/', $relative_class) . '.php';
+            } else {
                 return;
             }
-            $relative_class = substr($class, $len);
-            $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
-            if (file_exists($file)) {
+
+            if (isset($file) && file_exists($file)) {
                 require $file;
             }
         });

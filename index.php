@@ -39,6 +39,13 @@ use App\Middleware\AdminMiddleware;
 
 $container = new Container();
 
+// Register Logger
+$container->set(\Psr\Log\LoggerInterface::class, function() use ($config) {
+    $isDebug = $config['app']['debug'] ?? false;
+    $retention = $config['app']['log_retention_days'] ?? 30;
+    return new \App\Core\FileLogger(__DIR__ . '/logs/app.log', $isDebug, $retention);
+});
+
 // Register PDO as a singleton service
 $container->set(\PDO::class, function() {
     return \App\Core\Database::getConnection();

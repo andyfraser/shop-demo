@@ -13,7 +13,8 @@ class AccountController {
         private Renderer $renderer,
         private AuthService $auth,
         private SecurityService $security,
-        private EmailService $email
+        private EmailService $email,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function show() {
@@ -48,6 +49,8 @@ class AccountController {
             "UPDATE users SET address = ? WHERE id = ?"
         )->execute([$address, $user['id']]);
 
+        $this->logger->notice("User {email} updated their address", ['email' => $user['email']]);
+
         // Refresh session so current_user() reflects the new address
         $_SESSION['user']['address'] = $address;
 
@@ -67,6 +70,10 @@ class AccountController {
 
             if ($order && $order['status'] === 'pending') {
                 $this->db->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?")->execute([$order_id]);
+                $this->logger->info("User {email} cancelled order {id}", [
+                    'email' => $user['email'],
+                    'id' => $order_id
+                ]);
                 $this->email->sendStatusUpdateEmail($order['customer_email'], $order_id, 'cancelled');
                 flash('msg', 'Order successfully cancelled.');
             } else {

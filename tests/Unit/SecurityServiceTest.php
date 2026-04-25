@@ -12,7 +12,8 @@ class SecurityServiceTest extends TestCase {
 
     public function setUp() {
         $_SESSION = [];
-        $this->security = new SecurityService(Database::getConnection());
+        $logger = new \App\Core\FileLogger(__DIR__ . '/../../test_app.log');
+        $this->security = new SecurityService(Database::getConnection(), $logger);
     }
 
     public function testCsrfTokenGeneration() {

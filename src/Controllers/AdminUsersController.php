@@ -13,7 +13,8 @@ class AdminUsersController {
         private Renderer $renderer,
         private Validator $validator,
         private SecurityService $security,
-        private SettingsService $settings
+        private SettingsService $settings,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function list() {
@@ -100,10 +101,13 @@ class AdminUsersController {
                     $this->db->prepare("UPDATE users SET name=?, email=?, role=?, address=? WHERE id=?")
                        ->execute([$name, $email, $role, $address, $user_id]);
                 }
+                $this->logger->info("Admin updated user: {email} (ID: {id})", ['email' => $email, 'id' => $user_id]);
                 flash('msg', 'User updated.');
             } else {
                 $this->db->prepare("INSERT INTO users (name, email, password_hash, role, address) VALUES (?, ?, ?, ?, ?)")
                    ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role, $address]);
+                $new_id = $this->db->lastInsertId();
+                $this->logger->info("Admin created user: {email} (ID: {id})", ['email' => $email, 'id' => $new_id]);
                 flash('msg', 'User created.');
             }
             redirect('/admin/users');
@@ -126,6 +130,7 @@ class AdminUsersController {
             flash('err', 'You cannot delete your own account.');
         } else if ($user_id) {
             $this->db->prepare("DELETE FROM users WHERE id = ?")->execute([$user_id]);
+            $this->logger->info("Admin deleted user ID: {id}", ['id' => $user_id]);
             flash('msg', 'User deleted.');
         }
         redirect('/admin/users');

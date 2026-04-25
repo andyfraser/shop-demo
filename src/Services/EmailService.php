@@ -2,7 +2,10 @@
 namespace App\Services;
 
 class EmailService {
-    public function __construct(private SettingsService $settings) {}
+    public function __construct(
+        private SettingsService $settings,
+        private \Psr\Log\LoggerInterface $logger
+    ) {}
 
     private function getFromEmail(): string {
         return $this->settings->get('email_from') ?: 'noreply@shop.local';
@@ -87,6 +90,12 @@ class EmailService {
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= "From: " . $this->getCleanSiteName() . " <" . $this->getFromEmail() . ">" . "\r\n";
 
-        return mail($to, $subject, $message, $headers);
+        $success = mail($to, $subject, $message, $headers);
+        if ($success) {
+            $this->logger->info("Email sent to {to} with subject: {subject}", ['to' => $to, 'subject' => $subject]);
+        } else {
+            $this->logger->error("Failed to send email to {to} with subject: {subject}", ['to' => $to, 'subject' => $subject]);
+        }
+        return $success;
     }
 }

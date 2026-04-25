@@ -11,7 +11,8 @@ class AdminCategoriesController {
         private \PDO $db,
         private Renderer $renderer,
         private Validator $validator,
-        private SecurityService $security
+        private SecurityService $security,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function list() {
@@ -83,6 +84,7 @@ class AdminCategoriesController {
 
                 $this->db->prepare("UPDATE categories SET name=?, slug=?, parent_id=?, description=?, icon=? WHERE id=?")
                    ->execute([$name, $slug, $parent_id, $description, $icon, $category_id]);
+                $this->logger->info("Admin updated category: {name} (ID: {id})", ['name' => $name, 'id' => $category_id]);
                 flash('msg', 'Category updated.');
             } else {
                 $check = $this->db->prepare("SELECT id FROM categories WHERE slug = ?");
@@ -91,6 +93,8 @@ class AdminCategoriesController {
 
                 $this->db->prepare("INSERT INTO categories (name, slug, parent_id, description, icon) VALUES (?, ?, ?, ?, ?)")
                    ->execute([$name, $slug, $parent_id, $description, $icon]);
+                $new_id = $this->db->lastInsertId();
+                $this->logger->info("Admin created category: {name} (ID: {id})", ['name' => $name, 'id' => $new_id]);
                 flash('msg', 'Category created.');
             }
             redirect('/admin/categories');
@@ -118,6 +122,7 @@ class AdminCategoriesController {
         if ($category_id) {
             $this->db->prepare("UPDATE categories SET parent_id = NULL WHERE parent_id = ?")->execute([$category_id]);
             $this->db->prepare("DELETE FROM categories WHERE id = ?")->execute([$category_id]);
+            $this->logger->info("Admin deleted category ID: {id}", ['id' => $category_id]);
             flash('msg', 'Category deleted.');
         }
         redirect('/admin/categories');

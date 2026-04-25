@@ -11,7 +11,8 @@ class AdminOrdersController {
         private \PDO $db,
         private Renderer $renderer,
         private SecurityService $security,
-        private EmailService $email
+        private EmailService $email,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function list() {
@@ -89,6 +90,11 @@ class AdminOrdersController {
         if ($order_id) {
             $this->db->prepare("UPDATE orders SET status = ? WHERE id = ?")->execute([$status, $order_id]);
             
+            $this->logger->info("Admin updated order {id} status to {status}", [
+                'id' => $order_id,
+                'status' => $status
+            ]);
+
             if ($status === 'shipped' || $status === 'cancelled') {
                 $stmt = $this->db->prepare("SELECT customer_email FROM orders WHERE id = ?");
                 $stmt->execute([$order_id]);

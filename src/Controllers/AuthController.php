@@ -16,7 +16,8 @@ class AuthController {
         private SecurityService $securityService,
         private SettingsService $settingsService,
         private EmailService $emailService,
-        private Validator $validator
+        private Validator $validator,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function showLogin() {
@@ -50,6 +51,7 @@ class AuthController {
         $user = $stmt->fetch();
 
         if (!$user || !password_verify($pass, $user['password_hash'])) {
+            $this->logger->warning("Failed login attempt for {email}", ['email' => $email]);
             $this->securityService->recordRateLimit('login', $_SERVER['REMOTE_ADDR']);
             $errors[] = 'Invalid email or password.';
             
@@ -59,6 +61,7 @@ class AuthController {
                 'email'      => $email,
             ]);
         } else {
+            $this->logger->info("User logged in: {email}", ['email' => $email]);
             $this->securityService->clearRateLimit('login', $_SERVER['REMOTE_ADDR']);
             $remember = !empty($_POST['remember_me']);
             $this->authService->login($user, $remember);
@@ -115,6 +118,7 @@ class AuthController {
                 $this->db->prepare("INSERT INTO users (name, email, password_hash, role, verification_token, is_verified) VALUES (?, ?, ?, 'customer', ?, 0)")
                    ->execute([$name, $email, $hash, $token]);
 
+                $this->logger->info("New user registered: {email}", ['email' => $email]);
                 $this->emailService->sendVerificationEmail($email, $name, $token);
 
                 $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
@@ -149,6 +153,7 @@ class AuthController {
             $this->db->prepare("UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?")
                ->execute([$user['id']]);
             
+            $this->logger->info("Email verified for user: {email}", ['email' => $user['email']]);
             // If logged in as this user, update session
             $current = $this->authService->currentUser();
             if ($current && $current['id'] === $user['id']) {
@@ -179,6 +184,10 @@ class AuthController {
     }
 
     public function logout() {
+        $user = $this->authService->currentUser();
+        if ($user) {
+            $this->logger->notice("User logged out: {email}", ['email' => $user['email']]);
+        }
         $this->authService->logout();
         redirect('/');
     }

@@ -11,7 +11,8 @@ class AdminDeliveryController {
         private Renderer $renderer,
         private Validator $validator,
         private DeliveryService $delivery,
-        private SecurityService $security
+        private SecurityService $security,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function list() {
@@ -62,6 +63,12 @@ class AdminDeliveryController {
 
         if (!$errors) {
             $this->delivery->save($data);
+            $action = $id ? 'updated' : 'created';
+            $this->logger->info("Admin {action} delivery option: {name} (ID: {id})", [
+                'action' => $action,
+                'name' => $data['name'],
+                'id' => $id ?: 'new'
+            ]);
             flash('success', 'Delivery option saved.');
             redirect('/admin/delivery');
         }
@@ -77,6 +84,7 @@ class AdminDeliveryController {
     public function delete() {
         $id = (int)($_GET['id'] ?? 0);
         $this->delivery->delete($id);
+        $this->logger->info("Admin deleted delivery option ID: {id}", ['id' => $id]);
         flash('success', 'Delivery option deleted.');
         redirect('/admin/delivery');
     }

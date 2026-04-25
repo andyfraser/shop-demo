@@ -21,7 +21,8 @@ class CheckoutController {
         private DeliveryService $delivery,
         private EmailService $email,
         private SettingsService $settings,
-        private Validator $validator
+        private Validator $validator,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function show() {
@@ -103,6 +104,11 @@ class CheckoutController {
             ]);
 
             $order_id = $this->db->lastInsertId();
+            $this->logger->info("New order placed: ID {id}, Total {total}, Email {email}", [
+                'id' => $order_id,
+                'total' => $total,
+                'email' => $email
+            ]);
 
             $ins = $this->db->prepare(
                 "INSERT INTO order_items (order_id, product_id, quantity, unit_price, vat_rate, vat_amount)

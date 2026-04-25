@@ -80,4 +80,20 @@ abstract class TestCase {
             throw new AssertionFailedException($msg);
         }
     }
+
+    protected function assertStringContainsString(string $needle, string $haystack, string $message = ''): void {
+        $this->assertions++;
+        if (strpos($haystack, $needle) === false) {
+            $msg = $message ?: "Expected string to contain \"$needle\", but it was not found.";
+            throw new AssertionFailedException($msg);
+        }
+    }
+
+    protected function assertStringNotContainsString(string $needle, string $haystack, string $message = ''): void {
+        $this->assertions++;
+        if (strpos($haystack, $needle) !== false) {
+            $msg = $message ?: "Expected string NOT to contain \"$needle\", but it was found.";
+            throw new AssertionFailedException($msg);
+        }
+    }
 }

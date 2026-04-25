@@ -24,4 +24,10 @@ return [
     'site' => [
         'base_url' => '',
     ],
+    
+    // Application settings
+    'app' => [
+        'debug' => false,
+        'log_retention_days' => 30,
+    ],
 ];

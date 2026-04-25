@@ -4,7 +4,18 @@ namespace App\Core;
 class Router {
     private array $routes = [];
 
-    public function __construct(private ?Container $container = null) {}
+    public function __construct(
+        private ?Container $container = null,
+        private ?\Psr\Log\LoggerInterface $logger = null
+    ) {
+        if ($this->container && !$this->logger) {
+            try {
+                $this->logger = $this->container->get(\Psr\Log\LoggerInterface::class);
+            } catch (\Exception $e) {
+                // Logger not registered or fail
+            }
+        }
+    }
 
     public function add(string $method, string $path, array $handler, array $middlewares = []) {
         $this->routes[] = compact('method', 'path', 'handler', 'middlewares');
@@ -33,6 +44,13 @@ class Router {
             
             $controller = $this->container ? $this->container->get($controllerClass) : new $controllerClass();
             return call_user_func_array([$controller, $action], $route['params']);
+        }
+
+        if ($this->logger) {
+            $this->logger->warning('Route not found: {method} {uri}', [
+                'method' => $method,
+                'uri' => $uri
+            ]);
         }
 
         http_response_code(404);

@@ -9,7 +9,8 @@ class AdminSettingsController {
     public function __construct(
         private Renderer $renderer,
         private SecurityService $securityService,
-        private SettingsService $settingsService
+        private SettingsService $settingsService,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function show() {
@@ -70,6 +71,7 @@ class AdminSettingsController {
             $this->settingsService->set('mobile_nav_max_top',      (string)$nav_max_top);
             $this->settingsService->set('mobile_nav_max_combined', (string)$nav_max_combined);
 
+            $this->logger->info("Admin updated site settings");
             flash('msg', 'Settings saved.');
             redirect('/admin/settings');
         }

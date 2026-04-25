@@ -9,9 +9,10 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 2. [Storefront Features](#2-storefront-features)
 3. [Admin Panel Guide](#3-admin-panel-guide)
 4. [Configuration & Settings](#4-configuration--settings)
-5. [Technical Architecture](#5-technical-architecture)
-6. [Security & Privacy](#6-security--privacy)
-7. [Running Tests](#7-running-tests)
+5. [Logging & Debugging](#5-logging--debugging)
+6. [Technical Architecture](#6-technical-architecture)
+7. [Security & Privacy](#7-security--privacy)
+8. [Running Tests](#8-running-tests)
 
 ---
 
@@ -106,7 +107,37 @@ Demoshop stores its core settings in the database, manageable via **Admin > Sett
 
 ---
 
-## 5. Technical Architecture
+## 5. Logging & Debugging
+
+Demoshop features a built-in PSR-3 compliant logging system to help monitor application activity and troubleshoot issues.
+
+### Log Files
+Logs are stored in the `logs/` directory. The primary log file is `logs/app.log`. This file contains timestamped entries for various system events, such as 404 errors or security alerts.
+
+### Debug Mode
+You can control the verbosity of the logs via the `config.php` file. By default, `DEBUG` level messages are suppressed to save space and maintain performance.
+
+To enable detailed debug logging:
+1. Open `config.php`.
+2. Find the `app` section.
+3. Set `'debug' => true`.
+
+### Log Rotation & Retention
+Logs are automatically rotated daily. By default, rotated log files are kept for **30 days**. You can adjust this threshold in the `config.php` file:
+
+```php
+'app' => [
+    'debug' => false,
+    'log_retention_days' => 30, // Adjust this value as needed
+],
+```
+
+### PSR-3 Compliance
+The logging system follows the PHP Standard Recommendation for logging (PSR-3). Developers can inject `\Psr\Log\LoggerInterface` into any service or controller via the constructor to start logging events immediately.
+
+---
+
+## 6. Technical Architecture
 
 ### Design Philosophy
 *   **Vanilla PHP 8:** No frameworks (Laravel/Symfony) or package managers (Composer).
@@ -125,7 +156,7 @@ Demoshop handles updates automatically. `src/Core/Database.php` contains a `migr
 
 ---
 
-## 6. Security & Privacy
+## 7. Security & Privacy
 
 ### Security Measures
 *   **CSRF Protection:** All state-changing forms require a unique session token.
@@ -138,7 +169,7 @@ Demoshop handles updates automatically. `src/Core/Database.php` contains a `migr
 
 ---
 
-## 7. Running Tests
+## 8. Running Tests
 
 Demoshop includes a custom-built unit testing framework that requires no external dependencies. Developers can verify the integrity of core logic by running the test suite from the command line.
 
