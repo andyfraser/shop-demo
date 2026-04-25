@@ -2,29 +2,29 @@
 namespace App\Services;
 
 class EmailService {
-    private static ?EmailService $instance = null;
-    private string $fromEmail;
-    private string $siteName;
-    private string $cleanSiteName;
+    private SettingsService $settings;
 
-    private function __construct() {
-        $this->fromEmail = SettingsService::get('email_from') ?: 'noreply@shop.local';
-        $this->siteName = SettingsService::get('site_name') ?: 'Demoshop';
-        $this->cleanSiteName = str_replace('|', '', $this->siteName);
+    public function __construct(SettingsService $settings) {
+        $this->settings = $settings;
     }
 
-    public static function getInstance(): EmailService {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
+    private function getFromEmail(): string {
+        return $this->settings->get('email_from') ?: 'noreply@shop.local';
+    }
+
+    private function getSiteName(): string {
+        return $this->settings->get('site_name') ?: 'Demoshop';
+    }
+
+    private function getCleanSiteName(): string {
+        return str_replace('|', '', $this->getSiteName());
     }
 
     public function sendVerificationEmail(string $toEmail, string $name, string $token): bool {
         $baseUrl = $this->getBaseUrl();
         $verifyUrl = $baseUrl . "/verify-email?token=" . $token;
 
-        $subject = "Verify your email - " . $this->cleanSiteName;
+        $subject = "Verify your email - " . $this->getCleanSiteName();
         $message = $this->renderTemplate('verification', [
             'name' => $name,
             'verifyUrl' => $verifyUrl,
@@ -35,7 +35,7 @@ class EmailService {
     }
 
     public function sendOrderConfirmation(array $order, array $items): bool {
-        $subject = "Order Confirmation #" . $order['id'] . " - " . $this->cleanSiteName;
+        $subject = "Order Confirmation #" . $order['id'] . " - " . $this->getCleanSiteName();
         
         $message = $this->renderTemplate('order_confirmation', [
             'order' => $order,
@@ -47,7 +47,7 @@ class EmailService {
     }
 
     public function sendStatusUpdateEmail(string $toEmail, int $orderId, string $status): bool {
-        $subject = "Order Status Updated #" . $orderId . " - " . $this->cleanSiteName;
+        $subject = "Order Status Updated #" . $orderId . " - " . $this->getCleanSiteName();
         
         $message = $this->renderTemplate('order_status', [
             'orderId' => $orderId,
@@ -62,12 +62,12 @@ class EmailService {
         if (isset($_SERVER['HTTP_HOST'])) {
             return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
         }
-        return SettingsService::get('site_url') ?: 'http://localhost';
+        return $this->settings->get('site_url') ?: 'http://localhost';
     }
 
     private function renderTemplate(string $template, array $vars = []): string {
-        $vars['siteName'] = $this->siteName;
-        $vars['cleanSiteName'] = $this->cleanSiteName;
+        $vars['siteName'] = $this->getSiteName();
+        $vars['cleanSiteName'] = $this->getCleanSiteName();
         $vars['baseUrl'] = $this->getBaseUrl();
         
         extract($vars);
@@ -89,7 +89,7 @@ class EmailService {
     private function sendHtmlEmail(string $to, string $subject, string $message): bool {
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-        $headers .= "From: " . $this->cleanSiteName . " <" . $this->fromEmail . ">" . "\r\n";
+        $headers .= "From: " . $this->getCleanSiteName() . " <" . $this->getFromEmail() . ">" . "\r\n";
 
         return mail($to, $subject, $message, $headers);
     }

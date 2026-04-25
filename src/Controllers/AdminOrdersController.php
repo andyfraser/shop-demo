@@ -7,15 +7,26 @@ use App\Services\SecurityService;
 use App\Services\EmailService;
 
 class AdminOrdersController {
+    private \PDO $db;
+    private Renderer $renderer;
+    private SecurityService $security;
+    private EmailService $email;
+
+    public function __construct(\PDO $db, Renderer $renderer, SecurityService $security, EmailService $email) {
+        $this->db = $db;
+        $this->renderer = $renderer;
+        $this->security = $security;
+        $this->email = $email;
+    }
+
     public function list() {
-        $db = Database::getConnection();
         $filter   = $_GET['status'] ?? '';
         $allowed  = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
         $where    = ($filter && in_array($filter, $allowed))
-                    ? "WHERE o.status = " . $db->quote($filter)
+                    ? "WHERE o.status = " . $this->db->quote($filter)
                     : '';
 
-        $orders = $db->query(
+        $orders = $this->db->query(
             "SELECT o.*, 
                     COALESCE(u.name, o.customer_name) as user_name,
                     COALESCE(u.email, o.customer_email) as user_email
@@ -25,7 +36,7 @@ class AdminOrdersController {
              ORDER BY o.created_at DESC"
         )->fetchAll();
 
-        Renderer::adminRender('orders_list', [
+        $this->renderer->adminRender('orders_list', [
             'page_title' => 'Orders',
             'active'     => 'orders',
             'orders'     => $orders,
@@ -34,14 +45,13 @@ class AdminOrdersController {
     }
 
     public function detail() {
-        $db = Database::getConnection();
         $order_id = (int)($_GET['id'] ?? 0);
 
         if (!$order_id) {
             redirect('/admin/orders');
         }
 
-        $stmt = $db->prepare(
+        $stmt = $this->db->prepare(
             "SELECT o.*, 
                     COALESCE(u.name, o.customer_name) as user_name,
                     COALESCE(u.email, o.customer_email) as user_email
@@ -57,7 +67,7 @@ class AdminOrdersController {
             exit('Order not found.');
         }
 
-        $stmt = $db->prepare(
+        $stmt = $this->db->prepare(
             "SELECT oi.*, p.name as product_name, p.slug
              FROM order_items oi
              LEFT JOIN products p ON oi.product_id = p.id
@@ -66,7 +76,7 @@ class AdminOrdersController {
         $stmt->execute([$order_id]);
         $order_items = $stmt->fetchAll();
 
-        Renderer::adminRender('orders_detail', [
+        $this->renderer->adminRender('orders_detail', [
             'page_title'  => 'Order #' . str_pad((string)$order_id, 6, '0', STR_PAD_LEFT),
             'active'      => 'orders',
             'order'       => $order,
@@ -76,21 +86,20 @@ class AdminOrdersController {
     }
 
     public function updateStatus() {
-        SecurityService::verifyCsrf();
-        $db = Database::getConnection();
+        $this->security->verifyCsrf();
         $order_id = (int)($_POST['id'] ?? 0);
         $allowed = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
         $status  = in_array($_POST['status'] ?? '', $allowed) ? $_POST['status'] : 'pending';
         
         if ($order_id) {
-            $db->prepare("UPDATE orders SET status = ? WHERE id = ?")->execute([$status, $order_id]);
+            $this->db->prepare("UPDATE orders SET status = ? WHERE id = ?")->execute([$status, $order_id]);
             
             if ($status === 'shipped' || $status === 'cancelled') {
-                $stmt = $db->prepare("SELECT customer_email FROM orders WHERE id = ?");
+                $stmt = $this->db->prepare("SELECT customer_email FROM orders WHERE id = ?");
                 $stmt->execute([$order_id]);
                 $order = $stmt->fetch();
                 if ($order && $order['customer_email']) {
-                    EmailService::getInstance()->sendStatusUpdateEmail($order['customer_email'], $order_id, $status);
+                    $this->email->sendStatusUpdateEmail($order['customer_email'], $order_id, $status);
                 }
             }
             

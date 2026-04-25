@@ -7,16 +7,28 @@ use App\Services\DeliveryService;
 use App\Services\SecurityService;
 
 class AdminDeliveryController {
+    private Renderer $renderer;
+    private Validator $validator;
+    private DeliveryService $delivery;
+    private SecurityService $security;
+
+    public function __construct(Renderer $renderer, Validator $validator, DeliveryService $delivery, SecurityService $security) {
+        $this->renderer = $renderer;
+        $this->validator = $validator;
+        $this->delivery = $delivery;
+        $this->security = $security;
+    }
+
     public function list() {
-        Renderer::adminRender('delivery_list', [
+        $this->renderer->adminRender('delivery_list', [
             'page_title' => 'Delivery Options',
             'active'     => 'delivery',
-            'options'    => DeliveryService::all(),
+            'options'    => $this->delivery->all(),
         ]);
     }
 
     public function create() {
-        Renderer::adminRender('delivery_form', [
+        $this->renderer->adminRender('delivery_form', [
             'page_title' => 'New Delivery Option',
             'active'     => 'delivery',
             'option'     => ['name' => '', 'price' => '', 'active' => 1, 'min_order_total' => 0],
@@ -26,10 +38,10 @@ class AdminDeliveryController {
 
     public function edit() {
         $id = (int)($_GET['id'] ?? 0);
-        $option = DeliveryService::get($id);
+        $option = $this->delivery->get($id);
         if (!$option) redirect('/admin/delivery');
 
-        Renderer::adminRender('delivery_form', [
+        $this->renderer->adminRender('delivery_form', [
             'page_title' => 'Edit Delivery Option',
             'active'     => 'delivery',
             'option'     => $option,
@@ -38,7 +50,7 @@ class AdminDeliveryController {
     }
 
     public function save() {
-        SecurityService::verifyCsrf();
+        $this->security->verifyCsrf();
         $id = (int)($_POST['id'] ?? 0);
         $data = [
             'id'              => $id,
@@ -48,18 +60,18 @@ class AdminDeliveryController {
             'min_order_total' => (float)($_POST['min_order_total'] ?? 0),
         ];
 
-        $errors = Validator::check($data, [
+        $errors = $this->validator->check($data, [
             'name'  => 'required',
             'price' => 'required',
         ]);
 
         if (!$errors) {
-            DeliveryService::save($data);
+            $this->delivery->save($data);
             flash('success', 'Delivery option saved.');
             redirect('/admin/delivery');
         }
 
-        Renderer::adminRender('delivery_form', [
+        $this->renderer->adminRender('delivery_form', [
             'page_title' => $id ? 'Edit Delivery Option' : 'New Delivery Option',
             'active'     => 'delivery',
             'option'     => $data,
@@ -69,7 +81,7 @@ class AdminDeliveryController {
 
     public function delete() {
         $id = (int)($_GET['id'] ?? 0);
-        DeliveryService::delete($id);
+        $this->delivery->delete($id);
         flash('success', 'Delivery option deleted.');
         redirect('/admin/delivery');
     }

@@ -8,9 +8,22 @@ use App\Services\SecurityService;
 use App\Services\SettingsService;
 
 class AdminUsersController {
+    private \PDO $db;
+    private Renderer $renderer;
+    private Validator $validator;
+    private SecurityService $security;
+    private SettingsService $settings;
+
+    public function __construct(\PDO $db, Renderer $renderer, Validator $validator, SecurityService $security, SettingsService $settings) {
+        $this->db = $db;
+        $this->renderer = $renderer;
+        $this->validator = $validator;
+        $this->security = $security;
+        $this->settings = $settings;
+    }
+
     public function list() {
-        $db = Database::getConnection();
-        $users = $db->query(
+        $users = $this->db->query(
             "SELECT u.*, COUNT(o.id) as order_count
              FROM users u
              LEFT JOIN orders o ON o.user_id = u.id
@@ -18,7 +31,7 @@ class AdminUsersController {
              ORDER BY u.id DESC"
         )->fetchAll();
 
-        Renderer::adminRender('users_list', [
+        $this->renderer->adminRender('users_list', [
             'page_title' => 'Users',
             'active'     => 'users',
             'users'      => $users,
@@ -28,39 +41,37 @@ class AdminUsersController {
     }
 
     public function create() {
-        Renderer::adminRender('users_form', [
+        $this->renderer->adminRender('users_form', [
             'page_title'       => 'Add User',
             'active'           => 'users',
             'is_new'           => true,
             'user'             => [],
             'user_id'          => 0,
             'errors'           => [],
-            'password_min_len' => (int)SettingsService::get('password_min_length'),
+            'password_min_len' => (int)$this->settings->get('password_min_length'),
         ]);
     }
 
     public function edit() {
-        $db = Database::getConnection();
         $user_id = (int)($_GET['id'] ?? 0);
 
-        $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
         $user = $stmt->fetch() ?: [];
 
-        Renderer::adminRender('users_form', [
+        $this->renderer->adminRender('users_form', [
             'page_title'       => 'Edit User',
             'active'           => 'users',
             'is_new'           => !$user_id,
             'user'             => $user,
             'user_id'          => $user_id,
             'errors'           => [],
-            'password_min_len' => (int)SettingsService::get('password_min_length'),
+            'password_min_len' => (int)$this->settings->get('password_min_length'),
         ]);
     }
 
     public function save() {
-        SecurityService::verifyCsrf();
-        $db      = Database::getConnection();
+        $this->security->verifyCsrf();
         $user_id = (int)($_POST['id'] ?? 0);
         $name    = trim($_POST['name'] ?? '');
         $email   = trim($_POST['email'] ?? '');
@@ -68,8 +79,8 @@ class AdminUsersController {
         $address = trim($_POST['address'] ?? '');
         $pass    = $_POST['password'] ?? '';
 
-        $minLen = SettingsService::get('password_min_length');
-        $errors = Validator::check($_POST, [
+        $minLen = $this->settings->get('password_min_length');
+        $errors = $this->validator->check($_POST, [
             'name'     => 'required',
             'email'    => 'required|email',
             'password' => $user_id ? "min_length:$minLen" : "required|min_length:$minLen",
@@ -77,8 +88,8 @@ class AdminUsersController {
 
         if (!$errors) {
             $check = $user_id
-                ? $db->prepare("SELECT id FROM users WHERE email = ? AND id != ?")
-                : $db->prepare("SELECT id FROM users WHERE email = ?");
+                ? $this->db->prepare("SELECT id FROM users WHERE email = ? AND id != ?")
+                : $this->db->prepare("SELECT id FROM users WHERE email = ?");
             $user_id ? $check->execute([$email, $user_id]) : $check->execute([$email]);
 
             if ($check->fetch()) {
@@ -89,29 +100,29 @@ class AdminUsersController {
         if (!$errors) {
             if ($user_id) {
                 if ($pass) {
-                    $db->prepare("UPDATE users SET name=?, email=?, role=?, address=?, password_hash=? WHERE id=?")
+                    $this->db->prepare("UPDATE users SET name=?, email=?, role=?, address=?, password_hash=? WHERE id=?")
                        ->execute([$name, $email, $role, $address, password_hash($pass, PASSWORD_DEFAULT), $user_id]);
                 } else {
-                    $db->prepare("UPDATE users SET name=?, email=?, role=?, address=? WHERE id=?")
+                    $this->db->prepare("UPDATE users SET name=?, email=?, role=?, address=? WHERE id=?")
                        ->execute([$name, $email, $role, $address, $user_id]);
                 }
                 flash('msg', 'User updated.');
             } else {
-                $db->prepare("INSERT INTO users (name, email, password_hash, role, address) VALUES (?, ?, ?, ?, ?)")
+                $this->db->prepare("INSERT INTO users (name, email, password_hash, role, address) VALUES (?, ?, ?, ?, ?)")
                    ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role, $address]);
                 flash('msg', 'User created.');
             }
             redirect('/admin/users');
         }
 
-        Renderer::adminRender('users_form', [
+        $this->renderer->adminRender('users_form', [
             'page_title'       => ($user_id ? 'Edit' : 'Add') . ' User',
             'active'           => 'users',
             'is_new'           => !$user_id,
             'user'             => compact('name', 'email', 'role', 'address'),
             'user_id'          => $user_id,
             'errors'           => $errors,
-            'password_min_len' => (int)SettingsService::get('password_min_length'),
+            'password_min_len' => (int)$this->settings->get('password_min_length'),
         ]);
     }
 
@@ -120,7 +131,7 @@ class AdminUsersController {
         if ($user_id === (int)current_user()['id']) {
             flash('err', 'You cannot delete your own account.');
         } else if ($user_id) {
-            Database::getConnection()->prepare("DELETE FROM users WHERE id = ?")->execute([$user_id]);
+            $this->db->prepare("DELETE FROM users WHERE id = ?")->execute([$user_id]);
             flash('msg', 'User deleted.');
         }
         redirect('/admin/users');

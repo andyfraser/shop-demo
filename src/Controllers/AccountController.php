@@ -8,10 +8,24 @@ use App\Services\SecurityService;
 use App\Services\EmailService;
 
 class AccountController {
-    public function show() {
-        $user = AuthService::currentUser();
+    private \PDO $db;
+    private Renderer $renderer;
+    private AuthService $auth;
+    private SecurityService $security;
+    private EmailService $email;
 
-        $orders = Database::getConnection()->prepare(
+    public function __construct(\PDO $db, Renderer $renderer, AuthService $auth, SecurityService $security, EmailService $email) {
+        $this->db = $db;
+        $this->renderer = $renderer;
+        $this->auth = $auth;
+        $this->security = $security;
+        $this->email = $email;
+    }
+
+    public function show() {
+        $user = $this->auth->currentUser();
+
+        $orders = $this->db->prepare(
             "SELECT o.*, COUNT(oi.id) as item_count
              FROM orders o
              LEFT JOIN order_items oi ON oi.order_id = o.id
@@ -21,7 +35,7 @@ class AccountController {
         );
         $orders->execute([$user['id']]);
 
-        Renderer::render('account', [
+        $this->renderer->render('account', [
             'page_title'      => 'My Account',
             'orders'          => $orders->fetchAll(),
             'address_saved'   => flash('address_saved'),
@@ -31,12 +45,12 @@ class AccountController {
     }
 
     public function saveAddress() {
-        SecurityService::verifyCsrf();
+        $this->security->verifyCsrf();
 
-        $user    = AuthService::currentUser();
+        $user    = $this->auth->currentUser();
         $address = trim($_POST['address'] ?? '');
 
-        Database::getConnection()->prepare(
+        $this->db->prepare(
             "UPDATE users SET address = ? WHERE id = ?"
         )->execute([$address, $user['id']]);
 
@@ -48,24 +62,51 @@ class AccountController {
     }
 
     public function cancelOrder() {
-        SecurityService::verifyCsrf();
-        $user = AuthService::currentUser();
+        $this->security->verifyCsrf();
+        $user = $this->auth->currentUser();
         $order_id = (int)($_POST['id'] ?? 0);
 
         if ($order_id) {
-            $db = Database::getConnection();
-            $stmt = $db->prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?");
+            $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?");
             $stmt->execute([$order_id, $user['id']]);
             $order = $stmt->fetch();
 
             if ($order && $order['status'] === 'pending') {
-                $db->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?")->execute([$order_id]);
-                EmailService::getInstance()->sendStatusUpdateEmail($order['customer_email'], $order_id, 'cancelled');
+                $this->db->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?")->execute([$order_id]);
+                $this->email->sendStatusUpdateEmail($order['customer_email'], $order_id, 'cancelled');
                 flash('msg', 'Order successfully cancelled.');
             } else {
                 flash('msg_error', 'Order cannot be cancelled.');
             }
         }
         redirect('/account');
+    }
+
+    public function orderDetail($id) {
+        $order_id = (int)$id;
+        $user = $this->auth->currentUser();
+
+        $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?");
+        $stmt->execute([$order_id, $user['id']]);
+        $order = $stmt->fetch();
+
+        if (!$order) {
+            redirect('/account');
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT oi.*, p.name, p.slug
+             FROM order_items oi
+             LEFT JOIN products p ON oi.product_id = p.id
+             WHERE oi.order_id = ?"
+        );
+        $stmt->execute([$order_id]);
+        $order_items = $stmt->fetchAll();
+
+        $this->renderer->render('order_confirm', [
+            'page_title'  => 'Order Details',
+            'order'       => $order,
+            'order_items' => $order_items,
+        ]);
     }
 }

@@ -5,23 +5,29 @@ use App\Core\Database;
 
 class AuthService {
     private const COOKIE_NAME = 'remember_token';
+    private \PDO $db;
+    private SettingsService $settings;
 
-    public static function sessionStart(): void {
+    public function __construct(\PDO $db, SettingsService $settings) {
+        $this->db = $db;
+        $this->settings = $settings;
+    }
+
+    public function sessionStart(): void {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
     }
 
-    public static function currentUser(): ?array {
-        self::sessionStart();
+    public function currentUser(): ?array {
+        $this->sessionStart();
         if (isset($_SESSION['user'])) {
             return $_SESSION['user'];
         }
         // Try to restore session from a remember-me cookie
         $token = $_COOKIE[self::COOKIE_NAME] ?? null;
         if ($token) {
-            $pdo  = Database::getConnection();
-            $stmt = $pdo->prepare(
+            $stmt = $this->db->prepare(
                 "SELECT rt.user_id, rt.expires_at, u.*
                  FROM remember_tokens rt
                  JOIN users u ON u.id = rt.user_id
@@ -33,34 +39,34 @@ class AuthService {
                 session_regenerate_id(true);
                 $_SESSION['user'] = $row;
                 // Rotate the token
-                self::setRememberCookie($row['user_id'], $token);
+                $this->setRememberCookie($row['user_id'], $token);
                 return $_SESSION['user'];
             }
             // Stale cookie — clear it
-            self::clearRememberCookie(null);
+            $this->clearRememberCookie($token);
         }
         return null;
     }
 
-    public static function isAdmin(): bool {
-        $u = self::currentUser();
+    public function isAdmin(): bool {
+        $u = $this->currentUser();
         return $u && $u['role'] === 'admin';
     }
 
-    public static function login(array $user, bool $remember = false): void {
-        self::sessionStart();
+    public function login(array $user, bool $remember = false): void {
+        $this->sessionStart();
         session_regenerate_id(true);
         $_SESSION['user'] = $user;
         if ($remember) {
-            self::setRememberCookie($user['id']);
+            $this->setRememberCookie($user['id']);
         }
     }
 
-    public static function logout(): void {
-        self::sessionStart();
+    public function logout(): void {
+        $this->sessionStart();
         $token = $_COOKIE[self::COOKIE_NAME] ?? null;
         if ($token) {
-            self::clearRememberCookie($token);
+            $this->clearRememberCookie($token);
         }
         session_regenerate_id(true);
         session_destroy();
@@ -72,17 +78,16 @@ class AuthService {
      * Create (or replace) a remember-me token for $userId.
      * If $oldToken is supplied the existing row is updated instead of inserted.
      */
-    private static function setRememberCookie(int $userId, ?string $oldToken = null): void {
-        $days    = max(1, (int)SettingsService::get('remember_me_days'));
+    private function setRememberCookie(int $userId, ?string $oldToken = null): void {
+        $days    = max(1, (int)$this->settings->get('remember_me_days'));
         $token   = bin2hex(random_bytes(32));
         $expires = time() + ($days * 86400);
-        $pdo     = Database::getConnection();
 
         if ($oldToken) {
-            $pdo->prepare("UPDATE remember_tokens SET token = ?, expires_at = ? WHERE token = ?")
+            $this->db->prepare("UPDATE remember_tokens SET token = ?, expires_at = ? WHERE token = ?")
                 ->execute([$token, $expires, $oldToken]);
         } else {
-            $pdo->prepare("INSERT INTO remember_tokens (user_id, token, expires_at) VALUES (?, ?, ?)")
+            $this->db->prepare("INSERT INTO remember_tokens (user_id, token, expires_at) VALUES (?, ?, ?)")
                 ->execute([$userId, $token, $expires]);
         }
 
@@ -97,10 +102,9 @@ class AuthService {
     }
 
     /** Delete the DB row and expire the browser cookie. */
-    private static function clearRememberCookie(?string $token): void {
+    private function clearRememberCookie(?string $token): void {
         if ($token) {
-            Database::getConnection()
-                ->prepare("DELETE FROM remember_tokens WHERE token = ?")
+            $this->db->prepare("DELETE FROM remember_tokens WHERE token = ?")
                 ->execute([$token]);
         }
         setcookie(

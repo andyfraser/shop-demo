@@ -20,11 +20,7 @@ $dbConfig = $config['db'] ?? [
 ];
 define('DB_CONFIG', $dbConfig);
 
-// Other constants
-define('BASE_URL', $config['site']['base_url'] ?? '');
-define('SITE_NAME', \App\Services\SettingsService::get('site_name'));
-define('SITE_NAME_PLAIN', str_replace('|', '', SITE_NAME));
-
+use App\Core\Container;
 use App\Core\Router;
 use App\Controllers\StorefrontController;
 use App\Controllers\AuthController;
@@ -41,7 +37,20 @@ use App\Controllers\AccountController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
 
-$router = new Router();
+$container = new Container();
+
+// Register PDO as a singleton service
+$container->set(\PDO::class, function() {
+    return \App\Core\Database::getConnection();
+});
+
+// Other constants
+define('BASE_URL', $config['site']['base_url'] ?? '');
+$settings = $container->get(\App\Services\SettingsService::class);
+define('SITE_NAME', $settings->get('site_name'));
+define('SITE_NAME_PLAIN', str_replace('|', '', SITE_NAME));
+
+$router = new Router($container);
 
 // Storefront routes
 $router->get('/', [StorefrontController::class, 'index']);
@@ -62,6 +71,7 @@ $router->get('/logout', [AuthController::class, 'logout']);
 $router->get('/account', [AccountController::class, 'show'], [AuthMiddleware::class]);
 $router->post('/account/address', [AccountController::class, 'saveAddress'], [AuthMiddleware::class]);
 $router->post('/account/cancel-order', [AccountController::class, 'cancelOrder'], [AuthMiddleware::class]);
+$router->get('/account/orders/:id', [AccountController::class, 'orderDetail'], [AuthMiddleware::class]);
 
 // Common icon routes to prevent 404 errors
 $router->get('/favicon.ico', [StorefrontController::class, 'handleIcon']);

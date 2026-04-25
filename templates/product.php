@@ -39,7 +39,7 @@
       <?php endif; ?>
 
       <div>
-        <?php if ($product['stock'] > (int)\App\Services\SettingsService::get('low_stock_threshold')): ?>
+        <?php if ($product['stock'] > (int)setting('low_stock_threshold')): ?>
           <span class="badge badge-success">✓ In Stock</span>
         <?php elseif ($product['stock'] > 0): ?>
           <span class="badge badge-warning">⚠ Only <?= $product['stock'] ?> left</span>

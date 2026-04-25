@@ -4,9 +4,10 @@ namespace App\Services;
 use App\Core\Database;
 
 class SettingsService {
-    private static ?array $cache = null;
+    private ?array $cache = null;
+    private \PDO $db;
 
-    private static array $defaults = [
+    private array $defaults = [
         'site_name'               => 'Demo|shop',
         'currency_symbol'         => '£',
         'password_min_length'     => '6',
@@ -21,27 +22,29 @@ class SettingsService {
         'mobile_nav_max_combined' => '20',
     ];
 
-    public static function get(string $key): string {
-        if (self::$cache === null) self::load();
-        return self::$cache[$key] ?? self::$defaults[$key] ?? '';
+    public function __construct(\PDO $db) {
+        $this->db = $db;
     }
 
-    public static function all(): array {
-        if (self::$cache === null) self::load();
-        return array_merge(self::$defaults, self::$cache);
+    public function get(string $key): string {
+        if ($this->cache === null) $this->load();
+        return $this->cache[$key] ?? $this->defaults[$key] ?? '';
     }
 
-    public static function set(string $key, string $value): void {
-        Database::getConnection()
-            ->prepare("REPLACE INTO settings (`key`, value) VALUES (?, ?)")
+    public function all(): array {
+        if ($this->cache === null) $this->load();
+        return array_merge($this->defaults, $this->cache);
+    }
+
+    public function set(string $key, string $value): void {
+        $this->db->prepare("REPLACE INTO settings (`key`, value) VALUES (?, ?)")
             ->execute([$key, $value]);
-        self::$cache = null;
+        $this->cache = null;
     }
 
-    private static function load(): void {
-        $rows = Database::getConnection()
-            ->query("SELECT `key`, value FROM settings")
+    private function load(): void {
+        $rows = $this->db->query("SELECT `key`, value FROM settings")
             ->fetchAll();
-        self::$cache = array_column($rows, 'value', 'key');
+        $this->cache = array_column($rows, 'value', 'key');
     }
 }

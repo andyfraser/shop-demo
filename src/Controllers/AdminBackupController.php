@@ -7,8 +7,18 @@ use App\Services\BackupService;
 use Exception;
 
 class AdminBackupController {
+    private Renderer $renderer;
+    private SecurityService $securityService;
+    private BackupService $backupService;
+
+    public function __construct(Renderer $renderer, SecurityService $securityService, BackupService $backupService) {
+        $this->renderer = $renderer;
+        $this->securityService = $securityService;
+        $this->backupService = $backupService;
+    }
+
     public function index() {
-        Renderer::adminRender('backup', [
+        $this->renderer->adminRender('backup', [
             'page_title' => 'Database Backup & Restore',
             'active'     => 'backup',
             'flash_msg'  => flash('msg'),
@@ -17,10 +27,10 @@ class AdminBackupController {
     }
 
     public function download() {
-        SecurityService::verifyCsrf();
+        $this->securityService->verifyCsrf();
 
         try {
-            $backup = BackupService::export();
+            $backup = $this->backupService->export();
             
             header('Content-Description: File Transfer');
             header('Content-Type: ' . $backup['mime']);
@@ -43,7 +53,7 @@ class AdminBackupController {
     }
 
     public function restore() {
-        SecurityService::verifyCsrf();
+        $this->securityService->verifyCsrf();
 
         $file = $_FILES['backup_file'] ?? null;
         if (!$file || $file['error'] === UPLOAD_ERR_NO_FILE) {
@@ -52,7 +62,7 @@ class AdminBackupController {
         }
 
         try {
-            if (BackupService::import($file)) {
+            if ($this->backupService->import($file)) {
                 flash('msg', 'Database restored successfully.');
             } else {
                 flash('error', 'Restore failed.');

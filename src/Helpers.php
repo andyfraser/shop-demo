@@ -1,17 +1,21 @@
 <?php
 use App\Services\SecurityService;
 use App\Services\AuthService;
+use App\Services\SettingsService;
+use App\Core\Container;
 
 function h(string $s): string {
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 }
 
 function money(float $v): string {
-    return \App\Services\SettingsService::get('currency_symbol') . number_format($v, 2);
+    $settings = Container::getInstance()->get(SettingsService::class);
+    return $settings->get('currency_symbol') . number_format($v, 2);
 }
 
 function setting(string $key): string {
-    return \App\Services\SettingsService::get($key);
+    $settings = Container::getInstance()->get(SettingsService::class);
+    return $settings->get($key);
 }
 
 function product_img(string $filename = '', string $alt = '', string $class = '', string $style = ''): void {
@@ -46,11 +50,13 @@ function slugify(string $s): string {
 }
 
 function csrf_field(): string {
-    return SecurityService::csrfField();
+    $security = Container::getInstance()->get(SecurityService::class);
+    return $security->csrfField();
 }
 
 function csrf_token(): string {
-    return SecurityService::csrfToken();
+    $security = Container::getInstance()->get(SecurityService::class);
+    return $security->csrfToken();
 }
 
 function is_ajax(): bool {
@@ -58,7 +64,8 @@ function is_ajax(): bool {
 }
 
 function current_user(): ?array {
-    return AuthService::currentUser();
+    $auth = Container::getInstance()->get(AuthService::class);
+    return $auth->currentUser();
 }
 
 function is_new_product(string $created_at): bool {
@@ -67,7 +74,8 @@ function is_new_product(string $created_at): bool {
 }
 
 function get_category_tree(): array {
-    $all = App\Core\Database::getConnection()->query("SELECT * FROM categories ORDER BY name")->fetchAll();
+    $db = Container::getInstance()->get(\PDO::class);
+    $all = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
     $tree = [];
     $map = [];
     foreach ($all as $c) $map[$c['id']] = $c + ['children' => []];
@@ -79,7 +87,8 @@ function get_category_tree(): array {
 }
 
 function get_category_flat(): array {
-    return App\Core\Database::getConnection()->query(
+    $db = Container::getInstance()->get(\PDO::class);
+    return $db->query(
         "SELECT c.*, p.name as parent_name
          FROM categories c
          LEFT JOIN categories p ON c.parent_id = p.id
@@ -89,7 +98,8 @@ function get_category_flat(): array {
 
 function get_breadcrumb(int $category_id): array {
     $crumbs = [];
-    $all = App\Core\Database::getConnection()->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC);
+    $db = Container::getInstance()->get(\PDO::class);
+    $all = $db->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC);
     $all = array_column($all, null, 'id');
     $current = $all[$category_id] ?? null;
     while ($current) {

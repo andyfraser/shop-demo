@@ -2,10 +2,16 @@
 namespace App\Core;
 
 class Renderer {
+    private ViewComposer $viewComposer;
+
+    public function __construct(ViewComposer $viewComposer) {
+        $this->viewComposer = $viewComposer;
+    }
+
     /**
      * Internal method to handle template execution and layout wrapping.
      */
-    private static function execute(string $templateDir, string $layoutDir, string $template, array $globals, array $vars = []) {
+    private function execute(string $templateDir, string $layoutDir, string $template, array $globals, array $vars = []) {
         // Merge globals and local vars. Local vars take precedence.
         $data = array_merge($globals, $vars);
         extract($data);
@@ -28,18 +34,18 @@ class Renderer {
     /**
      * Render a storefront template wrapped in storefront header/footer.
      */
-    public static function render(string $template, array $vars = []) {
-        $globals = ViewComposer::getStorefrontGlobals();
+    public function render(string $template, array $vars = []) {
+        $globals = $this->viewComposer->getStorefrontGlobals();
         $baseDir = __DIR__ . '/../../templates';
-        self::execute($baseDir, $baseDir, $template, $globals, $vars);
+        $this->execute($baseDir, $baseDir, $template, $globals, $vars);
     }
 
     /**
      * Render an admin template wrapped in admin header/footer.
      */
-    public static function adminRender(string $template, array $vars = []) {
-        $globals = ViewComposer::getAdminGlobals();
+    public function adminRender(string $template, array $vars = []) {
+        $globals = $this->viewComposer->getAdminGlobals();
         $adminDir = __DIR__ . '/../../templates/admin';
-        self::execute($adminDir, $adminDir, $template, $globals, $vars);
+        $this->execute($adminDir, $adminDir, $template, $globals, $vars);
     }
 }

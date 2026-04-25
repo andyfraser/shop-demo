@@ -9,42 +9,65 @@ use App\Services\AuthService;
 use App\Services\SecurityService;
 use App\Services\DeliveryService;
 use App\Services\EmailService;
+use App\Services\SettingsService;
 
 class CheckoutController {
+    private \PDO $db;
+    private Renderer $renderer;
+    private CartService $cart;
+    private AuthService $auth;
+    private SecurityService $security;
+    private DeliveryService $delivery;
+    private EmailService $email;
+    private SettingsService $settings;
+    private Validator $validator;
+
+    public function __construct(\PDO $db, Renderer $renderer, CartService $cart, AuthService $auth, SecurityService $security, DeliveryService $delivery, EmailService $email, SettingsService $settings, Validator $validator) {
+        $this->db = $db;
+        $this->renderer = $renderer;
+        $this->cart = $cart;
+        $this->auth = $auth;
+        $this->security = $security;
+        $this->delivery = $delivery;
+        $this->email = $email;
+        $this->settings = $settings;
+        $this->validator = $validator;
+    }
+
     public function show() {
-        $items = CartService::items();
+        $items = $this->cart->items();
         if (empty($items)) {
             redirect('/cart');
         }
 
-        $user = AuthService::currentUser();
+        $user = $this->auth->currentUser();
         if ($user && empty($user['is_verified'])) {
             redirect('/cart?msg=verify_required');
         }
 
-        Renderer::render('checkout', [
+        $this->renderer->render('checkout', [
             'page_title' => 'Checkout',
             'items'      => $items,
-            'total'      => CartService::total(),
-            'total_item_vat' => CartService::totalVat(),
+            'total'      => $this->cart->total(),
+            'total_item_vat' => $this->cart->totalVat(),
             'errors'     => [],
             'name'       => $user['name'] ?? '',
             'email'      => $user['email'] ?? '',
             'address'    => $user['address'] ?? '',
             'notes'      => '',
-            'delivery_options' => DeliveryService::active(CartService::total()),
+            'delivery_options' => $this->delivery->active($this->cart->total()),
             'delivery_id' => null,
             'is_guest'   => $user === null,
         ]);
     }
 
     public function process() {
-        $items = CartService::items();
+        $items = $this->cart->items();
         if (empty($items)) {
             redirect('/cart');
         }
 
-        SecurityService::verifyCsrf();
+        $this->security->verifyCsrf();
 
         $name       = trim($_POST['name'] ?? '');
         $email      = trim($_POST['email'] ?? '');
@@ -59,24 +82,22 @@ class CheckoutController {
             'delivery_option_id' => 'required',
         ];
 
-        $errors = Validator::check($_POST, $rules);
+        $errors = $this->validator->check($_POST, $rules);
 
-        $delivery = DeliveryService::get($deliveryId);
-        if (!$delivery || !$delivery['active']) {
+        $deliveryOption = $this->delivery->get($deliveryId);
+        if (!$deliveryOption || !$deliveryOption['active']) {
             $errors['delivery_option_id'] = 'Please select a valid delivery method.';
         }
 
         if (!$errors) {
-            $user  = AuthService::currentUser();
-            $total = CartService::total() + $delivery['price'];
+            $user  = $this->auth->currentUser();
+            $total = $this->cart->total() + $deliveryOption['price'];
             
-            $defaultVatRate = (float)\App\Services\SettingsService::get('default_vat_rate');
-            $deliveryVat = $delivery['price'] * ($defaultVatRate / (100 + $defaultVatRate));
-            $totalVat = CartService::totalVat() + $deliveryVat;
+            $defaultVatRate = (float)$this->settings->get('default_vat_rate');
+            $deliveryVat = $deliveryOption['price'] * ($defaultVatRate / (100 + $defaultVatRate));
+            $totalVat = $this->cart->totalVat() + $deliveryVat;
             
-            $db    = Database::getConnection();
-
-            $db->prepare(
+            $this->db->prepare(
                 "INSERT INTO orders (user_id, customer_name, customer_email, total, total_vat_amount, shipping_address, notes, status, delivery_method, delivery_cost)
                  VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)"
             )->execute([
@@ -87,20 +108,20 @@ class CheckoutController {
                 $totalVat,
                 $address,
                 $notes,
-                $delivery['name'],
-                $delivery['price']
+                $deliveryOption['name'],
+                $deliveryOption['price']
             ]);
 
-            $order_id = $db->lastInsertId();
+            $order_id = $this->db->lastInsertId();
 
-            $ins = $db->prepare(
+            $ins = $this->db->prepare(
                 "INSERT INTO order_items (order_id, product_id, quantity, unit_price, vat_rate, vat_amount)
                  VALUES (?, ?, ?, ?, ?, ?)"
             );
             $orderItems = [];
             foreach ($items as $item) {
                 $ins->execute([$order_id, $item['id'], $item['qty'], $item['price'], $item['vat_rate'], $item['vat_amount']]);
-                $db->prepare("UPDATE products SET stock = stock - ? WHERE id = ?")
+                $this->db->prepare("UPDATE products SET stock = stock - ? WHERE id = ?")
                    ->execute([$item['qty'], $item['id']]);
                 $orderItems[] = [
                     'name' => $item['name'],
@@ -111,46 +132,45 @@ class CheckoutController {
                 ];
             }
 
-            $stmt = $db->prepare("SELECT * FROM orders WHERE id = ?");
+            $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
             $stmt->execute([$order_id]);
             $order = $stmt->fetch();
-            EmailService::getInstance()->sendOrderConfirmation($order, $orderItems);
+            $this->email->sendOrderConfirmation($order, $orderItems);
 
-            CartService::clear();
+            $this->cart->clear();
             
             // Allow guest to see confirmation
-            AuthService::sessionStart();
+            $this->auth->sessionStart();
             $_SESSION['last_order_id'] = (int)$order_id;
             
             redirect('/order/confirm?id=' . $order_id);
         }
 
-        Renderer::render('checkout', [
+        $this->renderer->render('checkout', [
             'page_title' => 'Checkout',
             'items'      => $items,
-            'total'      => CartService::total(),
-            'total_item_vat' => CartService::totalVat(),
+            'total'      => $this->cart->total(),
+            'total_item_vat' => $this->cart->totalVat(),
             'errors'     => $errors,
             'name'       => $name,
             'email'      => $email,
             'address'    => $address,
             'notes'      => $notes,
-            'delivery_options' => DeliveryService::active(CartService::total()),
+            'delivery_options' => $this->delivery->active($this->cart->total()),
             'delivery_id' => $deliveryId,
-            'is_guest'   => AuthService::currentUser() === null,
+            'is_guest'   => $this->auth->currentUser() === null,
         ]);
     }
 
     public function confirm() {
-        $db       = Database::getConnection();
         $order_id = (int)($_GET['id'] ?? 0);
 
-        $stmt = $db->prepare("SELECT * FROM orders WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
         $stmt->execute([$order_id]);
         $order = $stmt->fetch();
 
-        $user = AuthService::currentUser();
-        AuthService::sessionStart();
+        $user = $this->auth->currentUser();
+        $this->auth->sessionStart();
         $is_owner = ($user && $order && $order['user_id'] === $user['id']) || 
                     (isset($_SESSION['last_order_id']) && $_SESSION['last_order_id'] === $order_id);
 
@@ -158,7 +178,7 @@ class CheckoutController {
             redirect('/');
         }
 
-        $stmt = $db->prepare(
+        $stmt = $this->db->prepare(
             "SELECT oi.*, p.name, p.slug
              FROM order_items oi
              LEFT JOIN products p ON oi.product_id = p.id
@@ -167,7 +187,7 @@ class CheckoutController {
         $stmt->execute([$order_id]);
         $order_items = $stmt->fetchAll();
 
-        Renderer::render('order_confirm', [
+        $this->renderer->render('order_confirm', [
             'page_title'  => 'Order Confirmed',
             'order'       => $order,
             'order_items' => $order_items,

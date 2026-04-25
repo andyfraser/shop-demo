@@ -7,12 +7,24 @@ use App\Services\SecurityService;
 
 class CartController
 {
+    private Renderer $renderer;
+    private CartService $cartService;
+    private SecurityService $securityService;
+
+    public function __construct(Renderer $renderer, CartService $cartService, SecurityService $securityService)
+    {
+        $this->renderer = $renderer;
+        $this->cartService = $cartService;
+        $this->securityService = $securityService;
+    }
+
     public function show()
     {
-        Renderer::render('cart', [
+        $this->renderer->render('cart', [
             'page_title' => 'Shopping Cart',
-            'items' => CartService::items(),
-            'total' => CartService::total(),
+            'items' => $this->cartService->items(),
+            'total' => $this->cartService->total(),
+            'total_vat' => $this->cartService->totalVat(),
             'flash_success' => flash('success'),
         ]);
     }
@@ -22,23 +34,23 @@ class CartController
         if (is_ajax()) {
             $this->verifyCsrfAjax();
         } else {
-            SecurityService::verifyCsrf();
+            $this->securityService->verifyCsrf();
         }
 
         $message = 'Cart updated.';
 
         if (isset($_POST['update'])) {
             foreach (($_POST['qty'] ?? []) as $id => $qty) {
-                CartService::update((int) $id, (int) $qty);
+                $this->cartService->update((int) $id, (int) $qty);
             }
         }
         if (isset($_POST['remove'])) {
-            CartService::remove((int) $_POST['remove']);
+            $this->cartService->remove((int) $_POST['remove']);
             $message = 'Item removed.';
         }
 
         if (is_ajax()) {
-            $items = CartService::items();
+            $items = $this->cartService->items();
             $lineItems = array_map(fn($i) => [
                 'id'       => $i['id'],
                 'subtotal' => money($i['subtotal']),
@@ -47,8 +59,8 @@ class CartController
             header('Content-Type: application/json');
             echo json_encode([
                 'ok'         => true,
-                'cart_count' => CartService::count(),
-                'total'      => money(CartService::total()),
+                'cart_count' => $this->cartService->count(),
+                'total'      => money($this->cartService->total()),
                 'items'      => $lineItems,
                 'message'    => $message,
             ]);
@@ -66,20 +78,20 @@ class CartController
         if (is_ajax()) {
             $this->verifyCsrfAjax();
         } else {
-            SecurityService::verifyCsrf();
+            $this->securityService->verifyCsrf();
         }
 
         $productId = (int) ($_POST['product_id'] ?? 0);
         $slug = $slug ?: ($_POST['slug'] ?? '');
         $qty = max(1, (int) ($_POST['qty'] ?? 1));
 
-        CartService::add($productId, $qty);
+        $this->cartService->add($productId, $qty);
 
         if (is_ajax()) {
             header('Content-Type: application/json');
             echo json_encode([
                 'ok'         => true,
-                'cart_count' => CartService::count(),
+                'cart_count' => $this->cartService->count(),
                 'message'    => 'Items added to your cart.',
             ]);
             exit;

@@ -6,18 +6,28 @@ use App\Services\SecurityService;
 use App\Services\SettingsService;
 
 class AdminSettingsController {
+    private Renderer $renderer;
+    private SecurityService $securityService;
+    private SettingsService $settingsService;
+
+    public function __construct(Renderer $renderer, SecurityService $securityService, SettingsService $settingsService) {
+        $this->renderer = $renderer;
+        $this->securityService = $securityService;
+        $this->settingsService = $settingsService;
+    }
+
     public function show() {
-        Renderer::adminRender('settings', [
+        $this->renderer->adminRender('settings', [
             'page_title' => 'Settings',
             'active'     => 'settings',
-            'settings'   => SettingsService::all(),
+            'settings'   => $this->settingsService->all(),
             'flash_msg'  => flash('msg'),
             'errors'     => [],
         ]);
     }
 
     public function save() {
-        SecurityService::verifyCsrf();
+        $this->securityService->verifyCsrf();
 
         $errors = [];
 
@@ -50,25 +60,25 @@ class AdminSettingsController {
         if ($nav_max_combined < 1) $errors[] = 'Mobile nav combined threshold must be at least 1.';
 
         if (!$errors) {
-            SettingsService::set('site_name',               $site_name);
-            SettingsService::set('currency_symbol',         $currency);
-            SettingsService::set('email_from',              $email_from);
-            SettingsService::set('password_min_length',     (string)$pass_min);
-            SettingsService::set('login_max_attempts',      (string)$login_att);
-            SettingsService::set('login_window_minutes',    (string)$login_win);
-            SettingsService::set('register_max_attempts',   (string)$reg_att);
-            SettingsService::set('register_window_minutes', (string)$reg_win);
-            SettingsService::set('low_stock_threshold',     (string)$low_stock);
-            SettingsService::set('default_vat_rate',        (string)$vat_rate);
-            SettingsService::set('remember_me_days',        (string)$remember_days);
-            SettingsService::set('mobile_nav_max_top',      (string)$nav_max_top);
-            SettingsService::set('mobile_nav_max_combined', (string)$nav_max_combined);
+            $this->settingsService->set('site_name',               $site_name);
+            $this->settingsService->set('currency_symbol',         $currency);
+            $this->settingsService->set('email_from',              $email_from);
+            $this->settingsService->set('password_min_length',     (string)$pass_min);
+            $this->settingsService->set('login_max_attempts',      (string)$login_att);
+            $this->settingsService->set('login_window_minutes',    (string)$login_win);
+            $this->settingsService->set('register_max_attempts',   (string)$reg_att);
+            $this->settingsService->set('register_window_minutes', (string)$reg_win);
+            $this->settingsService->set('low_stock_threshold',     (string)$low_stock);
+            $this->settingsService->set('default_vat_rate',        (string)$vat_rate);
+            $this->settingsService->set('remember_me_days',        (string)$remember_days);
+            $this->settingsService->set('mobile_nav_max_top',      (string)$nav_max_top);
+            $this->settingsService->set('mobile_nav_max_combined', (string)$nav_max_combined);
 
             flash('msg', 'Settings saved.');
             redirect('/admin/settings');
         }
 
-        Renderer::adminRender('settings', [
+        $this->renderer->adminRender('settings', [
             'page_title' => 'Settings',
             'active'     => 'settings',
             'settings'   => [

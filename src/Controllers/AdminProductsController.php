@@ -5,20 +5,33 @@ use App\Core\Database;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\SecurityService;
+use App\Services\SettingsService;
 use RuntimeException;
 
 class AdminProductsController {
+    private \PDO $db;
+    private Renderer $renderer;
+    private Validator $validator;
+    private SecurityService $security;
+    private SettingsService $settings;
+
+    public function __construct(\PDO $db, Renderer $renderer, Validator $validator, SecurityService $security, SettingsService $settings) {
+        $this->db = $db;
+        $this->renderer = $renderer;
+        $this->validator = $validator;
+        $this->security = $security;
+        $this->settings = $settings;
+    }
     
     private function getUploadDir() {
         return __DIR__ . '/../../public/images/';
     }
     
     public function list() {
-        $db     = Database::getConnection();
         $search = trim($_GET['search'] ?? '');
 
         if ($search !== '') {
-            $stmt = $db->prepare(
+            $stmt = $this->db->prepare(
                 "SELECT p.*, c.name as cat_name
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
@@ -28,7 +41,7 @@ class AdminProductsController {
             $stmt->execute(['%' . $search . '%']);
             $products = $stmt->fetchAll();
         } else {
-            $products = $db->query(
+            $products = $this->db->query(
                 "SELECT p.*, c.name as cat_name
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
@@ -36,7 +49,7 @@ class AdminProductsController {
             )->fetchAll();
         }
 
-        Renderer::adminRender('products_list', [
+        $this->renderer->adminRender('products_list', [
             'page_title' => 'Products',
             'active'     => 'products',
             'products'   => $products,
@@ -46,12 +59,12 @@ class AdminProductsController {
     }
 
     public function create() {
-        Renderer::adminRender('products_form', [
+        $this->renderer->adminRender('products_form', [
             'page_title' => 'Add Product',
             'active'     => 'products',
             'is_new'     => true,
             'product'    => [
-                'vat_rate' => \App\Services\SettingsService::get('default_vat_rate')
+                'vat_rate' => $this->settings->get('default_vat_rate')
             ],
             'product_id' => 0,
             'categories' => get_category_flat(),
@@ -60,14 +73,13 @@ class AdminProductsController {
     }
 
     public function edit() {
-        $db = Database::getConnection();
         $product_id = (int)($_GET['id'] ?? 0);
 
-        $stmt = $db->prepare("SELECT * FROM products WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT * FROM products WHERE id = ?");
         $stmt->execute([$product_id]);
         $product = $stmt->fetch() ?: [];
 
-        Renderer::adminRender('products_form', [
+        $this->renderer->adminRender('products_form', [
             'page_title' => 'Edit Product',
             'active'     => 'products',
             'is_new'     => !$product_id,
@@ -100,8 +112,7 @@ class AdminProductsController {
     }
 
     public function save() {
-        SecurityService::verifyCsrf();
-        $db = Database::getConnection();
+        $this->security->verifyCsrf();
         
         $product = [
             'name'        => trim($_POST['name'] ?? ''),
@@ -116,7 +127,7 @@ class AdminProductsController {
         ];
         $product_id = (int)($_POST['id'] ?? 0);
 
-        $errors = Validator::check($_POST, [
+        $errors = $this->validator->check($_POST, [
             'name'  => 'required',
             'price' => 'required|positive',
         ]);
@@ -146,11 +157,11 @@ class AdminProductsController {
             $slug = slugify($product['name']);
 
             if ($product_id) {
-                $check = $db->prepare("SELECT id FROM products WHERE slug = ? AND id != ?");
+                $check = $this->db->prepare("SELECT id FROM products WHERE slug = ? AND id != ?");
                 $check->execute([$slug, $product_id]);
                 if ($check->fetch()) $slug .= '-' . $product_id;
 
-                $db->prepare(
+                $this->db->prepare(
                     "UPDATE products
                      SET name=?, slug=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?
                      WHERE id=?"
@@ -161,11 +172,11 @@ class AdminProductsController {
                 ]);
                 flash('msg', 'Product updated.');
             } else {
-                $check = $db->prepare("SELECT id FROM products WHERE slug = ?");
+                $check = $this->db->prepare("SELECT id FROM products WHERE slug = ?");
                 $check->execute([$slug]);
                 if ($check->fetch()) $slug .= '-' . time();
 
-                $db->prepare(
+                $this->db->prepare(
                     "INSERT INTO products (name, slug, description, price, vat_rate, stock, category_id, image, active, featured)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 )->execute([
@@ -178,7 +189,7 @@ class AdminProductsController {
             redirect('/admin/products');
         }
 
-        Renderer::adminRender('products_form', [
+        $this->renderer->adminRender('products_form', [
             'page_title' => ($product_id ? 'Edit' : 'Add') . ' Product',
             'active'     => 'products',
             'is_new'     => !$product_id,
@@ -192,7 +203,7 @@ class AdminProductsController {
     public function delete() {
         $product_id = (int)($_GET['id'] ?? 0);
         if ($product_id) {
-            Database::getConnection()->prepare("UPDATE products SET active = 0 WHERE id = ?")->execute([$product_id]);
+            $this->db->prepare("UPDATE products SET active = 0 WHERE id = ?")->execute([$product_id]);
             flash('msg', 'Product deactivated.');
         }
         redirect('/admin/products');

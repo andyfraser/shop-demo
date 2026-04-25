@@ -1,7 +1,6 @@
 <?php
 namespace App\Controllers;
 
-use App\Core\Database;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\AuthService;
@@ -10,11 +9,37 @@ use App\Services\SettingsService;
 use App\Services\EmailService;
 
 class AuthController {
+    private \PDO $db;
+    private Renderer $renderer;
+    private AuthService $authService;
+    private SecurityService $securityService;
+    private SettingsService $settingsService;
+    private EmailService $emailService;
+    private Validator $validator;
+
+    public function __construct(
+        \PDO $db,
+        Renderer $renderer,
+        AuthService $authService,
+        SecurityService $securityService,
+        SettingsService $settingsService,
+        EmailService $emailService,
+        Validator $validator
+    ) {
+        $this->db = $db;
+        $this->renderer = $renderer;
+        $this->authService = $authService;
+        $this->securityService = $securityService;
+        $this->settingsService = $settingsService;
+        $this->emailService = $emailService;
+        $this->validator = $validator;
+    }
+
     public function showLogin() {
-        if (AuthService::currentUser()) {
+        if ($this->authService->currentUser()) {
             redirect('/');
         }
-        Renderer::render('login', [
+        $this->renderer->render('login', [
             'page_title' => 'Sign In',
             'errors'     => [],
             'email'      => '',
@@ -22,46 +47,46 @@ class AuthController {
     }
 
     public function login() {
-        if (AuthService::currentUser()) {
+        if ($this->authService->currentUser()) {
             redirect('/');
         }
         
-        SecurityService::verifyCsrf();
-        SecurityService::checkRateLimit('login', $_SERVER['REMOTE_ADDR'],
-            (int)SettingsService::get('login_max_attempts'),
-            (int)SettingsService::get('login_window_minutes') * 60
+        $this->securityService->verifyCsrf();
+        $this->securityService->checkRateLimit('login', $_SERVER['REMOTE_ADDR'],
+            (int)$this->settingsService->get('login_max_attempts'),
+            (int)$this->settingsService->get('login_window_minutes') * 60
         );
 
         $email = trim($_POST['email'] ?? '');
         $pass  = $_POST['password'] ?? '';
         $errors = [];
 
-        $stmt = Database::getConnection()->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
         if (!$user || !password_verify($pass, $user['password_hash'])) {
-            SecurityService::recordRateLimit('login', $_SERVER['REMOTE_ADDR']);
+            $this->securityService->recordRateLimit('login', $_SERVER['REMOTE_ADDR']);
             $errors[] = 'Invalid email or password.';
             
-            Renderer::render('login', [
+            $this->renderer->render('login', [
                 'page_title' => 'Sign In',
                 'errors'     => $errors,
                 'email'      => $email,
             ]);
         } else {
-            SecurityService::clearRateLimit('login', $_SERVER['REMOTE_ADDR']);
+            $this->securityService->clearRateLimit('login', $_SERVER['REMOTE_ADDR']);
             $remember = !empty($_POST['remember_me']);
-            AuthService::login($user, $remember);
+            $this->authService->login($user, $remember);
             redirect($_SESSION['redirect_after_login'] ?? '/');
         }
     }
 
     public function showRegister() {
-        if (AuthService::currentUser()) {
+        if ($this->authService->currentUser()) {
             redirect('/');
         }
-        Renderer::render('register', [
+        $this->renderer->render('register', [
             'page_title' => 'Create Account',
             'errors'     => [],
             'name'       => '',
@@ -70,14 +95,14 @@ class AuthController {
     }
 
     public function register() {
-        if (AuthService::currentUser()) {
+        if ($this->authService->currentUser()) {
             redirect('/');
         }
 
-        SecurityService::verifyCsrf();
-        SecurityService::checkRateLimit('register', $_SERVER['REMOTE_ADDR'],
-            (int)SettingsService::get('register_max_attempts'),
-            (int)SettingsService::get('register_window_minutes') * 60
+        $this->securityService->verifyCsrf();
+        $this->securityService->checkRateLimit('register', $_SERVER['REMOTE_ADDR'],
+            (int)$this->settingsService->get('register_max_attempts'),
+            (int)$this->settingsService->get('register_window_minutes') * 60
         );
 
         $name  = trim($_POST['name'] ?? '');
@@ -85,17 +110,17 @@ class AuthController {
         $pass  = $_POST['password'] ?? '';
         $pass2 = $_POST['password2'] ?? '';
 
-        $errors = Validator::check($_POST, [
+        $errors = $this->validator->check($_POST, [
             'name'     => 'required',
             'email'    => 'required|email',
-            'password' => 'required|min_length:' . SettingsService::get('password_min_length'),
+            'password' => 'required|min_length:' . $this->settingsService->get('password_min_length'),
         ]);
         if (!$errors && $pass !== $pass2) {
             $errors[] = 'Passwords do not match.';
         }
 
         if (!$errors) {
-            $stmt = Database::getConnection()->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt = $this->db->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$email]);
             if ($stmt->fetch()) {
                 $errors[] = 'This email is already registered.';
@@ -103,21 +128,21 @@ class AuthController {
                 $hash = password_hash($pass, PASSWORD_DEFAULT);
                 $token = bin2hex(random_bytes(32));
                 
-                Database::getConnection()->prepare("INSERT INTO users (name, email, password_hash, role, verification_token, is_verified) VALUES (?, ?, ?, 'customer', ?, 0)")
+                $this->db->prepare("INSERT INTO users (name, email, password_hash, role, verification_token, is_verified) VALUES (?, ?, ?, 'customer', ?, 0)")
                    ->execute([$name, $email, $hash, $token]);
 
-                EmailService::getInstance()->sendVerificationEmail($email, $name, $token);
+                $this->emailService->sendVerificationEmail($email, $name, $token);
 
-                $stmt = Database::getConnection()->prepare("SELECT * FROM users WHERE email = ?");
+                $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
                 $stmt->execute([$email]);
-                AuthService::login($stmt->fetch());
+                $this->authService->login($stmt->fetch());
                 redirect('/?msg=verify_sent');
             }
         }
         
         if ($errors) {
-            SecurityService::recordRateLimit('register', $_SERVER['REMOTE_ADDR']);
-            Renderer::render('register', [
+            $this->securityService->recordRateLimit('register', $_SERVER['REMOTE_ADDR']);
+            $this->renderer->render('register', [
                 'page_title' => 'Create Account',
                 'errors'     => $errors,
                 'name'       => $name,
@@ -132,20 +157,20 @@ class AuthController {
             redirect('/');
         }
 
-        $stmt = Database::getConnection()->prepare("SELECT * FROM users WHERE verification_token = ?");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE verification_token = ?");
         $stmt->execute([$token]);
         $user = $stmt->fetch();
 
         if ($user) {
-            Database::getConnection()->prepare("UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?")
+            $this->db->prepare("UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?")
                ->execute([$user['id']]);
             
             // If logged in as this user, update session
-            $current = AuthService::currentUser();
+            $current = $this->authService->currentUser();
             if ($current && $current['id'] === $user['id']) {
                 $user['is_verified'] = 1;
                 $user['verification_token'] = null;
-                AuthService::login($user);
+                $this->authService->login($user);
             }
             
             redirect('/?msg=verified');
@@ -155,22 +180,22 @@ class AuthController {
     }
 
     public function resendVerification() {
-        $user = AuthService::currentUser();
+        $user = $this->authService->currentUser();
         if (!$user || !empty($user['is_verified'])) {
             redirect('/');
         }
 
         $token = bin2hex(random_bytes(32));
-        Database::getConnection()->prepare("UPDATE users SET verification_token = ? WHERE id = ?")
+        $this->db->prepare("UPDATE users SET verification_token = ? WHERE id = ?")
            ->execute([$token, $user['id']]);
 
-        EmailService::getInstance()->sendVerificationEmail($user['email'], $user['name'], $token);
+        $this->emailService->sendVerificationEmail($user['email'], $user['name'], $token);
 
         redirect('/?msg=verify_sent');
     }
 
     public function logout() {
-        AuthService::logout();
+        $this->authService->logout();
         redirect('/');
     }
 }

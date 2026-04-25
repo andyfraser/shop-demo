@@ -1,9 +1,19 @@
-<?php // templates/order_confirm.php ?>
+<?php // templates/order_confirm.php
+$status_badges = [
+    'pending'   => 'badge-warning',
+    'confirmed' => 'badge-info',
+    'shipped'   => 'badge-info',
+    'delivered' => 'badge-success',
+    'cancelled' => 'badge-danger',
+];
+?>
 <div class="container" style="max-width:700px;">
   <div style="text-align:center;padding:3rem 0 2rem;">
     <div style="font-size:4rem;margin-bottom:1rem;">✅</div>
-    <h1 style="font-family:var(--font-display);font-size:2rem;margin-bottom:.5rem;">Order Confirmed!</h1>
-    <p style="color:var(--ink-2);">Thank you for your order. We'll have it on its way soon.</p>
+    <h1 style="font-family:var(--font-display);font-size:2rem;margin-bottom:.5rem;">
+      <?= $order['status'] === 'pending' && isset($_SESSION['last_order_id']) && $_SESSION['last_order_id'] == $order['id'] ? 'Order Confirmed!' : 'Order Details' ?>
+    </h1>
+    <p style="color:var(--ink-2);">Order details and history for order #<?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?></p>
   </div>
 
   <div class="card">
@@ -18,7 +28,7 @@
       </div>
       <div>
         <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);">Status</div>
-        <span class="badge badge-warning"><?= h(ucfirst($order['status'])) ?></span>
+        <span class="badge <?= $status_badges[$order['status']] ?? 'badge-neutral' ?>"><?= h(ucfirst($order['status'])) ?></span>
       </div>
       <div>
         <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);">Total</div>

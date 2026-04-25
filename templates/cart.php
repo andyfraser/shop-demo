@@ -76,7 +76,7 @@
             <span>Total</span><span id="cart-total" style="color:var(--accent-2)"><?= money($total) ?></span>
           </div>
           <div style="font-size:.85rem;color:var(--ink-2);margin-bottom:1.2rem;text-align:right;">
-            Includes <?= money(\App\Services\CartService::totalVat()) ?> VAT
+            Includes <?= money($total_vat) ?> VAT
           </div>
           <a href="/checkout" class="btn btn-primary" style="width:100%;justify-content:center;">
             Proceed to Checkout

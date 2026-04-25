@@ -1,13 +1,19 @@
 <?php
 namespace App\Controllers;
 
-use App\Core\Database;
 use App\Core\Renderer;
 
 class StorefrontController {
+    private \PDO $db;
+    private Renderer $renderer;
+
+    public function __construct(\PDO $db, Renderer $renderer) {
+        $this->db = $db;
+        $this->renderer = $renderer;
+    }
+
     public function index() {
-        $db = Database::getConnection();
-        $featured_products = $db->query(
+        $featured_products = $this->db->query(
             "SELECT p.*, c.name as cat_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
@@ -16,7 +22,7 @@ class StorefrontController {
              LIMIT 8"
         )->fetchAll();
 
-        Renderer::render('home', [
+        $this->renderer->render('home', [
             'page_title'       => 'Welcome',
             'featured_products' => $featured_products,
         ]);
@@ -42,10 +48,9 @@ class StorefrontController {
         };
 
         if ($query) {
-            $db   = Database::getConnection();
             $like = '%' . $query . '%';
 
-            $stmt = $db->prepare(
+            $stmt = $this->db->prepare(
                 "SELECT COUNT(*) FROM products p
                  WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)"
             );
@@ -57,7 +62,7 @@ class StorefrontController {
                 $offset = ($current_page - 1) * $per_page;
                 $limit_int  = (int)$per_page;
                 $offset_int = (int)$offset;
-                $stmt = $db->prepare(
+                $stmt = $this->db->prepare(
                     "SELECT p.*, c.name as cat_name
                      FROM products p
                      LEFT JOIN categories c ON p.category_id = c.id
@@ -67,7 +72,7 @@ class StorefrontController {
                 );
                 $stmt->execute([$like, $like]);
             } else {
-                $stmt = $db->prepare(
+                $stmt = $this->db->prepare(
                     "SELECT p.*, c.name as cat_name
                      FROM products p
                      LEFT JOIN categories c ON p.category_id = c.id
@@ -79,7 +84,7 @@ class StorefrontController {
             $products = $stmt->fetchAll();
         }
 
-        Renderer::render('search', [
+        $this->renderer->render('search', [
             'page_title'     => $query ? 'Search: ' . $query : 'Search',
             'search_query'   => $query,
             'query'          => $query,
@@ -93,8 +98,8 @@ class StorefrontController {
     }
 
     public function category($slug = '') {
-        $db = Database::getConnection();
-        $stmt = $db->prepare("SELECT * FROM categories WHERE slug = ?");
+        
+        $stmt = $this->db->prepare("SELECT * FROM categories WHERE slug = ?");
         $stmt->execute([$slug]);
         $category = $stmt->fetch();
 
@@ -103,7 +108,7 @@ class StorefrontController {
             exit('Category not found.');
         }
 
-        $stmt = $db->prepare("SELECT * FROM categories WHERE parent_id = ? ORDER BY name");
+        $stmt = $this->db->prepare("SELECT * FROM categories WHERE parent_id = ? ORDER BY name");
         $stmt->execute([$category['id']]);
         $subcategories = $stmt->fetchAll();
 
@@ -113,7 +118,7 @@ class StorefrontController {
         while ($queue) {
             $id = array_shift($queue);
             $cat_ids[] = $id;
-            $s = $db->prepare("SELECT id FROM categories WHERE parent_id = ?");
+            $s = $this->db->prepare("SELECT id FROM categories WHERE parent_id = ?");
             $s->execute([$id]);
             foreach ($s->fetchAll() as $row) $queue[] = $row['id'];
         }
@@ -133,7 +138,7 @@ class StorefrontController {
 
         $current_page = max(1, (int)($_GET['page'] ?? 1));
 
-        $stmt = $db->prepare(
+        $stmt = $this->db->prepare(
             "SELECT COUNT(*) FROM products WHERE category_id IN ($placeholders) AND active = 1"
         );
         $stmt->execute($cat_ids);
@@ -144,7 +149,7 @@ class StorefrontController {
             $offset = ($current_page - 1) * $per_page;
             $limit_int  = (int)$per_page;
             $offset_int = (int)$offset;
-            $stmt = $db->prepare(
+            $stmt = $this->db->prepare(
                 "SELECT p.*, c.name as cat_name
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
@@ -155,7 +160,7 @@ class StorefrontController {
             $stmt->execute($cat_ids);
         } else {
             $total_pages = 1;
-            $stmt = $db->prepare(
+            $stmt = $this->db->prepare(
                 "SELECT p.*, c.name as cat_name
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
@@ -168,7 +173,7 @@ class StorefrontController {
 
         $breadcrumb = get_breadcrumb($category['id']);
 
-        Renderer::render('category', [
+        $this->renderer->render('category', [
             'page_title'     => $category['name'],
             'category'       => $category,
             'subcategories'  => $subcategories,
@@ -183,7 +188,7 @@ class StorefrontController {
     }
 
     public function products() {
-        $db = Database::getConnection();
+        
 
         $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
         $per_page_raw = $_GET['per_page'] ?? '12';
@@ -199,14 +204,14 @@ class StorefrontController {
 
         $current_page = max(1, (int)($_GET['page'] ?? 1));
 
-        $total_products = (int)$db->query("SELECT COUNT(*) FROM products WHERE active = 1")->fetchColumn();
+        $total_products = (int)$this->db->query("SELECT COUNT(*) FROM products WHERE active = 1")->fetchColumn();
 
         if ($per_page !== null) {
             $total_pages = (int)ceil($total_products / $per_page);
             $offset = ($current_page - 1) * $per_page;
             $limit_int  = (int)$per_page;
             $offset_int = (int)$offset;
-            $stmt = $db->prepare(
+            $stmt = $this->db->prepare(
                 "SELECT p.*, c.name as cat_name
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
@@ -217,7 +222,7 @@ class StorefrontController {
             $stmt->execute([]);
         } else {
             $total_pages = 1;
-            $stmt = $db->query(
+            $stmt = $this->db->query(
                 "SELECT p.*, c.name as cat_name
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
@@ -227,7 +232,7 @@ class StorefrontController {
         }
         $products = $stmt->fetchAll();
 
-        Renderer::render('products', [
+        $this->renderer->render('products', [
             'page_title'     => 'All Products',
             'products'       => $products,
             'total_products' => $total_products,
@@ -239,8 +244,8 @@ class StorefrontController {
     }
 
     public function product($slug = '') {
-        $db = Database::getConnection();
-        $stmt = $db->prepare(
+        
+        $stmt = $this->db->prepare(
             "SELECT p.*, c.name as cat_name, c.slug as cat_slug
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
@@ -256,7 +261,7 @@ class StorefrontController {
 
         $breadcrumb = $product['category_id'] ? get_breadcrumb($product['category_id']) : [];
 
-        $stmt = $db->prepare(
+        $stmt = $this->db->prepare(
             "SELECT p.*, c.name as cat_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
@@ -267,7 +272,7 @@ class StorefrontController {
         $stmt->execute([$product['category_id'], $product['id']]);
         $related_products = $stmt->fetchAll();
 
-        Renderer::render('product', [
+        $this->renderer->render('product', [
             'page_title'      => $product['name'],
             'product'         => $product,
             'breadcrumb'      => $breadcrumb,

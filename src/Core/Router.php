@@ -3,6 +3,11 @@ namespace App\Core;
 
 class Router {
     private array $routes = [];
+    private ?Container $container = null;
+
+    public function __construct(?Container $container = null) {
+        $this->container = $container;
+    }
 
     public function add(string $method, string $path, array $handler, array $middlewares = []) {
         $this->routes[] = compact('method', 'path', 'handler', 'middlewares');
@@ -22,14 +27,14 @@ class Router {
         if ($route) {
             // Run middlewares
             foreach ($route['middlewares'] as $middleware) {
-                $middlewareInst = new $middleware();
+                $middlewareInst = $this->container ? $this->container->get($middleware) : new $middleware();
                 $middlewareInst->handle();
             }
 
             $controllerClass = $route['handler'][0];
             $action = $route['handler'][1];
             
-            $controller = new $controllerClass();
+            $controller = $this->container ? $this->container->get($controllerClass) : new $controllerClass();
             return call_user_func_array([$controller, $action], $route['params']);
         }
 

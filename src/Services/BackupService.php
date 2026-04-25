@@ -6,9 +6,14 @@ use PDO;
 use Exception;
 
 class BackupService {
-    public static function export(): array {
-        $pdo = Database::getConnection();
-        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    private PDO $db;
+
+    public function __construct(PDO $db) {
+        $this->db = $db;
+    }
+
+    public function export(): array {
+        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
         $timestamp = date('Ymd_His');
 
         if ($driver === 'sqlite') {
@@ -30,25 +35,25 @@ class BackupService {
             $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
             $sql .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
 
-            $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+            $tables = $this->db->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
 
             foreach ($tables as $table) {
                 // Drop table
                 $sql .= "DROP TABLE IF EXISTS `{$table}`;\n";
                 
                 // Create table
-                $createRes = $pdo->query("SHOW CREATE TABLE `{$table}`")->fetch();
+                $createRes = $this->db->query("SHOW CREATE TABLE `{$table}`")->fetch();
                 $sql .= $createRes['Create Table'] . ";\n\n";
 
                 // Inserts
-                $rows = $pdo->query("SELECT * FROM `{$table}`")->fetchAll(PDO::FETCH_ASSOC);
+                $rows = $this->db->query("SELECT * FROM `{$table}`")->fetchAll(PDO::FETCH_ASSOC);
                 if ($rows) {
                     $sql .= "INSERT INTO `{$table}` VALUES \n";
                     $insertRows = [];
                     foreach ($rows as $row) {
-                        $values = array_map(function($val) use ($pdo) {
+                        $values = array_map(function($val) {
                             if ($val === null) return 'NULL';
-                            return $pdo->quote($val);
+                            return $this->db->quote($val);
                         }, array_values($row));
                         $insertRows[] = "(" . implode(', ', $values) . ")";
                     }
@@ -72,13 +77,12 @@ class BackupService {
         throw new Exception("Unsupported driver for export: " . $driver);
     }
 
-    public static function import(array $file): bool {
+    public function import(array $file): bool {
         if ($file['error'] !== UPLOAD_ERR_OK) {
             throw new Exception("Upload failed with error code: " . $file['error']);
         }
 
-        $pdo = Database::getConnection();
-        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
         $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
 
         if ($driver === 'sqlite') {
@@ -118,15 +122,15 @@ class BackupService {
                 throw new Exception("Could not read uploaded SQL file.");
             }
 
-            $pdo->exec("SET FOREIGN_KEY_CHECKS=0");
+            $this->db->exec("SET FOREIGN_KEY_CHECKS=0");
             
             // Execute the SQL. Since it might contain multiple statements, we can't just use exec() 
             // if it has many statements on some PDO drivers, but MySQL usually allows it.
             // However, it's safer to split or use a loop if possible, but for a backup file 
             // produced by our export(), it should be fine.
-            $pdo->exec($sql);
+            $this->db->exec($sql);
             
-            $pdo->exec("SET FOREIGN_KEY_CHECKS=1");
+            $this->db->exec("SET FOREIGN_KEY_CHECKS=1");
 
             return true;
         }

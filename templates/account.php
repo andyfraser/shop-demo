@@ -84,7 +84,7 @@ $status_badges = [
                     </span>
                   </td>
                   <td style="display:flex;gap:0.5rem;justify-content:flex-end;">
-                    <a href="/order/confirm?id=<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a>
+                    <a href="/account/orders/<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a>
                     <?php if ($o['status'] === 'pending'): ?>
                       <form method="POST" action="/account/cancel-order" onsubmit="return confirm('Are you sure you want to cancel this order?');">
                         <?= csrf_field() ?>

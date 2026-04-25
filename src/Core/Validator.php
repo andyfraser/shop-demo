@@ -23,7 +23,7 @@ namespace App\Core;
  *   in:a,b,c        — value must be one of the comma-separated options
  */
 class Validator {
-    public static function check(array $data, array $rules): array {
+    public function check(array $data, array $rules): array {
         $errors = [];
 
         foreach ($rules as $field => $ruleStr) {
