@@ -2,6 +2,7 @@
 *.code-workspace
 shop.db
 /config.php
+/config/config.php
 public/images/*
 !public/images/placeholder.svg
 !public/images/favicon.svg

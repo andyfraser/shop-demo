@@ -1,0 +1,98 @@
+<?php
+
+use App\Controllers\StorefrontController;
+use App\Controllers\AuthController;
+use App\Controllers\CartController;
+use App\Controllers\CheckoutController;
+use App\Controllers\AdminDashboardController;
+use App\Controllers\AdminCategoriesController;
+use App\Controllers\AdminProductsController;
+use App\Controllers\AdminOrdersController;
+use App\Controllers\AdminDeliveryController;
+use App\Controllers\AdminUsersController;
+use App\Controllers\AdminSettingsController;
+use App\Controllers\AccountController;
+use App\Middleware\AuthMiddleware;
+use App\Middleware\AdminMiddleware;
+
+$adminMiddleware = [AdminMiddleware::class];
+$authMiddleware = [AuthMiddleware::class];
+
+return [
+    // Storefront routes
+    ['method' => 'GET', 'path' => '/', 'handler' => [StorefrontController::class, 'index']],
+    ['method' => 'GET', 'path' => '/products', 'handler' => [StorefrontController::class, 'products']],
+    ['method' => 'GET', 'path' => '/search', 'handler' => [StorefrontController::class, 'search']],
+    ['method' => 'GET', 'path' => '/category/:slug', 'handler' => [StorefrontController::class, 'category']],
+    ['method' => 'GET', 'path' => '/product/:slug', 'handler' => [StorefrontController::class, 'product']],
+    ['method' => 'POST', 'path' => '/product/:slug', 'handler' => [CartController::class, 'add']],
+
+    // Auth routes
+    ['method' => 'GET', 'path' => '/login', 'handler' => [AuthController::class, 'showLogin']],
+    ['method' => 'POST', 'path' => '/login', 'handler' => [AuthController::class, 'login']],
+    ['method' => 'GET', 'path' => '/register', 'handler' => [AuthController::class, 'showRegister']],
+    ['method' => 'POST', 'path' => '/register', 'handler' => [AuthController::class, 'register']],
+    ['method' => 'GET', 'path' => '/verify-email', 'handler' => [AuthController::class, 'verifyEmail']],
+    ['method' => 'GET', 'path' => '/verify-email/resend', 'handler' => [AuthController::class, 'resendVerification']],
+    ['method' => 'GET', 'path' => '/logout', 'handler' => [AuthController::class, 'logout']],
+    ['method' => 'GET', 'path' => '/account', 'handler' => [AccountController::class, 'show'], 'middlewares' => $authMiddleware],
+    ['method' => 'POST', 'path' => '/account/address', 'handler' => [AccountController::class, 'saveAddress'], 'middlewares' => $authMiddleware],
+    ['method' => 'POST', 'path' => '/account/cancel-order', 'handler' => [AccountController::class, 'cancelOrder'], 'middlewares' => $authMiddleware],
+    ['method' => 'GET', 'path' => '/account/orders/:id', 'handler' => [AccountController::class, 'orderDetail'], 'middlewares' => $authMiddleware],
+
+    // Common icon routes to prevent 404 errors
+    ['method' => 'GET', 'path' => '/favicon.ico', 'handler' => [StorefrontController::class, 'handleIcon']],
+    ['method' => 'GET', 'path' => '/apple-touch-icon.png', 'handler' => [StorefrontController::class, 'handleIcon']],
+    ['method' => 'GET', 'path' => '/apple-touch-icon-precomposed.png', 'handler' => [StorefrontController::class, 'handleIcon']],
+
+    // Cart routes
+    ['method' => 'GET', 'path' => '/cart', 'handler' => [CartController::class, 'show']],
+    ['method' => 'POST', 'path' => '/cart', 'handler' => [CartController::class, 'update']],
+
+    // Checkout routes
+    ['method' => 'GET', 'path' => '/checkout', 'handler' => [CheckoutController::class, 'show']],
+    ['method' => 'POST', 'path' => '/checkout', 'handler' => [CheckoutController::class, 'process']],
+    ['method' => 'GET', 'path' => '/order/confirm', 'handler' => [CheckoutController::class, 'confirm']],
+
+    // Admin routes
+    ['method' => 'GET', 'path' => '/admin', 'handler' => [AdminDashboardController::class, 'index'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/', 'handler' => [AdminDashboardController::class, 'index'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/categories', 'handler' => [AdminCategoriesController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/categories/new', 'handler' => [AdminCategoriesController::class, 'create'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/categories/edit', 'handler' => [AdminCategoriesController::class, 'edit'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/categories/new', 'handler' => [AdminCategoriesController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/categories/edit', 'handler' => [AdminCategoriesController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/categories/delete', 'handler' => [AdminCategoriesController::class, 'delete'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/products', 'handler' => [AdminProductsController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/products/new', 'handler' => [AdminProductsController::class, 'create'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/products/edit', 'handler' => [AdminProductsController::class, 'edit'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/products/new', 'handler' => [AdminProductsController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/products/edit', 'handler' => [AdminProductsController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/products/delete', 'handler' => [AdminProductsController::class, 'delete'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/orders', 'handler' => [AdminOrdersController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/orders/detail', 'handler' => [AdminOrdersController::class, 'detail'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/orders/detail', 'handler' => [AdminOrdersController::class, 'updateStatus'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/delivery', 'handler' => [AdminDeliveryController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/delivery/new', 'handler' => [AdminDeliveryController::class, 'create'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/delivery/edit', 'handler' => [AdminDeliveryController::class, 'edit'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/delivery/new', 'handler' => [AdminDeliveryController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/delivery/edit', 'handler' => [AdminDeliveryController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/delivery/delete', 'handler' => [AdminDeliveryController::class, 'delete'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/users', 'handler' => [AdminUsersController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/users/new', 'handler' => [AdminUsersController::class, 'create'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/users/edit', 'handler' => [AdminUsersController::class, 'edit'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/users/new', 'handler' => [AdminUsersController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/users/edit', 'handler' => [AdminUsersController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/users/delete', 'handler' => [AdminUsersController::class, 'delete'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/settings', 'handler' => [AdminSettingsController::class, 'show'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/settings', 'handler' => [AdminSettingsController::class, 'save'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/backup', 'handler' => [\App\Controllers\AdminBackupController::class, 'index'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/backup/download', 'handler' => [\App\Controllers\AdminBackupController::class, 'download'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/backup/restore', 'handler' => [\App\Controllers\AdminBackupController::class, 'restore'], 'middlewares' => $adminMiddleware],
+];
