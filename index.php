@@ -1,7 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 require_once __DIR__ . '/src/Core/Autoloader.php';
 \App\Core\Autoloader::register();
@@ -12,6 +9,68 @@ $config = [];
 if (file_exists(__DIR__ . '/config/config.php')) {
     $config = require __DIR__ . '/config/config.php';
 }
+
+$isDebug = $config['app']['debug'] ?? false;
+
+if (!$isDebug) {
+    ini_set('display_errors', 0);
+} else {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+}
+error_reporting(E_ALL);
+
+// Error and Exception Handling
+$errorHandler = function ($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        return;
+    }
+    throw new \ErrorException($message, 0, $severity, $file, $line);
+};
+
+$exceptionHandler = function ($exception) use ($isDebug, $config) {
+    // Attempt to log the error
+    try {
+        $logFile = __DIR__ . '/logs/app.log';
+        $date = date('Y-m-d H:i:s');
+        $logEntry = sprintf("[%s] CRITICAL: Uncaught Exception: %s in %s on line %d" . PHP_EOL, 
+            $date, $exception->getMessage(), $exception->getFile(), $exception->getLine());
+        $logEntry .= $exception->getTraceAsString() . PHP_EOL;
+        
+        if (!is_dir(dirname($logFile))) {
+            mkdir(dirname($logFile), 0755, true);
+        }
+        file_put_contents($logFile, $logEntry, FILE_APPEND);
+    } catch (\Exception $e) {
+        // If logging fails, we can't do much more
+    }
+
+    if ($isDebug) {
+        echo "<h1>Fatal Error</h1>";
+        echo "<p>" . $exception->getMessage() . "</p>";
+        echo "<pre>" . $exception->getTraceAsString() . "</pre>";
+    } else {
+        http_response_code(500);
+        // Try to use the renderer for a nice 500 page if possible
+        try {
+            // We need a container and renderer. This might fail if the error happened early.
+            global $container;
+            if (isset($container) && $container instanceof \App\Core\Container) {
+                $renderer = $container->get(\App\Core\Renderer::class);
+                $renderer->render('500');
+            } else {
+                include __DIR__ . '/templates/500.php';
+            }
+        } catch (\Exception $e) {
+            echo "<h1>500 Internal Server Error</h1>";
+            echo "<p>Something went wrong. Please try again later.</p>";
+        }
+    }
+    exit(1);
+};
+
+set_error_handler($errorHandler);
+set_exception_handler($exceptionHandler);
 
 // Database configuration
 $dbConfig = $config['db'] ?? [

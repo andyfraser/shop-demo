@@ -54,6 +54,16 @@ class Router {
         }
 
         http_response_code(404);
+        
+        if ($this->container) {
+            try {
+                $renderer = $this->container->get(Renderer::class);
+                return $renderer->render('404');
+            } catch (\Exception $e) {
+                // Fallback to basic message if renderer fails
+            }
+        }
+
         echo "404 Not Found";
     }
 
