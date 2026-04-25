@@ -4,13 +4,10 @@ namespace App\Controllers;
 use App\Core\Renderer;
 
 class StorefrontController {
-    private \PDO $db;
-    private Renderer $renderer;
-
-    public function __construct(\PDO $db, Renderer $renderer) {
-        $this->db = $db;
-        $this->renderer = $renderer;
-    }
+    public function __construct(
+        private \PDO $db,
+        private Renderer $renderer
+    ) {}
 
     public function index() {
         $featured_products = $this->db->query(

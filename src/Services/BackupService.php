@@ -6,11 +6,7 @@ use PDO;
 use Exception;
 
 class BackupService {
-    private PDO $db;
-
-    public function __construct(PDO $db) {
-        $this->db = $db;
-    }
+    public function __construct(private PDO $db) {}
 
     public function export(): array {
         $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);

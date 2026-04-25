@@ -2,11 +2,7 @@
 namespace App\Services;
 
 class EmailService {
-    private SettingsService $settings;
-
-    public function __construct(SettingsService $settings) {
-        $this->settings = $settings;
-    }
+    public function __construct(private SettingsService $settings) {}
 
     private function getFromEmail(): string {
         return $this->settings->get('email_from') ?: 'noreply@shop.local';

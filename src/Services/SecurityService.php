@@ -4,11 +4,7 @@ namespace App\Services;
 use App\Core\Database;
 
 class SecurityService {
-    private \PDO $db;
-
-    public function __construct(\PDO $db) {
-        $this->db = $db;
-    }
+    public function __construct(private \PDO $db) {}
 
     public function csrfToken(): string {
         if (session_status() === PHP_SESSION_NONE) @session_start();

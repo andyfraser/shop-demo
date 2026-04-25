@@ -2,11 +2,7 @@
 namespace App\Services;
 
 class DeliveryService {
-    private \PDO $db;
-
-    public function __construct(\PDO $db) {
-        $this->db = $db;
-    }
+    public function __construct(private \PDO $db) {}
 
     public function all(): array {
         return $this->db

@@ -4,11 +4,7 @@ namespace App\Middleware;
 use App\Services\AuthService;
 
 class AuthMiddleware {
-    private AuthService $auth;
-
-    public function __construct(AuthService $auth) {
-        $this->auth = $auth;
-    }
+    public function __construct(private AuthService $auth) {}
 
     public function handle() {
         if (!$this->auth->currentUser()) {

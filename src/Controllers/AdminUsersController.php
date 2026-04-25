@@ -8,19 +8,13 @@ use App\Services\SecurityService;
 use App\Services\SettingsService;
 
 class AdminUsersController {
-    private \PDO $db;
-    private Renderer $renderer;
-    private Validator $validator;
-    private SecurityService $security;
-    private SettingsService $settings;
-
-    public function __construct(\PDO $db, Renderer $renderer, Validator $validator, SecurityService $security, SettingsService $settings) {
-        $this->db = $db;
-        $this->renderer = $renderer;
-        $this->validator = $validator;
-        $this->security = $security;
-        $this->settings = $settings;
-    }
+    public function __construct(
+        private \PDO $db,
+        private Renderer $renderer,
+        private Validator $validator,
+        private SecurityService $security,
+        private SettingsService $settings
+    ) {}
 
     public function list() {
         $users = $this->db->query(

@@ -5,7 +5,6 @@ use App\Core\Database;
 
 class SettingsService {
     private ?array $cache = null;
-    private \PDO $db;
 
     private array $defaults = [
         'site_name'               => 'Demo|shop',
@@ -22,9 +21,7 @@ class SettingsService {
         'mobile_nav_max_combined' => '20',
     ];
 
-    public function __construct(\PDO $db) {
-        $this->db = $db;
-    }
+    public function __construct(private \PDO $db) {}
 
     public function get(string $key): string {
         if ($this->cache === null) $this->load();

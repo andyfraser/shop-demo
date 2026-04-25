@@ -4,13 +4,10 @@ namespace App\Services;
 use App\Core\Database;
 
 class CartService {
-    private \PDO $db;
-    private AuthService $auth;
-
-    public function __construct(\PDO $db, AuthService $auth) {
-        $this->db = $db;
-        $this->auth = $auth;
-    }
+    public function __construct(
+        private \PDO $db,
+        private AuthService $auth
+    ) {}
 
     public function get(): array {
         $this->auth->sessionStart();

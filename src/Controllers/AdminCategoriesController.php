@@ -7,17 +7,12 @@ use App\Core\Validator;
 use App\Services\SecurityService;
 
 class AdminCategoriesController {
-    private \PDO $db;
-    private Renderer $renderer;
-    private Validator $validator;
-    private SecurityService $security;
-
-    public function __construct(\PDO $db, Renderer $renderer, Validator $validator, SecurityService $security) {
-        $this->db = $db;
-        $this->renderer = $renderer;
-        $this->validator = $validator;
-        $this->security = $security;
-    }
+    public function __construct(
+        private \PDO $db,
+        private Renderer $renderer,
+        private Validator $validator,
+        private SecurityService $security
+    ) {}
 
     public function list() {
         $categories = $this->db->query(

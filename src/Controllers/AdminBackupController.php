@@ -7,15 +7,11 @@ use App\Services\BackupService;
 use Exception;
 
 class AdminBackupController {
-    private Renderer $renderer;
-    private SecurityService $securityService;
-    private BackupService $backupService;
-
-    public function __construct(Renderer $renderer, SecurityService $securityService, BackupService $backupService) {
-        $this->renderer = $renderer;
-        $this->securityService = $securityService;
-        $this->backupService = $backupService;
-    }
+    public function __construct(
+        private Renderer $renderer,
+        private SecurityService $securityService,
+        private BackupService $backupService
+    ) {}
 
     public function index() {
         $this->renderer->adminRender('backup', [

@@ -7,17 +7,12 @@ use App\Services\DeliveryService;
 use App\Services\SecurityService;
 
 class AdminDeliveryController {
-    private Renderer $renderer;
-    private Validator $validator;
-    private DeliveryService $delivery;
-    private SecurityService $security;
-
-    public function __construct(Renderer $renderer, Validator $validator, DeliveryService $delivery, SecurityService $security) {
-        $this->renderer = $renderer;
-        $this->validator = $validator;
-        $this->delivery = $delivery;
-        $this->security = $security;
-    }
+    public function __construct(
+        private Renderer $renderer,
+        private Validator $validator,
+        private DeliveryService $delivery,
+        private SecurityService $security
+    ) {}
 
     public function list() {
         $this->renderer->adminRender('delivery_list', [

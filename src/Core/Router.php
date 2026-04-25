@@ -3,11 +3,8 @@ namespace App\Core;
 
 class Router {
     private array $routes = [];
-    private ?Container $container = null;
 
-    public function __construct(?Container $container = null) {
-        $this->container = $container;
-    }
+    public function __construct(private ?Container $container = null) {}
 
     public function add(string $method, string $path, array $handler, array $middlewares = []) {
         $this->routes[] = compact('method', 'path', 'handler', 'middlewares');

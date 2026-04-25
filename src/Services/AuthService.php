@@ -5,13 +5,11 @@ use App\Core\Database;
 
 class AuthService {
     private const COOKIE_NAME = 'remember_token';
-    private \PDO $db;
-    private SettingsService $settings;
 
-    public function __construct(\PDO $db, SettingsService $settings) {
-        $this->db = $db;
-        $this->settings = $settings;
-    }
+    public function __construct(
+        private \PDO $db,
+        private SettingsService $settings
+    ) {}
 
     public function sessionStart(): void {
         if (session_status() === PHP_SESSION_NONE) {

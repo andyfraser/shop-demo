@@ -5,15 +5,11 @@ use App\Core\Renderer;
 use App\Services\SettingsService;
 
 class AdminDashboardController {
-    private \PDO $db;
-    private Renderer $renderer;
-    private SettingsService $settingsService;
-
-    public function __construct(\PDO $db, Renderer $renderer, SettingsService $settingsService) {
-        $this->db = $db;
-        $this->renderer = $renderer;
-        $this->settingsService = $settingsService;
-    }
+    public function __construct(
+        private \PDO $db,
+        private Renderer $renderer,
+        private SettingsService $settingsService
+    ) {}
 
     public function index() {
         $stats = [

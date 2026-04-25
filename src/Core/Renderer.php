@@ -2,11 +2,7 @@
 namespace App\Core;
 
 class Renderer {
-    private ViewComposer $viewComposer;
-
-    public function __construct(ViewComposer $viewComposer) {
-        $this->viewComposer = $viewComposer;
-    }
+    public function __construct(private ViewComposer $viewComposer) {}
 
     /**
      * Internal method to handle template execution and layout wrapping.

@@ -8,19 +8,13 @@ use App\Services\SecurityService;
 use App\Services\EmailService;
 
 class AccountController {
-    private \PDO $db;
-    private Renderer $renderer;
-    private AuthService $auth;
-    private SecurityService $security;
-    private EmailService $email;
-
-    public function __construct(\PDO $db, Renderer $renderer, AuthService $auth, SecurityService $security, EmailService $email) {
-        $this->db = $db;
-        $this->renderer = $renderer;
-        $this->auth = $auth;
-        $this->security = $security;
-        $this->email = $email;
-    }
+    public function __construct(
+        private \PDO $db,
+        private Renderer $renderer,
+        private AuthService $auth,
+        private SecurityService $security,
+        private EmailService $email
+    ) {}
 
     public function show() {
         $user = $this->auth->currentUser();

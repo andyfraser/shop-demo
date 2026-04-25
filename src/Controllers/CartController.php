@@ -7,16 +7,11 @@ use App\Services\SecurityService;
 
 class CartController
 {
-    private Renderer $renderer;
-    private CartService $cartService;
-    private SecurityService $securityService;
-
-    public function __construct(Renderer $renderer, CartService $cartService, SecurityService $securityService)
-    {
-        $this->renderer = $renderer;
-        $this->cartService = $cartService;
-        $this->securityService = $securityService;
-    }
+    public function __construct(
+        private Renderer $renderer,
+        private CartService $cartService,
+        private SecurityService $securityService
+    ) {}
 
     public function show()
     {

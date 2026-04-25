@@ -6,15 +6,11 @@ use App\Services\SecurityService;
 use App\Services\SettingsService;
 
 class AdminSettingsController {
-    private Renderer $renderer;
-    private SecurityService $securityService;
-    private SettingsService $settingsService;
-
-    public function __construct(Renderer $renderer, SecurityService $securityService, SettingsService $settingsService) {
-        $this->renderer = $renderer;
-        $this->securityService = $securityService;
-        $this->settingsService = $settingsService;
-    }
+    public function __construct(
+        private Renderer $renderer,
+        private SecurityService $securityService,
+        private SettingsService $settingsService
+    ) {}
 
     public function show() {
         $this->renderer->adminRender('settings', [

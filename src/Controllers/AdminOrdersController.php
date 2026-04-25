@@ -7,17 +7,12 @@ use App\Services\SecurityService;
 use App\Services\EmailService;
 
 class AdminOrdersController {
-    private \PDO $db;
-    private Renderer $renderer;
-    private SecurityService $security;
-    private EmailService $email;
-
-    public function __construct(\PDO $db, Renderer $renderer, SecurityService $security, EmailService $email) {
-        $this->db = $db;
-        $this->renderer = $renderer;
-        $this->security = $security;
-        $this->email = $email;
-    }
+    public function __construct(
+        private \PDO $db,
+        private Renderer $renderer,
+        private SecurityService $security,
+        private EmailService $email
+    ) {}
 
     public function list() {
         $filter   = $_GET['status'] ?? '';

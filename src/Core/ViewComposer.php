@@ -5,13 +5,10 @@ use App\Services\CartService;
 use App\Services\AuthService;
 
 class ViewComposer {
-    private CartService $cart;
-    private AuthService $auth;
-
-    public function __construct(CartService $cart, AuthService $auth) {
-        $this->cart = $cart;
-        $this->auth = $auth;
-    }
+    public function __construct(
+        private CartService $cart,
+        private AuthService $auth
+    ) {}
 
     /**
      * Data available to all storefront templates

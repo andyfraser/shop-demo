@@ -12,27 +12,17 @@ use App\Services\EmailService;
 use App\Services\SettingsService;
 
 class CheckoutController {
-    private \PDO $db;
-    private Renderer $renderer;
-    private CartService $cart;
-    private AuthService $auth;
-    private SecurityService $security;
-    private DeliveryService $delivery;
-    private EmailService $email;
-    private SettingsService $settings;
-    private Validator $validator;
-
-    public function __construct(\PDO $db, Renderer $renderer, CartService $cart, AuthService $auth, SecurityService $security, DeliveryService $delivery, EmailService $email, SettingsService $settings, Validator $validator) {
-        $this->db = $db;
-        $this->renderer = $renderer;
-        $this->cart = $cart;
-        $this->auth = $auth;
-        $this->security = $security;
-        $this->delivery = $delivery;
-        $this->email = $email;
-        $this->settings = $settings;
-        $this->validator = $validator;
-    }
+    public function __construct(
+        private \PDO $db,
+        private Renderer $renderer,
+        private CartService $cart,
+        private AuthService $auth,
+        private SecurityService $security,
+        private DeliveryService $delivery,
+        private EmailService $email,
+        private SettingsService $settings,
+        private Validator $validator
+    ) {}
 
     public function show() {
         $items = $this->cart->items();

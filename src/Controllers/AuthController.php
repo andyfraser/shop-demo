@@ -9,31 +9,15 @@ use App\Services\SettingsService;
 use App\Services\EmailService;
 
 class AuthController {
-    private \PDO $db;
-    private Renderer $renderer;
-    private AuthService $authService;
-    private SecurityService $securityService;
-    private SettingsService $settingsService;
-    private EmailService $emailService;
-    private Validator $validator;
-
     public function __construct(
-        \PDO $db,
-        Renderer $renderer,
-        AuthService $authService,
-        SecurityService $securityService,
-        SettingsService $settingsService,
-        EmailService $emailService,
-        Validator $validator
-    ) {
-        $this->db = $db;
-        $this->renderer = $renderer;
-        $this->authService = $authService;
-        $this->securityService = $securityService;
-        $this->settingsService = $settingsService;
-        $this->emailService = $emailService;
-        $this->validator = $validator;
-    }
+        private \PDO $db,
+        private Renderer $renderer,
+        private AuthService $authService,
+        private SecurityService $securityService,
+        private SettingsService $settingsService,
+        private EmailService $emailService,
+        private Validator $validator
+    ) {}
 
     public function showLogin() {
         if ($this->authService->currentUser()) {
