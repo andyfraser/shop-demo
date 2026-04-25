@@ -54,6 +54,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 *   **Advanced Search:** Use the search bar to find products. Sort results by price, name, or date.
 *   **Product Details:** View high-quality images, descriptions, inventory status, and related products.
 *   **Inventory Logic:** Out-of-stock products are automatically hidden from the "Featured" homepage list but remain accessible via direct links or category pages.
+*   **SEO Friendly URLs:** Account and order detail pages use clean URL structures (e.g., `/account/orders/4`).
 
 ### Shopping Experience
 *   **Dynamic Cart:** Add, update, or remove items without page reloads using the AJAX-powered cart.
@@ -109,12 +110,13 @@ Demoshop stores its core settings in the database, manageable via **Admin > Sett
 
 ### Design Philosophy
 *   **Vanilla PHP 8:** No frameworks (Laravel/Symfony) or package managers (Composer).
+*   **Dependency Injection:** Uses a custom DI Container (`App\Core\Container`) for object lifecycle management and autowiring.
 *   **MVC Pattern:** Separation of concerns between `Controllers`, `Services`, and `Core` logic.
-*   **Front Controller:** All traffic routes through `index.php`.
+*   **Front Controller:** All traffic routes through `index.php`, which initializes the DI system.
 
 ### Directory Structure Highlights
-*   `src/Core/`: Foundation classes (Router, Database, Renderer).
-*   `src/Services/`: Business logic (Auth, Cart, Email, Security).
+*   `src/Core/`: Foundation classes including the `Container`, `Router`, `Database`, and `Renderer`.
+*   `src/Services/`: Instance-based business logic (Auth, Cart, Email, Security, Settings).
 *   `templates/`: Pure PHP/HTML view files.
 *   `public/`: Assets (CSS, JS, Images).
 

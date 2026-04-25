@@ -118,10 +118,11 @@ shop-demo/
 ├── src/
 │   ├── Core/
 │   │   ├── Autoloader.php  # PSR-4 style class autoloader
-│   │   ├── Database.php    # Multi-driver PDO singleton + migrations
+│   │   ├── Container.php   # Dependency Injection container with autowiring
+│   │   ├── Database.php    # Multi-driver PDO connection factory + migrations
 │   │   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
-│   │   ├── Router.php      # HTTP router with middleware support
-│   │   └── Validator.php   # Field validation helpers
+│   │   ├── Router.php      # HTTP router with middleware and DI support
+│   │   └── Validator.php   # Field validation logic
 │   │
 │   ├── Controllers/
 │   │   ├── StorefrontController.php   # Home, search, category, product pages
@@ -189,23 +190,25 @@ shop-demo/
 
 ## Architecture
 
-All requests enter through `index.php` (front controller), which registers the autoloader, defines constants, and dispatches to `src/Core/Router`. Common icon routes (like `/favicon.ico` or `/apple-touch-icon.png`) are explicitly handled to prevent 404 errors by redirecting to a centralized SVG favicon. The router matches `REQUEST_URI` / `REQUEST_METHOD` against registered routes, runs any middleware, then calls the controller action.
+All requests enter through `index.php` (front controller), which bootstraps the **Dependency Injection (DI) Container**, registers the autoloader, defines constants, and dispatches to `src/Core/Router`. Common icon routes (like `/favicon.ico` or `/apple-touch-icon.png`) are explicitly handled to prevent 404 errors. 
 
-**Rendering:** Controllers fetch data and call `Renderer::render('template_name', ['var' => $val])`. The renderer extracts the data array, auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`), and wraps the template with `header.php` / `footer.php`. Admin pages use `Renderer::adminRender()`.
+**Dependency Injection:** The application uses a custom `Container` for managing object lifecycles and dependencies. Controllers and services receive their dependencies (like `PDO`, `Renderer`, or other services) via their constructors. The `Router` uses the container to automatically instantiate controllers with all required dependencies (autowiring).
 
-**Database:** Support for SQLite and MySQL via PDO. `Database::getConnection()` returns the singleton; the appropriate schema (`sqlite_schema.sql` or `mysql_schema.sql`) runs automatically on first connection. Additive column migrations also run on init so existing databases are upgraded without data loss. A `settings` table stores editable key/value pairs read via `SettingsService`, which falls back to built-in defaults if a key is not yet in the database.
+**Rendering:** Controllers fetch data and call `$this->renderer->render('template_name', ['var' => $val])`. The renderer extracts the data array, auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`), and wraps the template with `header.php` / `footer.php`. Admin pages use `adminRender()`.
 
-**Session cart:** Stored in `$_SESSION['cart']` as `[product_id => quantity]`, managed entirely by `CartService`.
+**Database:** Support for SQLite and MySQL via PDO. The `PDO` instance is registered as a singleton in the DI container. The appropriate schema (`sqlite_schema.sql` or `mysql_schema.sql`) runs automatically on first connection. Additive column migrations also run on init so existing databases are upgraded without data loss.
 
-**Security:** Every POST form includes a CSRF token (`csrf_field()`), verified by `SecurityService::validateCsrf()`. Login and registration are rate-limited (5 attempts / 15 min and 10 attempts / hour respectively). Admin routes are protected by `AdminMiddleware`. A cookie consent banner and JavaScript implementation handle session/cart cookie persistence in compliance with privacy standards.
+**Session cart:** Stored in `$_SESSION['cart']` as `[product_id => quantity]`, managed by the instance-based `CartService`.
+
+**Security:** Every POST form includes a CSRF token (`csrf_field()`), verified by `$this->securityService->verifyCsrf()`. Login and registration are rate-limited. Admin routes are protected by `AdminMiddleware`, which also uses DI to access `AuthService`.
 
 ---
 
 ## Adding a New Route
 
-1. Register the route in `index.php` with `$router->get()` or `$router->post()`, passing middleware as the third argument if needed.
-2. Add the action method to the appropriate controller in `src/Controllers/`.
-3. Create a template in `templates/` and call `Renderer::render()` from the controller.
+1. Register the route in `index.php` with `$router->get()` or `$router->post()`.
+2. Add the action method to the appropriate controller in `src/Controllers/`. Ensure the controller defines its dependencies in the constructor for autowiring.
+3. Create a template in `templates/` and call `$this->renderer->render()` from the controller.
 
 ---
 
