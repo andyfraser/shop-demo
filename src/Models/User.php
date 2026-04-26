@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class User {
+class User extends Model {
     public int $id;
     public string $name;
     public string $email;
@@ -15,15 +15,6 @@ class User {
 
     // Join fields
     public ?int $order_count = 0;
-
-    public function fill(array $data): self {
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->$key = $value;
-            }
-        }
-        return $this;
-    }
 
     public function isAdmin(): bool {
         return $this->role === 'admin';

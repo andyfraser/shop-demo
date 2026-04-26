@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Models;
+
+use Psr\Log\LoggerInterface;
+
+abstract class Model {
+    /**
+     * Internal storage for properties that aren't explicitly defined in the class.
+     * This avoids the need for #[AllowDynamicProperties] and prevents PHP 8.2+ deprecation notices.
+     */
+    protected array $unmappedData = [];
+
+    /**
+     * Proper Dependency Injection via constructor.
+     * All models require a logger to handle warnings consistently.
+     */
+    public function __construct(
+        protected LoggerInterface $logger
+    ) {}
+
+    /**
+     * Safety valve for unexpected database columns during hydration.
+     * Instead of creating a dynamic property, we store it in $unmappedData.
+     */
+    public function __set(string $name, mixed $value): void {
+        $className = static::class;
+        $this->logger->warning("Missing property '{$name}' in model '{$className}'. Data stored in unmappedData array.");
+        
+        $this->unmappedData[$name] = $value;
+    }
+
+    /**
+     * Magic getter to allow access to unmapped properties as if they were real.
+     */
+    public function __get(string $name): mixed {
+        return $this->unmappedData[$name] ?? null;
+    }
+
+    /**
+     * Magic isset to check unmapped properties.
+     */
+    public function __isset(string $name): bool {
+        return isset($this->unmappedData[$name]);
+    }
+
+    /**
+     * Fill the model from an associative array.
+     */
+    public function fill(array $data): self {
+        foreach ($data as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            } else {
+                // This will trigger __set()
+                $this->$key = $value;
+            }
+        }
+        return $this;
+    }
+}

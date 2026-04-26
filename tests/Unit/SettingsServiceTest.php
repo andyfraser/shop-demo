@@ -16,7 +16,7 @@ class SettingsServiceTest extends TestCase {
         $this->db = Database::getConnection();
         // Clear settings table for isolation
         $this->db->exec("DELETE FROM settings");
-        $this->service = new SettingsService($this->db);
+        $this->service = new SettingsService($this->db, new \Tests\NullLogger());
     }
 
     public function testGetSettingsModel() {
@@ -38,7 +38,7 @@ class SettingsServiceTest extends TestCase {
         $this->service->set('site_name', 'My Store');
         
         // New service instance should load from DB
-        $newService = new SettingsService($this->db);
+        $newService = new SettingsService($this->db, new \Tests\NullLogger());
         $this->assertEquals('My Store', $newService->getSettings()->site_name);
     }
 

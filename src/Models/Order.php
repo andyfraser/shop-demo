@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class Order {
+class Order extends Model {
     public const STATUS_PENDING   = 'pending';
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_SHIPPED   = 'shipped';
@@ -29,15 +29,6 @@ class Order {
 
     /** @var OrderItem[] */
     public array $items = [];
-
-    public function fill(array $data): self {
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->$key = $value;
-            }
-        }
-        return $this;
-    }
 
     public function canBeCancelled(): bool {
         return $this->status === self::STATUS_PENDING;

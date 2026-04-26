@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class Settings {
+class Settings extends Model {
     public string $site_name = 'Demo|shop';
     public string $currency_symbol = '£';
     public int $password_min_length = 6;
@@ -33,6 +33,9 @@ class Settings {
                 } else {
                     $this->$key = (string)$value;
                 }
+            } else {
+                // Trigger __set and the warning
+                $this->$key = $value;
             }
         }
         return $this;

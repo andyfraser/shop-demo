@@ -8,6 +8,7 @@ require_once __DIR__ . '/../src/Helpers.php';
 @session_start();
 
 require_once __DIR__ . '/TestCase.php';
+require_once __DIR__ . '/NullLogger.php';
 
 use Tests\AssertionFailedException;
 
@@ -23,61 +24,62 @@ $failures = [];
 echo "Running tests...\n\n";
 
 foreach ($testFiles as $file) {
+    $beforeClasses = get_declared_classes();
     require_once $file->getPathname();
+    $afterClasses = get_declared_classes();
+    $newClasses = array_diff($afterClasses, $beforeClasses);
     
-    // Get classes defined in this file
-    $classes = get_declared_classes();
-    $testClass = end($classes);
-    
-    $reflection = new ReflectionClass($testClass);
-    if (!$reflection->isAbstract() && $reflection->isSubclassOf('Tests\TestCase')) {
-        $instance = $reflection->newInstance();
-        $methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
-        
-        foreach ($methods as $method) {
-            if (strpos($method->name, 'test') === 0) {
-                $instance->clearExpectedException();
-                try {
-                    if ($reflection->hasMethod('setUp')) {
-                        $instance->setUp();
-                    }
-                    $instance->{$method->name}();
-                    
-                    if ($instance->getExpectedException()) {
-                        throw new AssertionFailedException("Expected exception " . $instance->getExpectedException() . " was not thrown.");
-                    }
+    foreach ($newClasses as $testClass) {
+        $reflection = new ReflectionClass($testClass);
+        if (!$reflection->isAbstract() && $reflection->isSubclassOf('Tests\TestCase')) {
+            $instance = $reflection->newInstance();
+            $methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
+            
+            foreach ($methods as $method) {
+                if (strpos($method->name, 'test') === 0) {
+                    $instance->clearExpectedException();
+                    try {
+                        if ($reflection->hasMethod('setUp')) {
+                            $instance->setUp();
+                        }
+                        $instance->{$method->name}();
+                        
+                        if ($instance->getExpectedException()) {
+                            throw new AssertionFailedException("Expected exception " . $instance->getExpectedException() . " was not thrown.");
+                        }
 
-                    echo ".";
-                    $passed++;
-                } catch (AssertionFailedException $e) {
-                    echo "F";
-                    $failed++;
-                    $failures[] = [
-                        'class' => $testClass,
-                        'method' => $method->name,
-                        'message' => $e->getMessage(),
-                        'file' => $file->getPathname(),
-                        'line' => $e->getLine()
-                    ];
-                } catch (Throwable $e) {
-                    if ($instance->getExpectedException() && $e instanceof ($instance->getExpectedException())) {
                         echo ".";
                         $passed++;
-                    } else {
-                        echo "E";
+                    } catch (AssertionFailedException $e) {
+                        echo "F";
                         $failed++;
                         $failures[] = [
                             'class' => $testClass,
                             'method' => $method->name,
-                            'message' => "Unhandled Exception/Error: " . get_class($e) . ": " . $e->getMessage(),
+                            'message' => $e->getMessage(),
                             'file' => $file->getPathname(),
                             'line' => $e->getLine()
                         ];
+                    } catch (Throwable $e) {
+                        if ($instance->getExpectedException() && $e instanceof ($instance->getExpectedException())) {
+                            echo ".";
+                            $passed++;
+                        } else {
+                            echo "E";
+                            $failed++;
+                            $failures[] = [
+                                'class' => $testClass,
+                                'method' => $method->name,
+                                'message' => "Unhandled Exception/Error: " . get_class($e) . ": " . $e->getMessage(),
+                                'file' => $file->getPathname(),
+                                'line' => $e->getLine()
+                            ];
+                        }
                     }
                 }
             }
+            $assertions += $instance->getAssertionCount();
         }
-        $assertions += $instance->getAssertionCount();
     }
 }
 

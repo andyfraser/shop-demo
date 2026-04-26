@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Models\Product;
+use Psr\Log\LoggerInterface;
 
 class ProductService implements ProductServiceInterface {
     public function __construct(
-        private \PDO $db
+        private \PDO $db,
+        private LoggerInterface $logger
     ) {}
 
     /**
@@ -22,7 +24,7 @@ class ProductService implements ProductServiceInterface {
                  ORDER BY p.name ASC"
             );
             $stmt->execute(['%' . $search . '%']);
-            return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class);
+            return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
         }
 
         return $this->db->query(
@@ -30,7 +32,7 @@ class ProductService implements ProductServiceInterface {
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
              ORDER BY p.name ASC"
-        )->fetchAll(\PDO::FETCH_CLASS, Product::class);
+        )->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     /**
@@ -38,7 +40,7 @@ class ProductService implements ProductServiceInterface {
      */
     public function findById(int $id): ?Product {
         $stmt = $this->db->prepare("SELECT * FROM products WHERE id = ?");
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, Product::class);
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }
@@ -53,7 +55,7 @@ class ProductService implements ProductServiceInterface {
              LEFT JOIN categories c ON p.category_id = c.id
              WHERE p.slug = ? AND p.active = 1"
         );
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, Product::class);
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
         $stmt->execute([$slug]);
         return $stmt->fetch() ?: null;
     }
@@ -116,7 +118,7 @@ class ProductService implements ProductServiceInterface {
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $stmt = $this->db->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
         $stmt->execute($ids);
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     /**
@@ -139,7 +141,7 @@ class ProductService implements ProductServiceInterface {
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$like, $like]);
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     /**
@@ -173,7 +175,7 @@ class ProductService implements ProductServiceInterface {
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($categoryIds);
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     /**
@@ -203,7 +205,7 @@ class ProductService implements ProductServiceInterface {
             $sql .= " LIMIT " . (int)$perPage . " OFFSET " . (int)$offset;
         }
 
-        return $this->db->query($sql)->fetchAll(\PDO::FETCH_CLASS, Product::class);
+        return $this->db->query($sql)->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     /**
@@ -223,7 +225,7 @@ class ProductService implements ProductServiceInterface {
         $stmt->bindValue(1, $threshold, \PDO::PARAM_INT);
         $stmt->bindValue(2, $limit, \PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     private function getSortSql(string $sort): string {
@@ -249,6 +251,6 @@ class ProductService implements ProductServiceInterface {
         );
         $stmt->bindValue(1, $limit, \PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 }

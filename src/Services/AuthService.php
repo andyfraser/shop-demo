@@ -2,15 +2,16 @@
 namespace App\Services;
 
 use App\Core\Database;
-
 use App\Models\User;
+use Psr\Log\LoggerInterface;
 
 class AuthService implements AuthServiceInterface {
     private const COOKIE_NAME = 'remember_token';
 
     public function __construct(
         private \PDO $db,
-        private SettingsServiceInterface $settings
+        private SettingsServiceInterface $settings,
+        private LoggerInterface $logger
     ) {}
 
     public function sessionStart(): void {
@@ -28,10 +29,7 @@ class AuthService implements AuthServiceInterface {
                 return $_SESSION['user'];
             }
             // If it was an array (from old code or login), convert it
-            $user = new User();
-            foreach ($_SESSION['user'] as $k => $v) {
-                if (property_exists($user, $k)) $user->$k = $v;
-            }
+            $user = (new User($this->logger))->fill((array)$_SESSION['user']);
             $_SESSION['user'] = $user;
             return $user;
         }
@@ -45,7 +43,7 @@ class AuthService implements AuthServiceInterface {
                  JOIN users u ON u.id = rt.user_id
                  WHERE rt.token = ? AND rt.expires_at > ?"
             );
-            $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class);
+            $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class, [$this->logger]);
             $stmt->execute([$token, time()]);
             $user = $stmt->fetch();
             
@@ -72,11 +70,7 @@ class AuthService implements AuthServiceInterface {
         @session_regenerate_id(true);
 
         if (is_array($user)) {
-            $u = new User();
-            foreach ($user as $k => $v) {
-                if (property_exists($u, $k)) $u->$k = $v;
-            }
-            $user = $u;
+            $user = (new User($this->logger))->fill($user);
         }
 
         $_SESSION['user'] = $user;

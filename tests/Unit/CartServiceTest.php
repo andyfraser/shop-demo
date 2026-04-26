@@ -17,9 +17,10 @@ class CartServiceTest extends TestCase {
     public function setUp() {
         $_SESSION['cart'] = [];
         $db = Database::getConnection();
-        $settings = new SettingsService($db);
-        $auth = new AuthService($db, $settings);
-        $productService = new ProductService($db);
+        $logger = new \Tests\NullLogger();
+        $settings = new SettingsService($db, $logger);
+        $auth = new AuthService($db, $settings, $logger);
+        $productService = new ProductService($db, $logger);
         $this->cart = new CartService($productService, $auth);
     }
 

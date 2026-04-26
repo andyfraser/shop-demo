@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class Category {
+class Category extends Model {
     public int $id;
     public string $name;
     public string $slug;
@@ -17,13 +17,4 @@ class Category {
 
     /** @var Category[] */
     public array $children = [];
-
-    public function fill(array $data): self {
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->$key = $value;
-            }
-        }
-        return $this;
-    }
 }

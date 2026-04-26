@@ -15,8 +15,9 @@ class AuthServiceTest extends TestCase {
     public function setUp() {
         $_SESSION = [];
         $this->db = Database::getConnection();
-        $settings = new SettingsService($this->db);
-        $this->auth = new AuthService($this->db, $settings);
+        $logger = new \Tests\NullLogger();
+        $settings = new SettingsService($this->db, $logger);
+        $this->auth = new AuthService($this->db, $settings, $logger);
     }
 
     public function testLoginSetsSession() {
@@ -28,7 +29,7 @@ class AuthServiceTest extends TestCase {
     }
 
     public function testLogoutClearsSession() {
-        $_SESSION['user'] = new \App\Models\User();
+        $_SESSION['user'] = new \App\Models\User(new \Tests\NullLogger());
         $this->auth->logout();
         
         $this->assertFalse(isset($_SESSION['user']));

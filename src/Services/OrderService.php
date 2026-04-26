@@ -5,10 +5,12 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use Psr\Log\LoggerInterface;
 
 class OrderService implements OrderServiceInterface {
     public function __construct(
-        private \PDO $db
+        private \PDO $db,
+        private LoggerInterface $logger
     ) {}
 
     /**
@@ -80,7 +82,7 @@ class OrderService implements OrderServiceInterface {
              LEFT JOIN users u ON o.user_id = u.id
              WHERE o.id = ?"
         );
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, Order::class);
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, Order::class, [$this->logger]);
         $stmt->execute([$id]);
         $order = $stmt->fetch() ?: null;
 
@@ -101,7 +103,7 @@ class OrderService implements OrderServiceInterface {
              LEFT JOIN products p ON oi.product_id = p.id
              WHERE oi.order_id = ?"
         );
-        return $stmt->execute([$orderId]) ? $stmt->fetchAll(\PDO::FETCH_CLASS, OrderItem::class) : [];
+        return $stmt->execute([$orderId]) ? $stmt->fetchAll(\PDO::FETCH_CLASS, OrderItem::class, [$this->logger]) : [];
     }
 
     /**
@@ -127,7 +129,7 @@ class OrderService implements OrderServiceInterface {
              LEFT JOIN users u ON o.user_id = u.id
              $where
              ORDER BY o.created_at DESC"
-        )->fetchAll(\PDO::FETCH_CLASS, Order::class);
+        )->fetchAll(\PDO::FETCH_CLASS, Order::class, [$this->logger]);
     }
 
     /**
@@ -143,7 +145,7 @@ class OrderService implements OrderServiceInterface {
              ORDER BY o.created_at DESC"
         );
         $stmt->execute([$userId]);
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Order::class);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Order::class, [$this->logger]);
     }
 
     public function countAll(): int {
@@ -169,7 +171,7 @@ class OrderService implements OrderServiceInterface {
         );
         $stmt->bindValue(1, $limit, \PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Order::class);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Order::class, [$this->logger]);
     }
 
     /**

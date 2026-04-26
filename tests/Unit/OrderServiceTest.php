@@ -18,8 +18,8 @@ class OrderServiceTest extends TestCase {
 
     public function setUp() {
         $this->db = Database::getConnection();
-        $this->orderService = new OrderService($this->db);
-        $this->productService = new ProductService($this->db);
+        $this->orderService = new OrderService($this->db, new \Tests\NullLogger());
+        $this->productService = new ProductService($this->db, new \Tests\NullLogger());
     }
 
     public function testCreateOrder() {

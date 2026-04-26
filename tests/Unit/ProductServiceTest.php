@@ -14,7 +14,7 @@ class ProductServiceTest extends TestCase {
 
     public function setUp() {
         $this->db = Database::getConnection();
-        $this->service = new ProductService($this->db);
+        $this->service = new ProductService($this->db, new \Tests\NullLogger());
     }
 
     public function testFindById() {

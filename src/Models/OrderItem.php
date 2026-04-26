@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class OrderItem {
+class OrderItem extends Model {
     public int $id;
     public int $order_id;
     public int $product_id;

@@ -2,18 +2,22 @@
 namespace App\Services;
 
 use App\Models\Settings;
+use Psr\Log\LoggerInterface;
 
 class SettingsService implements SettingsServiceInterface {
     private ?Settings $settings = null;
 
-    public function __construct(private \PDO $db) {}
+    public function __construct(
+        private \PDO $db,
+        private LoggerInterface $logger
+    ) {}
 
     /**
      * Get the typed Settings model.
      */
     public function getSettings(): Settings {
         if ($this->settings === null) {
-            $this->settings = new Settings();
+            $this->settings = new Settings($this->logger);
             $this->settings->fill($this->loadFromDb());
         }
         return $this->settings;

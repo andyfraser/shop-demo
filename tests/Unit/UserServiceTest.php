@@ -14,7 +14,7 @@ class UserServiceTest extends TestCase {
 
     public function setUp() {
         $this->db = Database::getConnection();
-        $this->service = new UserService($this->db);
+        $this->service = new UserService($this->db, new \Tests\NullLogger());
     }
 
     public function testFindById() {

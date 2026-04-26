@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Models\Category;
+use Psr\Log\LoggerInterface;
 
 class CategoryService implements CategoryServiceInterface {
     public function __construct(
-        private \PDO $db
+        private \PDO $db,
+        private LoggerInterface $logger
     ) {}
 
     /**
@@ -20,7 +22,7 @@ class CategoryService implements CategoryServiceInterface {
              LEFT JOIN products pr ON pr.category_id = c.id
              GROUP BY c.id
              ORDER BY p.name, c.name"
-        )->fetchAll(\PDO::FETCH_CLASS, Category::class);
+        )->fetchAll(\PDO::FETCH_CLASS, Category::class, [$this->logger]);
     }
 
     /**
@@ -28,7 +30,7 @@ class CategoryService implements CategoryServiceInterface {
      */
     public function getAll(): array {
         return $this->db->query("SELECT * FROM categories ORDER BY name")
-            ->fetchAll(\PDO::FETCH_CLASS, Category::class);
+            ->fetchAll(\PDO::FETCH_CLASS, Category::class, [$this->logger]);
     }
 
     /**
@@ -36,7 +38,7 @@ class CategoryService implements CategoryServiceInterface {
      */
     public function findById(int $id): ?Category {
         $stmt = $this->db->prepare("SELECT * FROM categories WHERE id = ?");
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, Category::class);
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, Category::class, [$this->logger]);
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }
@@ -46,7 +48,7 @@ class CategoryService implements CategoryServiceInterface {
      */
     public function findBySlug(string $slug): ?Category {
         $stmt = $this->db->prepare("SELECT * FROM categories WHERE slug = ?");
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, Category::class);
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, Category::class, [$this->logger]);
         $stmt->execute([$slug]);
         return $stmt->fetch() ?: null;
     }
@@ -78,7 +80,7 @@ class CategoryService implements CategoryServiceInterface {
              FROM categories c
              LEFT JOIN categories p ON c.parent_id = p.id
              ORDER BY COALESCE(p.name, c.name), c.parent_id IS NOT NULL, c.name"
-        )->fetchAll(\PDO::FETCH_CLASS, Category::class);
+        )->fetchAll(\PDO::FETCH_CLASS, Category::class, [$this->logger]);
     }
 
     /**
@@ -87,7 +89,7 @@ class CategoryService implements CategoryServiceInterface {
     public function getSubcategories(int $parentId): array {
         $stmt = $this->db->prepare("SELECT * FROM categories WHERE parent_id = ? ORDER BY name");
         $stmt->execute([$parentId]);
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Category::class);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Category::class, [$this->logger]);
     }
 
     /**

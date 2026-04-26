@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class Product {
+class Product extends Model {
     public int $id;
     public string $name;
     public string $slug;
@@ -19,15 +19,6 @@ class Product {
     // Join fields (explicitly defined)
     public ?string $cat_name = null;
     public ?string $cat_slug = null;
-
-    public function fill(array $data): self {
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->$key = $value;
-            }
-        }
-        return $this;
-    }
 
     /**
      * Calculate subtotal for a given quantity.

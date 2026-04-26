@@ -48,7 +48,7 @@ class AdminSettingsController {
             redirect('/admin/settings');
         }
 
-        $settings = new Settings();
+        $settings = new Settings($this->logger);
         $settings->fill($_POST);
 
         $this->renderer->adminRender('settings', [

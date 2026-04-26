@@ -50,25 +50,25 @@ return function(array $config) {
 
         // Services
         SettingsServiceInterface::class => function($c) {
-            return new SettingsService($c->get(\PDO::class));
+            return new SettingsService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
         AuthServiceInterface::class => function($c) {
-            return new AuthService($c->get(\PDO::class), $c->get(SettingsServiceInterface::class));
+            return new AuthService($c->get(\PDO::class), $c->get(SettingsServiceInterface::class), $c->get(LoggerInterface::class));
         },
         ProductServiceInterface::class => function($c) {
-            return new ProductService($c->get(\PDO::class));
+            return new ProductService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
         CartServiceInterface::class => function($c) {
             return new CartService($c->get(ProductServiceInterface::class), $c->get(AuthServiceInterface::class));
         },
         CategoryServiceInterface::class => function($c) {
-            return new CategoryService($c->get(\PDO::class));
+            return new CategoryService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
         OrderServiceInterface::class => function($c) {
-            return new OrderService($c->get(\PDO::class));
+            return new OrderService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
         UserServiceInterface::class => function($c) {
-            return new UserService($c->get(\PDO::class));
+            return new UserService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
         EmailServiceInterface::class => function($c) {
             return new EmailService($c->get(SettingsServiceInterface::class), $c->get(LoggerInterface::class));
@@ -80,7 +80,7 @@ return function(array $config) {
             return new BackupService($c->get(\PDO::class));
         },
         DeliveryServiceInterface::class => function($c) {
-            return new DeliveryService($c->get(\PDO::class));
+            return new DeliveryService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
     ];
 };

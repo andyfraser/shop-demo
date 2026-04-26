@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Models\User;
+use Psr\Log\LoggerInterface;
 
 class UserService implements UserServiceInterface {
     public function __construct(
-        private \PDO $db
+        private \PDO $db,
+        private LoggerInterface $logger
     ) {}
 
     public function getAll(): array {
@@ -16,26 +18,26 @@ class UserService implements UserServiceInterface {
              LEFT JOIN orders o ON o.user_id = u.id
              GROUP BY u.id
              ORDER BY u.id DESC"
-        )->fetchAll(\PDO::FETCH_CLASS, User::class);
+        )->fetchAll(\PDO::FETCH_CLASS, User::class, [$this->logger]);
     }
 
     public function findById(int $id): ?User {
         $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class, [$this->logger]);
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }
 
     public function findByEmail(string $email): ?User {
         $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class, [$this->logger]);
         $stmt->execute([$email]);
         return $stmt->fetch() ?: null;
     }
 
     public function findByVerificationToken(string $token): ?User {
         $stmt = $this->db->prepare("SELECT * FROM users WHERE verification_token = ?");
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class, [$this->logger]);
         $stmt->execute([$token]);
         return $stmt->fetch() ?: null;
     }
