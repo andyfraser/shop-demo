@@ -28,6 +28,7 @@ return [
     // Application settings
     'app' => [
         'debug' => false,
+        'log_path' => __DIR__ . '/../logs/app.log',
         'log_retention_days' => 30,
     ],
 ];

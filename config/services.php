@@ -39,8 +39,9 @@ return function(array $config) {
         // PSR-3 compliant file logger
         LoggerInterface::class => function() use ($config) {
             $isDebug = $config['app']['debug'] ?? false;
+            $logPath = $config['app']['log_path'] ?? __DIR__ . '/../logs/app.log';
             $retention = $config['app']['log_retention_days'] ?? 30;
-            return new FileLogger(__DIR__ . '/../logs/app.log', $isDebug, $retention);
+            return new FileLogger($logPath, $isDebug, $retention);
         },
 
         // PDO instance for database connectivity
