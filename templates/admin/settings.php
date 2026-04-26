@@ -23,34 +23,34 @@
       <div class="form-group">
         <label>Site Name</label>
         <input type="text" name="site_name" class="form-control"
-               value="<?= h($settings['site_name']) ?>" required>
+               value="<?= h($settings->site_name) ?>" required>
         <small style="color:var(--ink-2);">Use <code>|</code> to split the logo into two parts, e.g. <code>Demo|shop</code> — the second part is styled differently in the header.</small>
       </div>
 
       <div class="form-group">
         <label>Currency Symbol</label>
         <input type="text" name="currency_symbol" class="form-control"
-               value="<?= h($settings['currency_symbol']) ?>" required style="max-width:6rem;">
+               value="<?= h($settings->currency_symbol) ?>" required style="max-width:6rem;">
       </div>
 
       <div class="form-group">
         <label>Email From Address</label>
         <input type="email" name="email_from" class="form-control"
-               value="<?= h($settings['email_from'] ?? 'noreply@shop.local') ?>" required>
+               value="<?= h($settings->email_from) ?>" required>
         <small style="color:var(--ink-2);">The email address used for all outgoing system emails.</small>
       </div>
 
       <div class="form-group">
         <label>Low Stock Threshold</label>
         <input type="number" name="low_stock_threshold" class="form-control"
-               value="<?= h($settings['low_stock_threshold']) ?>" min="0" required style="max-width:6rem;">
+               value="<?= h($settings->low_stock_threshold) ?>" min="0" required style="max-width:6rem;">
         <small style="color:var(--ink-2);">Products with stock at or below this level will trigger low stock warnings.</small>
       </div>
 
       <div class="form-group">
         <label>Default VAT Rate (%)</label>
         <input type="number" name="default_vat_rate" class="form-control"
-               value="<?= h($settings['default_vat_rate']) ?>" min="0" step="0.01" required style="max-width:6rem;">
+               value="<?= h($settings->default_vat_rate) ?>" min="0" step="0.01" required style="max-width:6rem;">
         <small style="color:var(--ink-2);">The default VAT percentage for new products and delivery costs.</small>
       </div>
     </div>
@@ -61,13 +61,13 @@
       <div class="form-group">
         <label>Minimum Password Length</label>
         <input type="number" name="password_min_length" class="form-control"
-               value="<?= h($settings['password_min_length']) ?>" min="1" required style="max-width:8rem;">
+               value="<?= h($settings->password_min_length) ?>" min="1" required style="max-width:8rem;">
       </div>
 
       <div class="form-group">
         <label>Remember Me — Duration (days)</label>
         <input type="number" name="remember_me_days" class="form-control"
-               value="<?= h($settings['remember_me_days']) ?>" min="1" required style="max-width:8rem;">
+               value="<?= h($settings->remember_me_days) ?>" min="1" required style="max-width:8rem;">
         <small style="color:var(--ink-2);">How long a "Remember me" login persists before the user must sign in again.</small>
       </div>
     </div>
@@ -83,22 +83,22 @@
         <div class="form-group">
           <label>Login — Max Attempts</label>
           <input type="number" name="login_max_attempts" class="form-control"
-                 value="<?= h($settings['login_max_attempts']) ?>" min="1" required>
+                 value="<?= h($settings->login_max_attempts) ?>" min="1" required>
         </div>
         <div class="form-group">
           <label>Login — Window (minutes)</label>
           <input type="number" name="login_window_minutes" class="form-control"
-                 value="<?= h($settings['login_window_minutes']) ?>" min="1" required>
+                 value="<?= h($settings->login_window_minutes) ?>" min="1" required>
         </div>
         <div class="form-group">
           <label>Registration — Max Attempts</label>
           <input type="number" name="register_max_attempts" class="form-control"
-                 value="<?= h($settings['register_max_attempts']) ?>" min="1" required>
+                 value="<?= h($settings->register_max_attempts) ?>" min="1" required>
         </div>
         <div class="form-group">
           <label>Registration — Window (minutes)</label>
           <input type="number" name="register_window_minutes" class="form-control"
-                 value="<?= h($settings['register_window_minutes']) ?>" min="1" required>
+                 value="<?= h($settings->register_window_minutes) ?>" min="1" required>
         </div>
       </div>
     </div>
@@ -115,13 +115,13 @@
         <div class="form-group">
           <label>Max Top-Level Categories</label>
           <input type="number" name="mobile_nav_max_top" class="form-control"
-                 value="<?= h($settings['mobile_nav_max_top']) ?>" min="1" required>
+                 value="<?= h($settings->mobile_nav_max_top) ?>" min="1" required>
           <small style="color:var(--ink-2);">Default: 10</small>
         </div>
         <div class="form-group">
           <label>Max Combined Categories</label>
           <input type="number" name="mobile_nav_max_combined" class="form-control"
-                 value="<?= h($settings['mobile_nav_max_combined']) ?>" min="1" required>
+                 value="<?= h($settings->mobile_nav_max_combined) ?>" min="1" required>
           <small style="color:var(--ink-2);">Top-level + first-level total. Default: 20</small>
         </div>
       </div>

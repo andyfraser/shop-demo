@@ -14,6 +14,11 @@
     </div>
   <?php endif; ?>
 
+  <?php
+    // Helper to handle both object and array during transition or error repopulation
+    $get = fn($key) => is_object($product) ? ($product->$key ?? null) : ($product[$key] ?? null);
+  ?>
+
   <div class="card" style="max-width:800px;">
     <form method="POST" enctype="multipart/form-data">
         <?= csrf_field() ?>
@@ -26,26 +31,26 @@
           <div class="form-group">
             <label>Product Name *</label>
             <input type="text" name="name" class="form-control"
-                   value="<?= h($product['name'] ?? '') ?>" required>
+                   value="<?= h($get('name') ?? '') ?>" required>
           </div>
         </div>
 
         <div class="form-group">
           <label>Price (£) *</label>
           <input type="number" name="price" step="0.01" min="0.01" class="form-control"
-                 value="<?= h($product['price'] ?? '') ?>" required>
+                 value="<?= h($get('price') ?? '') ?>" required>
         </div>
 
         <div class="form-group">
           <label>VAT Rate (%) *</label>
           <input type="number" name="vat_rate" step="0.01" min="0" class="form-control"
-                 value="<?= h($product['vat_rate'] ?? '20.00') ?>" required>
+                 value="<?= h($get('vat_rate') ?? '20.00') ?>" required>
         </div>
 
         <div class="form-group">
           <label>Stock Quantity</label>
           <input type="number" name="stock" min="0" class="form-control"
-                 value="<?= h($product['stock'] ?? 0) ?>">
+                 value="<?= h($get('stock') ?? 0) ?>">
         </div>
 
         <div class="form-group span-2">
@@ -53,9 +58,9 @@
           <select name="category_id" class="form-control">
             <option value="">— No category —</option>
             <?php foreach ($categories as $cat): ?>
-              <option value="<?= $cat['id'] ?>"
-                      <?= ($product['category_id'] ?? '') == $cat['id'] ? 'selected' : '' ?>>
-                <?= $cat['parent_name'] ? h($cat['parent_name']) . ' › ' : '' ?><?= h($cat['name']) ?>
+              <option value="<?= $cat->id ?>"
+                      <?= ($get('category_id') ?? '') == $cat->id ? 'selected' : '' ?>>
+                <?= $cat->parent_name ? h($cat->parent_name) . ' › ' : '' ?><?= h($cat->name) ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -64,7 +69,7 @@
         <div class="span-2">
           <div class="form-group">
             <label>Description</label>
-            <textarea name="description" class="form-control"><?= h($product['description'] ?? '') ?></textarea>
+            <textarea name="description" class="form-control"><?= h($get('description') ?? '') ?></textarea>
           </div>
         </div>
 
@@ -72,7 +77,7 @@
           <div class="form-group">
             <label>Product Image</label>
             <?php
-              $img_file = $product['image'] ?? null;
+              $img_file = $get('image');
               $img_url  = $img_file ? BASE_URL . '/public/images/' . h($img_file) : null;
             ?>
             <?php if ($img_url): ?>
@@ -98,13 +103,13 @@
         <div class="span-2" style="display:flex;gap:1.5rem;">
           <label class="toggle-label">
             <input type="checkbox" name="active" value="1"
-                   <?= ($product['active'] ?? 1) ? 'checked' : '' ?>>
+                   <?= ($get('active') ?? 1) ? 'checked' : '' ?>>
             <span class="toggle-track"></span>
             Active (visible in store)
           </label>
           <label class="toggle-label">
             <input type="checkbox" name="featured" value="1"
-                   <?= ($product['featured'] ?? 0) ? 'checked' : '' ?>>
+                   <?= ($get('featured') ?? 0) ? 'checked' : '' ?>>
             <span class="toggle-track"></span>
             Featured Product (shown on homepage)
           </label>

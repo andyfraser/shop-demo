@@ -81,6 +81,38 @@ abstract class TestCase {
         }
     }
 
+    protected function assertInstanceOf(string $expectedClass, $actual, string $message = ''): void {
+        $this->assertions++;
+        if (!($actual instanceof $expectedClass)) {
+            $msg = $message ?: "Expected instance of $expectedClass, but got " . (is_object($actual) ? get_class($actual) : gettype($actual));
+            throw new AssertionFailedException($msg);
+        }
+    }
+
+    protected function assertGreaterThan($expected, $actual, string $message = ''): void {
+        $this->assertions++;
+        if (!($actual > $expected)) {
+            $msg = $message ?: "Expected $actual to be greater than $expected";
+            throw new AssertionFailedException($msg);
+        }
+    }
+
+    protected function assertIsArray($actual, string $message = ''): void {
+        $this->assertions++;
+        if (!is_array($actual)) {
+            $msg = $message ?: "Expected array, but got " . gettype($actual);
+            throw new AssertionFailedException($msg);
+        }
+    }
+
+    protected function assertNotEmpty($actual, string $message = ''): void {
+        $this->assertions++;
+        if (empty($actual)) {
+            $msg = $message ?: "Expected value NOT to be empty";
+            throw new AssertionFailedException($msg);
+        }
+    }
+
     protected function assertStringContainsString(string $needle, string $haystack, string $message = ''): void {
         $this->assertions++;
         if (strpos($haystack, $needle) === false) {

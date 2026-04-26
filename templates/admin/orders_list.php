@@ -21,21 +21,18 @@
     </thead>
     <tbody>
       <?php if ($orders): ?>
-        <?php
-        $badges = ['pending'=>'badge-warning','confirmed'=>'badge-info','shipped'=>'badge-info','delivered'=>'badge-success','cancelled'=>'badge-danger'];
-        ?>
         <?php foreach ($orders as $o): ?>
           <tr>
-            <td><strong>#<?= str_pad($o['id'], 6, '0', STR_PAD_LEFT) ?></strong></td>
-            <td><?= h($o['user_name'] ?? 'Guest') ?></td>
-            <td>£<?= number_format($o['total'], 2) ?></td>
+            <td><strong><?= $o->getFormattedId() ?></strong></td>
+            <td><?= h($o->user_name ?? 'Guest') ?></td>
+            <td>£<?= number_format($o->total, 2) ?></td>
             <td>
-              <span class="badge <?= $badges[$o['status']] ?? 'badge-neutral' ?>">
-                <?= ucfirst($o['status']) ?>
+              <span class="badge <?= $o->getStatusBadgeClass() ?>">
+                <?= ucfirst($o->status) ?>
               </span>
             </td>
-            <td><?= date('d M Y, H:i', strtotime($o['created_at'])) ?></td>
-            <td><a href="/admin/orders/detail?id=<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a></td>
+            <td><?= date('d M Y, H:i', strtotime($o->created_at)) ?></td>
+            <td><a href="/admin/orders/detail?id=<?= $o->id ?>" class="btn btn-outline btn-sm">View</a></td>
           </tr>
         <?php endforeach; ?>
       <?php else: ?>

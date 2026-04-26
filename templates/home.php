@@ -16,13 +16,13 @@
     <h2 class="section-title">Shop by Category</h2>
     <div class="cat-grid">
       <?php foreach ($nav_tree as $cat): ?>
-        <a href="/category/<?= h($cat['slug']) ?>" class="cat-card">
+        <a href="/category/<?= h($cat->slug) ?>" class="cat-card">
           <div class="cat-icon-wrap">
-            <span class="cat-icon"><?= $cat['icon'] ? h($cat['icon']) : '📦' ?></span>
+            <span class="cat-icon"><?= $cat->icon ? h($cat->icon) : '📦' ?></span>
           </div>
-          <span class="cat-name"><?= h($cat['name']) ?></span>
-          <?php if ($cat['children']): ?>
-            <span class="cat-sub"><?= count($cat['children']) ?> subcategories</span>
+          <span class="cat-name"><?= h($cat->name) ?></span>
+          <?php if ($cat->children): ?>
+            <span class="cat-sub"><?= count($cat->children) ?> subcategories</span>
           <?php endif; ?>
         </a>
       <?php endforeach; ?>
@@ -33,19 +33,19 @@
     <h2 class="section-title">Featured Products</h2>
     <div class="product-grid">
       <?php foreach ($featured_products as $p): ?>
-        <a href="/product/<?= h($p['slug']) ?>" class="product-card">
+        <a href="/product/<?= h($p->slug) ?>" class="product-card">
           <div class="img-wrap">
-            <?php if ($p['featured']): ?>
+            <?php if ($p->featured): ?>
               <span class="product-badge badge-featured">Featured</span>
-            <?php elseif (is_new_product($p['created_at'])): ?>
+            <?php elseif ($p->isNew()): ?>
               <span class="product-badge badge-new">New</span>
             <?php endif; ?>
-            <?php product_img($p['image'] ?? '', $p['name'], '', 'loading:lazy') ?>
+            <?php product_img($p->image ?? '', $p->name, '', 'loading:lazy') ?>
           </div>
           <div class="card-body">
-            <div class="card-cat"><?= h($p['cat_name'] ?? 'Uncategorised') ?></div>
-            <div class="card-name"><?= h($p['name']) ?></div>
-            <div class="card-price"><?= money($p['price']) ?></div>
+            <div class="card-cat"><?= h($p->cat_name ?? 'Uncategorised') ?></div>
+            <div class="card-name"><?= h($p->name) ?></div>
+            <div class="card-price"><?= money($p->price) ?></div>
             <div class="card-actions">
               <span class="btn btn-primary btn-sm">View Product</span>
             </div>

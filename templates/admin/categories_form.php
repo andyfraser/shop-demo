@@ -21,10 +21,15 @@
         <input type="hidden" name="id" value="<?= $category_id ?>">
       <?php endif; ?>
 
+      <?php
+        // Helper to handle both object and array during transition or error repopulation
+        $get = fn($key) => is_object($category) ? ($category->$key ?? null) : ($category[$key] ?? null);
+      ?>
+
       <div class="form-group">
         <label>Name *</label>
         <input type="text" name="name" class="form-control"
-               value="<?= h($category['name'] ?? '') ?>" required autofocus>
+               value="<?= h($get('name') ?? '') ?>" required autofocus>
       </div>
 
       <div class="form-group">
@@ -32,10 +37,10 @@
         <select name="parent_id" class="form-control">
           <option value="">— Top level —</option>
           <?php foreach ($all_categories as $c): ?>
-            <?php if ($c['id'] == $category_id) continue; ?>
-            <option value="<?= $c['id'] ?>"
-                    <?= ($category['parent_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
-              <?= h($c['name']) ?>
+            <?php if ($c->id == $category_id) continue; ?>
+            <option value="<?= $c->id ?>"
+                    <?= ($get('parent_id') ?? '') == $c->id ? 'selected' : '' ?>>
+              <?= h($c->name) ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -44,13 +49,13 @@
       <div class="form-group">
         <label>Icon <small style="color:var(--ink-2);font-weight:400;">— paste any emoji</small></label>
         <input type="text" name="icon" class="form-control"
-               value="<?= h($category['icon'] ?? '') ?>"
+               value="<?= h($get('icon') ?? '') ?>"
                placeholder="e.g. 💻" style="max-width:120px;">
       </div>
 
       <div class="form-group">
         <label>Description</label>
-        <textarea name="description" class="form-control"><?= h($category['description'] ?? '') ?></textarea>
+        <textarea name="description" class="form-control"><?= h($get('description') ?? '') ?></textarea>
       </div>
 
       <div style="display:flex;gap:.75rem;">

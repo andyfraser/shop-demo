@@ -9,13 +9,18 @@ function h(string $s): string {
 }
 
 function money(float $v): string {
-    $settings = Container::getInstance()->get(SettingsService::class);
-    return $settings->get('currency_symbol') . number_format($v, 2);
+    $s = settings();
+    return $s->currency_symbol . number_format($v, 2);
 }
 
-function setting(string $key): string {
+function setting(string $key): mixed {
     $settings = Container::getInstance()->get(SettingsService::class);
     return $settings->get($key);
+}
+
+function settings(): \App\Models\Settings {
+    $settings = Container::getInstance()->get(SettingsService::class);
+    return $settings->getSettings();
 }
 
 function product_img(string $filename = '', string $alt = '', string $class = '', string $style = ''): void {
@@ -63,48 +68,22 @@ function is_ajax(): bool {
     return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
 }
 
-function current_user(): ?array {
-    $auth = Container::getInstance()->get(AuthService::class);
-    return $auth->currentUser();
-}
-
 function is_new_product(string $created_at): bool {
     $ts = strtotime($created_at);
     return (time() - $ts) < (7 * 24 * 60 * 60); // 7 days
 }
 
-function get_category_tree(): array {
-    $db = Container::getInstance()->get(\PDO::class);
-    $all = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
-    $tree = [];
-    $map = [];
-    foreach ($all as $c) $map[$c['id']] = $c + ['children' => []];
-    foreach ($map as &$c) {
-        if ($c['parent_id']) $map[$c['parent_id']]['children'][] = &$c;
-        else $tree[] = &$c;
-    }
-    return $tree;
-}
-
-function get_category_flat(): array {
-    $db = Container::getInstance()->get(\PDO::class);
-    return $db->query(
-        "SELECT c.*, p.name as parent_name
-         FROM categories c
-         LEFT JOIN categories p ON c.parent_id = p.id
-         ORDER BY COALESCE(p.name, c.name), c.parent_id IS NOT NULL, c.name"
-    )->fetchAll();
-}
-
 function get_breadcrumb(int $category_id): array {
     $crumbs = [];
     $db = Container::getInstance()->get(\PDO::class);
-    $all = $db->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC);
-    $all = array_column($all, null, 'id');
-    $current = $all[$category_id] ?? null;
+    $all = $db->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_CLASS, \App\Models\Category::class);
+    $map = [];
+    foreach ($all as $c) $map[$c->id] = $c;
+    
+    $current = $map[$category_id] ?? null;
     while ($current) {
         array_unshift($crumbs, $current);
-        $current = $current['parent_id'] ? ($all[$current['parent_id']] ?? null) : null;
+        $current = $current->parent_id ? ($map[$current->parent_id] ?? null) : null;
     }
     return $crumbs;
 }

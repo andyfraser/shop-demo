@@ -22,12 +22,12 @@ class AuthServiceTest extends TestCase {
         $user = ['id' => 1, 'name' => 'Test User', 'role' => 'customer'];
         $this->auth->login($user);
         
-        $this->assertEquals($user, $_SESSION['user']);
-        $this->assertEquals($user, $this->auth->currentUser());
+        $this->assertInstanceOf(\App\Models\User::class, $_SESSION['user']);
+        $this->assertEquals('Test User', $this->auth->currentUser()->name);
     }
 
     public function testLogoutClearsSession() {
-        $_SESSION['user'] = ['id' => 1];
+        $_SESSION['user'] = new \App\Models\User();
         $this->auth->logout();
         
         $this->assertFalse(isset($_SESSION['user']));

@@ -7,6 +7,7 @@ use App\Services\AuthService;
 use App\Services\SecurityService;
 use App\Services\SettingsService;
 use App\Services\EmailService;
+use App\Services\UserService;
 
 class AuthController {
     public function __construct(
@@ -16,6 +17,7 @@ class AuthController {
         private SecurityService $securityService,
         private SettingsService $settingsService,
         private EmailService $emailService,
+        private UserService $userService,
         private Validator $validator,
         private \Psr\Log\LoggerInterface $logger
     ) {}
@@ -46,11 +48,9 @@ class AuthController {
         $pass  = $_POST['password'] ?? '';
         $errors = [];
 
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
+        $user = $this->userService->findByEmail($email);
 
-        if (!$user || !password_verify($pass, $user['password_hash'])) {
+        if (!$user || !password_verify($pass, $user->password_hash)) {
             $this->logger->warning("Failed login attempt for {email}", ['email' => $email]);
             $this->securityService->recordRateLimit('login', $_SERVER['REMOTE_ADDR']);
             $errors[] = 'Invalid email or password.';
@@ -107,23 +107,29 @@ class AuthController {
         }
 
         if (!$errors) {
-            $stmt = $this->db->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            if ($stmt->fetch()) {
+            if ($this->userService->findByEmail($email)) {
                 $errors[] = 'This email is already registered.';
             } else {
                 $hash = password_hash($pass, PASSWORD_DEFAULT);
                 $token = bin2hex(random_bytes(32));
                 
-                $this->db->prepare("INSERT INTO users (name, email, password_hash, role, verification_token, is_verified) VALUES (?, ?, ?, 'customer', ?, 0)")
-                   ->execute([$name, $email, $hash, $token]);
+                $userData = [
+                    'name'               => $name,
+                    'email'              => $email,
+                    'password_hash'      => $hash,
+                    'role'               => 'customer',
+                    'verification_token' => $token,
+                    'is_verified'        => 0,
+                    'address'            => null
+                ];
+
+                $this->userService->save($userData);
 
                 $this->logger->info("New user registered: {email}", ['email' => $email]);
                 $this->emailService->sendVerificationEmail($email, $name, $token);
 
-                $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
-                $stmt->execute([$email]);
-                $this->authService->login($stmt->fetch());
+                $user = $this->userService->findByEmail($email);
+                $this->authService->login($user);
                 redirect('/?msg=verify_sent');
             }
         }
@@ -145,20 +151,18 @@ class AuthController {
             redirect('/');
         }
 
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE verification_token = ?");
-        $stmt->execute([$token]);
-        $user = $stmt->fetch();
+        $user = $this->userService->findByVerificationToken($token);
 
         if ($user) {
-            $this->db->prepare("UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?")
-               ->execute([$user['id']]);
+            $user->is_verified = 1;
+            $user->verification_token = null;
+            $this->userService->save($user, $user->id);
             
-            $this->logger->info("Email verified for user: {email}", ['email' => $user['email']]);
+            $this->logger->info("Email verified for user: {email}", ['email' => $user->email]);
+            
             // If logged in as this user, update session
             $current = $this->authService->currentUser();
-            if ($current && $current['id'] === $user['id']) {
-                $user['is_verified'] = 1;
-                $user['verification_token'] = null;
+            if ($current && $current->id === $user->id) {
                 $this->authService->login($user);
             }
             
@@ -170,15 +174,14 @@ class AuthController {
 
     public function resendVerification() {
         $user = $this->authService->currentUser();
-        if (!$user || !empty($user['is_verified'])) {
+        if (!$user || $user->isVerified()) {
             redirect('/');
         }
 
-        $token = bin2hex(random_bytes(32));
-        $this->db->prepare("UPDATE users SET verification_token = ? WHERE id = ?")
-           ->execute([$token, $user['id']]);
+        $user->verification_token = bin2hex(random_bytes(32));
+        $this->userService->save($user, $user->id);
 
-        $this->emailService->sendVerificationEmail($user['email'], $user['name'], $token);
+        $this->emailService->sendVerificationEmail($user->email, $user->name, $user->verification_token);
 
         redirect('/?msg=verify_sent');
     }
@@ -186,7 +189,7 @@ class AuthController {
     public function logout() {
         $user = $this->authService->currentUser();
         if ($user) {
-            $this->logger->notice("User logged out: {email}", ['email' => $user['email']]);
+            $this->logger->notice("User logged out: {email}", ['email' => $user->email]);
         }
         $this->authService->logout();
         redirect('/');

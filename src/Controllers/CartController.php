@@ -47,7 +47,7 @@ class CartController
         if (is_ajax()) {
             $items = $this->cartService->items();
             $lineItems = array_map(fn($i) => [
-                'id'       => $i['id'],
+                'id'       => $i['product']->id,
                 'subtotal' => money($i['subtotal']),
             ], $items);
 

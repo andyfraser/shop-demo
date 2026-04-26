@@ -2,22 +2,18 @@
 namespace App\Controllers;
 
 use App\Core\Renderer;
+use App\Services\ProductService;
+use App\Services\CategoryService;
 
 class StorefrontController {
     public function __construct(
-        private \PDO $db,
+        private ProductService $productService,
+        private CategoryService $categoryService,
         private Renderer $renderer
     ) {}
 
     public function index() {
-        $featured_products = $this->db->query(
-            "SELECT p.*, c.name as cat_name
-             FROM products p
-             LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.active = 1 AND p.stock > 0
-             ORDER BY p.featured DESC, p.created_at DESC
-             LIMIT 8"
-        )->fetchAll();
+        $featured_products = $this->productService->getFeatured(8);
 
         $this->renderer->render('home', [
             'page_title'       => 'Welcome',
@@ -37,48 +33,13 @@ class StorefrontController {
         $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
 
-        $order_by = match($sort) {
-            'price_asc'  => 'p.price ASC',
-            'price_desc' => 'p.price DESC',
-            'featured'   => 'p.featured DESC, p.created_at DESC',
-            default      => 'p.name',
-        };
-
         if ($query) {
-            $like = '%' . $query . '%';
-
-            $stmt = $this->db->prepare(
-                "SELECT COUNT(*) FROM products p
-                 WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)"
-            );
-            $stmt->execute([$like, $like]);
-            $total_products = (int)$stmt->fetchColumn();
-
+            $total_products = $this->productService->countSearch($query);
+            $products = $this->productService->search($query, $per_page, $current_page, $sort);
+            
             if ($per_page !== null) {
                 $total_pages = (int)ceil($total_products / $per_page);
-                $offset = ($current_page - 1) * $per_page;
-                $limit_int  = (int)$per_page;
-                $offset_int = (int)$offset;
-                $stmt = $this->db->prepare(
-                    "SELECT p.*, c.name as cat_name
-                     FROM products p
-                     LEFT JOIN categories c ON p.category_id = c.id
-                     WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)
-                     ORDER BY $order_by
-                     LIMIT $limit_int OFFSET $offset_int"
-                );
-                $stmt->execute([$like, $like]);
-            } else {
-                $stmt = $this->db->prepare(
-                    "SELECT p.*, c.name as cat_name
-                     FROM products p
-                     LEFT JOIN categories c ON p.category_id = c.id
-                     WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)
-                     ORDER BY $order_by"
-                );
-                $stmt->execute([$like, $like]);
             }
-            $products = $stmt->fetchAll();
         }
 
         $this->renderer->render('search', [
@@ -95,83 +56,46 @@ class StorefrontController {
     }
 
     public function category($slug = '') {
-        
-        $stmt = $this->db->prepare("SELECT * FROM categories WHERE slug = ?");
-        $stmt->execute([$slug]);
-        $category = $stmt->fetch();
+        $category = $this->categoryService->findBySlug($slug);
 
         if (!$category) {
             http_response_code(404);
             exit('Category not found.');
         }
 
-        $stmt = $this->db->prepare("SELECT * FROM categories WHERE parent_id = ? ORDER BY name");
-        $stmt->execute([$category['id']]);
-        $subcategories = $stmt->fetchAll();
+        $subcategories = $this->categoryService->getSubcategories($category->id);
 
         // Collect all descendant category IDs to include products from subcategories
-        $cat_ids = [$category['id']];
+        $cat_ids = [$category->id];
         $queue = array_column($subcategories, 'id');
+        // If array_column doesn't work on objects directly in all PHP versions, 
+        // we might need to map it, but it should work for public properties.
+        if (empty($queue) && !empty($subcategories)) {
+            $queue = array_map(fn($c) => $c->id, $subcategories);
+        }
+
         while ($queue) {
             $id = array_shift($queue);
             $cat_ids[] = $id;
-            $s = $this->db->prepare("SELECT id FROM categories WHERE parent_id = ?");
-            $s->execute([$id]);
-            foreach ($s->fetchAll() as $row) $queue[] = $row['id'];
+            $subs = $this->categoryService->getSubcategories($id);
+            foreach ($subs as $row) $queue[] = $row->id;
         }
-        $placeholders = implode(',', array_fill(0, count($cat_ids), '?'));
 
         $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
         $per_page_raw = $_GET['per_page'] ?? '12';
         $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
-
-        $order_by = match($sort) {
-            'price_asc'  => 'p.price ASC',
-            'price_desc' => 'p.price DESC',
-            'featured'   => 'p.featured DESC, p.created_at DESC',
-            default      => 'p.name',
-        };
-
         $current_page = max(1, (int)($_GET['page'] ?? 1));
 
-        $stmt = $this->db->prepare(
-            "SELECT COUNT(*) FROM products WHERE category_id IN ($placeholders) AND active = 1"
-        );
-        $stmt->execute($cat_ids);
-        $total_products = (int)$stmt->fetchColumn();
+        $total_products = $this->productService->countByCategory($cat_ids);
+        $products = $this->productService->getByCategory($cat_ids, $per_page, $current_page, $sort);
+        
+        $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
-        if ($per_page !== null) {
-            $total_pages = (int)ceil($total_products / $per_page);
-            $offset = ($current_page - 1) * $per_page;
-            $limit_int  = (int)$per_page;
-            $offset_int = (int)$offset;
-            $stmt = $this->db->prepare(
-                "SELECT p.*, c.name as cat_name
-                 FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 WHERE p.category_id IN ($placeholders) AND p.active = 1
-                 ORDER BY $order_by
-                 LIMIT $limit_int OFFSET $offset_int"
-            );
-            $stmt->execute($cat_ids);
-        } else {
-            $total_pages = 1;
-            $stmt = $this->db->prepare(
-                "SELECT p.*, c.name as cat_name
-                 FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 WHERE p.category_id IN ($placeholders) AND p.active = 1
-                 ORDER BY $order_by"
-            );
-            $stmt->execute($cat_ids);
-        }
-        $products = $stmt->fetchAll();
-
-        $breadcrumb = get_breadcrumb($category['id']);
+        $breadcrumb = get_breadcrumb($category->id);
 
         $this->renderer->render('category', [
-            'page_title'     => $category['name'],
+            'page_title'     => $category->name,
             'category'       => $category,
             'subcategories'  => $subcategories,
             'products'       => $products,
@@ -185,49 +109,15 @@ class StorefrontController {
     }
 
     public function products() {
-        
-
         $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
         $per_page_raw = $_GET['per_page'] ?? '12';
         $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
-
-        $order_by = match($sort) {
-            'price_asc'  => 'p.price ASC',
-            'price_desc' => 'p.price DESC',
-            'featured'   => 'p.featured DESC, p.created_at DESC',
-            default      => 'p.name',
-        };
-
         $current_page = max(1, (int)($_GET['page'] ?? 1));
 
-        $total_products = (int)$this->db->query("SELECT COUNT(*) FROM products WHERE active = 1")->fetchColumn();
-
-        if ($per_page !== null) {
-            $total_pages = (int)ceil($total_products / $per_page);
-            $offset = ($current_page - 1) * $per_page;
-            $limit_int  = (int)$per_page;
-            $offset_int = (int)$offset;
-            $stmt = $this->db->prepare(
-                "SELECT p.*, c.name as cat_name
-                 FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 WHERE p.active = 1
-                 ORDER BY $order_by
-                 LIMIT $limit_int OFFSET $offset_int"
-            );
-            $stmt->execute([]);
-        } else {
-            $total_pages = 1;
-            $stmt = $this->db->query(
-                "SELECT p.*, c.name as cat_name
-                 FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 WHERE p.active = 1
-                 ORDER BY $order_by"
-            );
-        }
-        $products = $stmt->fetchAll();
+        $total_products = $this->productService->countAllActive();
+        $products = $this->productService->getAllActive($per_page, $current_page, $sort);
+        $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
         $this->renderer->render('products', [
             'page_title'     => 'All Products',
@@ -241,36 +131,22 @@ class StorefrontController {
     }
 
     public function product($slug = '') {
-        
-        $stmt = $this->db->prepare(
-            "SELECT p.*, c.name as cat_name, c.slug as cat_slug
-             FROM products p
-             LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.slug = ? AND p.active = 1"
-        );
-        $stmt->execute([$slug]);
-        $product = $stmt->fetch();
+        $product = $this->productService->findBySlug($slug);
 
         if (!$product) {
             http_response_code(404);
             exit('Product not found.');
         }
 
-        $breadcrumb = $product['category_id'] ? get_breadcrumb($product['category_id']) : [];
+        $breadcrumb = $product->category_id ? get_breadcrumb($product->category_id) : [];
 
-        $stmt = $this->db->prepare(
-            "SELECT p.*, c.name as cat_name
-             FROM products p
-             LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.category_id = ? AND p.id != ? AND p.active = 1
-             ORDER BY p.featured DESC, p.created_at DESC
-             LIMIT 4"
-        );
-        $stmt->execute([$product['category_id'], $product['id']]);
-        $related_products = $stmt->fetchAll();
+        // Related products logic
+        $related_products = $this->productService->getByCategory([$product->category_id], 4, 1, 'featured');
+        // Filter out current product
+        $related_products = array_filter($related_products, fn($p) => $p->id != $product->id);
 
         $this->renderer->render('product', [
-            'page_title'      => $product['name'],
+            'page_title'      => $product->name,
             'product'         => $product,
             'breadcrumb'      => $breadcrumb,
             'related_products' => $related_products,

@@ -1,11 +1,9 @@
 <?php
 namespace App\Services;
 
-use App\Core\Database;
-
 class CartService {
     public function __construct(
-        private \PDO $db,
+        private ProductService $productService,
         private AuthService $auth
     ) {}
 
@@ -42,14 +40,21 @@ class CartService {
     public function items(): array {
         $c = $this->get();
         if (empty($c)) return [];
-        $ids = implode(',', array_map('intval', array_keys($c)));
-        $rows = $this->db->query("SELECT * FROM products WHERE id IN ($ids)")->fetchAll();
-        foreach ($rows as &$row) {
-            $row['qty'] = $c[$row['id']];
-            $row['subtotal'] = $row['price'] * $row['qty'];
-            $row['vat_amount'] = $row['subtotal'] * ($row['vat_rate'] / (100 + $row['vat_rate']));
+        
+        $ids = array_map('intval', array_keys($c));
+        $products = $this->productService->findByIds($ids);
+
+        $items = [];
+        foreach ($products as $p) {
+            $qty = $c[$p->id];
+            $items[] = [
+                'product'    => $p,
+                'qty'        => $qty,
+                'subtotal'   => $p->getSubtotal($qty),
+                'vat_amount' => $p->getVatAmount($qty),
+            ];
         }
-        return $rows;
+        return $items;
     }
 
     public function total(): float {

@@ -1,7 +1,12 @@
 <?php // templates/admin/users_form.php ?>
 
+<?php
+  // Helper to handle both object and array during transition or error repopulation
+  $get = fn($key) => is_object($user) ? ($user->$key ?? null) : ($user[$key] ?? null);
+?>
+
 <div class="admin-topbar">
-  <h1><?= $is_new ? 'Add User' : 'Edit: ' . h($user['name'] ?? '') ?></h1>
+  <h1><?= $is_new ? 'Add User' : 'Edit: ' . h($get('name') ?? '') ?></h1>
   <div class="actions">
     <a href="/admin/users" class="btn btn-outline">← Back</a>
   </div>
@@ -24,27 +29,27 @@
       <div class="form-group">
         <label>Full Name *</label>
         <input type="text" name="name" class="form-control"
-               value="<?= h($user['name'] ?? '') ?>" required autofocus>
+               value="<?= h($get('name') ?? '') ?>" required autofocus>
       </div>
 
       <div class="form-group">
         <label>Email Address *</label>
         <input type="email" name="email" class="form-control"
-               value="<?= h($user['email'] ?? '') ?>" required>
+               value="<?= h($get('email') ?? '') ?>" required>
       </div>
 
       <div class="form-group">
         <label>Role</label>
         <select name="role" class="form-control">
-          <option value="customer" <?= ($user['role'] ?? 'customer') === 'customer' ? 'selected' : '' ?>>Customer</option>
-          <option value="admin"    <?= ($user['role'] ?? '') === 'admin'             ? 'selected' : '' ?>>Admin</option>
+          <option value="customer" <?= ($get('role') ?? 'customer') === 'customer' ? 'selected' : '' ?>>Customer</option>
+          <option value="admin"    <?= ($get('role') ?? '') === 'admin'             ? 'selected' : '' ?>>Admin</option>
         </select>
       </div>
 
       <div class="form-group">
         <label>Shipping Address</label>
         <textarea name="address" class="form-control" rows="3"
-                  placeholder="Customer's default shipping address"><?= h($user['address'] ?? '') ?></textarea>
+                  placeholder="Customer's default shipping address"><?= h($get('address') ?? '') ?></textarea>
       </div>
 
       <div class="form-group">

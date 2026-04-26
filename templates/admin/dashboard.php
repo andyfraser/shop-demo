@@ -43,14 +43,13 @@
           <?php if ($recent_orders): ?>
             <?php foreach ($recent_orders as $o): ?>
               <tr>
-                <td><a href="/admin/orders?id=<?= $o['id'] ?>">#<?= str_pad($o['id'], 6, '0', STR_PAD_LEFT) ?></a></td>
-                <td><?= h($o['user_name'] ?? 'Guest') ?></td>
-                <td><strong>£<?= number_format($o['total'], 2) ?></strong></td>
+                <td><a href="/admin/orders/detail?id=<?= $o->id ?>"><?= $o->getFormattedId() ?></a></td>
+                <td><?= h($o->user_name ?? 'Guest') ?></td>
+                <td><strong>£<?= number_format($o->total, 2) ?></strong></td>
                 <td>
-                  <?php $badges = ['pending'=>'badge-warning','confirmed'=>'badge-info','shipped'=>'badge-info','delivered'=>'badge-success','cancelled'=>'badge-danger']; ?>
-                  <span class="badge <?= $badges[$o['status']] ?? 'badge-neutral' ?>"><?= ucfirst($o['status']) ?></span>
+                  <span class="badge <?= $o->getStatusBadgeClass() ?>"><?= ucfirst($o->status) ?></span>
                 </td>
-                <td><?= date('d M', strtotime($o['created_at'])) ?></td>
+                <td><?= date('d M', strtotime($o->created_at)) ?></td>
               </tr>
             <?php endforeach; ?>
           <?php else: ?>
@@ -71,9 +70,9 @@
           <?php foreach ($low_stock as $p): ?>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--line);">
               <div style="font-size:.85rem;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                <?= h($p['name']) ?>
+                <?= h($p->name) ?>
               </div>
-              <span class="badge <?= $p['stock'] == 0 ? 'badge-danger' : 'badge-warning' ?>"><?= $p['stock'] ?> left</span>
+              <span class="badge <?= $p->stock == 0 ? 'badge-danger' : 'badge-warning' ?>"><?= $p->stock ?> left</span>
             </div>
           <?php endforeach; ?>
         <?php else: ?>

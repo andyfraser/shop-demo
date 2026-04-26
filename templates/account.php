@@ -1,27 +1,19 @@
-<?php // templates/account.php
-$status_badges = [
-    'pending'   => 'badge-warning',
-    'confirmed' => 'badge-info',
-    'shipped'   => 'badge-info',
-    'delivered' => 'badge-success',
-    'cancelled' => 'badge-danger',
-];
-?>
+<?php // templates/account.php ?>
 <div class="container">
   <h1 class="page-title">My Account</h1>
 
   <div style="display:grid;grid-template-columns:280px 1fr;gap:2rem;align-items:start;">
     <div class="card">
       <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:600;margin-bottom:.25rem;">
-        <?= h($current_user['name']) ?>
+        <?= h($current_user->name) ?>
       </div>
-      <div style="color:var(--ink-2);font-size:.85rem;margin-bottom:1rem;"><?= h($current_user['email']) ?></div>
-      <span class="badge <?= $current_user['role'] === 'admin' ? 'badge-danger' : 'badge-neutral' ?>"
+      <div style="color:var(--ink-2);font-size:.85rem;margin-bottom:1rem;"><?= h($current_user->email) ?></div>
+      <span class="badge <?= $current_user->isAdmin() ? 'badge-danger' : 'badge-neutral' ?>"
             style="margin-bottom:1.2rem;display:inline-block;">
-        <?= ucfirst($current_user['role']) ?>
+        <?= ucfirst($current_user->role) ?>
       </span>
       <div style="font-size:.8rem;color:var(--ink-2);">
-        Member since <?= date('M Y', strtotime($current_user['created_at'])) ?>
+        Member since <?= date('M Y', strtotime($current_user->created_at)) ?>
       </div>
       <hr style="margin:1.2rem 0;border:none;border-top:1px solid var(--line);">
 
@@ -43,7 +35,7 @@ $status_badges = [
           <label style="font-size:.8rem;font-weight:600;">Shipping Address</label>
           <textarea name="address" class="form-control" rows="4"
                     placeholder="Enter your default shipping address"
-                    style="font-size:.85rem;"><?= h($current_user['address'] ?? '') ?></textarea>
+                    style="font-size:.85rem;"><?= h($current_user->address ?? '') ?></textarea>
         </div>
         <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">Save Address</button>
       </form>
@@ -74,21 +66,21 @@ $status_badges = [
             <tbody>
               <?php foreach ($orders as $o): ?>
                 <tr>
-                  <td><strong>#<?= str_pad($o['id'], 6, '0', STR_PAD_LEFT) ?></strong></td>
-                  <td><?= date('d M Y', strtotime($o['created_at'])) ?></td>
-                  <td><?= $o['item_count'] ?> item<?= $o['item_count'] != 1 ? 's' : '' ?></td>
-                  <td><strong><?= money($o['total']) ?></strong></td>
+                  <td><strong><?= $o->getFormattedId() ?></strong></td>
+                  <td><?= date('d M Y', strtotime($o->created_at)) ?></td>
+                  <td><?= $o->item_count ?> item<?= $o->item_count != 1 ? 's' : '' ?></td>
+                  <td><strong><?= money($o->total) ?></strong></td>
                   <td>
-                    <span class="badge <?= $status_badges[$o['status']] ?? 'badge-neutral' ?>">
-                      <?= ucfirst($o['status']) ?>
+                    <span class="badge <?= $o->getStatusBadgeClass() ?>">
+                      <?= ucfirst($o->status) ?>
                     </span>
                   </td>
                   <td style="display:flex;gap:0.5rem;justify-content:flex-end;">
-                    <a href="/account/orders/<?= $o['id'] ?>" class="btn btn-outline btn-sm">View</a>
-                    <?php if ($o['status'] === 'pending'): ?>
+                    <a href="/account/orders/<?= $o->id ?>" class="btn btn-outline btn-sm">View</a>
+                    <?php if ($o->canBeCancelled()): ?>
                       <form method="POST" action="/account/cancel-order" onsubmit="return confirm('Are you sure you want to cancel this order?');">
                         <?= csrf_field() ?>
-                        <input type="hidden" name="id" value="<?= $o['id'] ?>">
+                        <input type="hidden" name="id" value="<?= $o->id ?>">
                         <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger-ink);border-color:var(--danger-ink);">Cancel</button>
                       </form>
                     <?php endif; ?>

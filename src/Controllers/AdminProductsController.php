@@ -1,16 +1,18 @@
 <?php
 namespace App\Controllers;
 
-use App\Core\Database;
 use App\Core\Renderer;
 use App\Core\Validator;
+use App\Services\ProductService;
+use App\Services\CategoryService;
 use App\Services\SecurityService;
 use App\Services\SettingsService;
 use RuntimeException;
 
 class AdminProductsController {
     public function __construct(
-        private \PDO $db,
+        private ProductService $productService,
+        private CategoryService $categoryService,
         private Renderer $renderer,
         private Validator $validator,
         private SecurityService $security,
@@ -24,25 +26,7 @@ class AdminProductsController {
     
     public function list() {
         $search = trim($_GET['search'] ?? '');
-
-        if ($search !== '') {
-            $stmt = $this->db->prepare(
-                "SELECT p.*, c.name as cat_name
-                 FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 WHERE p.name LIKE ?
-                 ORDER BY p.name ASC"
-            );
-            $stmt->execute(['%' . $search . '%']);
-            $products = $stmt->fetchAll();
-        } else {
-            $products = $this->db->query(
-                "SELECT p.*, c.name as cat_name
-                 FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 ORDER BY p.name ASC"
-            )->fetchAll();
-        }
+        $products = $this->productService->getAllForAdmin($search);
 
         $this->renderer->adminRender('products_list', [
             'page_title' => 'Products',
@@ -62,17 +46,14 @@ class AdminProductsController {
                 'vat_rate' => $this->settings->get('default_vat_rate')
             ],
             'product_id' => 0,
-            'categories' => get_category_flat(),
+            'categories' => $this->categoryService->getFlat(),
             'errors'     => [],
         ]);
     }
 
     public function edit() {
         $product_id = (int)($_GET['id'] ?? 0);
-
-        $stmt = $this->db->prepare("SELECT * FROM products WHERE id = ?");
-        $stmt->execute([$product_id]);
-        $product = $stmt->fetch() ?: [];
+        $product = $this->productService->findById($product_id);
 
         $this->renderer->adminRender('products_form', [
             'page_title' => 'Edit Product',
@@ -80,7 +61,7 @@ class AdminProductsController {
             'is_new'     => !$product_id,
             'product'    => $product,
             'product_id' => $product_id,
-            'categories' => get_category_flat(),
+            'categories' => $this->categoryService->getFlat(),
             'errors'     => [],
         ]);
     }
@@ -109,7 +90,7 @@ class AdminProductsController {
     public function save() {
         $this->security->verifyCsrf();
         
-        $product = [
+        $data = [
             'name'        => trim($_POST['name'] ?? ''),
             'description' => trim($_POST['description'] ?? ''),
             'price'       => (float)($_POST['price'] ?? 0),
@@ -131,17 +112,17 @@ class AdminProductsController {
             try {
                 $uploaded = $this->handleUpload();
                 if ($uploaded) {
-                    $old = $product['image'];
+                    $old = $data['image'];
                     if ($old && file_exists($this->getUploadDir() . $old)) {
                         unlink($this->getUploadDir() . $old);
                     }
-                    $product['image'] = $uploaded;
+                    $data['image'] = $uploaded;
                 } elseif (isset($_POST['remove_image'])) {
-                    $old = $product['image'];
+                    $old = $data['image'];
                     if ($old && file_exists($this->getUploadDir() . $old)) {
                         unlink($this->getUploadDir() . $old);
                     }
-                    $product['image'] = null;
+                    $data['image'] = null;
                 }
             } catch (RuntimeException $e) {
                 $errors[] = $e->getMessage();
@@ -149,49 +130,19 @@ class AdminProductsController {
         }
 
         if (!$errors) {
-            $slug = slugify($product['name']);
+            $saved_id = $this->productService->save($data, $product_id);
 
             if ($product_id) {
-                $check = $this->db->prepare("SELECT id FROM products WHERE slug = ? AND id != ?");
-                $check->execute([$slug, $product_id]);
-                if ($check->fetch()) $slug .= '-' . $product_id;
-
-                $this->db->prepare(
-                    "UPDATE products
-                     SET name=?, slug=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?
-                     WHERE id=?"
-                )->execute([
-                    $product['name'], $slug, $product['description'], $product['price'], $product['vat_rate'],
-                    $product['stock'], $product['category_id'], $product['image'],
-                    $product['active'], $product['featured'], $product_id,
-                ]);
-
                 $this->logger->info("Admin updated product: {name} (ID: {id})", [
-                    'name' => $product['name'],
+                    'name' => $data['name'],
                     'id' => $product_id
                 ]);
-
                 flash('msg', 'Product updated.');
             } else {
-                $check = $this->db->prepare("SELECT id FROM products WHERE slug = ?");
-                $check->execute([$slug]);
-                if ($check->fetch()) $slug .= '-' . time();
-
-                $this->db->prepare(
-                    "INSERT INTO products (name, slug, description, price, vat_rate, stock, category_id, image, active, featured)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                )->execute([
-                    $product['name'], $slug, $product['description'], $product['price'], $product['vat_rate'],
-                    $product['stock'], $product['category_id'], $product['image'],
-                    $product['active'], $product['featured'],
-                ]);
-
-                $new_id = $this->db->lastInsertId();
                 $this->logger->info("Admin created product: {name} (ID: {id})", [
-                    'name' => $product['name'],
-                    'id' => $new_id
+                    'name' => $data['name'],
+                    'id' => $saved_id
                 ]);
-
                 flash('msg', 'Product created.');
             }
             redirect('/admin/products');
@@ -201,9 +152,9 @@ class AdminProductsController {
             'page_title' => ($product_id ? 'Edit' : 'Add') . ' Product',
             'active'     => 'products',
             'is_new'     => !$product_id,
-            'product'    => $product,
+            'product'    => $data, // Still passing array for the re-populated form on error
             'product_id' => $product_id,
-            'categories' => get_category_flat(),
+            'categories' => $this->categoryService->getFlat(),
             'errors'     => $errors,
         ]);
     }
@@ -211,7 +162,7 @@ class AdminProductsController {
     public function delete() {
         $product_id = (int)($_GET['id'] ?? 0);
         if ($product_id) {
-            $this->db->prepare("UPDATE products SET active = 0 WHERE id = ?")->execute([$product_id]);
+            $this->productService->deactivate($product_id);
             $this->logger->info("Admin deactivated product: (ID: {id})", [
                 'id' => $product_id
             ]);

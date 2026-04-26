@@ -6,10 +6,10 @@
     <a href="<?= BASE_URL ?>/">Home</a>
     <?php foreach ($breadcrumb as $c): ?>
       <span class="sep">›</span>
-      <a href="/category/<?= h($c['slug']) ?>"><?= h($c['name']) ?></a>
+      <a href="/category/<?= h($c->slug) ?>"><?= h($c->name) ?></a>
     <?php endforeach; ?>
     <span class="sep">›</span>
-    <span><?= h($product['name']) ?></span>
+    <span><?= h($product->name) ?></span>
   </div>
 
   <?php if ($flash_success): ?>
@@ -18,47 +18,47 @@
 
   <div class="product-detail">
     <div class="product-img">
-      <?php product_img($product['image'] ?? '', $product['name']) ?>
+      <?php product_img($product->image ?? '', $product->name) ?>
     </div>
 
     <div class="product-meta">
-      <?php if ($product['cat_name']): ?>
+      <?php if ($product->cat_name): ?>
         <div>
-          <a href="/category/<?= h($product['cat_slug']) ?>"
+          <a href="/category/<?= h($product->cat_slug) ?>"
              style="color:var(--accent);font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">
-            <?= h($product['cat_name']) ?>
+            <?= h($product->cat_name) ?>
           </a>
         </div>
       <?php endif; ?>
 
-      <h1 class="product-title"><?= h($product['name']) ?></h1>
-      <div class="product-price"><?= money($product['price']) ?></div>
+      <h1 class="product-title"><?= h($product->name) ?></h1>
+      <div class="product-price"><?= money($product->price) ?></div>
 
-      <?php if ($product['description']): ?>
-        <p class="product-desc"><?= nl2br(h($product['description'])) ?></p>
+      <?php if ($product->description): ?>
+        <p class="product-desc"><?= nl2br(h($product->description)) ?></p>
       <?php endif; ?>
 
       <div>
-        <?php if ($product['stock'] > (int)setting('low_stock_threshold')): ?>
+        <?php if ($product->stock > settings()->low_stock_threshold): ?>
           <span class="badge badge-success">✓ In Stock</span>
-        <?php elseif ($product['stock'] > 0): ?>
-          <span class="badge badge-warning">⚠ Only <?= $product['stock'] ?> left</span>
+        <?php elseif ($product->stock > 0): ?>
+          <span class="badge badge-warning">⚠ Only <?= $product->stock ?> left</span>
         <?php else: ?>
           <span class="badge badge-danger">✗ Out of Stock</span>
         <?php endif; ?>
       </div>
 
-      <?php if ($product['stock'] > 0): ?>
+      <?php if ($product->stock > 0): ?>
         <div id="cart-message"></div>
         <form method="POST" id="add-to-cart-form">
             <?= csrf_field() ?>
-            <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-            <input type="hidden" name="slug" value="<?= h($product['slug']) ?>">
+            <input type="hidden" name="product_id" value="<?= $product->id ?>">
+            <input type="hidden" name="slug" value="<?= h($product->slug) ?>">
           <div class="qty-row">
             <div class="form-group" style="margin:0">
               <label for="qty">Quantity</label>
               <input type="number" id="qty" name="qty" class="form-control qty-input"
-                     value="1" min="1" max="<?= $product['stock'] ?>">
+                     value="1" min="1" max="<?= $product->stock ?>">
             </div>
             <button type="submit" name="add_to_cart" class="btn btn-primary" style="padding:.65rem 1.8rem;">
               Add to Cart
@@ -74,13 +74,13 @@
       <h2 class="page-title" style="font-size:1.4rem;">Related Products</h2>
       <div class="product-grid">
         <?php foreach ($related_products as $r): ?>
-          <a href="/product/<?= h($r['slug']) ?>" class="product-card">
+          <a href="/product/<?= h($r->slug) ?>" class="product-card">
             <div class="img-wrap">
-              <?php product_img($r['image'] ?? '', $r['name']) ?>
+              <?php product_img($r->image ?? '', $r->name) ?>
             </div>
             <div class="card-body">
-              <div class="card-name"><?= h($r['name']) ?></div>
-              <div class="card-price"><?= money($r['price']) ?></div>
+              <div class="card-name"><?= h($r->name) ?></div>
+              <div class="card-price"><?= money($r->price) ?></div>
             </div>
           </a>
         <?php endforeach; ?>

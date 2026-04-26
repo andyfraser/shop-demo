@@ -36,33 +36,33 @@
       <?php foreach ($products as $p): ?>
         <tr>
           <td>
-            <?php product_img($p['image'] ?? '', $p['name'], 'thumb') ?>
+            <?php product_img($p->image ?? '', $p->name, 'thumb') ?>
           </td>
           <td>
-            <strong><?= h($p['name']) ?></strong>
-            <?php if ($p['featured']): ?>
+            <strong><?= h($p->name) ?></strong>
+            <?php if ($p->featured): ?>
               <span title="Featured Product" style="color:var(--gold);margin-left:.25rem;">★</span>
             <?php endif; ?>
           </td>
-          <td><?= h($p['cat_name'] ?? '—') ?></td>
-          <td>£<?= number_format($p['price'], 2) ?></td>
+          <td><?= h($p->cat_name ?? '—') ?></td>
+          <td>£<?= number_format($p->price, 2) ?></td>
           <td>
-            <?php if ($p['stock'] == 0): ?>
-              <span class="badge badge-danger"><?= $p['stock'] ?></span>
-            <?php elseif ($p['stock'] <= (int)setting('low_stock_threshold')): ?>
-              <span class="badge badge-warning"><?= $p['stock'] ?></span>
+            <?php if ($p->stock == 0): ?>
+              <span class="badge badge-danger"><?= $p->stock ?></span>
+            <?php elseif ($p->isLowStock(settings()->low_stock_threshold)): ?>
+              <span class="badge badge-warning"><?= $p->stock ?></span>
             <?php else: ?>
-              <span class="badge badge-success"><?= $p['stock'] ?></span>
+              <span class="badge badge-success"><?= $p->stock ?></span>
             <?php endif; ?>
           </td>
           <td>
-            <span class="badge <?= $p['active'] ? 'badge-success' : 'badge-neutral' ?>">
-              <?= $p['active'] ? 'Active' : 'Inactive' ?>
+            <span class="badge <?= $p->active ? 'badge-success' : 'badge-neutral' ?>">
+              <?= $p->active ? 'Active' : 'Inactive' ?>
             </span>
           </td>
           <td>
-            <a href="/admin/products/edit?id=<?= $p['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
-            <a href="/admin/products/delete?id=<?= $p['id'] ?>" class="btn btn-danger btn-sm"
+            <a href="/admin/products/edit?id=<?= $p->id ?>" class="btn btn-outline btn-sm">Edit</a>
+            <a href="/admin/products/delete?id=<?= $p->id ?>" class="btn btn-danger btn-sm"
                onclick="return confirm('Deactivate this product?')">Delete</a>
           </td>
         </tr>

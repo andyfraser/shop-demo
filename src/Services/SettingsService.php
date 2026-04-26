@@ -1,47 +1,51 @@
 <?php
 namespace App\Services;
 
-use App\Core\Database;
+use App\Models\Settings;
 
 class SettingsService {
-    private ?array $cache = null;
-
-    private array $defaults = [
-        'site_name'               => 'Demo|shop',
-        'currency_symbol'         => '£',
-        'password_min_length'     => '6',
-        'login_max_attempts'      => '5',
-        'login_window_minutes'    => '15',
-        'register_max_attempts'   => '10',
-        'register_window_minutes' => '60',
-        'low_stock_threshold'     => '10',
-        'remember_me_days'        => '30',
-        'default_vat_rate'        => '20',
-        'mobile_nav_max_top'      => '10',
-        'mobile_nav_max_combined' => '20',
-    ];
+    private ?Settings $settings = null;
 
     public function __construct(private \PDO $db) {}
 
-    public function get(string $key): string {
-        if ($this->cache === null) $this->load();
-        return $this->cache[$key] ?? $this->defaults[$key] ?? '';
+    /**
+     * Get the typed Settings model.
+     */
+    public function getSettings(): Settings {
+        if ($this->settings === null) {
+            $this->settings = new Settings();
+            $this->settings->fill($this->loadFromDb());
+        }
+        return $this->settings;
     }
 
+    /**
+     * Legacy support for individual key access.
+     */
+    public function get(string $key): mixed {
+        $settings = $this->getSettings();
+        return $settings->$key ?? null;
+    }
+
+    /**
+     * Legacy support for getting all settings as an array.
+     */
     public function all(): array {
-        if ($this->cache === null) $this->load();
-        return array_merge($this->defaults, $this->cache);
+        return (array)$this->getSettings();
     }
 
-    public function set(string $key, string $value): void {
+    /**
+     * Persist a setting value.
+     */
+    public function set(string $key, mixed $value): void {
         $this->db->prepare("REPLACE INTO settings (`key`, value) VALUES (?, ?)")
-            ->execute([$key, $value]);
-        $this->cache = null;
+            ->execute([$key, (string)$value]);
+        $this->settings = null; // Clear cache
     }
 
-    private function load(): void {
+    private function loadFromDb(): array {
         $rows = $this->db->query("SELECT `key`, value FROM settings")
             ->fetchAll();
-        $this->cache = array_column($rows, 'value', 'key');
+        return array_column($rows, 'value', 'key');
     }
 }

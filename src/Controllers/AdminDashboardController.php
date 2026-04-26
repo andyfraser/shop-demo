@@ -3,35 +3,31 @@ namespace App\Controllers;
 
 use App\Core\Renderer;
 use App\Services\SettingsService;
+use App\Services\ProductService;
+use App\Services\OrderService;
+use App\Services\UserService;
 
 class AdminDashboardController {
     public function __construct(
-        private \PDO $db,
         private Renderer $renderer,
-        private SettingsService $settingsService
+        private SettingsService $settingsService,
+        private ProductService $productService,
+        private OrderService $orderService,
+        private UserService $userService
     ) {}
 
     public function index() {
         $stats = [
-            'products'  => $this->db->query("SELECT COUNT(*) FROM products WHERE active = 1")->fetchColumn(),
-            'customers' => $this->db->query("SELECT COUNT(*) FROM users WHERE role = 'customer'")->fetchColumn(),
-            'orders'    => $this->db->query("SELECT COUNT(*) FROM orders")->fetchColumn(),
-            'revenue'   => $this->db->query("SELECT COALESCE(SUM(total), 0) FROM orders WHERE status != 'cancelled'")->fetchColumn(),
+            'products'  => $this->productService->countAllActive(),
+            'customers' => $this->userService->countByRole('customer'),
+            'orders'    => $this->orderService->countAll(),
+            'revenue'   => $this->orderService->getTotalRevenue(),
         ];
 
-        $recent_orders = $this->db->query(
-            "SELECT o.*, u.name as user_name
-             FROM orders o
-             LEFT JOIN users u ON o.user_id = u.id
-             ORDER BY o.created_at DESC
-             LIMIT 10"
-        )->fetchAll();
+        $recent_orders = $this->orderService->getRecentOrders(10);
 
-        $low_stock = $this->db->prepare(
-            "SELECT name, stock FROM products WHERE active = 1 AND stock <= ? ORDER BY stock ASC LIMIT 10"
-        );
-        $low_stock->execute([(int)$this->settingsService->get('low_stock_threshold')]);
-        $low_stock = $low_stock->fetchAll();
+        $threshold = (int)$this->settingsService->get('low_stock_threshold');
+        $low_stock = $this->productService->getLowStock($threshold);
 
         $this->renderer->adminRender('dashboard', [
             'page_title'    => 'Dashboard',

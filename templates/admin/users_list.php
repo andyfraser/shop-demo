@@ -24,20 +24,20 @@
     <tbody>
       <?php foreach ($users as $u): ?>
         <tr>
-          <td><strong><?= h($u['name']) ?></strong></td>
-          <td><?= h($u['email']) ?></td>
+          <td><strong><?= h($u->name) ?></strong></td>
+          <td><?= h($u->email) ?></td>
           <td>
-            <span class="badge <?= $u['role'] === 'admin' ? 'badge-danger' : 'badge-neutral' ?>">
-              <?= ucfirst($u['role']) ?>
+            <span class="badge <?= $u->isAdmin() ? 'badge-danger' : 'badge-neutral' ?>">
+              <?= ucfirst($u->role) ?>
             </span>
           </td>
-          <td><?= $u['order_count'] ?></td>
-          <td><?= date('d M Y', strtotime($u['created_at'])) ?></td>
+          <td><?= $u->order_count ?></td>
+          <td><?= date('d M Y', strtotime($u->created_at)) ?></td>
           <td>
-            <a href="/admin/users/edit?id=<?= $u['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
-            <?php if ($u['id'] != $current_user['id']): ?>
-              <a href="/admin/users/delete?id=<?= $u['id'] ?>" class="btn btn-danger btn-sm"
-                 onclick="return confirm('Delete user <?= h(addslashes($u['name'])) ?>?')">Delete</a>
+            <a href="/admin/users/edit?id=<?= $u->id ?>" class="btn btn-outline btn-sm">Edit</a>
+            <?php if ($u->id != $current_user->id): ?>
+              <a href="/admin/users/delete?id=<?= $u->id ?>" class="btn btn-danger btn-sm"
+                 onclick="return confirm('Delete user <?= h(addslashes($u->name)) ?>?')">Delete</a>
             <?php endif; ?>
           </td>
         </tr>

@@ -73,7 +73,7 @@ return [
 
     ['method' => 'GET', 'path' => '/admin/orders', 'handler' => [AdminOrdersController::class, 'list'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/orders/detail', 'handler' => [AdminOrdersController::class, 'detail'], 'middlewares' => $adminMiddleware],
-    ['method' => 'POST', 'path' => '/admin/orders/detail', 'handler' => [AdminOrdersController::class, 'updateStatus'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/orders/status', 'handler' => [AdminOrdersController::class, 'updateStatus'], 'middlewares' => $adminMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/delivery', 'handler' => [AdminDeliveryController::class, 'list'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/delivery/new', 'handler' => [AdminDeliveryController::class, 'create'], 'middlewares' => $adminMiddleware],

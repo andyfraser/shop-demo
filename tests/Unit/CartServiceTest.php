@@ -7,6 +7,8 @@ use App\Services\CartService;
 
 use App\Core\Database;
 use App\Services\AuthService;
+use App\Services\ProductService;
+use App\Services\SettingsService;
 
 class CartServiceTest extends TestCase {
     private CartService $cart;
@@ -14,9 +16,10 @@ class CartServiceTest extends TestCase {
     public function setUp() {
         $_SESSION['cart'] = [];
         $db = Database::getConnection();
-        $settings = new \App\Services\SettingsService($db);
+        $settings = new SettingsService($db);
         $auth = new AuthService($db, $settings);
-        $this->cart = new CartService($db, $auth);
+        $productService = new ProductService($db);
+        $this->cart = new CartService($productService, $auth);
     }
 
     public function testAdd() {
@@ -57,5 +60,23 @@ class CartServiceTest extends TestCase {
 
         $this->cart->clear();
         $this->assertEquals(0, $this->cart->count());
+    }
+
+    public function testItems() {
+        // Product IDs 1 and 2 are usually seeded in this project's test db
+        $_SESSION['cart'] = [1 => 2];
+        $items = $this->cart->items();
+        
+        $this->assertCount(1, $items);
+        $this->assertInstanceOf(\App\Models\Product::class, $items[0]['product']);
+        $this->assertEquals(2, $items[0]['qty']);
+        $this->assertEquals(1, $items[0]['product']->id);
+    }
+
+    public function testTotal() {
+        $_SESSION['cart'] = [1 => 1];
+        $items = $this->cart->items();
+        $expected = $items[0]['product']->price;
+        $this->assertEquals($expected, $this->cart->total());
     }
 }

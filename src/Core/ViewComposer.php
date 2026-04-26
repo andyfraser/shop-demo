@@ -3,11 +3,13 @@ namespace App\Core;
 
 use App\Services\CartService;
 use App\Services\AuthService;
+use App\Services\CategoryService;
 
 class ViewComposer {
     public function __construct(
         private CartService $cart,
-        private AuthService $auth
+        private AuthService $auth,
+        private CategoryService $categoryService
     ) {}
 
     /**
@@ -17,7 +19,7 @@ class ViewComposer {
         return [
             'cart_count' => $this->cart->count(),
             'current_user' => $this->auth->currentUser(),
-            'nav_tree' => get_category_tree(),
+            'nav_tree' => $this->categoryService->getTree(),
         ];
     }
 

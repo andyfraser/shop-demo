@@ -33,8 +33,8 @@ class EmailService {
         return $this->sendHtmlEmail($toEmail, $subject, $message);
     }
 
-    public function sendOrderConfirmation(array $order, array $items): bool {
-        $subject = "Order Confirmation #" . $order['id'] . " - " . $this->getCleanSiteName();
+    public function sendOrderConfirmation(\App\Models\Order $order, array $items): bool {
+        $subject = "Order Confirmation " . $order->getFormattedId() . " - " . $this->getCleanSiteName();
         
         $message = $this->renderTemplate('order_confirmation', [
             'order' => $order,
@@ -42,7 +42,7 @@ class EmailService {
             'subject' => $subject
         ]);
 
-        return $this->sendHtmlEmail($order['customer_email'], $subject, $message);
+        return $this->sendHtmlEmail($order->customer_email, $subject, $message);
     }
 
     public function sendStatusUpdateEmail(string $toEmail, int $orderId, string $status): bool {

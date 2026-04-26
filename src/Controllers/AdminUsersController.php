@@ -1,15 +1,15 @@
 <?php
 namespace App\Controllers;
 
-use App\Core\Database;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\SecurityService;
 use App\Services\SettingsService;
+use App\Services\UserService;
 
 class AdminUsersController {
     public function __construct(
-        private \PDO $db,
+        private UserService $userService,
         private Renderer $renderer,
         private Validator $validator,
         private SecurityService $security,
@@ -18,13 +18,7 @@ class AdminUsersController {
     ) {}
 
     public function list() {
-        $users = $this->db->query(
-            "SELECT u.*, COUNT(o.id) as order_count
-             FROM users u
-             LEFT JOIN orders o ON o.user_id = u.id
-             GROUP BY u.id
-             ORDER BY u.id DESC"
-        )->fetchAll();
+        $users = $this->userService->getAll();
 
         $this->renderer->adminRender('users_list', [
             'page_title' => 'Users',
@@ -49,15 +43,16 @@ class AdminUsersController {
 
     public function edit() {
         $user_id = (int)($_GET['id'] ?? 0);
+        $user = $this->userService->findById($user_id);
 
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
-        $stmt->execute([$user_id]);
-        $user = $stmt->fetch() ?: [];
+        if (!$user) {
+            redirect('/admin/users');
+        }
 
         $this->renderer->adminRender('users_form', [
             'page_title'       => 'Edit User',
             'active'           => 'users',
-            'is_new'           => !$user_id,
+            'is_new'           => false,
             'user'             => $user,
             'user_id'          => $user_id,
             'errors'           => [],
@@ -68,11 +63,15 @@ class AdminUsersController {
     public function save() {
         $this->security->verifyCsrf();
         $user_id = (int)($_POST['id'] ?? 0);
-        $name    = trim($_POST['name'] ?? '');
-        $email   = trim($_POST['email'] ?? '');
-        $role    = in_array($_POST['role'] ?? '', ['admin', 'customer']) ? $_POST['role'] : 'customer';
-        $address = trim($_POST['address'] ?? '');
-        $pass    = $_POST['password'] ?? '';
+        
+        $data = [
+            'name'        => trim($_POST['name'] ?? ''),
+            'email'       => trim($_POST['email'] ?? ''),
+            'role'        => in_array($_POST['role'] ?? '', ['admin', 'customer']) ? $_POST['role'] : 'customer',
+            'address'     => trim($_POST['address'] ?? ''),
+            'is_verified' => isset($_POST['is_verified']) ? 1 : 0,
+        ];
+        $pass = $_POST['password'] ?? '';
 
         $minLen = $this->settings->get('password_min_length');
         $errors = $this->validator->check($_POST, [
@@ -82,32 +81,32 @@ class AdminUsersController {
         ]);
 
         if (!$errors) {
-            $check = $user_id
-                ? $this->db->prepare("SELECT id FROM users WHERE email = ? AND id != ?")
-                : $this->db->prepare("SELECT id FROM users WHERE email = ?");
-            $user_id ? $check->execute([$email, $user_id]) : $check->execute([$email]);
-
-            if ($check->fetch()) {
+            $existing = $this->userService->findByEmail($data['email']);
+            if ($existing && $existing->id !== $user_id) {
                 $errors[] = 'Email already in use.';
             }
         }
 
         if (!$errors) {
             if ($user_id) {
+                $user = $this->userService->findById($user_id);
+                $data['password_hash'] = $user->password_hash;
+                $data['verification_token'] = $user->verification_token;
                 if ($pass) {
-                    $this->db->prepare("UPDATE users SET name=?, email=?, role=?, address=?, password_hash=? WHERE id=?")
-                       ->execute([$name, $email, $role, $address, password_hash($pass, PASSWORD_DEFAULT), $user_id]);
-                } else {
-                    $this->db->prepare("UPDATE users SET name=?, email=?, role=?, address=? WHERE id=?")
-                       ->execute([$name, $email, $role, $address, $user_id]);
+                    $data['password_hash'] = password_hash($pass, PASSWORD_DEFAULT);
                 }
-                $this->logger->info("Admin updated user: {email} (ID: {id})", ['email' => $email, 'id' => $user_id]);
+            } else {
+                $data['password_hash'] = password_hash($pass, PASSWORD_DEFAULT);
+                $data['verification_token'] = null;
+            }
+
+            $saved_id = $this->userService->save($data, $user_id);
+
+            if ($user_id) {
+                $this->logger->info("Admin updated user: {email} (ID: {id})", ['email' => $data['email'], 'id' => $user_id]);
                 flash('msg', 'User updated.');
             } else {
-                $this->db->prepare("INSERT INTO users (name, email, password_hash, role, address) VALUES (?, ?, ?, ?, ?)")
-                   ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role, $address]);
-                $new_id = $this->db->lastInsertId();
-                $this->logger->info("Admin created user: {email} (ID: {id})", ['email' => $email, 'id' => $new_id]);
+                $this->logger->info("Admin created user: {email} (ID: {id})", ['email' => $data['email'], 'id' => $saved_id]);
                 flash('msg', 'User created.');
             }
             redirect('/admin/users');
@@ -117,7 +116,7 @@ class AdminUsersController {
             'page_title'       => ($user_id ? 'Edit' : 'Add') . ' User',
             'active'           => 'users',
             'is_new'           => !$user_id,
-            'user'             => compact('name', 'email', 'role', 'address'),
+            'user'             => $data,
             'user_id'          => $user_id,
             'errors'           => $errors,
             'password_min_len' => (int)$this->settings->get('password_min_length'),
@@ -126,10 +125,12 @@ class AdminUsersController {
 
     public function delete() {
         $user_id = (int)($_GET['id'] ?? 0);
-        if ($user_id === (int)current_user()['id']) {
+        $current = $this->userService->findById((int)current_user()->id);
+        
+        if ($user_id === $current->id) {
             flash('err', 'You cannot delete your own account.');
         } else if ($user_id) {
-            $this->db->prepare("DELETE FROM users WHERE id = ?")->execute([$user_id]);
+            $this->userService->delete($user_id);
             $this->logger->info("Admin deleted user ID: {id}", ['id' => $user_id]);
             flash('msg', 'User deleted.');
         }

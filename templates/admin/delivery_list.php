@@ -24,23 +24,23 @@
     <tbody>
       <?php foreach ($options as $opt): ?>
         <tr>
-          <td><strong><?= h($opt['name']) ?></strong></td>
-          <td><?= money($opt['price']) ?></td>
-          <td><?= money($opt['min_order_total']) ?></td>
+          <td><strong><?= h($opt->name) ?></strong></td>
+          <td><?= money($opt->price) ?></td>
+          <td><?= money($opt->min_order_total) ?></td>
           <td>
-            <span class="badge <?= $opt['active'] ? 'badge-success' : 'badge-neutral' ?>">
-              <?= $opt['active'] ? 'Active' : 'Inactive' ?>
+            <span class="badge <?= $opt->active ? 'badge-success' : 'badge-neutral' ?>">
+              <?= $opt->active ? 'Active' : 'Inactive' ?>
             </span>
           </td>
           <td>
-            <a href="/admin/delivery/edit?id=<?= $opt['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
-            <a href="/admin/delivery/delete?id=<?= $opt['id'] ?>" class="btn btn-danger btn-sm"
+            <a href="/admin/delivery/edit?id=<?= $opt->id ?>" class="btn btn-outline btn-sm">Edit</a>
+            <a href="/admin/delivery/delete?id=<?= $opt->id ?>" class="btn btn-danger btn-sm"
                onclick="return confirm('Are you sure you want to delete this option?')">Delete</a>
           </td>
         </tr>
       <?php endforeach; ?>
       <?php if (empty($options)): ?>
-        <tr><td colspan="4" style="text-align:center;padding:2rem;opacity:.5;">No delivery options found.</td></tr>
+        <tr><td colspan="5" style="text-align:center;padding:2rem;opacity:.5;">No delivery options found.</td></tr>
       <?php endif; ?>
     </tbody>
   </table>

@@ -3,6 +3,8 @@ namespace App\Services;
 
 use App\Core\Database;
 
+use App\Models\User;
+
 class AuthService {
     private const COOKIE_NAME = 'remember_token';
 
@@ -17,11 +19,23 @@ class AuthService {
         }
     }
 
-    public function currentUser(): ?array {
+    public function currentUser(): ?User {
         $this->sessionStart();
+        
+        // If we have a user in session, we want to return it as a User object
         if (isset($_SESSION['user'])) {
-            return $_SESSION['user'];
+            if ($_SESSION['user'] instanceof User) {
+                return $_SESSION['user'];
+            }
+            // If it was an array (from old code or login), convert it
+            $user = new User();
+            foreach ($_SESSION['user'] as $k => $v) {
+                if (property_exists($user, $k)) $user->$k = $v;
+            }
+            $_SESSION['user'] = $user;
+            return $user;
         }
+
         // Try to restore session from a remember-me cookie
         $token = $_COOKIE[self::COOKIE_NAME] ?? null;
         if ($token) {
@@ -31,14 +45,16 @@ class AuthService {
                  JOIN users u ON u.id = rt.user_id
                  WHERE rt.token = ? AND rt.expires_at > ?"
             );
+            $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class);
             $stmt->execute([$token, time()]);
-            $row = $stmt->fetch();
-            if ($row) {
+            $user = $stmt->fetch();
+            
+            if ($user) {
                 @session_regenerate_id(true);
-                $_SESSION['user'] = $row;
+                $_SESSION['user'] = $user;
                 // Rotate the token
-                $this->setRememberCookie($row['user_id'], $token);
-                return $_SESSION['user'];
+                $this->setRememberCookie($user->id, $token);
+                return $user;
             }
             // Stale cookie — clear it
             $this->clearRememberCookie($token);
@@ -48,15 +64,24 @@ class AuthService {
 
     public function isAdmin(): bool {
         $u = $this->currentUser();
-        return $u && $u['role'] === 'admin';
+        return $u && $u->isAdmin();
     }
 
-    public function login(array $user, bool $remember = false): void {
+    public function login(array|User $user, bool $remember = false): void {
         $this->sessionStart();
         @session_regenerate_id(true);
+
+        if (is_array($user)) {
+            $u = new User();
+            foreach ($user as $k => $v) {
+                if (property_exists($u, $k)) $u->$k = $v;
+            }
+            $user = $u;
+        }
+
         $_SESSION['user'] = $user;
         if ($remember) {
-            $this->setRememberCookie($user['id']);
+            $this->setRememberCookie($user->id);
         }
     }
 

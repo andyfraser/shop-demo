@@ -17,10 +17,11 @@
 <meta name="csrf-token" content="<?= h(csrf_token()) ?>">
 <?php
 $_top      = count($nav_tree);
-$_children = array_sum(array_map(fn($c) => count($c['children'] ?? []), $nav_tree));
+$_children = array_sum(array_map(fn($c) => count($c->children), $nav_tree));
+$s = settings();
 $mobile_nav_expanded = (
-    $_top      <= (int) setting('mobile_nav_max_top') &&
-    ($_top + $_children) <= (int) setting('mobile_nav_max_combined')
+    $_top      <= $s->mobile_nav_max_top &&
+    ($_top + $_children) <= $s->mobile_nav_max_combined
 );
 ?>
 </head>
@@ -44,8 +45,8 @@ $mobile_nav_expanded = (
     <div class="header-right">
       <nav class="header-actions">
         <?php if ($current_user): ?>
-          <a href="<?= BASE_URL ?>/account">👤 <span class="link-text"><?= h($current_user['name']) ?></span></a>
-          <?php if ($current_user['role'] === 'admin'): ?>
+          <a href="<?= BASE_URL ?>/account">👤 <span class="link-text"><?= h($current_user->name) ?></span></a>
+          <?php if ($current_user->isAdmin()): ?>
             <a href="<?= BASE_URL ?>/admin">⚙ <span class="link-text">Admin</span></a>
           <?php endif; ?>
           <a href="<?= BASE_URL ?>/logout">🚪 <span class="link-text">Sign out</span></a>
@@ -80,17 +81,17 @@ $mobile_nav_expanded = (
     <ul>
       <li><a href="<?= BASE_URL ?>/">Home</a></li>
       <?php foreach ($nav_tree as $cat): ?>
-        <li class="<?= $cat['children'] ? 'has-sub' : '' ?>">
-          <a href="<?= BASE_URL ?>/category/<?= h($cat['slug']) ?>">
-            <?= h($cat['name']) ?>
-            <?php if ($cat['children']): ?><span class="arrow">›</span><?php endif; ?>
+        <li class="<?= $cat->children ? 'has-sub' : '' ?>">
+          <a href="<?= BASE_URL ?>/category/<?= h($cat->slug) ?>">
+            <?= h($cat->name) ?>
+            <?php if ($cat->children): ?><span class="arrow">›</span><?php endif; ?>
           </a>
-          <?php if ($cat['children']): ?>
+          <?php if ($cat->children): ?>
             <ul class="sub-menu">
-              <?php foreach ($cat['children'] as $sub): ?>
+              <?php foreach ($cat->children as $sub): ?>
                 <li>
-                  <a href="<?= BASE_URL ?>/category/<?= h($sub['slug']) ?>">
-                    <?= h($sub['name']) ?>
+                  <a href="<?= BASE_URL ?>/category/<?= h($sub->slug) ?>">
+                    <?= h($sub->name) ?>
                   </a>
                 </li>
               <?php endforeach; ?>
@@ -103,7 +104,7 @@ $mobile_nav_expanded = (
 </nav>
 
 <main>
-  <?php if ($current_user && empty($current_user['is_verified'])): ?>
+  <?php if ($current_user && !$current_user->isVerified()): ?>
     <div class="alert alert-warning" style="margin: 0; text-align: center; border-radius: 0; border: none; border-bottom: 1px solid var(--warning-ink); background: var(--warning-bg); color: var(--warning-ink); padding: 0.75rem;">
       <strong>Verify your email:</strong> Please check your inbox to verify your account before you can make a purchase.
       <a href="/verify-email/resend" style="text-decoration: underline; margin-left: 0.5rem;">Resend email</a>

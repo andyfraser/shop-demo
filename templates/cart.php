@@ -32,24 +32,26 @@
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($items as $item): ?>
-                  <tr data-item-id="<?= $item['id'] ?>">
+                <?php foreach ($items as $item): 
+                  $p = $item['product'];
+                ?>
+                  <tr data-item-id="<?= $p->id ?>">
                     <td style="width:80px;">
-                      <?php product_img($item['image'] ?? '', $item['name'], 'cart-thumb') ?>
+                      <?php product_img($p->image ?? '', $p->name, 'cart-thumb') ?>
                     </td>
                     <td>
-                      <a href="/product/<?= h($item['slug']) ?>" class="cart-product-name">
-                        <?= h($item['name']) ?>
+                      <a href="/product/<?= h($p->slug) ?>" class="cart-product-name">
+                        <?= h($p->name) ?>
                       </a>
                     </td>
-                    <td><?= money($item['price']) ?></td>
+                    <td><?= money($p->price) ?></td>
                     <td>
-                      <input type="number" name="qty[<?= $item['id'] ?>]" value="<?= $item['qty'] ?>" min="0"
-                        max="<?= $item['stock'] ?>" class="form-control qty-ctrl">
+                      <input type="number" name="qty[<?= $p->id ?>]" value="<?= $item['qty'] ?>" min="0"
+                        max="<?= $p->stock ?>" class="form-control qty-ctrl">
                     </td>
-                    <td class="item-subtotal" data-item-id="<?= $item['id'] ?>"><strong><?= money($item['subtotal']) ?></strong></td>
+                    <td class="item-subtotal" data-item-id="<?= $p->id ?>"><strong><?= money($item['subtotal']) ?></strong></td>
                     <td>
-                      <button type="submit" name="remove" value="<?= $item['id'] ?>" class="btn btn-outline btn-sm"
+                      <button type="submit" name="remove" value="<?= $p->id ?>" class="btn btn-outline btn-sm"
                         style="padding:.3rem .7rem;color:var(--accent)">✕</button>
                     </td>
                   </tr>

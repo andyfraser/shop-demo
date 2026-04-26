@@ -42,13 +42,13 @@
             <div style="display:flex;flex-direction:column;gap:.75rem;">
               <?php foreach ($delivery_options as $opt): ?>
                 <label style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;transition:border-color .2s;" class="delivery-opt">
-                  <input type="radio" name="delivery_option_id" value="<?= $opt['id'] ?>" 
-                         <?= ($delivery_id == $opt['id']) ? 'checked' : '' ?> required
-                         onchange="updateTotal(<?= $opt['price'] ?>)">
+                  <input type="radio" name="delivery_option_id" value="<?= $opt->id ?>" 
+                         <?= ($delivery_id == $opt->id) ? 'checked' : '' ?> required
+                         onchange="updateTotal(<?= $opt->price ?>)">
                   <div style="flex:1">
-                    <div style="font-weight:500;"><?= h($opt['name']) ?></div>
+                    <div style="font-weight:500;"><?= h($opt->name) ?></div>
                   </div>
-                  <strong><?= money($opt['price']) ?></strong>
+                  <strong><?= money($opt->price) ?></strong>
                 </label>
               <?php endforeach; ?>
             </div>
@@ -59,9 +59,11 @@
       <div>
         <div class="card" style="position:sticky;top:84px;">
           <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem;">Order Summary</h2>
-          <?php foreach ($items as $item): ?>
+          <?php foreach ($items as $item): 
+             $p = $item['product'];
+          ?>
             <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--line);font-size:.875rem;">
-              <span><?= h($item['name']) ?> × <?= $item['qty'] ?></span>
+              <span><?= h($p->name) ?> × <?= $item['qty'] ?></span>
               <strong><?= money($item['subtotal']) ?></strong>
             </div>
           <?php endforeach; ?>
@@ -96,8 +98,9 @@
 <script>
 const baseTotal = <?= (float)$total ?>;
 const baseVat = <?= (float)$total_item_vat ?>;
-const defaultVatRate = <?= (float)setting('default_vat_rate') ?>;
-const currencySymbol = '<?= setting('currency_symbol') ?>';
+const s = <?= json_encode(settings()) ?>;
+const defaultVatRate = s.default_vat_rate;
+const currencySymbol = s.currency_symbol;
 
 function updateTotal(price) {
   const deliveryVat = price * (defaultVatRate / (100 + defaultVatRate));

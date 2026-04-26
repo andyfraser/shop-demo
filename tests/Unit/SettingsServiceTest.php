@@ -4,42 +4,49 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use App\Services\SettingsService;
+use App\Models\Settings;
 use App\Core\Database;
 
 class SettingsServiceTest extends TestCase {
-    private SettingsService $settings;
+    private SettingsService $service;
     private \PDO $db;
 
     public function setUp() {
         $this->db = Database::getConnection();
         // Clear settings table for isolation
         $this->db->exec("DELETE FROM settings");
-        $this->settings = new SettingsService($this->db);
+        $this->service = new SettingsService($this->db);
     }
 
-    public function testGetDefaultValue() {
-        $this->assertEquals('Demo|shop', $this->settings->get('site_name'));
-        $this->assertEquals('£', $this->settings->get('currency_symbol'));
+    public function testGetSettingsModel() {
+        $settings = $this->service->getSettings();
+        $this->assertInstanceOf(Settings::class, $settings);
+        $this->assertEquals('Demo|shop', $settings->site_name);
+        $this->assertEquals(6, $settings->password_min_length); // Integer check
     }
 
-    public function testSetAndGet() {
-        $this->settings->set('test_key', 'test_value');
-        $this->assertEquals('test_value', $this->settings->get('test_key'));
+    public function testSetAndGetTyped() {
+        $this->service->set('password_min_length', '12');
+        $settings = $this->service->getSettings();
+        
+        $this->assertEquals(12, $settings->password_min_length);
+        $this->assertSame(12, $settings->password_min_length); // Strict type check
     }
 
     public function testPersistence() {
-        $this->settings->set('persistent_key', 'persistent_value');
+        $this->service->set('site_name', 'My Store');
         
-        // Create a new instance to verify it loads from DB
-        $newSettings = new SettingsService($this->db);
-        $this->assertEquals('persistent_value', $newSettings->get('persistent_key'));
+        // New service instance should load from DB
+        $newService = new SettingsService($this->db);
+        $this->assertEquals('My Store', $newService->getSettings()->site_name);
     }
 
-    public function testAll() {
-        $this->settings->set('custom_key', 'custom_value');
-        $all = $this->settings->all();
+    public function testLegacySupport() {
+        $this->service->set('site_name', 'Legacy Test');
+        $this->assertEquals('Legacy Test', $this->service->get('site_name'));
         
-        $this->assertEquals('custom_value', $all['custom_key']);
-        $this->assertEquals('Demo|shop', $all['site_name']); // Still has defaults
+        $all = $this->service->all();
+        $this->assertEquals('Legacy Test', $all['site_name']);
+        $this->assertEquals('£', $all['currency_symbol']);
     }
 }
