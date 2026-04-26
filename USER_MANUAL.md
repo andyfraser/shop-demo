@@ -115,12 +115,10 @@ Demoshop features a built-in PSR-3 compliant logging system to help monitor appl
 Logs are stored in the `logs/` directory. The primary log file is `logs/app.log`. This file contains timestamped entries for various system events, such as 404 errors or security alerts.
 
 ### Debug Mode
-You can control the verbosity of the logs via the `config.php` file. By default, `DEBUG` level messages are suppressed to save space and maintain performance.
+You can control the verbosity of the logs and the detail of error messages via the `config.php` file. 
 
-To enable detailed debug logging:
-1. Open `config.php`.
-2. Find the `app` section.
-3. Set `'debug' => true`.
+*   **Production Mode (`'debug' => false`):** Errors are logged to `logs/app.log`, and users are shown a friendly `500 Internal Server Error` page. Detailed technical information is hidden for security.
+*   **Debug Mode (`'debug' => true`):** Detailed error messages, stack traces, and environment information are displayed directly in the browser to assist with development.
 
 ### Log Rotation & Retention
 Logs are automatically rotated daily. By default, rotated log files are kept for **30 days**. You can adjust this threshold in the `config.php` file:
@@ -141,14 +139,16 @@ The logging system follows the PHP Standard Recommendation for logging (PSR-3). 
 
 ### Design Philosophy
 *   **Vanilla PHP 8:** No frameworks (Laravel/Symfony) or package managers (Composer).
-*   **Dependency Injection:** Uses a custom DI Container (`App\Core\Container`) for object lifecycle management and autowiring.
-*   **MVC Pattern:** Separation of concerns between `Controllers`, `Services`, and `Core` logic.
-*   **Front Controller:** All traffic routes through `index.php`, which initializes the DI system.
+*   **Dependency Injection:** Uses a custom DI Container (`App\Core\Container`) for object lifecycle management and autowiring. Service registrations are centralized in `config/services.php`.
+*   **MVC Pattern:** Separation of concerns between `Controllers`, `Services`, `Models`, and `Core` logic.
+*   **Front Controller:** All traffic routes through `index.php`, which initializes the DI system and sets up global error handling.
 
 ### Directory Structure Highlights
 *   `src/Core/`: Foundation classes including the `Container`, `Router`, `Database`, and `Renderer`.
-*   `src/Services/`: Instance-based business logic (Auth, Cart, Email, Security, Settings).
-*   `templates/`: Pure PHP/HTML view files.
+*   `src/Models/`: Data objects (User, Product, Order, etc.) that represent core business entities.
+*   `src/Services/`: Instance-based business logic (Auth, Cart, Category, Email, Order, Product, Security, Settings, User).
+*   `config/`: Configuration files for routing and service registration.
+*   `templates/`: Pure PHP/HTML view files, now utilizing Model objects for data representation.
 *   `public/`: Assets (CSS, JS, Images).
 
 ### Database Migrations

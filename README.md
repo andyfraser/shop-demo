@@ -113,25 +113,31 @@ shop-demo/
 ├── logs/                   # Application log files (ignored by Git)
 │   └── app.log             # Main application log
 │
+├── config/                 # Application configuration files
+│   ├── routes.php          # Route definitions
+│   └── services.php        # DI service registrations
+│
 ├── tests/                  # Custom unit testing framework
 │   ├── run.php             # CLI test runner
 │   ├── TestCase.php        # Base test class with assertions
 │   └── Unit/               # Unit test suites
 │
 ├── src/
-├── Core/
-│   ├── Autoloader.php  # PSR-4 style class autoloader (supports App\ and Psr\)
-│   ├── Container.php   # Dependency Injection container with autowiring
-│   ├── Database.php    # Multi-driver PDO connection factory + migrations
-│   ├── FileLogger.php  # PSR-3 compliant file-based logger
-│   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
-│   ├── Router.php      # HTTP router with middleware and DI support
-│   └── Validator.php   # Field validation logic
-│
-├── Psr/
-│   └── Log/            # Standard PSR-3 logging interfaces
-│
-├── Controllers/
+│   ├── Core/
+│   │   ├── Autoloader.php  # PSR-4 style class autoloader (supports App\ and Psr\)
+│   │   ├── Container.php   # Dependency Injection container with autowiring
+│   │   ├── Database.php    # Multi-driver PDO connection factory + migrations
+│   │   ├── FileLogger.php  # PSR-3 compliant file-based logger
+│   │   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
+│   │   ├── Router.php      # HTTP router with middleware and DI support
+│   │   └── Validator.php   # Field validation logic
+│   │
+│   ├── Psr/
+│   │   └── Log/            # Standard PSR-3 logging interfaces
+│   │
+│   ├── Models/             # Data models (User, Product, Order, Category, etc.)
+│   │
+│   ├── Controllers/
 │   │   ├── StorefrontController.php   # Home, search, category, product pages
 │   │   ├── AuthController.php         # Login, register, logout, email verification
 │   │   ├── CartController.php         # Cart view, add, update (AJAX + form)
@@ -152,13 +158,17 @@ shop-demo/
 │   ├── Services/
 │   │   ├── AuthService.php             # Session login / logout / current user
 │   │   ├── CartService.php             # Session-based cart operations
+│   │   ├── CategoryService.php         # Category hierarchy and CRUD
 │   │   ├── DeliveryService.php         # DB-backed delivery options management
 │   │   ├── EmailService.php            # Transactional emails (verification, orders)
+│   │   ├── OrderService.php            # Order creation and management
+│   │   ├── ProductService.php          # Product catalog and search
 │   │   ├── SecurityService.php         # CSRF tokens and rate limiting
-│   │   └── SettingsService.php         # DB-backed key/value settings with defaults
+│   │   ├── SettingsService.php         # DB-backed key/value settings with defaults
+│   │   └── UserService.php             # User management and profile updates
 │   │
-│   └── Helpers.php         # Global helpers: h(), money(), setting(), redirect(), flash(),
-│                           #   csrf_field(), csrf_token(), current_user(), is_ajax(), is_new_product(),
+│   └── Helpers.php         # Global helpers: h(), money(), settings(), redirect(), flash(),
+│                           #   csrf_field(), csrf_token(), current_user(), is_ajax(),
 │                           #   product_img(), slugify(), get_category_tree(), get_category_flat(), get_breadcrumb()
 │
 ├── templates/              # HTML-only templates — no queries or redirects
@@ -174,6 +184,8 @@ shop-demo/
 │   ├── account.php
 │   ├── login.php
 │   ├── register.php
+│   ├── 404.php             # Custom 404 error page
+│   ├── 500.php             # Custom 500 error page
 │   └── admin/
 │       ├── header.php / footer.php
 │       ├── dashboard.php
@@ -199,7 +211,11 @@ shop-demo/
 
 All requests enter through `index.php` (front controller), which bootstraps the **Dependency Injection (DI) Container**, registers the autoloader, defines constants, and dispatches to `src/Core/Router`. Common icon routes (like `/favicon.ico` or `/apple-touch-icon.png`) are explicitly handled to prevent 404 errors. 
 
-**Dependency Injection:** The application uses a custom `Container` for managing object lifecycles and dependencies. Controllers and services receive their dependencies (like `PDO`, `Renderer`, or other services) via their constructors. The `Router` uses the container to automatically instantiate controllers with all required dependencies (autowiring).
+**Error Handling:** The application includes a global error and exception handler. In debug mode, detailed errors are displayed. In production, errors are logged to `logs/app.log` and a user-friendly `500.php` template is rendered.
+
+**Dependency Injection:** The application uses a custom `Container` for managing object lifecycles and dependencies. Service registrations are centralized in `config/services.php`. Controllers and services receive their dependencies via their constructors using PHP 8 property promotion. The `Router` uses the container to automatically instantiate controllers with all required dependencies (autowiring).
+
+**Models:** Data is represented by Model classes in `src/Models/`. These classes encapsulate data structure and provide helper methods (e.g., `Order::getStatusBadgeClass()`), moving away from raw associative arrays.
 
 **Rendering:** Controllers fetch data and call `$this->renderer->render('template_name', ['var' => $val])`. The renderer extracts the data array, auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`), and wraps the template with `header.php` / `footer.php`. Admin pages use `adminRender()`.
 
