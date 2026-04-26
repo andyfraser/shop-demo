@@ -138,18 +138,18 @@ The logging system follows the PHP Standard Recommendation for logging (PSR-3). 
 ## 6. Technical Architecture
 
 ### Design Philosophy
-*   **Vanilla PHP 8:** No frameworks (Laravel/Symfony) or package managers (Composer).
-*   **Dependency Injection:** Uses a custom DI Container (`App\Core\Container`) for object lifecycle management and autowiring. Service registrations are centralized in `config/services.php`.
-*   **MVC Pattern:** Separation of concerns between `Controllers`, `Services`, `Models`, and `Core` logic.
+*   **Vanilla PHP 8:** Zero external dependencies (No Laravel, Symfony, or Composer).
+*   **Dependency Inversion:** Use of Interfaces for all service logic to ensure decoupling and follow the SOLID principles.
+*   **DI Container:** Custom container (`App\Core\Container`) with autowiring and interface mapping support. Service registrations are centralized in `config/services.php`.
+*   **MVC Pattern:** Strict separation of Controllers, Services, Models, and Views.
 *   **Front Controller:** All traffic routes through `index.php`, which initializes the DI system and sets up global error handling.
 
 ### Directory Structure Highlights
 *   `src/Core/`: Foundation classes including the `Container`, `Router`, `Database`, and `Renderer`.
 *   `src/Models/`: Data objects (User, Product, Order, etc.) that represent core business entities.
-*   `src/Services/`: Instance-based business logic (Auth, Cart, Category, Email, Order, Product, Security, Settings, User).
-*   `config/`: Configuration files for routing and service registration.
-*   `templates/`: Pure PHP/HTML view files, now utilizing Model objects for data representation.
-*   `public/`: Assets (CSS, JS, Images).
+*   `src/Services/`: Interface-driven business logic (Auth, Cart, Category, Email, Order, Product, Security, Settings, User).
+*   `config/`: Route and Service (Interface to Implementation) definitions.
+*   `templates/`: Pure PHP/HTML view files, utilizing Model objects for data representation.
 
 ### Database Migrations
 Demoshop handles updates automatically. `src/Core/Database.php` contains a `migrations()` method that applies additive schema changes (like new columns) on-the-fly, ensuring the application stays up-to-date without manual SQL execution.
@@ -159,13 +159,14 @@ Demoshop handles updates automatically. `src/Core/Database.php` contains a `migr
 ## 7. Security & Privacy
 
 ### Security Measures
-*   **CSRF Protection:** All state-changing forms require a unique session token.
-*   **Rate Limiting:** Protects login and registration routes against brute-force attacks.
+*   **CSRF Protection:** All state-changing forms require a unique session token, verified by `SecurityService`.
+*   **Rate Limiting:** Protects login and registration routes against brute-force attacks by tracking attempts in the `rate_limits` table.
 *   **Secure Sessions:** Automatic session regeneration and role-based access control (RBAC).
+*   **Input Handling:** Rigorous use of `h()` for HTML escaping and PDO prepared statements for database queries to prevent XSS and SQL injection.
 
 ### Privacy Compliance
 *   **Cookie Consent:** A built-in, persistence-aware banner handles user consent for non-essential cookies.
-*   **Input Sanitization:** Rigorous use of `h()` for HTML escaping and PDO prepared statements for database queries.
+*   **Email Communications:** All transactional emails are managed through `EmailService` and use native PHP `mail()` functionality.
 
 ---
 
@@ -181,8 +182,10 @@ php tests/run.php
 
 ### Framework Features
 *   **Automatic Discovery:** The runner automatically finds all `*Test.php` files in the `tests/Unit/` directory.
-*   **Isolation:** Each test method is executed with a fresh environment via the `setUp()` method.
+*   **Interface Testing:** Specific tests verify that the DI Container correctly maps interfaces to implementations.
+*   **Service Testing:** Unit tests for all services verify logic via their interface contracts.
+*   **Isolation:** `setUp()` ensures each test runs in a clean environment.
 *   **Detailed Reporting:** The suite reports total tests, assertions, and detailed failure messages with file and line references.
 
 ---
-*For developer support or feature requests, please consult the `README.md` or contact the system administrator.*
+*For developer support or feature requests, please consult the `README.md`.*

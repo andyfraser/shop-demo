@@ -2,15 +2,15 @@
 namespace App\Controllers;
 
 use App\Core\Renderer;
-use App\Services\SecurityService;
-use App\Services\BackupService;
+use App\Services\SecurityServiceInterface;
+use App\Services\BackupServiceInterface;
 use Exception;
 
 class AdminBackupController {
     public function __construct(
         private Renderer $renderer,
-        private SecurityService $securityService,
-        private BackupService $backupService,
+        private SecurityServiceInterface $securityService,
+        private BackupServiceInterface $backupService,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 

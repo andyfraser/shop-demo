@@ -3,24 +3,24 @@ namespace App\Controllers;
 
 use App\Core\Renderer;
 use App\Core\Validator;
-use App\Services\CartService;
-use App\Services\AuthService;
-use App\Services\SecurityService;
-use App\Services\DeliveryService;
-use App\Services\EmailService;
-use App\Services\OrderService;
-use App\Services\SettingsService;
+use App\Services\CartServiceInterface;
+use App\Services\AuthServiceInterface;
+use App\Services\SecurityServiceInterface;
+use App\Services\DeliveryServiceInterface;
+use App\Services\EmailServiceInterface;
+use App\Services\OrderServiceInterface;
+use App\Services\SettingsServiceInterface;
 
 class CheckoutController {
     public function __construct(
-        private OrderService $orderService,
+        private OrderServiceInterface $orderService,
         private Renderer $renderer,
-        private CartService $cart,
-        private AuthService $auth,
-        private SecurityService $security,
-        private DeliveryService $delivery,
-        private EmailService $email,
-        private SettingsService $settings,
+        private CartServiceInterface $cart,
+        private AuthServiceInterface $auth,
+        private SecurityServiceInterface $security,
+        private DeliveryServiceInterface $delivery,
+        private EmailServiceInterface $email,
+        private SettingsServiceInterface $settings,
         private Validator $validator,
         private \Psr\Log\LoggerInterface $logger
     ) {}

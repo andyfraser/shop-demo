@@ -1,10 +1,10 @@
 <?php
 namespace App\Middleware;
 
-use App\Services\AuthService;
+use App\Services\AuthServiceInterface;
 
 class AdminMiddleware {
-    public function __construct(private AuthService $auth) {}
+    public function __construct(private AuthServiceInterface $auth) {}
 
     public function handle() {
         if (!$this->auth->currentUser()) {

@@ -2,16 +2,16 @@
 namespace App\Controllers;
 
 use App\Core\Renderer;
-use App\Services\SecurityService;
-use App\Services\EmailService;
-use App\Services\OrderService;
+use App\Services\SecurityServiceInterface;
+use App\Services\EmailServiceInterface;
+use App\Services\OrderServiceInterface;
 
 class AdminOrdersController {
     public function __construct(
-        private OrderService $orderService,
+        private OrderServiceInterface $orderService,
         private Renderer $renderer,
-        private SecurityService $security,
-        private EmailService $email,
+        private SecurityServiceInterface $security,
+        private EmailServiceInterface $email,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 

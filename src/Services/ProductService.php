@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 
-class ProductService {
+class ProductService implements ProductServiceInterface {
     public function __construct(
         private \PDO $db
     ) {}

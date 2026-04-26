@@ -2,15 +2,15 @@
 namespace App\Controllers;
 
 use App\Core\Renderer;
-use App\Services\CartService;
-use App\Services\SecurityService;
+use App\Services\CartServiceInterface;
+use App\Services\SecurityServiceInterface;
 
 class CartController
 {
     public function __construct(
         private Renderer $renderer,
-        private CartService $cartService,
-        private SecurityService $securityService
+        private CartServiceInterface $cartService,
+        private SecurityServiceInterface $securityService
     ) {}
 
     public function show()

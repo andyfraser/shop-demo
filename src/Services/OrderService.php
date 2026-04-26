@@ -6,7 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 
-class OrderService {
+class OrderService implements OrderServiceInterface {
     public function __construct(
         private \PDO $db
     ) {}

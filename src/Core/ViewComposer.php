@@ -1,15 +1,15 @@
 <?php
 namespace App\Core;
 
-use App\Services\CartService;
-use App\Services\AuthService;
-use App\Services\CategoryService;
+use App\Services\CartServiceInterface;
+use App\Services\AuthServiceInterface;
+use App\Services\CategoryServiceInterface;
 
 class ViewComposer {
     public function __construct(
-        private CartService $cart,
-        private AuthService $auth,
-        private CategoryService $categoryService
+        private CartServiceInterface $cart,
+        private AuthServiceInterface $auth,
+        private CategoryServiceInterface $categoryService
     ) {}
 
     /**

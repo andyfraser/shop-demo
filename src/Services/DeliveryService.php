@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\DeliveryOption;
 
-class DeliveryService {
+class DeliveryService implements DeliveryServiceInterface {
     public function __construct(private \PDO $db) {}
 
     public function all(): array {

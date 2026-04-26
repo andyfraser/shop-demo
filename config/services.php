@@ -11,6 +11,28 @@
 use Psr\Log\LoggerInterface;
 use App\Core\FileLogger;
 use App\Core\Database;
+use App\Services\AuthServiceInterface;
+use App\Services\AuthService;
+use App\Services\CartServiceInterface;
+use App\Services\CartService;
+use App\Services\ProductServiceInterface;
+use App\Services\ProductService;
+use App\Services\CategoryServiceInterface;
+use App\Services\CategoryService;
+use App\Services\OrderServiceInterface;
+use App\Services\OrderService;
+use App\Services\UserServiceInterface;
+use App\Services\UserService;
+use App\Services\SettingsServiceInterface;
+use App\Services\SettingsService;
+use App\Services\EmailServiceInterface;
+use App\Services\EmailService;
+use App\Services\SecurityServiceInterface;
+use App\Services\SecurityService;
+use App\Services\BackupServiceInterface;
+use App\Services\BackupService;
+use App\Services\DeliveryServiceInterface;
+use App\Services\DeliveryService;
 
 return function(array $config) {
     return [
@@ -24,6 +46,41 @@ return function(array $config) {
         // PDO instance for database connectivity
         \PDO::class => function() {
             return Database::getConnection();
+        },
+
+        // Services
+        SettingsServiceInterface::class => function($c) {
+            return new SettingsService($c->get(\PDO::class));
+        },
+        AuthServiceInterface::class => function($c) {
+            return new AuthService($c->get(\PDO::class), $c->get(SettingsServiceInterface::class));
+        },
+        ProductServiceInterface::class => function($c) {
+            return new ProductService($c->get(\PDO::class));
+        },
+        CartServiceInterface::class => function($c) {
+            return new CartService($c->get(ProductServiceInterface::class), $c->get(AuthServiceInterface::class));
+        },
+        CategoryServiceInterface::class => function($c) {
+            return new CategoryService($c->get(\PDO::class));
+        },
+        OrderServiceInterface::class => function($c) {
+            return new OrderService($c->get(\PDO::class));
+        },
+        UserServiceInterface::class => function($c) {
+            return new UserService($c->get(\PDO::class));
+        },
+        EmailServiceInterface::class => function($c) {
+            return new EmailService($c->get(SettingsServiceInterface::class), $c->get(LoggerInterface::class));
+        },
+        SecurityServiceInterface::class => function($c) {
+            return new SecurityService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+        },
+        BackupServiceInterface::class => function($c) {
+            return new BackupService($c->get(\PDO::class));
+        },
+        DeliveryServiceInterface::class => function($c) {
+            return new DeliveryService($c->get(\PDO::class));
         },
     ];
 };

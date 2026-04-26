@@ -2,20 +2,20 @@
 namespace App\Controllers;
 
 use App\Core\Renderer;
-use App\Services\AuthService;
-use App\Services\SecurityService;
-use App\Services\EmailService;
-use App\Services\OrderService;
-use App\Services\UserService;
+use App\Services\AuthServiceInterface;
+use App\Services\SecurityServiceInterface;
+use App\Services\EmailServiceInterface;
+use App\Services\OrderServiceInterface;
+use App\Services\UserServiceInterface;
 
 class AccountController {
     public function __construct(
-        private OrderService $orderService,
-        private UserService $userService,
+        private OrderServiceInterface $orderService,
+        private UserServiceInterface $userService,
         private Renderer $renderer,
-        private AuthService $auth,
-        private SecurityService $security,
-        private EmailService $email,
+        private AuthServiceInterface $auth,
+        private SecurityServiceInterface $security,
+        private EmailServiceInterface $email,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 

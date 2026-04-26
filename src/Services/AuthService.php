@@ -5,12 +5,12 @@ use App\Core\Database;
 
 use App\Models\User;
 
-class AuthService {
+class AuthService implements AuthServiceInterface {
     private const COOKIE_NAME = 'remember_token';
 
     public function __construct(
         private \PDO $db,
-        private SettingsService $settings
+        private SettingsServiceInterface $settings
     ) {}
 
     public function sessionStart(): void {

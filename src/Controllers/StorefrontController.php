@@ -2,13 +2,13 @@
 namespace App\Controllers;
 
 use App\Core\Renderer;
-use App\Services\ProductService;
-use App\Services\CategoryService;
+use App\Services\ProductServiceInterface;
+use App\Services\CategoryServiceInterface;
 
 class StorefrontController {
     public function __construct(
-        private ProductService $productService,
-        private CategoryService $categoryService,
+        private ProductServiceInterface $productService,
+        private CategoryServiceInterface $categoryService,
         private Renderer $renderer
     ) {}
 

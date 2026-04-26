@@ -3,12 +3,13 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use App\Services\SecurityServiceInterface;
 use App\Services\SecurityService;
 
 use App\Core\Database;
 
 class SecurityServiceTest extends TestCase {
-    private SecurityService $security;
+    private SecurityServiceInterface $security;
 
     public function setUp() {
         $_SESSION = [];

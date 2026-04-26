@@ -3,12 +3,13 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use App\Services\UserServiceInterface;
 use App\Services\UserService;
 use App\Models\User;
 use App\Core\Database;
 
 class UserServiceTest extends TestCase {
-    private UserService $service;
+    private UserServiceInterface $service;
     private \PDO $db;
 
     public function setUp() {

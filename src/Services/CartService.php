@@ -1,10 +1,10 @@
 <?php
 namespace App\Services;
 
-class CartService {
+class CartService implements CartServiceInterface {
     public function __construct(
-        private ProductService $productService,
-        private AuthService $auth
+        private ProductServiceInterface $productService,
+        private AuthServiceInterface $auth
     ) {}
 
     public function get(): array {

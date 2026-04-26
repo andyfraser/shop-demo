@@ -3,12 +3,13 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use App\Services\AuthServiceInterface;
 use App\Services\AuthService;
 use App\Services\SettingsService;
 use App\Core\Database;
 
 class AuthServiceTest extends TestCase {
-    private AuthService $auth;
+    private AuthServiceInterface $auth;
     private \PDO $db;
 
     public function setUp() {

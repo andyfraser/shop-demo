@@ -2,15 +2,15 @@
 namespace App\Controllers;
 
 use App\Core\Renderer;
-use App\Services\SecurityService;
-use App\Services\SettingsService;
+use App\Services\SecurityServiceInterface;
+use App\Services\SettingsServiceInterface;
 use App\Models\Settings;
 
 class AdminSettingsController {
     public function __construct(
         private Renderer $renderer,
-        private SecurityService $securityService,
-        private SettingsService $settingsService,
+        private SecurityServiceInterface $securityService,
+        private SettingsServiceInterface $settingsService,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 

@@ -3,12 +3,13 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use App\Services\SettingsServiceInterface;
 use App\Services\SettingsService;
 use App\Models\Settings;
 use App\Core\Database;
 
 class SettingsServiceTest extends TestCase {
-    private SettingsService $service;
+    private SettingsServiceInterface $service;
     private \PDO $db;
 
     public function setUp() {

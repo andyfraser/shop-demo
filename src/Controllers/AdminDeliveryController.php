@@ -3,15 +3,15 @@ namespace App\Controllers;
 
 use App\Core\Renderer;
 use App\Core\Validator;
-use App\Services\DeliveryService;
-use App\Services\SecurityService;
+use App\Services\DeliveryServiceInterface;
+use App\Services\SecurityServiceInterface;
 
 class AdminDeliveryController {
     public function __construct(
         private Renderer $renderer,
         private Validator $validator,
-        private DeliveryService $delivery,
-        private SecurityService $security,
+        private DeliveryServiceInterface $delivery,
+        private SecurityServiceInterface $security,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 

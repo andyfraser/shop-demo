@@ -3,7 +3,7 @@ namespace App\Services;
 
 use App\Models\Settings;
 
-class SettingsService {
+class SettingsService implements SettingsServiceInterface {
     private ?Settings $settings = null;
 
     public function __construct(private \PDO $db) {}

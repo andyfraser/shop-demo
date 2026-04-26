@@ -3,15 +3,17 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use App\Services\OrderServiceInterface;
 use App\Services\OrderService;
+use App\Services\ProductServiceInterface;
 use App\Services\ProductService;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Core\Database;
 
 class OrderServiceTest extends TestCase {
-    private OrderService $orderService;
-    private ProductService $productService;
+    private OrderServiceInterface $orderService;
+    private ProductServiceInterface $productService;
     private \PDO $db;
 
     public function setUp() {

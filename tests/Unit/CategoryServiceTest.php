@@ -3,12 +3,13 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use App\Services\CategoryServiceInterface;
 use App\Services\CategoryService;
 use App\Models\Category;
 use App\Core\Database;
 
 class CategoryServiceTest extends TestCase {
-    private CategoryService $service;
+    private CategoryServiceInterface $service;
     private \PDO $db;
 
     public function setUp() {

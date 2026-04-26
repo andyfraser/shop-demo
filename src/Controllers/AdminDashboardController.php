@@ -2,18 +2,18 @@
 namespace App\Controllers;
 
 use App\Core\Renderer;
-use App\Services\SettingsService;
-use App\Services\ProductService;
-use App\Services\OrderService;
-use App\Services\UserService;
+use App\Services\SettingsServiceInterface;
+use App\Services\ProductServiceInterface;
+use App\Services\OrderServiceInterface;
+use App\Services\UserServiceInterface;
 
 class AdminDashboardController {
     public function __construct(
         private Renderer $renderer,
-        private SettingsService $settingsService,
-        private ProductService $productService,
-        private OrderService $orderService,
-        private UserService $userService
+        private SettingsServiceInterface $settingsService,
+        private ProductServiceInterface $productService,
+        private OrderServiceInterface $orderService,
+        private UserServiceInterface $userService
     ) {}
 
     public function index() {

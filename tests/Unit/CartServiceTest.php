@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use App\Services\CartServiceInterface;
 use App\Services\CartService;
 
 use App\Core\Database;
@@ -11,7 +12,7 @@ use App\Services\ProductService;
 use App\Services\SettingsService;
 
 class CartServiceTest extends TestCase {
-    private CartService $cart;
+    private CartServiceInterface $cart;
 
     public function setUp() {
         $_SESSION['cart'] = [];

@@ -3,17 +3,17 @@ namespace App\Controllers;
 
 use App\Core\Renderer;
 use App\Core\Validator;
-use App\Services\SecurityService;
-use App\Services\SettingsService;
-use App\Services\UserService;
+use App\Services\SecurityServiceInterface;
+use App\Services\SettingsServiceInterface;
+use App\Services\UserServiceInterface;
 
 class AdminUsersController {
     public function __construct(
-        private UserService $userService,
+        private UserServiceInterface $userService,
         private Renderer $renderer,
         private Validator $validator,
-        private SecurityService $security,
-        private SettingsService $settings,
+        private SecurityServiceInterface $security,
+        private SettingsServiceInterface $settings,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 

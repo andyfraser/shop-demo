@@ -3,12 +3,13 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use App\Services\ProductServiceInterface;
 use App\Services\ProductService;
 use App\Models\Product;
 use App\Core\Database;
 
 class ProductServiceTest extends TestCase {
-    private ProductService $service;
+    private ProductServiceInterface $service;
     private \PDO $db;
 
     public function setUp() {

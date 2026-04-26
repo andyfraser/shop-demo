@@ -5,7 +5,7 @@ use App\Core\Database;
 use PDO;
 use Exception;
 
-class BackupService {
+class BackupService implements BackupServiceInterface {
     public function __construct(private PDO $db) {}
 
     public function export(): array {

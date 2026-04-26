@@ -78,7 +78,7 @@ The project includes a custom vanilla PHP unit testing framework (no external de
 php tests/run.php
 ```
 
-This will run all tests in the `tests/Unit/` directory and report on pass/fail status and assertion counts.
+This will run all tests in the `tests/Unit/` directory and report on pass/fail status and assertion counts. The test suite includes specific tests for verifying the Dependency Injection container's ability to map interfaces to concrete implementations.
 
 ---
 
@@ -115,7 +115,7 @@ shop-demo/
 │
 ├── config/                 # Application configuration files
 │   ├── routes.php          # Route definitions
-│   └── services.php        # DI service registrations
+│   └── services.php        # DI service registrations (Interface to Implementation)
 │
 ├── tests/                  # Custom unit testing framework
 │   ├── run.php             # CLI test runner
@@ -125,12 +125,13 @@ shop-demo/
 ├── src/
 │   ├── Core/
 │   │   ├── Autoloader.php  # PSR-4 style class autoloader (supports App\ and Psr\)
-│   │   ├── Container.php   # Dependency Injection container with autowiring
+│   │   ├── Container.php   # DI container with autowiring and interface mapping
 │   │   ├── Database.php    # Multi-driver PDO connection factory + migrations
 │   │   ├── FileLogger.php  # PSR-3 compliant file-based logger
 │   │   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
 │   │   ├── Router.php      # HTTP router with middleware and DI support
 │   │   └── Validator.php   # Field validation logic
+│   │   └── ViewComposer.php # Shared view data logic
 │   │
 │   ├── Psr/
 │   │   └── Log/            # Standard PSR-3 logging interfaces
@@ -138,25 +139,28 @@ shop-demo/
 │   ├── Models/             # Data models (User, Product, Order, Category, etc.)
 │   │
 │   ├── Controllers/
-│   │   ├── StorefrontController.php   # Home, search, category, product pages
+│   │   ├── AccountController.php      # Customer account, order history, address
+│   │   ├── AdminBackupController.php
+│   │   ├── AdminCategoriesController.php
+│   │   ├── AdminDashboardController.php
+│   │   ├── AdminDeliveryController.php
+│   │   ├── AdminOrdersController.php
+│   │   ├── AdminProductsController.php
+│   │   ├── AdminSettingsController.php
+│   │   ├── AdminUsersController.php
 │   │   ├── AuthController.php         # Login, register, logout, email verification
 │   │   ├── CartController.php         # Cart view, add, update (AJAX + form)
 │   │   ├── CheckoutController.php     # Checkout form and order processing
-│   │   ├── AccountController.php      # Customer account, order history, address
-│   │   ├── AdminDashboardController.php
-│   │   ├── AdminCategoriesController.php
-│   │   ├── AdminProductsController.php
-│   │   ├── AdminOrdersController.php
-│   │   ├── AdminUsersController.php
-│   │   ├── AdminSettingsController.php
-│   │   └── AdminDeliveryController.php
+│   │   └── StorefrontController.php   # Home, search, category, product pages
 │   │
 │   ├── Middleware/
 │   │   ├── AuthMiddleware.php          # Requires authenticated session
 │   │   └── AdminMiddleware.php         # Requires admin role
 │   │
 │   ├── Services/
+│   │   ├── *ServiceInterface.php       # Contract definitions for all services
 │   │   ├── AuthService.php             # Session login / logout / current user
+│   │   ├── BackupService.php           # DB backup and restore logic
 │   │   ├── CartService.php             # Session-based cart operations
 │   │   ├── CategoryService.php         # Category hierarchy and CRUD
 │   │   ├── DeliveryService.php         # DB-backed delivery options management
@@ -167,41 +171,27 @@ shop-demo/
 │   │   ├── SettingsService.php         # DB-backed key/value settings with defaults
 │   │   └── UserService.php             # User management and profile updates
 │   │
-│   └── Helpers.php         # Global helpers: h(), money(), settings(), redirect(), flash(),
-│                           #   csrf_field(), csrf_token(), current_user(), is_ajax(),
-│                           #   product_img(), slugify(), get_category_tree(), get_category_flat(), get_breadcrumb()
+│   └── Helpers.php         # Global helpers
 │
 ├── templates/              # HTML-only templates — no queries or redirects
-│   ├── header.php
-│   ├── footer.php
-│   ├── home.php
-│   ├── category.php
-│   ├── product.php
-│   ├── search.php
-│   ├── cart.php
-│   ├── checkout.php
-│   ├── order_confirm.php
-│   ├── account.php
-│   ├── login.php
-│   ├── register.php
-│   ├── 404.php             # Custom 404 error page
-│   ├── 500.php             # Custom 500 error page
-│   └── admin/
-│       ├── header.php / footer.php
-│       ├── dashboard.php
-│       ├── categories_list.php / categories_form.php
-│       ├── products_list.php / products_form.php
-│       ├── delivery_list.php / delivery_form.php
-│       ├── orders_list.php / orders_detail.php
-│       ├── users_list.php / users_form.php
-│       └── settings.php
+│   ├── header.php / footer.php
+│   ├── home.php / category.php / product.php / products.php / search.php
+│   ├── cart.php / checkout.php / order_confirm.php / account.php
+│   ├── login.php / register.php / 404.php / 500.php
+│   ├── admin/
+│   │   ├── header.php / footer.php / dashboard.php
+│   │   ├── categories_list.php / categories_form.php
+│   │   ├── products_list.php / products_form.php
+│   │   ├── delivery_list.php / delivery_form.php
+│   │   ├── orders_list.php / orders_detail.php
+│   │   ├── users_list.php / users_form.php
+│   │   ├── settings.php / backup.php
+│   └── emails/
+│       ├── layout.php / verification.php / order_confirmation.php / order_status.php
 │
 └── public/
-    ├── css/
-    │   ├── shop.css        # Storefront styles (design tokens, responsive layout)
-    │   └── admin.css       # Admin panel styles
-    ├── js/
-    │   └── shop.js         # AJAX cart, toast notifications, dynamic UI
+    ├── css/                # Storefront and Admin styles
+    ├── js/                 # AJAX cart and UI logic
     └── images/             # Uploaded and demo product images
 ```
 
@@ -209,28 +199,38 @@ shop-demo/
 
 ## Architecture
 
-All requests enter through `index.php` (front controller), which bootstraps the **Dependency Injection (DI) Container**, registers the autoloader, defines constants, and dispatches to `src/Core/Router`. Common icon routes (like `/favicon.ico` or `/apple-touch-icon.png`) are explicitly handled to prevent 404 errors. 
+**Dependency Injection & Interfaces:** The application follows the **Dependency Inversion Principle**. Every service (e.g., `ProductService`) has a corresponding interface (e.g., `ProductServiceInterface`). 
+- **Centralized Mapping:** Service registrations are managed in `config/services.php`, mapping interfaces to their concrete implementations.
+- **Constructor Injection:** Controllers, middlewares, and services receive their dependencies via interfaces in their constructors. 
+- **Decoupling:** This design decouples business logic from specific implementations, allowing for easier testing and future extensibility (e.g., swapping a local `FileLogger` for a different PSR-3 implementation).
 
-**Error Handling:** The application includes a global error and exception handler. In debug mode, detailed errors are displayed. In production, errors are logged to `logs/app.log` and a user-friendly `500.php` template is rendered.
+**Front Controller:** All requests enter through `index.php`, which bootstraps the **Dependency Injection (DI) Container**, registers the autoloader, defines constants, and dispatches to `src/Core/Router`. 
 
-**Dependency Injection:** The application uses a custom `Container` for managing object lifecycles and dependencies. Service registrations are centralized in `config/services.php`. Controllers and services receive their dependencies via their constructors using PHP 8 property promotion. The `Router` uses the container to automatically instantiate controllers with all required dependencies (autowiring).
+**Error Handling:** The application includes a global error and exception handler. In production, errors are logged to `logs/app.log` and a user-friendly `500.php` template is rendered.
 
-**Models:** Data is represented by Model classes in `src/Models/`. These classes encapsulate data structure and provide helper methods (e.g., `Order::getStatusBadgeClass()`), moving away from raw associative arrays.
+**Models:** Data is represented by Model classes in `src/Models/`. These classes encapsulate data structure and provide helper methods (e.g., `Order::getStatusBadgeClass()`).
 
-**Rendering:** Controllers fetch data and call `$this->renderer->render('template_name', ['var' => $val])`. The renderer extracts the data array, auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`), and wraps the template with `header.php` / `footer.php`. Admin pages use `adminRender()`.
+**Rendering:** Controllers fetch data and call `$this->renderer->render()`. The renderer auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`).
 
-**Database:** Support for SQLite and MySQL via PDO. The `PDO` instance is registered as a singleton in the DI container. The appropriate schema (`sqlite_schema.sql` or `mysql_schema.sql`) runs automatically on first connection. Additive column migrations also run on init so existing databases are upgraded without data loss.
+**Database:** Support for SQLite and MySQL via PDO. The appropriate schema runs automatically on first connection. 
 
-**Session cart:** Stored in `$_SESSION['cart']` as `[product_id => quantity]`, managed by the instance-based `CartService`.
+**Security:** Every POST form includes a CSRF token (`csrf_field()`). Login and registration are rate-limited. Admin routes are protected by `AdminMiddleware`.
 
-**Security:** Every POST form includes a CSRF token (`csrf_field()`), verified by `$this->securityService->verifyCsrf()`. Login and registration are rate-limited. Admin routes are protected by `AdminMiddleware`, which also uses DI to access `AuthService`.
+---
+
+## Adding a New Service
+
+1. Create a new interface in `src/Services/` (e.g., `ReportingServiceInterface.php`).
+2. Create a concrete class that implements this interface (e.g., `ReportingService.php`).
+3. Register the mapping in `config/services.php`.
+4. Type-hint the interface in the constructor of any controller or service that needs it.
 
 ---
 
 ## Adding a New Route
 
-1. Register the route in `index.php` with `$router->get()` or `$router->post()`.
-2. Add the action method to the appropriate controller in `src/Controllers/`. Ensure the controller defines its dependencies in the constructor for autowiring.
+1. Register the route in `config/routes.php`.
+2. Add the action method to the appropriate controller in `src/Controllers/`. Ensure the controller defines its dependencies (via interfaces) in the constructor for autowiring.
 3. Create a template in `templates/` and call `$this->renderer->render()` from the controller.
 
 ---
@@ -254,4 +254,3 @@ This application uses modern CSS (Grid, Flexbox gap, CSS variables, `aspect-rati
 ## No External Dependencies
 
 Do not add Composer packages or any external libraries. Use only PHP 8 built-ins.
-

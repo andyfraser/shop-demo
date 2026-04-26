@@ -3,21 +3,21 @@ namespace App\Controllers;
 
 use App\Core\Renderer;
 use App\Core\Validator;
-use App\Services\AuthService;
-use App\Services\SecurityService;
-use App\Services\SettingsService;
-use App\Services\EmailService;
-use App\Services\UserService;
+use App\Services\AuthServiceInterface;
+use App\Services\SecurityServiceInterface;
+use App\Services\SettingsServiceInterface;
+use App\Services\EmailServiceInterface;
+use App\Services\UserServiceInterface;
 
 class AuthController {
     public function __construct(
         private \PDO $db,
         private Renderer $renderer,
-        private AuthService $authService,
-        private SecurityService $securityService,
-        private SettingsService $settingsService,
-        private EmailService $emailService,
-        private UserService $userService,
+        private AuthServiceInterface $authService,
+        private SecurityServiceInterface $securityService,
+        private SettingsServiceInterface $settingsService,
+        private EmailServiceInterface $emailService,
+        private UserServiceInterface $userService,
         private Validator $validator,
         private \Psr\Log\LoggerInterface $logger
     ) {}

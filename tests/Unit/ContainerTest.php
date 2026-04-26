@@ -44,12 +44,24 @@ class ContainerTest extends TestCase {
         $this->assertTrue($instance->dep instanceof DummyClassNoConstructor);
     }
 
+    public function testInterfaceMapping() {
+        $this->container->set(DummyInterface::class, function() {
+            return new DummyImplementation();
+        });
+
+        $instance = $this->container->get(DummyInterface::class);
+        $this->assertTrue($instance instanceof DummyImplementation);
+        $this->assertTrue($instance instanceof DummyInterface);
+    }
+
     public function testResolutionException() {
         $this->expectException(Exception::class);
         $this->container->get('NonExistentClass');
     }
 }
 
+interface DummyInterface {}
+class DummyImplementation implements DummyInterface {}
 class DummyClassNoConstructor {}
 class DummyClassWithDependency {
     public function __construct(public DummyClassNoConstructor $dep) {}

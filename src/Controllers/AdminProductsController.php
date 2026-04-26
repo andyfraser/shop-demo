@@ -3,20 +3,20 @@ namespace App\Controllers;
 
 use App\Core\Renderer;
 use App\Core\Validator;
-use App\Services\ProductService;
-use App\Services\CategoryService;
-use App\Services\SecurityService;
-use App\Services\SettingsService;
+use App\Services\ProductServiceInterface;
+use App\Services\CategoryServiceInterface;
+use App\Services\SecurityServiceInterface;
+use App\Services\SettingsServiceInterface;
 use RuntimeException;
 
 class AdminProductsController {
     public function __construct(
-        private ProductService $productService,
-        private CategoryService $categoryService,
+        private ProductServiceInterface $productService,
+        private CategoryServiceInterface $categoryService,
         private Renderer $renderer,
         private Validator $validator,
-        private SecurityService $security,
-        private SettingsService $settings,
+        private SecurityServiceInterface $security,
+        private SettingsServiceInterface $settings,
         private \Psr\Log\LoggerInterface $logger
     ) {}
     

@@ -3,15 +3,15 @@ namespace App\Controllers;
 
 use App\Core\Renderer;
 use App\Core\Validator;
-use App\Services\CategoryService;
-use App\Services\SecurityService;
+use App\Services\CategoryServiceInterface;
+use App\Services\SecurityServiceInterface;
 
 class AdminCategoriesController {
     public function __construct(
-        private CategoryService $categoryService,
+        private CategoryServiceInterface $categoryService,
         private Renderer $renderer,
         private Validator $validator,
-        private SecurityService $security,
+        private SecurityServiceInterface $security,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 

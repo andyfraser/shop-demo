@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Category;
 
-class CategoryService {
+class CategoryService implements CategoryServiceInterface {
     public function __construct(
         private \PDO $db
     ) {}

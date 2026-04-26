@@ -1,9 +1,9 @@
 <?php
 namespace App\Services;
 
-class EmailService {
+class EmailService implements EmailServiceInterface {
     public function __construct(
-        private SettingsService $settings,
+        private SettingsServiceInterface $settings,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 

@@ -3,7 +3,7 @@ namespace App\Services;
 
 use App\Core\Database;
 
-class SecurityService {
+class SecurityService implements SecurityServiceInterface {
     public function __construct(
         private \PDO $db,
         private \Psr\Log\LoggerInterface $logger
