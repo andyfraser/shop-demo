@@ -34,6 +34,9 @@ use App\Services\BackupService;
 use App\Services\DeliveryServiceInterface;
 use App\Services\DeliveryService;
 
+use App\Services\VatServiceInterface;
+use App\Services\VatService;
+
 return function(array $config) {
     return [
         // PSR-3 compliant file logger
@@ -53,6 +56,9 @@ return function(array $config) {
         SettingsServiceInterface::class => function($c) {
             return new SettingsService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
+        VatServiceInterface::class => function($c) {
+            return new VatService();
+        },
         AuthServiceInterface::class => function($c) {
             return new AuthService($c->get(\PDO::class), $c->get(SettingsServiceInterface::class), $c->get(LoggerInterface::class));
         },
@@ -66,7 +72,7 @@ return function(array $config) {
             return new CategoryService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
         OrderServiceInterface::class => function($c) {
-            return new OrderService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+            return new OrderService($c->get(\PDO::class), $c->get(LoggerInterface::class), $c->get(VatServiceInterface::class));
         },
         UserServiceInterface::class => function($c) {
             return new UserService($c->get(\PDO::class), $c->get(LoggerInterface::class));

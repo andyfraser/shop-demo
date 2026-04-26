@@ -92,7 +92,7 @@ class StorefrontController {
         
         $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
-        $breadcrumb = get_breadcrumb($category->id);
+        $breadcrumb = $this->categoryService->getBreadcrumb($category->id);
 
         $this->renderer->render('category', [
             'page_title'     => $category->name,
@@ -138,7 +138,7 @@ class StorefrontController {
             exit('Product not found.');
         }
 
-        $breadcrumb = $product->category_id ? get_breadcrumb($product->category_id) : [];
+        $breadcrumb = $product->category_id ? $this->categoryService->getBreadcrumb($product->category_id) : [];
 
         // Related products logic
         $related_products = $this->productService->getByCategory([$product->category_id], 4, 1, 'featured');

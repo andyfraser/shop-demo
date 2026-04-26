@@ -9,15 +9,11 @@ class Database {
 
     public static function getConnection(): PDO {
         if (self::$pdo === null) {
-            $config = defined('DB_CONFIG') ? DB_CONFIG : [
-                'driver' => 'sqlite',
-                'path'   => __DIR__ . '/../../shop.db',
-            ];
-
+            $config = self::getConfig();
             $driver = $config['driver'] ?? 'sqlite';
 
             if ($driver === 'sqlite') {
-                $dbPath = $config['path'] ?? __DIR__ . '/../../shop.db';
+                $dbPath = self::getSqlitePath($config);
                 $isNewDatabase = !file_exists($dbPath);
 
                 self::$pdo = new PDO('sqlite:' . $dbPath);
@@ -66,6 +62,18 @@ class Database {
 
     public static function closeConnection(): void {
         self::$pdo = null;
+    }
+
+    public static function getConfig(): array {
+        return defined('DB_CONFIG') ? DB_CONFIG : [
+            'driver' => 'sqlite',
+            'path'   => __DIR__ . '/../../shop.db',
+        ];
+    }
+
+    public static function getSqlitePath(?array $config = null): string {
+        $config = $config ?? self::getConfig();
+        return $config['path'] ?? __DIR__ . '/../../shop.db';
     }
 
     private static function createMySQLDatabase($host, $dbname, $user, $pass, $charset): void {

@@ -11,6 +11,7 @@ interface CategoryServiceInterface {
     public function getTree(): array;
     public function getFlat(): array;
     public function getSubcategories(int $parentId): array;
+    public function getBreadcrumb(int $categoryId): array;
     public function save(array|Category $data, int $id = 0): int;
     public function delete(int $id): void;
 }

@@ -13,8 +13,7 @@ class BackupService implements BackupServiceInterface {
         $timestamp = date('Ymd_His');
 
         if ($driver === 'sqlite') {
-            $config = DB_CONFIG;
-            $dbPath = $config['path'] ?? __DIR__ . '/../../shop.db';
+            $dbPath = Database::getSqlitePath();
             
             if (!file_exists($dbPath)) {
                 throw new Exception("SQLite database file not found at: " . $dbPath);
@@ -94,8 +93,7 @@ class BackupService implements BackupServiceInterface {
                 throw new Exception("The uploaded file is not a valid SQLite 3 database.");
             }
 
-            $config = DB_CONFIG;
-            $dbPath = $config['path'] ?? __DIR__ . '/../../shop.db';
+            $dbPath = Database::getSqlitePath();
 
             // Close PDO connection to release lock
             Database::closeConnection();

@@ -23,9 +23,4 @@ class User extends Model {
     public function isVerified(): bool {
         return (bool)$this->is_verified;
     }
-
-    public function getGravatarUrl(int $size = 80): string {
-        $hash = md5(strtolower(trim($this->email)));
-        return "https://www.gravatar.com/avatar/$hash?s=$size&d=mp";
-    }
 }

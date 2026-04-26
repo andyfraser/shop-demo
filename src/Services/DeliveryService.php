@@ -4,28 +4,29 @@ namespace App\Services;
 
 use App\Models\DeliveryOption;
 use Psr\Log\LoggerInterface;
+use PDO;
 
 class DeliveryService implements DeliveryServiceInterface {
     public function __construct(
-        private \PDO $db,
+        private PDO $db,
         private LoggerInterface $logger
     ) {}
 
     public function all(): array {
         return $this->db
             ->query("SELECT * FROM delivery_options ORDER BY price ASC")
-            ->fetchAll(\PDO::FETCH_CLASS, DeliveryOption::class, [$this->logger]);
+            ->fetchAll(PDO::FETCH_CLASS, DeliveryOption::class, [$this->logger]);
     }
 
     public function active(float $orderTotal = 0): array {
-        return $this->db
-            ->query("SELECT * FROM delivery_options WHERE active = 1 AND min_order_total <= $orderTotal ORDER BY price ASC")
-            ->fetchAll(\PDO::FETCH_CLASS, DeliveryOption::class, [$this->logger]);
+        $stmt = $this->db->prepare("SELECT * FROM delivery_options WHERE active = 1 AND min_order_total <= ? ORDER BY price ASC");
+        $stmt->execute([$orderTotal]);
+        return $stmt->fetchAll(PDO::FETCH_CLASS, DeliveryOption::class, [$this->logger]);
     }
 
     public function get(int $id): ?DeliveryOption {
         $stmt = $this->db->prepare("SELECT * FROM delivery_options WHERE id = ?");
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, DeliveryOption::class, [$this->logger]);
+        $stmt->setFetchMode(PDO::FETCH_CLASS, DeliveryOption::class, [$this->logger]);
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }

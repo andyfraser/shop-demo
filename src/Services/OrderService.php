@@ -6,11 +6,13 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Psr\Log\LoggerInterface;
+use App\Services\VatServiceInterface;
 
 class OrderService implements OrderServiceInterface {
     public function __construct(
         private \PDO $db,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private VatServiceInterface $vatService
     ) {}
 
     /**
@@ -56,7 +58,7 @@ class OrderService implements OrderServiceInterface {
                     $qty,
                     $product->price,
                     $product->vat_rate,
-                    $product->getVatAmount($qty)
+                    $this->vatService->calculateVatFromGross($product->getSubtotal($qty), $product->vat_rate)
                 ]);
 
                 $stockStmt->execute([$qty, $product->id]);
@@ -117,19 +119,24 @@ class OrderService implements OrderServiceInterface {
             Order::STATUS_DELIVERED,
             Order::STATUS_CANCELLED
         ];
-        $where = ($status && in_array($status, $allowed))
-            ? "WHERE o.status = " . $this->db->quote($status)
-            : '';
+        
+        $sql = "SELECT o.*, 
+                       COALESCE(u.name, o.customer_name) as user_name,
+                       COALESCE(u.email, o.customer_email) as user_email
+                FROM orders o
+                LEFT JOIN users u ON o.user_id = u.id";
+        
+        $params = [];
+        if ($status && in_array($status, $allowed)) {
+            $sql .= " WHERE o.status = ?";
+            $params[] = $status;
+        }
+        
+        $sql .= " ORDER BY o.created_at DESC";
 
-        return $this->db->query(
-            "SELECT o.*, 
-                    COALESCE(u.name, o.customer_name) as user_name,
-                    COALESCE(u.email, o.customer_email) as user_email
-             FROM orders o
-             LEFT JOIN users u ON o.user_id = u.id
-             $where
-             ORDER BY o.created_at DESC"
-        )->fetchAll(\PDO::FETCH_CLASS, Order::class, [$this->logger]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Order::class, [$this->logger]);
     }
 
     /**

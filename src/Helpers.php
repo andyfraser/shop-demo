@@ -67,25 +67,3 @@ function csrf_token(): string {
 function is_ajax(): bool {
     return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
 }
-
-function is_new_product(string $created_at): bool {
-    $ts = strtotime($created_at);
-    return (time() - $ts) < (7 * 24 * 60 * 60); // 7 days
-}
-
-function get_breadcrumb(int $category_id): array {
-    $crumbs = [];
-    $container = Container::getInstance();
-    $db = $container->get(\PDO::class);
-    $logger = $container->get(\Psr\Log\LoggerInterface::class);
-    $all = $db->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_CLASS, \App\Models\Category::class, [$logger]);
-    $map = [];
-    foreach ($all as $c) $map[$c->id] = $c;
-    
-    $current = $map[$category_id] ?? null;
-    while ($current) {
-        array_unshift($crumbs, $current);
-        $current = $current->parent_id ? ($map[$current->parent_id] ?? null) : null;
-    }
-    return $crumbs;
-}

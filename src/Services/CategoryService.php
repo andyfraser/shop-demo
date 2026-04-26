@@ -93,6 +93,23 @@ class CategoryService implements CategoryServiceInterface {
     }
 
     /**
+     * Get breadcrumb for a given category.
+     */
+    public function getBreadcrumb(int $categoryId): array {
+        $crumbs = [];
+        $all = $this->getAll();
+        $map = [];
+        foreach ($all as $c) $map[$c->id] = $c;
+
+        $current = $map[$categoryId] ?? null;
+        while ($current) {
+            array_unshift($crumbs, $current);
+            $current = $current->parent_id ? ($map[$current->parent_id] ?? null) : null;
+        }
+        return $crumbs;
+    }
+
+    /**
      * Save (Create or Update) a category.
      */
     public function save(array|Category $data, int $id = 0): int {
