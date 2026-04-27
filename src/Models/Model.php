@@ -10,25 +10,44 @@ abstract class Model {
      * This avoids the need for #[AllowDynamicProperties] and prevents PHP 8.2+ deprecation notices.
      */
     protected array $unmappedData = [];
+/**
+ * Temporary storage for logs generated before the logger is initialized.
+ */
+private array $pendingLogs = [];
 
-    /**
-     * Proper Dependency Injection via constructor.
-     * All models require a logger to handle warnings consistently.
-     */
-    public function __construct(
-        protected LoggerInterface $logger
-    ) {}
-
-    /**
-     * Safety valve for unexpected database columns during hydration.
-     * Instead of creating a dynamic property, we store it in $unmappedData.
-     */
-    public function __set(string $name, mixed $value): void {
-        $className = static::class;
-        $this->logger->warning("Missing property '{$name}' in model '{$className}'. Data stored in unmappedData array.");
-        
-        $this->unmappedData[$name] = $value;
+/**
+ * Proper Dependency Injection via constructor.
+ * All models require a logger to handle warnings consistently.
+ */
+public function __construct(
+    protected LoggerInterface $logger
+) {
+    // Flush any logs that were stashed before the constructor was called
+    foreach ($this->pendingLogs as $log) {
+        $this->logger->log($log['level'], $log['message']);
     }
+    $this->pendingLogs = [];
+}
+
+/**
+ * Safety valve for unexpected database columns during hydration.
+ * Instead of creating a dynamic property, we store it in $unmappedData.
+ */
+public function __set(string $name, mixed $value): void {
+    $this->unmappedData[$name] = $value;
+    $className = static::class;
+    $message = "Missing property '{$name}' in model '{$className}'. Data stored in unmappedData array.";
+
+    if (isset($this->logger)) {
+        $this->logger->warning($message);
+    } else {
+        // Stash the log to be flushed in the constructor
+        $this->pendingLogs[] = [
+            'level' => \Psr\Log\LogLevel::WARNING,
+            'message' => $message
+        ];
+    }
+}
 
     /**
      * Magic getter to allow access to unmapped properties as if they were real.

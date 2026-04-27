@@ -68,9 +68,31 @@ class ModelTest extends TestCase {
 
     /**
      * PDO::FETCH_CLASS injects properties BEFORE the constructor is called.
-     * We can simulate this by setting properties on an uninitialized object 
-     * or by manually calling __set.
+     * We simulate this by creating an instance without constructor and setting a missing property.
      */
+    public function testPdoHydrationBeforeConstructor() {
+        $reflection = new \ReflectionClass(TestModel::class);
+        $model = $reflection->newInstanceWithoutConstructor();
+        
+        // This should NOT throw "Typed property App\Models\Model::$logger must not be accessed before initialization"
+        $model->unmapped_before_const = 'val';
+        
+        $this->assertEquals('val', $model->unmapped_before_const);
+        
+        // Now call constructor. It should flush the stashed log.
+        $logger = new MockLogger();
+        $model->__construct($logger);
+        
+        $this->assertCount(1, $logger->logs, 'Stashed log should be flushed during constructor');
+        $this->assertStringContainsString('unmapped_before_const', $logger->logs[0]['message']);
+
+        // Setting another one after constructor should log immediately
+        $model->unmapped_after_const = 'val2';
+        $this->assertEquals('val2', $model->unmapped_after_const);
+        $this->assertCount(2, $logger->logs, 'Second log should be added');
+        $this->assertStringContainsString('unmapped_after_const', $logger->logs[1]['message']);
+    }
+
     public function testPdoHydrationSimulation() {
         $logger = new MockLogger();
         

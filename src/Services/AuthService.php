@@ -38,12 +38,12 @@ class AuthService implements AuthServiceInterface {
         $token = $_COOKIE[self::COOKIE_NAME] ?? null;
         if ($token) {
             $stmt = $this->db->prepare(
-                "SELECT rt.user_id, rt.expires_at, u.*
+                "SELECT u.*
                  FROM remember_tokens rt
                  JOIN users u ON u.id = rt.user_id
                  WHERE rt.token = ? AND rt.expires_at > ?"
             );
-            $stmt->setFetchMode(\PDO::FETCH_CLASS, User::class, [$this->logger]);
+            $stmt->setFetchMode(\PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE, User::class, [$this->logger]);
             $stmt->execute([$token, time()]);
             $user = $stmt->fetch();
             
