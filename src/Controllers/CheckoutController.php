@@ -113,6 +113,7 @@ class CheckoutController {
                 // Convert items to array structure for email service
                 $emailItems = array_map(fn($i) => [
                     'name' => $i->product_name ?? $i->name,
+                    'variant_name' => $i->variant_name,
                     'quantity' => $i->quantity,
                     'unit_price' => $i->unit_price,
                     'vat_rate' => $i->vat_rate,

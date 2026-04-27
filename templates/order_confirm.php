@@ -33,6 +33,9 @@
       <div style="display:flex;justify-content:space-between;padding:.5rem 0;<?= $i < count($order_items) - 1 ? 'border-bottom:1px solid var(--line);' : '' ?>font-size:.875rem;">
         <span>
           <a href="/product/<?= h($item->slug) ?>"><?= h($item->name ?? $item->product_name) ?></a>
+          <?php if ($item->variant_name): ?>
+            <div style="font-size:.75rem;color:var(--ink-2);margin-top:.1rem;">Option: <?= h($item->variant_name) ?></div>
+          <?php endif; ?>
           × <?= $item->quantity ?>
         </span>
         <strong><?= money($item->getSubtotal()) ?></strong>

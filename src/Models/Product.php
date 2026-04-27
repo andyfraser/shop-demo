@@ -6,6 +6,7 @@ class Product extends Model {
     public int $id;
     public string $name;
     public string $slug;
+    public ?string $sku = null;
     public ?string $description = null;
     public float $price;
     public float $vat_rate;
@@ -14,6 +15,7 @@ class Product extends Model {
     public ?string $image = null;
     public int|bool $active;
     public int|bool $featured;
+    public int|bool $force_variant;
     public string $created_at;
 
     // Join fields (explicitly defined)

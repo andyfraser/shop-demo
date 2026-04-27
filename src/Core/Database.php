@@ -164,6 +164,16 @@ class Database {
         if (!in_array('vat_rate', $p_cols)) {
             $pdo->exec("ALTER TABLE products ADD COLUMN vat_rate REAL DEFAULT 20.0");
         }
+        if (!in_array('sku', $p_cols)) {
+            $type = ($driver === 'mysql') ? 'VARCHAR(255)' : 'TEXT';
+            // SQLite doesn't support adding UNIQUE columns via ALTER TABLE easily
+            $pdo->exec("ALTER TABLE products ADD COLUMN sku $type");
+            $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku ON products(sku)");
+        }
+        if (!in_array('force_variant', $p_cols)) {
+            $type = ($driver === 'mysql') ? 'TINYINT(1)' : 'INTEGER';
+            $pdo->exec("ALTER TABLE products ADD COLUMN force_variant $type DEFAULT 0");
+        }
 
         // Order Items table migrations
         if ($driver === 'sqlite') {
@@ -221,6 +231,39 @@ class Database {
                     expires_at INTEGER NOT NULL
                 )");
             }
+        }
+
+        // Product Variants table
+        if (!in_array('product_variants', $tables)) {
+            if ($driver === 'mysql') {
+                $pdo->exec("CREATE TABLE product_variants (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    product_id INT NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    sku VARCHAR(255) UNIQUE,
+                    price DOUBLE,
+                    stock INT DEFAULT 0,
+                    active TINYINT(1) DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB");
+            } else {
+                $pdo->exec("CREATE TABLE product_variants (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                    name TEXT NOT NULL,
+                    sku TEXT UNIQUE,
+                    price REAL,
+                    stock INTEGER DEFAULT 0,
+                    active INTEGER DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )");
+            }
+        }
+
+        // Add variant_id to order_items
+        if (!in_array('variant_id', $oi_cols)) {
+            $pdo->exec("ALTER TABLE order_items ADD COLUMN variant_id " . ($driver === 'mysql' ? 'INT' : 'INTEGER'));
         }
     }
 }

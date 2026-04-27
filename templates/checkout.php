@@ -61,9 +61,16 @@
           <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem;">Order Summary</h2>
           <?php foreach ($items as $item): 
              $p = $item['product'];
+             $v = $item['variant'] ?? null;
           ?>
             <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--line);font-size:.875rem;">
-              <span><?= h($p->name) ?> × <?= $item['qty'] ?></span>
+              <span>
+                <?= h($p->name) ?>
+                <?php if ($v): ?>
+                  <div style="font-size:0.75rem;color:var(--ink-2);margin-top:0.1rem;">Option: <?= h($v->name) ?></div>
+                <?php endif; ?>
+                × <?= $item['qty'] ?>
+              </span>
               <strong><?= money($item['subtotal']) ?></strong>
             </div>
           <?php endforeach; ?>

@@ -6,6 +6,7 @@ class OrderItem extends Model {
     public int $id;
     public int $order_id;
     public int $product_id;
+    public ?int $variant_id = null;
     public int $quantity;
     public float $unit_price;
     public float $vat_rate;
@@ -14,6 +15,7 @@ class OrderItem extends Model {
     // Join fields
     public ?string $name = null; // product name
     public ?string $product_name = null; // some queries use product_name
+    public ?string $variant_name = null;
     public ?string $slug = null; // product slug
 
     public function getSubtotal(): float {

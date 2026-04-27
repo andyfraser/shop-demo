@@ -69,6 +69,7 @@ if (addToCartForm) {
             const slug = addToCartForm.querySelector('[name=slug]').value;
             const data = await postAjax('/product/' + encodeURIComponent(slug), {
                 product_id: addToCartForm.querySelector('[name=product_id]').value,
+                variant_id: addToCartForm.querySelector('[name=variant_id]')?.value || '',
                 slug:       addToCartForm.querySelector('[name=slug]').value,
                 qty:        addToCartForm.querySelector('[name=qty]').value,
             });
@@ -133,7 +134,7 @@ if (cartForm) {
             updateCartBadge(data.cart_count);
 
             if (isRemove) {
-                const row = cartForm.querySelector(`tr[data-item-id="${submitter.value}"]`);
+                const row = cartForm.querySelector(`tr[data-item-key="${submitter.value}"]`);
                 if (row) {
                     row.style.transition = 'opacity .25s';
                     row.style.opacity = '0';
@@ -156,7 +157,7 @@ if (cartForm) {
             if (isUpdate) {
                 // Update each row subtotal
                 data.items.forEach(item => {
-                    const cell = cartForm.querySelector(`.item-subtotal[data-item-id="${item.id}"]`);
+                    const cell = cartForm.querySelector(`.item-subtotal[data-item-key="${item.key}"]`);
                     if (cell) cell.innerHTML = `<strong>${item.subtotal}</strong>`;
                 });
                 // Update totals

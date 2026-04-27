@@ -28,7 +28,14 @@
           <tbody>
             <?php foreach ($order_items as $item): ?>
               <tr>
-                <td><a href="/product/<?= h($item->slug) ?>"><?= h($item->product_name ?? $item->name) ?></a></td>
+                <td>
+                  <a href="/product/<?= h($item->slug) ?>"><?= h($item->product_name ?? $item->name) ?></a>
+                  <?php if ($item->variant_name): ?>
+                    <div style="font-size:0.8rem;color:var(--ink-2);margin-top:0.2rem;">
+                      Option: <?= h($item->variant_name) ?>
+                    </div>
+                  <?php endif; ?>
+                </td>
                 <td><?= money($item->unit_price) ?></td>
                 <td><?= (float)$item->vat_rate ?>%</td>
                 <td><?= $item->quantity ?></td>

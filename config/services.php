@@ -66,7 +66,7 @@ return function(array $config) {
             return new ProductService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
         CartServiceInterface::class => function($c) {
-            return new CartService($c->get(ProductServiceInterface::class), $c->get(AuthServiceInterface::class));
+            return new CartService($c->get(ProductServiceInterface::class), $c->get(AuthServiceInterface::class), $c->get(VatServiceInterface::class));
         },
         CategoryServiceInterface::class => function($c) {
             return new CategoryService($c->get(\PDO::class), $c->get(LoggerInterface::class));

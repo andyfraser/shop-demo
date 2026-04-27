@@ -34,8 +34,11 @@
               <tbody>
                 <?php foreach ($items as $item): 
                   $p = $item['product'];
+                  $v = $item['variant'] ?? null;
+                  $key = $item['key'];
+                  $maxStock = $v ? $v->stock : $p->stock;
                 ?>
-                  <tr data-item-id="<?= $p->id ?>">
+                  <tr data-item-key="<?= h($key) ?>">
                     <td style="width:80px;">
                       <?php product_img($p->image ?? '', $p->name, 'cart-thumb') ?>
                     </td>
@@ -43,15 +46,20 @@
                       <a href="/product/<?= h($p->slug) ?>" class="cart-product-name">
                         <?= h($p->name) ?>
                       </a>
+                      <?php if ($v): ?>
+                        <div style="font-size:0.85rem;color:var(--ink-2);margin-top:0.2rem;">
+                          Option: <?= h($v->name) ?>
+                        </div>
+                      <?php endif; ?>
                     </td>
-                    <td><?= money($p->price) ?></td>
+                    <td><?= money($item['unit_price']) ?></td>
                     <td>
-                      <input type="number" name="qty[<?= $p->id ?>]" value="<?= $item['qty'] ?>" min="0"
-                        max="<?= $p->stock ?>" class="form-control qty-ctrl">
+                      <input type="number" name="qty[<?= h($key) ?>]" value="<?= $item['qty'] ?>" min="0"
+                        max="<?= $maxStock ?>" class="form-control qty-ctrl">
                     </td>
-                    <td class="item-subtotal" data-item-id="<?= $p->id ?>"><strong><?= money($item['subtotal']) ?></strong></td>
+                    <td class="item-subtotal" data-item-key="<?= h($key) ?>"><strong><?= money($item['subtotal']) ?></strong></td>
                     <td>
-                      <button type="submit" name="remove" value="<?= $p->id ?>" class="btn btn-outline btn-sm"
+                      <button type="submit" name="remove" value="<?= h($key) ?>" class="btn btn-outline btn-sm"
                         style="padding:.3rem .7rem;color:var(--accent)">✕</button>
                     </td>
                   </tr>

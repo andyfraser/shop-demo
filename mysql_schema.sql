@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL UNIQUE,
+    sku VARCHAR(255) UNIQUE,
     description TEXT,
     price DOUBLE NOT NULL,
     vat_rate DOUBLE DEFAULT 20.0,
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS products (
     image VARCHAR(255),
     active TINYINT(1) DEFAULT 1,
     featured TINYINT(1) DEFAULT 0,
+    force_variant TINYINT(1) DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -64,10 +66,23 @@ CREATE TABLE IF NOT EXISTS order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT REFERENCES orders(id) ON DELETE CASCADE,
     product_id INT REFERENCES products(id),
+    variant_id INT REFERENCES product_variants(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
     unit_price DOUBLE NOT NULL,
     vat_rate DOUBLE DEFAULT 0.0,
     vat_amount DOUBLE DEFAULT 0.0
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS product_variants (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    sku VARCHAR(255) UNIQUE,
+    price DOUBLE,
+    stock INT DEFAULT 0,
+    active TINYINT(1) DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS rate_limits (

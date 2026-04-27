@@ -92,6 +92,7 @@ class AdminProductsController {
         
         $data = [
             'name'        => trim($_POST['name'] ?? ''),
+            'sku'         => trim($_POST['sku'] ?? ''),
             'description' => trim($_POST['description'] ?? ''),
             'price'       => (float)($_POST['price'] ?? 0),
             'vat_rate'    => (float)($_POST['vat_rate'] ?? 0),
@@ -100,6 +101,7 @@ class AdminProductsController {
             'image'       => $_POST['existing_image'] ?? null,
             'active'      => isset($_POST['active']) ? 1 : 0,
             'featured'    => isset($_POST['featured']) ? 1 : 0,
+            'force_variant' => isset($_POST['force_variant']) ? 1 : 0,
         ];
         $product_id = (int)($_POST['id'] ?? 0);
 
@@ -131,6 +133,30 @@ class AdminProductsController {
 
         if (!$errors) {
             $saved_id = $this->productService->save($data, $product_id);
+            $final_id = $product_id ?: $saved_id;
+
+            // Handle variants
+            if (isset($_POST['variants']) && is_array($_POST['variants'])) {
+                foreach ($_POST['variants'] as $v) {
+                    if (!empty($v['delete']) && !empty($v['id'])) {
+                        $this->productService->deleteVariant((int)$v['id']);
+                        continue;
+                    }
+
+                    if (empty($v['name'])) continue;
+
+                    $vData = [
+                        'product_id' => $final_id,
+                        'name'       => trim($v['name']),
+                        'sku'        => trim($v['sku'] ?? ''),
+                        'price'      => $v['price'] !== '' ? (float)$v['price'] : null,
+                        'stock'      => (int)($v['stock'] ?? 0),
+                        'active'     => 1
+                    ];
+                    $vId = !empty($v['id']) ? (int)$v['id'] : 0;
+                    $this->productService->saveVariant($vData, $vId);
+                }
+            }
 
             if ($product_id) {
                 $this->logger->info("Admin updated product: {name} (ID: {id})", [

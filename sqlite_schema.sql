@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
+    sku TEXT UNIQUE,
     description TEXT,
     price REAL NOT NULL,
     vat_rate REAL DEFAULT 20.0,
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS products (
     image TEXT,
     active INTEGER DEFAULT 1,
     featured INTEGER DEFAULT 0,
+    force_variant INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -64,10 +66,22 @@ CREATE TABLE IF NOT EXISTS order_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id),
+    variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL,
     quantity INTEGER NOT NULL,
     unit_price REAL NOT NULL,
     vat_rate REAL DEFAULT 0.0,
     vat_amount REAL DEFAULT 0.0
+);
+
+CREATE TABLE IF NOT EXISTS product_variants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    sku TEXT UNIQUE,
+    price REAL,
+    stock INTEGER DEFAULT 0,
+    active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS rate_limits (

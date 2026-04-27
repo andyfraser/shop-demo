@@ -35,19 +35,19 @@ class CartController
         $message = 'Cart updated.';
 
         if (isset($_POST['update'])) {
-            foreach (($_POST['qty'] ?? []) as $id => $qty) {
-                $this->cartService->update((int) $id, (int) $qty);
+            foreach (($_POST['qty'] ?? []) as $key => $qty) {
+                $this->cartService->update((string) $key, (int) $qty);
             }
         }
         if (isset($_POST['remove'])) {
-            $this->cartService->remove((int) $_POST['remove']);
+            $this->cartService->remove((string) $_POST['remove']);
             $message = 'Item removed.';
         }
 
         if (is_ajax()) {
             $items = $this->cartService->items();
             $lineItems = array_map(fn($i) => [
-                'id'       => $i['product']->id,
+                'key'      => $i['key'],
                 'subtotal' => money($i['subtotal']),
             ], $items);
 
@@ -77,10 +77,11 @@ class CartController
         }
 
         $productId = (int) ($_POST['product_id'] ?? 0);
+        $variantId = isset($_POST['variant_id']) && $_POST['variant_id'] !== '' ? (int)$_POST['variant_id'] : null;
         $slug = $slug ?: ($_POST['slug'] ?? '');
         $qty = max(1, (int) ($_POST['qty'] ?? 1));
 
-        $this->cartService->add($productId, $qty);
+        $this->cartService->add($productId, $qty, $variantId);
 
         if (is_ajax()) {
             header('Content-Type: application/json');

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Psr\Log\LoggerInterface;
 
 class ProductService implements ProductServiceInterface {
@@ -42,7 +43,11 @@ class ProductService implements ProductServiceInterface {
         $stmt = $this->db->prepare("SELECT * FROM products WHERE id = ?");
         $stmt->setFetchMode(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
         $stmt->execute([$id]);
-        return $stmt->fetch() ?: null;
+        $product = $stmt->fetch() ?: null;
+        if ($product) {
+            $product->variants = $this->getVariants($id);
+        }
+        return $product;
     }
 
     /**
@@ -57,7 +62,11 @@ class ProductService implements ProductServiceInterface {
         );
         $stmt->setFetchMode(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
         $stmt->execute([$slug]);
-        return $stmt->fetch() ?: null;
+        $product = $stmt->fetch() ?: null;
+        if ($product) {
+            $product->variants = $this->getVariants($product->id);
+        }
+        return $product;
     }
 
     /**
@@ -68,13 +77,13 @@ class ProductService implements ProductServiceInterface {
         $slug = slugify($name);
 
         $params = is_array($data) ? [
-            $data['name'], $slug, $data['description'], (float)$data['price'], (float)$data['vat_rate'],
+            $data['name'], $slug, $data['sku'] ?? null, $data['description'], (float)$data['price'], (float)$data['vat_rate'],
             (int)$data['stock'], $data['category_id'], $data['image'],
-            (int)$data['active'], (int)$data['featured']
+            (int)$data['active'], (int)$data['featured'], (int)($data['force_variant'] ?? 0)
         ] : [
-            $data->name, $slug, $data->description, $data->price, $data->vat_rate,
+            $data->name, $slug, $data->sku, $data->description, $data->price, $data->vat_rate,
             $data->stock, $data->category_id, $data->image,
-            (int)$data->active, (int)$data->featured
+            (int)$data->active, (int)$data->featured, (int)$data->force_variant
         ];
 
         if ($id) {
@@ -85,7 +94,7 @@ class ProductService implements ProductServiceInterface {
 
             $this->db->prepare(
                 "UPDATE products
-                 SET name=?, slug=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?
+                 SET name=?, slug=?, sku=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?, force_variant=?
                  WHERE id=?"
             )->execute([...$params, $id]);
             return $id;
@@ -96,8 +105,8 @@ class ProductService implements ProductServiceInterface {
             $params[1] = $slug;
 
             $this->db->prepare(
-                "INSERT INTO products (name, slug, description, price, vat_rate, stock, category_id, image, active, featured)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             )->execute($params);
             return (int)$this->db->lastInsertId();
         }
@@ -252,5 +261,50 @@ class ProductService implements ProductServiceInterface {
         $stmt->bindValue(1, $limit, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
+    }
+
+    public function getVariants(int $productId): array {
+        $stmt = $this->db->prepare("SELECT * FROM product_variants WHERE product_id = ? AND active = 1 ORDER BY name ASC");
+        $stmt->execute([$productId]);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, ProductVariant::class, [$this->logger]);
+    }
+
+    public function findVariantById(int $variantId): ?ProductVariant {
+        $stmt = $this->db->prepare("SELECT * FROM product_variants WHERE id = ?");
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, ProductVariant::class, [$this->logger]);
+        $stmt->execute([$variantId]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function findVariantsByIds(array $ids): array {
+        if (empty($ids)) return [];
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->db->prepare("SELECT * FROM product_variants WHERE id IN ($placeholders)");
+        $stmt->execute($ids);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, ProductVariant::class, [$this->logger]);
+    }
+
+    public function saveVariant(array $data, int $id = 0): int {
+        $params = [
+            (int)$data['product_id'], $data['name'], $data['sku'] ?? null,
+            isset($data['price']) && $data['price'] !== '' ? (float)$data['price'] : null,
+            (int)$data['stock'], (int)($data['active'] ?? 1)
+        ];
+
+        if ($id) {
+            $this->db->prepare(
+                "UPDATE product_variants SET product_id=?, name=?, sku=?, price=?, stock=?, active=? WHERE id=?"
+            )->execute([...$params, $id]);
+            return $id;
+        } else {
+            $this->db->prepare(
+                "INSERT INTO product_variants (product_id, name, sku, price, stock, active) VALUES (?, ?, ?, ?, ?, ?)"
+            )->execute($params);
+            return (int)$this->db->lastInsertId();
+        }
+    }
+
+    public function deleteVariant(int $id): void {
+        $this->db->prepare("DELETE FROM product_variants WHERE id = ?")->execute([$id]);
     }
 }

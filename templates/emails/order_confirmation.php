@@ -14,7 +14,12 @@
     <tbody>
         <?php foreach ($items as $item): ?>
         <tr>
-            <td><?= h($item['name']) ?></td>
+            <td>
+                <?= h($item['name']) ?>
+                <?php if (!empty($item['variant_name'])): ?>
+                    <div style="font-size: 0.8em; color: #666; margin-top: 2px;">Option: <?= h($item['variant_name']) ?></div>
+                <?php endif; ?>
+            </td>
             <td style="text-align: center;"><?= $item['quantity'] ?></td>
             <td style="text-align: right;"><?= money($item['unit_price'] * $item['quantity']) ?></td>
         </tr>

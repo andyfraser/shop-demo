@@ -42,26 +42,34 @@ class OrderService implements OrderServiceInterface {
             $orderId = (int)$this->db->lastInsertId();
 
             $itemStmt = $this->db->prepare(
-                "INSERT INTO order_items (order_id, product_id, quantity, unit_price, vat_rate, vat_amount)
-                 VALUES (?, ?, ?, ?, ?, ?)"
+                "INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, vat_rate, vat_amount)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)"
             );
             $stockStmt = $this->db->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+            $variantStockStmt = $this->db->prepare("UPDATE product_variants SET stock = stock - ? WHERE id = ?");
 
             foreach ($items as $item) {
-                // $item can be from CartService::items() which is an array with 'product' and 'qty'
                 $product = $item['product'];
+                $variant = $item['variant'] ?? null;
                 $qty = $item['qty'];
+                $unitPrice = $item['unit_price'];
+                $vatAmount = $item['vat_amount'];
 
                 $itemStmt->execute([
                     $orderId,
                     $product->id,
+                    $variant ? $variant->id : null,
                     $qty,
-                    $product->price,
+                    $unitPrice,
                     $product->vat_rate,
-                    $this->vatService->calculateVatFromGross($product->getSubtotal($qty), $product->vat_rate)
+                    $vatAmount
                 ]);
 
-                $stockStmt->execute([$qty, $product->id]);
+                if ($variant) {
+                    $variantStockStmt->execute([$qty, $variant->id]);
+                } else {
+                    $stockStmt->execute([$qty, $product->id]);
+                }
             }
 
             $this->db->commit();
@@ -100,9 +108,10 @@ class OrderService implements OrderServiceInterface {
      */
     public function getItems(int $orderId): array {
         $stmt = $this->db->prepare(
-            "SELECT oi.*, p.name as product_name, p.slug
+            "SELECT oi.*, p.name as product_name, p.slug, pv.name as variant_name
              FROM order_items oi
              LEFT JOIN products p ON oi.product_id = p.id
+             LEFT JOIN product_variants pv ON oi.variant_id = pv.id
              WHERE oi.order_id = ?"
         );
         return $stmt->execute([$orderId]) ? $stmt->fetchAll(\PDO::FETCH_CLASS, OrderItem::class, [$this->logger]) : [];
