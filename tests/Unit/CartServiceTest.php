@@ -21,7 +21,7 @@ class CartServiceTest extends TestCase {
         $settings = new SettingsService($db, $logger);
         $auth = new AuthService($db, $settings, $logger);
         $productService = new ProductService($db, $logger);
-        $vatService = new \App\Services\VatService($settings);
+        $vatService = new \App\Services\VatService();
         $this->cart = new CartService($productService, $auth, $vatService);
     }
 
