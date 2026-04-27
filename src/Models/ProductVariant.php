@@ -10,6 +10,7 @@ class ProductVariant extends Model {
     public ?float $price = null;
     public int $stock;
     public int|bool $active;
+    public int $sort_order = 0;
     public string $created_at;
 
     /**

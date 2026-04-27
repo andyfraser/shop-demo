@@ -74,6 +74,7 @@ return new class {
                     price DOUBLE,
                     stock INT DEFAULT 0,
                     active TINYINT(1) DEFAULT 1,
+                    sort_order INT DEFAULT 0,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB;
@@ -267,6 +268,7 @@ return new class {
                     price REAL,
                     stock INTEGER DEFAULT 0,
                     active INTEGER DEFAULT 1,
+                    sort_order INTEGER DEFAULT 0,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 );
 

@@ -77,9 +77,9 @@ class ProductService implements ProductServiceInterface {
         $slug = slugify($name);
 
         $params = is_array($data) ? [
-            $data['name'], $slug, $data['sku'] ?? null, $data['description'], (float)$data['price'], (float)$data['vat_rate'],
-            (int)$data['stock'], $data['category_id'], $data['image'],
-            (int)$data['active'], (int)$data['featured'], (int)($data['force_variant'] ?? 0)
+            $data['name'], $slug, $data['sku'] ?? null, $data['description'] ?? null, (float)$data['price'], (float)$data['vat_rate'],
+            (int)$data['stock'], $data['category_id'] ?? null, $data['image'] ?? null,
+            (int)($data['active'] ?? 1), (int)($data['featured'] ?? 0), (int)($data['force_variant'] ?? 0)
         ] : [
             $data->name, $slug, $data->sku, $data->description, $data->price, $data->vat_rate,
             $data->stock, $data->category_id, $data->image,
@@ -264,7 +264,7 @@ class ProductService implements ProductServiceInterface {
     }
 
     public function getVariants(int $productId): array {
-        $stmt = $this->db->prepare("SELECT * FROM product_variants WHERE product_id = ? AND active = 1 ORDER BY name ASC");
+        $stmt = $this->db->prepare("SELECT * FROM product_variants WHERE product_id = ? AND active = 1 ORDER BY sort_order ASC, name ASC");
         $stmt->execute([$productId]);
         return $stmt->fetchAll(\PDO::FETCH_CLASS, ProductVariant::class, [$this->logger]);
     }
@@ -288,17 +288,17 @@ class ProductService implements ProductServiceInterface {
         $params = [
             (int)$data['product_id'], $data['name'], $data['sku'] ?? null,
             isset($data['price']) && $data['price'] !== '' ? (float)$data['price'] : null,
-            (int)$data['stock'], (int)($data['active'] ?? 1)
+            (int)$data['stock'], (int)($data['active'] ?? 1), (int)($data['sort_order'] ?? 0)
         ];
 
         if ($id) {
             $this->db->prepare(
-                "UPDATE product_variants SET product_id=?, name=?, sku=?, price=?, stock=?, active=? WHERE id=?"
+                "UPDATE product_variants SET product_id=?, name=?, sku=?, price=?, stock=?, active=?, sort_order=? WHERE id=?"
             )->execute([...$params, $id]);
             return $id;
         } else {
             $this->db->prepare(
-                "INSERT INTO product_variants (product_id, name, sku, price, stock, active) VALUES (?, ?, ?, ?, ?, ?)"
+                "INSERT INTO product_variants (product_id, name, sku, price, stock, active, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)"
             )->execute($params);
             return (int)$this->db->lastInsertId();
         }

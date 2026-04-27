@@ -66,4 +66,45 @@ class ProductServiceTest extends TestCase {
         $this->assertInstanceOf(Product::class, $results[0]);
         $this->assertStringContainsString('ProBook', $results[0]->name);
     }
+
+    public function testVariantSorting() {
+        // Create a product
+        $productId = $this->service->save([
+            'name' => 'Sort Test Product',
+            'price' => 10,
+            'vat_rate' => 20,
+            'stock' => 10,
+            'active' => 1,
+            'featured' => 0,
+            'image' => null,
+            'category_id' => null
+        ]);
+
+        // Create variants out of order
+        $this->service->saveVariant([
+            'product_id' => $productId,
+            'name' => 'Variant B',
+            'sort_order' => 2,
+            'stock' => 5
+        ]);
+        $this->service->saveVariant([
+            'product_id' => $productId,
+            'name' => 'Variant A',
+            'sort_order' => 1,
+            'stock' => 5
+        ]);
+        $this->service->saveVariant([
+            'product_id' => $productId,
+            'name' => 'Variant C',
+            'sort_order' => 0,
+            'stock' => 5
+        ]);
+
+        $variants = $this->service->getVariants($productId);
+        
+        $this->assertCount(3, $variants);
+        $this->assertEquals('Variant C', $variants[0]->name);
+        $this->assertEquals('Variant A', $variants[1]->name);
+        $this->assertEquals('Variant B', $variants[2]->name);
+    }
 }

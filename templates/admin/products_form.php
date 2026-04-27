@@ -138,6 +138,7 @@
           <table class="table" id="variants-table" style="width: 100%;">
             <thead>
               <tr>
+                <th style="width: 40px;"></th>
                 <th>Variant Name</th>
                 <th>SKU</th>
                 <th>Price Override</th>
@@ -150,9 +151,11 @@
                 $variants = is_object($product) ? ($product->variants ?? []) : [];
                 foreach ($variants as $index => $v): 
               ?>
-                <tr>
+                <tr draggable="true" class="variant-row">
+                  <td class="drag-handle" title="Drag to reorder">⋮⋮</td>
                   <td>
                     <input type="hidden" name="variants[<?= $index ?>][id]" value="<?= $v->id ?>">
+                    <input type="hidden" name="variants[<?= $index ?>][sort_order]" class="sort-order-input" value="<?= $v->sort_order ?>">
                     <input type="text" name="variants[<?= $index ?>][name]" class="form-control" value="<?= h($v->name) ?>" placeholder="e.g. Large">
                   </td>
                   <td><input type="text" name="variants[<?= $index ?>][sku]" class="form-control" value="<?= h($v->sku ?? '') ?>" placeholder="SKU"></td>
@@ -190,10 +193,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const tbody = document.querySelector('#variants-table tbody');
     let index = <?= count($variants ?? []) ?>;
 
+    function updateSortOrders() {
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach((row, i) => {
+            const input = row.querySelector('.sort-order-input');
+            if (input) input.value = i;
+        });
+    }
+
     btn.addEventListener('click', function() {
         const tr = document.createElement('tr');
+        tr.className = 'variant-row';
+        tr.draggable = true;
         tr.innerHTML = `
+            <td class="drag-handle" title="Drag to reorder">⋮⋮</td>
             <td>
+                <input type="hidden" name="variants[${index}][sort_order]" class="sort-order-input" value="${index}">
                 <input type="text" name="variants[${index}][name]" class="form-control" placeholder="e.g. Large">
             </td>
             <td><input type="text" name="variants[${index}][sku]" class="form-control" placeholder="SKU"></td>
@@ -202,7 +217,48 @@ document.addEventListener('DOMContentLoaded', function() {
             <td></td>
         `;
         tbody.appendChild(tr);
+        addDragEvents(tr);
         index++;
+        updateSortOrders();
     });
+
+    let dragSrcEl = null;
+
+    function addDragEvents(row) {
+        row.addEventListener('dragstart', function(e) {
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+            this.classList.add('dragging');
+            // Required for Firefox to show drag image correctly
+            e.dataTransfer.setDragImage(this, 20, 20);
+        });
+
+        row.addEventListener('dragover', function(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (this !== dragSrcEl) {
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                if (e.clientY < midpoint) {
+                    this.parentNode.insertBefore(dragSrcEl, this);
+                } else {
+                    this.parentNode.insertBefore(dragSrcEl, this.nextSibling);
+                }
+                updateSortOrders();
+            }
+            return false;
+        });
+
+        row.addEventListener('dragend', function() {
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach(r => {
+                r.classList.remove('dragging');
+            });
+        });
+    }
+
+    document.querySelectorAll('.variant-row').forEach(addDragEvents);
 });
 </script>

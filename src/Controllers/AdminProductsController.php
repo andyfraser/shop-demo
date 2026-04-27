@@ -151,7 +151,8 @@ class AdminProductsController {
                         'sku'        => trim($v['sku'] ?? ''),
                         'price'      => $v['price'] !== '' ? (float)$v['price'] : null,
                         'stock'      => (int)($v['stock'] ?? 0),
-                        'active'     => 1
+                        'active'     => 1,
+                        'sort_order' => (int)($v['sort_order'] ?? 0)
                     ];
                     $vId = !empty($v['id']) ? (int)$v['id'] : 0;
                     $this->productService->saveVariant($vData, $vId);

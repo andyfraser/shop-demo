@@ -94,7 +94,15 @@ function migrate($pdo) {
                         }
                     }
                 } else {
-                    $pdo->exec($sql);
+                    try {
+                        $pdo->exec($sql);
+                    } catch (PDOException $e) {
+                        if (str_contains($e->getMessage(), 'duplicate column name')) {
+                            // ignore
+                        } else {
+                            throw $e;
+                        }
+                    }
                 }
             } else if (is_array($sql)) {
                 foreach ($sql as $s) {

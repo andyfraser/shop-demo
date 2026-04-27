@@ -81,7 +81,15 @@ foreach ($migrationFiles as $file) {
                     }
                 }
             } else {
-                $pdo->exec($sql);
+                try {
+                    $pdo->exec($sql);
+                } catch (PDOException $e) {
+                    if (str_contains($e->getMessage(), 'duplicate column name')) {
+                        // ignore
+                    } else {
+                        throw $e;
+                    }
+                }
             }
         }
         

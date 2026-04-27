@@ -214,3 +214,21 @@ select.form-control   { cursor: pointer; }
 .form-grid        { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
 .form-grid .span-2 { grid-column: 1 / -1; }
 .thumb            { width: 50px; height: 40px; object-fit: cover; border-radius: 2px; background: var(--warm); }
+
+/* ── Drag & Drop ────────────────────────────────────────────────────────── */
+.drag-handle {
+    cursor: grab;
+    color: var(--ink-2);
+    opacity: 0.4;
+    transition: opacity var(--trans);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    padding: 0 5px;
+    user-select: none;
+}
+.drag-handle:hover { opacity: 1; }
+.drag-handle:active { cursor: grabbing; }
+tr.dragging { opacity: 0.5; background: var(--sand); }
+tr.drag-over { border-top: 2px solid var(--accent); }
