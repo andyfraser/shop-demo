@@ -18,6 +18,11 @@ class Product extends Model {
     public int|bool $force_variant;
     public string $created_at;
 
+    /**
+     * @var \App\Models\ProductVariant[]
+     */
+    public array $variants = [];
+
     // Join fields (explicitly defined)
     public ?string $cat_name = null;
     public ?string $cat_slug = null;
