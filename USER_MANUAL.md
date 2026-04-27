@@ -152,7 +152,10 @@ The logging system follows the PHP Standard Recommendation for logging (PSR-3). 
 *   `templates/`: Pure PHP/HTML view files, utilizing Model objects for data representation.
 
 ### Database Migrations
-Demoshop handles updates automatically. `src/Core/Database.php` contains a `migrations()` method that applies additive schema changes (like new columns) on-the-fly, ensuring the application stays up-to-date without manual SQL execution.
+Demoshop uses a migration system to manage database schema and seed data.
+*   **Applying Migrations:** To apply new updates, run `php migrate.php` from the project root.
+*   **Rollback:** To undo the last migration, run `php migrate.php --rollback`.
+*   **Files:** Migration logic is stored in the `migrations/` directory.
 
 ---
 

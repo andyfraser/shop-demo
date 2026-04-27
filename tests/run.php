@@ -21,7 +21,77 @@ $failed = 0;
 $assertions = 0;
 $failures = [];
 
-echo "Running tests...\n\n";
+// Setup test database
+$testDbPath = __DIR__ . '/test.db';
+if (file_exists($testDbPath)) {
+    unlink($testDbPath);
+}
+
+define('DB_CONFIG', [
+    'driver' => 'sqlite',
+    'path'   => $testDbPath
+]);
+
+echo "Running migrations on test database...\n";
+$pdo = \App\Core\Database::getConnection();
+$driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+// Create migrations table if it doesn't exist
+$migrationsTableSql = $driver === 'mysql' 
+    ? "CREATE TABLE IF NOT EXISTS migrations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        migration VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+    : "CREATE TABLE IF NOT EXISTS migrations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        migration TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );";
+$pdo->exec($migrationsTableSql);
+
+// Get already applied migrations
+$stmt = $pdo->query("SELECT migration FROM migrations");
+$appliedMigrations = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+// Get all migration files
+$migrationFiles = glob(__DIR__ . '/../migrations/m*_*.php');
+sort($migrationFiles);
+
+foreach ($migrationFiles as $file) {
+    $migrationName = basename($file, '.php');
+    if (!in_array($migrationName, $appliedMigrations)) {
+        echo "Applying migration: $migrationName... ";
+        $migrationInstance = require $file;
+        $sql = $migrationInstance->up($driver);
+        
+        if (is_string($sql)) {
+            if ($driver === 'mysql') {
+                $statements = array_filter(array_map('trim', explode(';', $sql)));
+                foreach ($statements as $s) {
+                    if (!empty($s)) {
+                        try {
+                            $pdo->exec($s);
+                        } catch (PDOException $e) {
+                            if ($e->getCode() == '42000' && (str_contains($e->getMessage(), '1061') || str_contains($e->getMessage(), 'Duplicate key name'))) {
+                                continue;
+                            }
+                            throw $e;
+                        }
+                    }
+                }
+            } else {
+                $pdo->exec($sql);
+            }
+        }
+        
+        $stmt = $pdo->prepare("INSERT INTO migrations (migration) VALUES (:migration)");
+        $stmt->execute(['migration' => $migrationName]);
+        echo "Done.\n";
+    }
+}
+
+echo "\nRunning tests...\n\n";
 
 foreach ($testFiles as $file) {
     $beforeClasses = get_declared_classes();
@@ -95,5 +165,10 @@ if ($failed > 0) {
 }
 
 echo "Tests: " . ($passed + $failed) . ", Assertions: $assertions, Failures: $failed\n";
+
+// Cleanup test database
+if (file_exists($testDbPath)) {
+    unlink($testDbPath);
+}
 
 exit($failed > 0 ? 1 : 0);

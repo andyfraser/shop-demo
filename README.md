@@ -107,9 +107,9 @@ shop-demo/
 ├── index.php               # Front controller — bootstraps app and registers all routes
 ├── config.php              # Local configuration (ignored by Git)
 ├── config.example.php      # Configuration template
-├── sqlite_schema.sql       # SQLite database schema and seed data
-├── mysql_schema.sql        # MySQL database schema and seed data
-├── shop.db                 # SQLite database (auto-created if using SQLite)
+├── migrate.php               # Database migration runner
+├── migrations/               # Database migration files
+├── shop.db                   # SQLite database (auto-created if using SQLite)
 ├── logs/                   # Application log files (ignored by Git)
 │   └── app.log             # Main application log
 │

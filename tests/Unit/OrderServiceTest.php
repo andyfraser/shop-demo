@@ -42,7 +42,9 @@ class OrderServiceTest extends TestCase {
         $items = [
             [
                 'product' => $product,
-                'qty'     => 2
+                'qty'     => 2,
+                'unit_price' => $product->price,
+                'vat_amount' => 20.00
             ]
         ];
 
@@ -61,8 +63,23 @@ class OrderServiceTest extends TestCase {
     }
 
     public function testUpdateStatus() {
-        $this->orderService->updateStatus(1, Order::STATUS_SHIPPED);
-        $order = $this->orderService->findById(1);
+        $product = $this->productService->findById(1);
+        $orderData = [
+            'user_id'          => 1,
+            'customer_name'    => 'Test User',
+            'customer_email'   => 'test@example.com',
+            'total'            => 100.00,
+            'total_vat_amount' => 16.67,
+            'shipping_address' => '123 Test St',
+            'notes'            => '',
+            'delivery_method'  => 'Standard',
+            'delivery_cost'    => 0.00
+        ];
+        $items = [['product' => $product, 'qty' => 1, 'unit_price' => $product->price, 'vat_amount' => 16.67]];
+        $orderId = $this->orderService->create($orderData, $items);
+
+        $this->orderService->updateStatus($orderId, Order::STATUS_SHIPPED);
+        $order = $this->orderService->findById($orderId);
         $this->assertEquals(Order::STATUS_SHIPPED, $order->status);
     }
 }
