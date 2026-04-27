@@ -48,12 +48,20 @@ The application uses a `config.php` file for database and site settings.
 2. Update the `db` settings with your preferred driver (`sqlite` or `mysql`) and credentials.
 
 ### SQLite Setup
-By default, the application is configured to use SQLite with a database file named `shop.db`. This file will be created and seeded automatically on the first run.
+By default, the application is configured to use SQLite with a database file named `shop.db`. 
+
+1. Run the migrations to create the schema and seed initial data:
+   ```bash
+   php migrate.php
+   ```
 
 ### MySQL / MariaDB Setup
 1. Ensure your MySQL server is running.
 2. Provide your server host, user, and password in `config.php`.
-3. The application will automatically create the database (if it doesn't exist), apply the schema, and seed the initial data.
+3. The application will automatically create the database if it doesn't exist, but you must run the migrations to apply the schema and seed data:
+   ```bash
+   php migrate.php
+   ```
 
 ---
 
@@ -63,6 +71,7 @@ By default, the application is configured to use SQLite with a database file nam
 git clone https://github.com/yourname/shop-demo.git
 cd shop-demo
 cp config.example.php config.php
+php migrate.php
 php -S localhost:8080
 ```
 

@@ -33,12 +33,17 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 2.  **Configure the Environment:**
     *   Copy `config.example.php` to `config.php`.
     *   Edit `config.php` to select your database driver (`sqlite` or `mysql`) and provide credentials.
-3.  **Start the Server:**
+3.  **Initialize the Database:**
+    *   Run the migration script to create tables and seed initial data:
+        ```bash
+        php migrate.php
+        ```
+4.  **Start the Server:**
     *   Using the PHP built-in server:
         ```bash
         php -S localhost:8080
         ```
-    *   Visit `http://localhost:8080` in your browser. The database and seed data will be initialized automatically.
+    *   Visit `http://localhost:8080` in your browser.
 
 ### Demo Accounts
 | Role | Email | Password |
