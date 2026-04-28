@@ -13,7 +13,9 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 
 **Storefront**
 - Hierarchical product categories with dropdown navigation
-- Product listings with breadcrumbs, related products, and detail pages. **Note:** Out-of-stock products are automatically hidden from the featured homepage list.
+- Product listings with breadcrumbs, detailed attribute-based related products, and detail pages. **Note:** Out-of-stock products are automatically hidden from the featured homepage list.
+- **Recently Viewed Products:** Session-based tracking of browsing history on product pages with automatic sorting by time.
+- **Smart Recommendations:** A weighted relevance algorithm that prioritizes products based on shared attributes (e.g., Brand, Color) and categories.
 - Full-text product search with sorting and configurable pagination (12 / 24 / all)
 - Session-based shopping cart with AJAX add/update/remove and live badge counter
 - Checkout with saved shipping address pre-fill and dynamic delivery options

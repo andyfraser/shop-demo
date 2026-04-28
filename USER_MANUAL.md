@@ -59,6 +59,8 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 *   **Hierarchical Navigation:** Explore products through a multi-tier category menu.
 *   **Advanced Search:** Use the search bar to find products. Sort results by price, name, or date.
 *   **Product Details:** View high-quality images, descriptions, inventory status, and related products.
+*   **Smart Related Products:** Discovers items using a weighted relevance algorithm (prioritizing shared attributes like Brand/Color and same-category items).
+*   **Recently Viewed:** Automatically tracks your last 7 viewed items in a dedicated section at the bottom of the page, sorted with the most recent items on the left.
 *   **Inventory Logic:** Out-of-stock products are automatically hidden from the "Featured" homepage list but remain accessible via direct links or category pages.
 *   **SEO Friendly URLs:** Account and order detail pages use clean URL structures (e.g., `/account/orders/4`).
 
