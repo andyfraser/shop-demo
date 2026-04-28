@@ -180,6 +180,7 @@ button, input, select, textarea { font: inherit; }
 main        { flex: 1; }
 .container  { max-width: 1280px; margin: 0 auto; padding: 2rem; }
 .two-col    { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; align-items: start; }
+.account-layout { display: grid; grid-template-columns: 280px 1fr; gap: 2rem; align-items: start; }
 
 .page-title {
     font-family: var(--font-display);
@@ -550,6 +551,7 @@ select.form-control  { cursor: pointer; }
 @media (max-width: 800px) {
     /* Multi-column layouts collapse to single column */
     .two-col          { grid-template-columns: 1fr; }
+    .account-layout   { grid-template-columns: 1fr; }
     .checkout-grid    { grid-template-columns: 1fr; }
     .product-detail   { grid-template-columns: 1fr; }
 
@@ -642,12 +644,14 @@ select.form-control  { cursor: pointer; }
     /* Container: tighter padding on mobile */
     .container { padding: 1rem; }
 
-    /* Cart table: scrollable on narrow screens */
+    /* Tables: scrollable on narrow screens */
+    .table-scroll,
     .cart-table-scroll {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
     .cart-table { min-width: 420px; }
+    .data-table { min-width: 600px; }
 }
 
 @media (max-width: 600px) {

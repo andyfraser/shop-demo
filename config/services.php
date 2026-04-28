@@ -40,6 +40,8 @@ use App\Services\Payment\PaymentService;
 use App\Services\Payment\ManualGateway;
 use App\Services\ReturnServiceInterface;
 use App\Services\ReturnService;
+use App\Services\WishlistServiceInterface;
+use App\Services\WishlistService;
 
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
@@ -129,6 +131,13 @@ return function(array $config) {
                 $c->get(OrderServiceInterface::class),
                 $c->get(PaymentServiceInterface::class),
                 $c->get(EmailServiceInterface::class)
+            );
+        },
+        WishlistServiceInterface::class => function($c) {
+            return new WishlistService(
+                $c->get(\PDO::class),
+                $c->get(ProductServiceInterface::class),
+                $c->get(LoggerInterface::class)
             );
         },
     ];

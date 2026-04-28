@@ -4,11 +4,15 @@ namespace App\Controllers;
 use App\Core\Renderer;
 use App\Services\ProductServiceInterface;
 use App\Services\CategoryServiceInterface;
+use App\Services\WishlistServiceInterface;
+use App\Services\AuthServiceInterface;
 
 class StorefrontController {
     public function __construct(
         private ProductServiceInterface $productService,
         private CategoryServiceInterface $categoryService,
+        private WishlistServiceInterface $wishlistService,
+        private AuthServiceInterface $authService,
         private Renderer $renderer
     ) {}
 
@@ -204,12 +208,20 @@ class StorefrontController {
         // Related products logic (Smart Weighted)
         $related_products = $this->productService->getRelatedProducts($product->id, 4);
 
+        $is_in_wishlist = false;
+        $user = $this->authService->currentUser();
+        if ($user) {
+            $is_in_wishlist = $this->wishlistService->isInWishlist($user->id, $product->id);
+        }
+
         $this->renderer->render('product', [
             'page_title'      => $product->name,
             'product'         => $product,
             'breadcrumb'      => $breadcrumb,
             'related_products' => $related_products,
             'recently_viewed'  => $recently_viewed,
+            'is_in_wishlist'   => $is_in_wishlist,
+            'is_logged_in'    => (bool)$user,
             'flash_success'   => flash('success'),
         ]);
     }

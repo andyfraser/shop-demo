@@ -90,6 +90,28 @@
             </button>
           </div>
         </form>
+
+        <div style="margin-top: 1rem;">
+          <?php if (!$is_logged_in): ?>
+            <p style="font-size: 0.85rem; color: var(--ink-2);">
+              <a href="/login">Login</a> to add this item to your wishlist.
+            </p>
+          <?php elseif ($is_in_wishlist): ?>
+            <form action="/wishlist/remove/<?= $product->id ?>" method="post">
+              <?= csrf_field() ?>
+              <button type="submit" class="btn btn-outline btn-block">
+                ❤️ Remove from Wishlist
+              </button>
+            </form>
+          <?php else: ?>
+            <form action="/wishlist/add/<?= $product->id ?>" method="post">
+              <?= csrf_field() ?>
+              <button type="submit" class="btn btn-outline btn-block">
+                ♡ Add to Wishlist
+              </button>
+            </form>
+          <?php endif; ?>
+        </div>
       <?php endif; ?>
     </div>
   </div>

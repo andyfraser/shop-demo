@@ -2,7 +2,7 @@
 <div class="container">
   <h1 class="page-title">My Account</h1>
 
-  <div style="display:grid;grid-template-columns:280px 1fr;gap:2rem;align-items:start;">
+  <div class="account-layout">
     <div class="card">
       <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:600;margin-bottom:.25rem;">
         <?= h($current_user->name) ?>
@@ -41,6 +41,7 @@
       </form>
 
       <hr style="margin:1.2rem 0;border:none;border-top:1px solid var(--line);">
+      <a href="/wishlist" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-bottom:0.5rem;">❤️ My Wishlist</a>
       <a href="/logout" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">Sign Out</a>
     </div>
 
@@ -57,38 +58,40 @@
         </div>
       <?php else: ?>
         <div class="card" style="padding:0;overflow:hidden;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Order #</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($orders as $o): ?>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td><strong><?= $o->getFormattedId() ?></strong></td>
-                  <td><?= date('d M Y', strtotime($o->created_at)) ?></td>
-                  <td><?= $o->item_count ?> item<?= $o->item_count != 1 ? 's' : '' ?></td>
-                  <td><strong><?= money($o->total) ?></strong></td>
-                  <td>
-                    <span class="badge <?= $o->getStatusBadgeClass() ?>">
-                      <?= ucfirst($o->status) ?>
-                    </span>
-                  </td>
-                  <td style="display:flex;gap:0.5rem;justify-content:flex-end;">
-                    <a href="/account/orders/<?= $o->id ?>" class="btn btn-outline btn-sm">View</a>
-                    <?php if ($o->canBeCancelled()): ?>
-                      <form method="POST" action="/account/cancel-order" onsubmit="return confirm('Are you sure you want to cancel this order?');">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="id" value="<?= $o->id ?>">
-                        <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger-ink);border-color:var(--danger-ink);">Cancel</button>
-                      </form>
-                    <?php endif; ?>
-                  </td>
+                  <th>Order #</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th></th>
                 </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                <?php foreach ($orders as $o): ?>
+                  <tr>
+                    <td><strong><?= $o->getFormattedId() ?></strong></td>
+                    <td><?= date('d M Y', strtotime($o->created_at)) ?></td>
+                    <td><?= $o->item_count ?> item<?= $o->item_count != 1 ? 's' : '' ?></td>
+                    <td><strong><?= money($o->total) ?></strong></td>
+                    <td>
+                      <span class="badge <?= $o->getStatusBadgeClass() ?>">
+                        <?= ucfirst($o->status) ?>
+                      </span>
+                    </td>
+                    <td style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                      <a href="/account/orders/<?= $o->id ?>" class="btn btn-outline btn-sm">View</a>
+                      <?php if ($o->canBeCancelled()): ?>
+                        <form method="POST" action="/account/cancel-order" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                          <?= csrf_field() ?>
+                          <input type="hidden" name="id" value="<?= $o->id ?>">
+                          <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger-ink);border-color:var(--danger-ink);">Cancel</button>
+                        </form>
+                      <?php endif; ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
         </div>
       <?php endif; ?>
     </div>

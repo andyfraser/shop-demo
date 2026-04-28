@@ -31,6 +31,7 @@ class Product extends Model {
     // Join fields (explicitly defined)
     public ?string $cat_name = null;
     public ?string $cat_slug = null;
+    public ?int $relevance_score = null;
 
     /**
      * Calculate subtotal for a given quantity.

@@ -46,6 +46,7 @@ $mobile_nav_expanded = (
       <nav class="header-actions">
         <?php if ($current_user): ?>
           <a href="<?= BASE_URL ?>/account">👤 <span class="link-text"><?= h($current_user->name) ?></span></a>
+          <a href="<?= BASE_URL ?>/wishlist">❤️ <span class="link-text">Wishlist</span></a>
           <?php if ($current_user->isAdmin()): ?>
             <a href="<?= BASE_URL ?>/admin">⚙ <span class="link-text">Admin</span></a>
           <?php endif; ?>

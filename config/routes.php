@@ -14,6 +14,7 @@ use App\Controllers\AdminSettingsController;
 use App\Controllers\AdminAttributesController;
 use App\Controllers\AdminReturnsController;
 use App\Controllers\AccountController;
+use App\Controllers\WishlistController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
 
@@ -42,6 +43,11 @@ return [
     ['method' => 'POST', 'path' => '/account/cancel-order', 'handler' => [AccountController::class, 'cancelOrder'], 'middlewares' => $authMiddleware],
     ['method' => 'POST', 'path' => '/account/request-return', 'handler' => [AccountController::class, 'requestReturn'], 'middlewares' => $authMiddleware],
     ['method' => 'GET', 'path' => '/account/orders/:id', 'handler' => [AccountController::class, 'orderDetail'], 'middlewares' => $authMiddleware],
+
+    // Wishlist routes
+    ['method' => 'GET', 'path' => '/wishlist', 'handler' => [WishlistController::class, 'index'], 'middlewares' => $authMiddleware],
+    ['method' => 'POST', 'path' => '/wishlist/add/:productId', 'handler' => [WishlistController::class, 'add'], 'middlewares' => $authMiddleware],
+    ['method' => 'POST', 'path' => '/wishlist/remove/:productId', 'handler' => [WishlistController::class, 'remove'], 'middlewares' => $authMiddleware],
 
     // Common icon routes to prevent 404 errors
     ['method' => 'GET', 'path' => '/favicon.ico', 'handler' => [StorefrontController::class, 'handleIcon']],
