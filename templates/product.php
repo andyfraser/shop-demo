@@ -120,21 +120,21 @@
 
   <?php if (!empty($recently_viewed)): ?>
     <section style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #eee;">
-      <h2 class="page-title" style="font-size:1.4rem;">Recently Viewed</h2>
-      <div class="product-grid">
+      <h2 class="page-title" style="font-size:1.2rem; color: var(--ink-2);">Recently Viewed</h2>
+      <div class="product-grid" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
         <?php foreach ($recently_viewed as $r): ?>
-          <a href="/product/<?= h($r->slug) ?>" class="product-card">
-            <div class="img-wrap">
+          <a href="/product/<?= h($r->slug) ?>" class="product-card" style="font-size: 0.85rem; min-height: auto;">
+            <div class="img-wrap" style="aspect-ratio: 4/3; height: auto; min-height: auto;">
               <?php if ($r->featured): ?>
-                <span class="product-badge badge-featured">Featured</span>
+                <span class="product-badge badge-featured" style="font-size: 0.65rem; padding: 1px 4px;">Featured</span>
               <?php elseif ($r->isNew()): ?>
-                <span class="product-badge badge-new">New</span>
+                <span class="product-badge badge-new" style="font-size: 0.65rem; padding: 1px 4px;">New</span>
               <?php endif; ?>
-              <?php product_img($r->image ?? '', $r->name) ?>
+              <?php product_img($r->image ?? '', $r->name, '', 'width: 100%; height: 100%; object-fit: cover;') ?>
             </div>
-            <div class="card-body">
-              <div class="card-name"><?= h($r->name) ?></div>
-              <div class="card-price"><?= money($r->price) ?></div>
+            <div class="card-body" style="padding: 0.5rem;">
+              <div class="card-name" style="margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= h($r->name) ?></div>
+              <div class="card-price" style="font-weight: 600; font-size: 0.85rem;"><?= money($r->price) ?></div>
             </div>
           </a>
         <?php endforeach; ?>

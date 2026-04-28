@@ -188,12 +188,18 @@ class StorefrontController {
         // Remove if already exists to move it to the end
         $_SESSION['recently_viewed'] = array_filter($_SESSION['recently_viewed'], fn($id) => $id != $product->id);
         array_unshift($_SESSION['recently_viewed'], $product->id);
-        // Keep only last 5
-        $_SESSION['recently_viewed'] = array_slice($_SESSION['recently_viewed'], 0, 5);
+        // Keep only last 8 (7 to show, plus 1 for current product being filtered out)
+        $_SESSION['recently_viewed'] = array_slice($_SESSION['recently_viewed'], 0, 8);
 
         // Fetch Recently Viewed products (excluding current)
         $recent_ids = array_values(array_filter($_SESSION['recently_viewed'], fn($id) => $id != $product->id));
         $recently_viewed = !empty($recent_ids) ? $this->productService->findByIds($recent_ids) : [];
+        
+        // Ensure products are returned in the exact order of the history
+        if (!empty($recently_viewed) && !empty($recent_ids)) {
+            $id_order = array_flip($recent_ids);
+            usort($recently_viewed, fn($a, $b) => $id_order[$a->id] <=> $id_order[$b->id]);
+        }
 
         // Related products logic (Smart Weighted)
         $related_products = $this->productService->getRelatedProducts($product->id, 4);
