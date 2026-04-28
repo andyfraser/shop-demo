@@ -38,6 +38,9 @@
     <a href="/admin/orders"     class="<?= $active === 'orders'     ? 'active' : '' ?>">
       <span class="ico">🧾</span> Orders
     </a>
+    <a href="/admin/returns"    class="<?= $active === 'returns'    ? 'active' : '' ?>">
+      <span class="ico">🔄</span> Returns
+    </a>
     <a href="/admin/delivery"   class="<?= $active === 'delivery'   ? 'active' : '' ?>">
       <span class="ico">🚚</span> Delivery
     </a>

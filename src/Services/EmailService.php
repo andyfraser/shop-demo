@@ -57,6 +57,28 @@ class EmailService implements EmailServiceInterface {
         return $this->sendHtmlEmail($toEmail, $subject, $message);
     }
 
+    public function sendReturnRequestedEmail(\App\Models\ReturnOrder $return, string $toEmail): bool {
+        $subject = "Return Request Received #" . $return->id . " - " . $this->getCleanSiteName();
+        
+        $message = $this->renderTemplate('return_requested', [
+            'return' => $return,
+            'subject' => $subject
+        ]);
+
+        return $this->sendHtmlEmail($toEmail, $subject, $message);
+    }
+
+    public function sendReturnUpdateEmail(\App\Models\ReturnOrder $return, string $toEmail): bool {
+        $subject = "Return Request #" . $return->id . " Updated - " . $this->getCleanSiteName();
+        
+        $message = $this->renderTemplate('return_status', [
+            'return' => $return,
+            'subject' => $subject
+        ]);
+
+        return $this->sendHtmlEmail($toEmail, $subject, $message);
+    }
+
     private function getBaseUrl(): string {
         if (isset($_SERVER['HTTP_HOST'])) {
             return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";

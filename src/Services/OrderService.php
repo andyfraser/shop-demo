@@ -7,12 +7,16 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use Psr\Log\LoggerInterface;
 use App\Services\VatServiceInterface;
+use App\Services\Payment\PaymentServiceInterface;
+use App\Services\EmailServiceInterface;
 
 class OrderService implements OrderServiceInterface {
     public function __construct(
         private \PDO $db,
         private LoggerInterface $logger,
-        private VatServiceInterface $vatService
+        private VatServiceInterface $vatService,
+        private PaymentServiceInterface $paymentService,
+        private EmailServiceInterface $emailService
     ) {}
 
     /**
@@ -40,6 +44,10 @@ class OrderService implements OrderServiceInterface {
             ]);
 
             $orderId = (int)$this->db->lastInsertId();
+
+            // Record initial status in history
+            $historyStmt = $this->db->prepare("INSERT INTO order_status_history (order_id, status, notes) VALUES (?, ?, ?)");
+            $historyStmt->execute([$orderId, Order::STATUS_PENDING, 'Order created']);
 
             $itemStmt = $this->db->prepare(
                 "INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, vat_rate, vat_amount)
@@ -193,8 +201,108 @@ class OrderService implements OrderServiceInterface {
     /**
      * Update order status.
      */
-    public function updateStatus(int $id, string $status): void {
-        $stmt = $this->db->prepare("UPDATE orders SET status = ? WHERE id = ?");
-        $stmt->execute([$status, $id]);
+    public function updateStatus(int $id, string $status, ?int $userId = null, string $notes = ''): void {
+        $startedTransaction = false;
+        try {
+            if (!$this->db->inTransaction()) {
+                $this->db->beginTransaction();
+                $startedTransaction = true;
+            }
+
+            $stmt = $this->db->prepare("UPDATE orders SET status = ? WHERE id = ?");
+            $stmt->execute([$status, $id]);
+
+            $this->addHistoryEntry($id, $status, $notes, $userId);
+
+            if ($startedTransaction) {
+                $this->db->commit();
+            }
+        } catch (\Exception $e) {
+            if ($startedTransaction) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public function addHistoryEntry(int $orderId, string $status, string $notes = '', ?int $userId = null): void {
+        $historyStmt = $this->db->prepare("INSERT INTO order_status_history (order_id, status, notes, created_by_user_id) VALUES (?, ?, ?, ?)");
+        $historyStmt->execute([$orderId, $status, $notes, $userId]);
+    }
+
+    /**
+     * Get order status history.
+     */
+    public function getStatusHistory(int $orderId): array {
+        $stmt = $this->db->prepare(
+            "SELECT h.*, u.name as user_name
+             FROM order_status_history h
+             LEFT JOIN users u ON h.created_by_user_id = u.id
+             WHERE h.order_id = ?
+             ORDER BY h.id DESC"
+        );
+        $stmt->execute([$orderId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Update payment information.
+     */
+    public function updatePaymentInfo(int $id, string $method, string $status, ?string $transactionId = null): void {
+        $stmt = $this->db->prepare("UPDATE orders SET payment_method = ?, payment_status = ?, payment_transaction_id = ? WHERE id = ?");
+        $stmt->execute([$method, $status, $transactionId, $id]);
+    }
+
+    /**
+     * Cancel an order.
+     */
+    public function cancelOrder(int $id, string $reason = '', ?int $userId = null): bool {
+        $order = $this->findById($id);
+        if (!$order || !$order->canBeCancelled()) {
+            return false;
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            // 1. Process Refund if confirmed/paid
+            if ($order->status === Order::STATUS_CONFIRMED && $order->payment_method) {
+                $result = $this->paymentService->refund($order->payment_method, $order);
+                if ($result->success) {
+                    $stmt = $this->db->prepare("UPDATE orders SET refund_status = ?, refunded_amount = ? WHERE id = ?");
+                    $stmt->execute([$result->status, $order->total, $id]);
+                } else {
+                    $this->logger->warning("Refund failed for order {id}: {message}", ['id' => $id, 'message' => $result->message]);
+                }
+            }
+
+            // 2. Update Order Status
+            $this->updateStatus($id, Order::STATUS_CANCELLED, $userId, $reason ?: 'Order cancelled');
+
+            // 3. Replenish Stock
+            $stockStmt = $this->db->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
+            $variantStockStmt = $this->db->prepare("UPDATE product_variants SET stock = stock + ? WHERE id = ?");
+
+            foreach ($order->items as $item) {
+                if ($item->variant_id) {
+                    $variantStockStmt->execute([$item->quantity, $item->variant_id]);
+                } else {
+                    $stockStmt->execute([$item->quantity, $item->product_id]);
+                }
+            }
+
+            $this->db->commit();
+
+            $this->logger->info("Order {id} successfully cancelled and items returned to stock.", ['id' => $id]);
+
+            // 4. Send Email
+            $this->emailService->sendStatusUpdateEmail($order->customer_email, $id, Order::STATUS_CANCELLED);
+
+            return true;
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            $this->logger->error("Failed to cancel order {id}: " . $e->getMessage(), ['id' => $id]);
+            return false;
+        }
     }
 }

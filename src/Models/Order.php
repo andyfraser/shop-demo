@@ -3,11 +3,16 @@
 namespace App\Models;
 
 class Order extends Model {
-    public const STATUS_PENDING   = 'pending';
-    public const STATUS_CONFIRMED = 'confirmed';
-    public const STATUS_SHIPPED   = 'shipped';
-    public const STATUS_DELIVERED = 'delivered';
-    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_PENDING        = 'pending';
+    public const STATUS_CONFIRMED      = 'confirmed';
+    public const STATUS_SHIPPED        = 'shipped';
+    public const STATUS_DELIVERED      = 'delivered';
+    public const STATUS_CANCELLED      = 'cancelled';
+    public const STATUS_RETURNING      = 'returning';
+    public const STATUS_REFUNDED       = 'refunded';
+    public const STATUS_NOT_REFUNDED   = 'not refunded';
+    public const STATUS_FULLY_REFUNDED = 'fully refunded';
+    public const STATUS_PARTIAL_REFUND = 'partial refund';
 
     public int $id;
     public ?int $user_id = null;
@@ -18,8 +23,14 @@ class Order extends Model {
     public ?string $notes = null;
     public ?string $delivery_method = null;
     public float $delivery_cost = 0.0;
+    public bool $delivery_refunded = false;
     public ?string $customer_email = null;
     public ?string $customer_name = null;
+    public ?string $payment_method = null;
+    public string $payment_status = 'pending';
+    public ?string $payment_transaction_id = null;
+    public ?string $refund_status = null;
+    public float $refunded_amount = 0.0;
     public string $created_at;
 
     // Join fields
@@ -31,7 +42,17 @@ class Order extends Model {
     public array $items = [];
 
     public function canBeCancelled(): bool {
-        return $this->status === self::STATUS_PENDING;
+        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_CONFIRMED]);
+    }
+
+    public function canBeReturned(): bool {
+        return in_array($this->status, [
+            self::STATUS_DELIVERED,
+            self::STATUS_RETURNING,
+            self::STATUS_REFUNDED,
+            self::STATUS_NOT_REFUNDED,
+            self::STATUS_PARTIAL_REFUND
+        ]);
     }
 
     public function getFormattedId(): string {
@@ -40,12 +61,17 @@ class Order extends Model {
 
     public function getStatusBadgeClass(): string {
         return match($this->status) {
-            self::STATUS_PENDING   => 'badge-warning',
-            self::STATUS_CONFIRMED => 'badge-info',
-            self::STATUS_SHIPPED   => 'badge-info',
-            self::STATUS_DELIVERED => 'badge-success',
-            self::STATUS_CANCELLED => 'badge-danger',
-            default                => 'badge-neutral',
+            self::STATUS_PENDING        => 'badge-warning',
+            self::STATUS_CONFIRMED      => 'badge-info',
+            self::STATUS_SHIPPED        => 'badge-info',
+            self::STATUS_DELIVERED      => 'badge-success',
+            self::STATUS_CANCELLED      => 'badge-danger',
+            self::STATUS_RETURNING      => 'badge-warning',
+            self::STATUS_REFUNDED       => 'badge-success',
+            self::STATUS_NOT_REFUNDED   => 'badge-danger',
+            self::STATUS_FULLY_REFUNDED => 'badge-success',
+            self::STATUS_PARTIAL_REFUND => 'badge-success',
+            default                     => 'badge-neutral',
         };
     }
 }

@@ -13,6 +13,11 @@ use App\Core\Database;
 use App\Services\VatService;
 use App\Services\AttributeService;
 
+use App\Services\Payment\PaymentService;
+use App\Services\Payment\ManualGateway;
+use App\Services\EmailService;
+use App\Services\SettingsService;
+
 class OrderServiceTest extends TestCase {
     private OrderServiceInterface $orderService;
     private ProductServiceInterface $productService;
@@ -21,7 +26,13 @@ class OrderServiceTest extends TestCase {
     public function setUp() {
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
-        $this->orderService = new OrderService($this->db, $logger, new VatService());
+        
+        $settingsService = new SettingsService($this->db, $logger);
+        $emailService = new EmailService($settingsService, $logger);
+        $paymentService = new PaymentService($logger);
+        $paymentService->registerGateway(new ManualGateway());
+
+        $this->orderService = new OrderService($this->db, $logger, new VatService(), $paymentService, $emailService);
         $attrService = new AttributeService($this->db, $logger);
         $this->productService = new ProductService($this->db, $attrService, $logger);
     }
@@ -84,5 +95,74 @@ class OrderServiceTest extends TestCase {
         $this->orderService->updateStatus($orderId, Order::STATUS_SHIPPED);
         $order = $this->orderService->findById($orderId);
         $this->assertEquals(Order::STATUS_SHIPPED, $order->status);
+    }
+
+    public function testCancelOrder() {
+        $product = $this->productService->findById(1);
+        $initialStock = $product->stock;
+
+        $orderData = [
+            'user_id'          => 1,
+            'customer_name'    => 'Test User',
+            'customer_email'   => 'test@example.com',
+            'total'            => 100.00,
+            'total_vat_amount' => 16.67,
+            'shipping_address' => '123 Test St',
+            'notes'            => '',
+            'delivery_method'  => 'Standard',
+            'delivery_cost'    => 0.00
+        ];
+        $items = [['product' => $product, 'qty' => 1, 'unit_price' => $product->price, 'vat_amount' => 16.67]];
+        $orderId = $this->orderService->create($orderData, $items);
+
+        // Confirm and set payment method
+        $this->orderService->updateStatus($orderId, Order::STATUS_CONFIRMED);
+        $this->orderService->updatePaymentInfo($orderId, 'manual', 'paid', 'TEST-123');
+
+        $productAfterCreate = $this->productService->findById(1);
+        $this->assertEquals($initialStock - 1, $productAfterCreate->stock);
+
+        // Cancel the order
+        $success = $this->orderService->cancelOrder($orderId);
+        $this->assertTrue($success);
+
+        $order = $this->orderService->findById($orderId);
+        $this->assertEquals(Order::STATUS_CANCELLED, $order->status);
+        $this->assertEquals('refunded', $order->refund_status);
+        $this->assertEquals(100.00, $order->refunded_amount);
+
+        // Check stock was replenished
+        $productAfterCancel = $this->productService->findById(1);
+        $this->assertEquals($initialStock, $productAfterCancel->stock);
+    }
+
+    public function testStatusHistory() {
+        $product = $this->productService->findById(1);
+        $orderData = [
+            'user_id'          => 1,
+            'customer_name'    => 'Test User',
+            'customer_email'   => 'test@example.com',
+            'total'            => 100.00,
+            'total_vat_amount' => 16.67,
+            'shipping_address' => '123 Test St',
+            'notes'            => '',
+            'delivery_method'  => 'Standard',
+            'delivery_cost'    => 0.00
+        ];
+        $items = [['product' => $product, 'qty' => 1, 'unit_price' => $product->price, 'vat_amount' => 16.67]];
+        $orderId = $this->orderService->create($orderData, $items);
+
+        $this->orderService->updateStatus($orderId, Order::STATUS_CONFIRMED, 1, 'Confirmed by admin');
+        $this->orderService->updateStatus($orderId, Order::STATUS_SHIPPED, null, 'Package sent');
+
+        $history = $this->orderService->getStatusHistory($orderId);
+        
+        $this->assertCount(3, $history);
+        $this->assertEquals(Order::STATUS_SHIPPED, $history[0]['status']);
+        $this->assertEquals('Package sent', $history[0]['notes']);
+        $this->assertEquals(Order::STATUS_CONFIRMED, $history[1]['status']);
+        $this->assertEquals('Confirmed by admin', $history[1]['notes']);
+        $this->assertEquals(1, $history[1]['created_by_user_id']);
+        $this->assertEquals(Order::STATUS_PENDING, $history[2]['status']);
     }
 }

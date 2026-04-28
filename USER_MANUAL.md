@@ -92,7 +92,11 @@ The dashboard provides an immediate overview of your business:
 
 ### Order Fulfillment
 *   **Status Workflow:** Transition orders through `Pending` → `Confirmed` → `Shipped` → `Delivered`.
-*   **Inventory Sync:** Stock levels are automatically adjusted when orders are placed or cancelled.
+*   **Enhanced History:** View a detailed timeline of all order events, including status updates, return requests, and refund processing.
+*   **Action Attribution:** Every status change is logged with the name of the user or administrator who authorized it.
+*   **Return Management:** Review and approve or reject customer return requests with optional notes.
+*   **Refund Tracking:** Monitor refund status (Partially Refunded, Fully Refunded) and amounts directly within the order detail view.
+*   **Inventory Sync:** Stock levels are automatically adjusted when orders are placed, cancelled, or when items are returned and approved.
 
 ### User & Delivery Management
 *   **Role Control:** Manage users and assign `Admin` or `Customer` roles.

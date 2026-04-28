@@ -28,6 +28,8 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
 - Full CRUD for products (including image upload and featured status), categories, users, delivery options (with minimum order thresholds), and orders
 - Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
+- **Detailed Order History:** Comprehensive tracking of all status changes, return requests, and refunds, with clear attribution to the customer or admin who performed the action.
+- **Return & Refund Tracking:** Admin visibility into return requests, item-level return details, and automated refund status updates.
 - Hierarchical category management with parent/child relationships
 - Role-based access control (admin / customer)
 - Configurable site settings: name, currency symbol, password policy, rate-limit thresholds, and low-stock threshold for inventory badges and alerts

@@ -10,6 +10,7 @@ use App\Services\DeliveryServiceInterface;
 use App\Services\EmailServiceInterface;
 use App\Services\OrderServiceInterface;
 use App\Services\SettingsServiceInterface;
+use App\Services\Payment\PaymentServiceInterface;
 
 class CheckoutController {
     public function __construct(
@@ -21,6 +22,7 @@ class CheckoutController {
         private DeliveryServiceInterface $delivery,
         private EmailServiceInterface $email,
         private SettingsServiceInterface $settings,
+        private PaymentServiceInterface $payment,
         private Validator $validator,
         private \Psr\Log\LoggerInterface $logger
     ) {}
@@ -102,12 +104,35 @@ class CheckoutController {
 
             try {
                 $order_id = $this->orderService->create($orderData, $items);
+                $order = $this->orderService->findById($order_id);
+
+                // Process payment (currently using the default manual gateway)
+                $paymentResult = $this->payment->process('manual', $order);
                 
-                $this->logger->info("New order placed: ID {id}, Total {total}, Email {email}", [
-                    'id' => $order_id,
-                    'total' => $total,
-                    'email' => $email
-                ]);
+                if ($paymentResult->success) {
+                    $this->orderService->updatePaymentInfo(
+                        $order_id, 
+                        'manual', 
+                        $paymentResult->status, 
+                        $paymentResult->transactionId
+                    );
+                    
+                    // If payment is successful, we can also confirm the order
+                    $this->orderService->updateStatus($order_id, \App\Models\Order::STATUS_CONFIRMED);
+                    
+                    $this->logger->info("New order placed and paid: ID {id}, Total {total}, Email {email}", [
+                        'id' => $order_id,
+                        'total' => $total,
+                        'email' => $email
+                    ]);
+                } else {
+                    $this->logger->warning("Order created but payment failed: ID {id}, Reason: {reason}", [
+                        'id' => $order_id,
+                        'reason' => $paymentResult->message
+                    ]);
+                    // You might want to handle failed payment differently, 
+                    // e.g., redirecting to a payment retry page.
+                }
 
                 $order = $this->orderService->findById($order_id);
                 // Convert items to array structure for email service

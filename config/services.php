@@ -35,9 +35,16 @@ use App\Services\DeliveryServiceInterface;
 use App\Services\DeliveryService;
 use App\Services\AttributeServiceInterface;
 use App\Services\AttributeService;
+use App\Services\Payment\PaymentServiceInterface;
+use App\Services\Payment\PaymentService;
+use App\Services\Payment\ManualGateway;
+use App\Services\ReturnServiceInterface;
+use App\Services\ReturnService;
 
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
+
+use App\Controllers\AdminReturnsController;
 
 return function(array $config) {
     return [
@@ -74,7 +81,13 @@ return function(array $config) {
             return new CategoryService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
         OrderServiceInterface::class => function($c) {
-            return new OrderService($c->get(\PDO::class), $c->get(LoggerInterface::class), $c->get(VatServiceInterface::class));
+            return new OrderService(
+                $c->get(\PDO::class), 
+                $c->get(LoggerInterface::class), 
+                $c->get(VatServiceInterface::class),
+                $c->get(PaymentServiceInterface::class),
+                $c->get(EmailServiceInterface::class)
+            );
         },
         UserServiceInterface::class => function($c) {
             return new UserService($c->get(\PDO::class), $c->get(LoggerInterface::class));
@@ -93,6 +106,30 @@ return function(array $config) {
         },
         AttributeServiceInterface::class => function($c) {
             return new AttributeService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+        },
+        AdminReturnsController::class => function($c) {
+            return new AdminReturnsController(
+                $c->get(ReturnServiceInterface::class),
+                $c->get(OrderServiceInterface::class),
+                $c->get(AuthServiceInterface::class),
+                $c->get(\App\Core\Renderer::class),
+                $c->get(SecurityServiceInterface::class),
+                $c->get(LoggerInterface::class)
+            );
+        },
+        PaymentServiceInterface::class => function($c) {
+            $service = new PaymentService($c->get(LoggerInterface::class));
+            $service->registerGateway(new ManualGateway());
+            return $service;
+        },
+        ReturnServiceInterface::class => function($c) {
+            return new ReturnService(
+                $c->get(\PDO::class),
+                $c->get(LoggerInterface::class),
+                $c->get(OrderServiceInterface::class),
+                $c->get(PaymentServiceInterface::class),
+                $c->get(EmailServiceInterface::class)
+            );
         },
     ];
 };

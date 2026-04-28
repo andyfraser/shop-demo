@@ -12,6 +12,7 @@ use App\Controllers\AdminDeliveryController;
 use App\Controllers\AdminUsersController;
 use App\Controllers\AdminSettingsController;
 use App\Controllers\AdminAttributesController;
+use App\Controllers\AdminReturnsController;
 use App\Controllers\AccountController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
@@ -39,6 +40,7 @@ return [
     ['method' => 'GET', 'path' => '/account', 'handler' => [AccountController::class, 'show'], 'middlewares' => $authMiddleware],
     ['method' => 'POST', 'path' => '/account/address', 'handler' => [AccountController::class, 'saveAddress'], 'middlewares' => $authMiddleware],
     ['method' => 'POST', 'path' => '/account/cancel-order', 'handler' => [AccountController::class, 'cancelOrder'], 'middlewares' => $authMiddleware],
+    ['method' => 'POST', 'path' => '/account/request-return', 'handler' => [AccountController::class, 'requestReturn'], 'middlewares' => $authMiddleware],
     ['method' => 'GET', 'path' => '/account/orders/:id', 'handler' => [AccountController::class, 'orderDetail'], 'middlewares' => $authMiddleware],
 
     // Common icon routes to prevent 404 errors
@@ -74,7 +76,12 @@ return [
 
     ['method' => 'GET', 'path' => '/admin/orders', 'handler' => [AdminOrdersController::class, 'list'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/orders/detail', 'handler' => [AdminOrdersController::class, 'detail'], 'middlewares' => $adminMiddleware],
-    ['method' => 'POST', 'path' => '/admin/orders/status', 'handler' => [AdminOrdersController::class, 'updateStatus'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/orders/update-status', 'handler' => [AdminOrdersController::class, 'updateStatus'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/returns', 'handler' => [AdminReturnsController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/returns/detail', 'handler' => [AdminReturnsController::class, 'detail'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/returns/approve', 'handler' => [AdminReturnsController::class, 'approve'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/returns/reject', 'handler' => [AdminReturnsController::class, 'reject'], 'middlewares' => $adminMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/delivery', 'handler' => [AdminDeliveryController::class, 'list'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/delivery/new', 'handler' => [AdminDeliveryController::class, 'create'], 'middlewares' => $adminMiddleware],

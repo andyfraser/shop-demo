@@ -17,6 +17,11 @@
     --font-display: 'Playfair Display', Georgia, serif;
     --font-body:    'DM Sans', system-ui, sans-serif;
     --trans: .18s ease;
+
+    /* Status Colors */
+    --danger-ink:  #922b21;
+    --warning-ink: #b7770d;
+    --warning-bg:  #fef9e7;
 }
 
 body {
