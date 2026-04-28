@@ -74,6 +74,35 @@ class OrderServiceTest extends TestCase {
         // Check stock was reduced
         $productAfter = $this->productService->findById(1);
         $this->assertEquals($initialStock - 2, $productAfter->stock);
+
+        // Check history
+        $history = $this->orderService->getStatusHistory($orderId);
+        $this->assertCount(1, $history);
+        $this->assertEquals('pending', $history[0]['status']);
+        $this->assertEquals(1, $history[0]['created_by_user_id']);
+    }
+
+    public function testCreateGuestOrder() {
+        $product = $this->productService->findById(1);
+        $orderData = [
+            'user_id'          => null,
+            'customer_name'    => 'Guest User',
+            'customer_email'   => 'guest@example.com',
+            'total'            => 50.00,
+            'total_vat_amount' => 8.33,
+            'shipping_address' => '456 Guest Ln',
+            'notes'            => '',
+            'delivery_method'  => 'Standard',
+            'delivery_cost'    => 0.00
+        ];
+        $items = [['product' => $product, 'qty' => 1, 'unit_price' => 50.00, 'vat_amount' => 8.33]];
+        
+        $orderId = $this->orderService->create($orderData, $items);
+        $this->assertGreaterThan(0, $orderId);
+
+        $history = $this->orderService->getStatusHistory($orderId);
+        $this->assertCount(1, $history);
+        $this->assertNull($history[0]['created_by_user_id']);
     }
 
     public function testUpdateStatus() {

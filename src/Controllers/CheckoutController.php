@@ -118,7 +118,7 @@ class CheckoutController {
                     );
                     
                     // If payment is successful, we can also confirm the order
-                    $this->orderService->updateStatus($order_id, \App\Models\Order::STATUS_CONFIRMED);
+                    $this->orderService->updateStatus($order_id, \App\Models\Order::STATUS_CONFIRMED, $user?->id, 'Paid via ' . $paymentResult->transactionId);
                     
                     $this->logger->info("New order placed and paid: ID {id}, Total {total}, Email {email}", [
                         'id' => $order_id,

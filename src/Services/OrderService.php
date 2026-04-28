@@ -46,8 +46,8 @@ class OrderService implements OrderServiceInterface {
             $orderId = (int)$this->db->lastInsertId();
 
             // Record initial status in history
-            $historyStmt = $this->db->prepare("INSERT INTO order_status_history (order_id, status, notes) VALUES (?, ?, ?)");
-            $historyStmt->execute([$orderId, Order::STATUS_PENDING, 'Order created']);
+            $historyStmt = $this->db->prepare("INSERT INTO order_status_history (order_id, status, notes, created_by_user_id) VALUES (?, ?, ?, ?)");
+            $historyStmt->execute([$orderId, Order::STATUS_PENDING, 'Order created', $orderData['user_id'] ?? null]);
 
             $itemStmt = $this->db->prepare(
                 "INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, vat_rate, vat_amount)
