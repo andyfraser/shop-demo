@@ -181,16 +181,29 @@ class StorefrontController {
 
         $breadcrumb = $product->category_id ? $this->categoryService->getBreadcrumb($product->category_id) : [];
 
-        // Related products logic
-        $related_products = $this->productService->getByCategory([$product->category_id], 4, 1, 'featured');
-        // Filter out current product
-        $related_products = array_filter($related_products, fn($p) => $p->id != $product->id);
+        // Track Recently Viewed
+        if (!isset($_SESSION['recently_viewed'])) {
+            $_SESSION['recently_viewed'] = [];
+        }
+        // Remove if already exists to move it to the end
+        $_SESSION['recently_viewed'] = array_filter($_SESSION['recently_viewed'], fn($id) => $id != $product->id);
+        array_unshift($_SESSION['recently_viewed'], $product->id);
+        // Keep only last 5
+        $_SESSION['recently_viewed'] = array_slice($_SESSION['recently_viewed'], 0, 5);
+
+        // Fetch Recently Viewed products (excluding current)
+        $recent_ids = array_values(array_filter($_SESSION['recently_viewed'], fn($id) => $id != $product->id));
+        $recently_viewed = !empty($recent_ids) ? $this->productService->findByIds($recent_ids) : [];
+
+        // Related products logic (Smart Weighted)
+        $related_products = $this->productService->getRelatedProducts($product->id, 4);
 
         $this->renderer->render('product', [
             'page_title'      => $product->name,
             'product'         => $product,
             'breadcrumb'      => $breadcrumb,
             'related_products' => $related_products,
+            'recently_viewed'  => $recently_viewed,
             'flash_success'   => flash('success'),
         ]);
     }

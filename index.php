@@ -20,6 +20,11 @@ if (!$isDebug) {
 }
 error_reporting(E_ALL);
 
+// Start Session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Error and Exception Handling
 $errorHandler = function ($severity, $message, $file, $line) {
     if (!(error_reporting() & $severity)) {

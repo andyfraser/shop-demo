@@ -101,6 +101,35 @@
         <?php foreach ($related_products as $r): ?>
           <a href="/product/<?= h($r->slug) ?>" class="product-card">
             <div class="img-wrap">
+              <?php if ($r->featured): ?>
+                <span class="product-badge badge-featured">Featured</span>
+              <?php elseif ($r->isNew()): ?>
+                <span class="product-badge badge-new">New</span>
+              <?php endif; ?>
+              <?php product_img($r->image ?? '', $r->name) ?>
+            </div>
+            <div class="card-body">
+              <div class="card-name"><?= h($r->name) ?></div>
+              <div class="card-price"><?= money($r->price) ?></div>
+            </div>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php endif; ?>
+
+  <?php if (!empty($recently_viewed)): ?>
+    <section style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #eee;">
+      <h2 class="page-title" style="font-size:1.4rem;">Recently Viewed</h2>
+      <div class="product-grid">
+        <?php foreach ($recently_viewed as $r): ?>
+          <a href="/product/<?= h($r->slug) ?>" class="product-card">
+            <div class="img-wrap">
+              <?php if ($r->featured): ?>
+                <span class="product-badge badge-featured">Featured</span>
+              <?php elseif ($r->isNew()): ?>
+                <span class="product-badge badge-new">New</span>
+              <?php endif; ?>
               <?php product_img($r->image ?? '', $r->name) ?>
             </div>
             <div class="card-body">

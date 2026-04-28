@@ -190,4 +190,23 @@ class ProductServiceTest extends TestCase {
         $this->assertTrue(isset($filters['attributes']), "attributes missing");
         $this->assertNotEmpty($filters['attributes'], "Available attributes list is empty");
     }
+
+    public function testGetRelatedProducts() {
+        // Product 1 (ProBook Laptop 15") is in category 4 (Laptops)
+        // Product 8 (MiniBook 13") is also in category 4 (Laptops)
+        // They share brand/color attributes in seed data.
+        
+        $related = $this->service->getRelatedProducts(1, 4);
+        
+        $this->assertNotEmpty($related);
+        $this->assertCount(4, $related);
+        
+        // Product 8 should be in the results and high relevance
+        $found8 = false;
+        foreach ($related as $p) {
+            if ($p->id === 8) $found8 = true;
+            $this->assertTrue($p->id !== 1, "Current product should not be in related results");
+        }
+        $this->assertTrue($found8, "Product 8 (similar laptop) should be in related results");
+    }
 }

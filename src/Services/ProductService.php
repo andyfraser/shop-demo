@@ -127,6 +127,7 @@ class ProductService implements ProductServiceInterface {
      */
     public function findByIds(array $ids): array {
         if (empty($ids)) return [];
+        $ids = array_values($ids);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $stmt = $this->db->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
         $stmt->execute($ids);
@@ -446,5 +447,47 @@ class ProductService implements ProductServiceInterface {
 
     public function deleteVariant(int $id): void {
         $this->db->prepare("DELETE FROM product_variants WHERE id = ?")->execute([$id]);
+    }
+
+    /**
+     * Get related products based on shared attributes and category.
+     */
+    public function getRelatedProducts(int $productId, int $limit = 4): array {
+        $product = $this->findById($productId);
+        if (!$product) return [];
+
+        // Weighted query:
+        // 1. Shared attribute values (e.g. same brand, color) - Weight: 5 per match
+        // 2. Same category - Weight: 10
+        // 3. Featured - Weight: 2
+        $sql = "
+            SELECT p.*, 
+                   (
+                       (CASE WHEN p.category_id = ? THEN 10 ELSE 0 END) +
+                       (CASE WHEN p.featured = 1 THEN 2 ELSE 0 END) +
+                       COALESCE(shared_attrs.attr_count * 5, 0)
+                   ) as relevance_score
+            FROM products p
+            LEFT JOIN (
+                SELECT pav2.product_id, COUNT(*) as attr_count
+                FROM product_attribute_values pav1
+                JOIN product_attribute_values pav2 ON pav1.attribute_value_id = pav2.attribute_value_id
+                WHERE pav1.product_id = ? AND pav2.product_id != ?
+                GROUP BY pav2.product_id
+            ) shared_attrs ON p.id = shared_attrs.product_id
+            WHERE p.id != ? AND p.active = 1 AND p.stock > 0
+            ORDER BY relevance_score DESC, p.created_at DESC
+            LIMIT ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(1, $product->category_id, \PDO::PARAM_INT);
+        $stmt->bindValue(2, $productId, \PDO::PARAM_INT);
+        $stmt->bindValue(3, $productId, \PDO::PARAM_INT);
+        $stmt->bindValue(4, $productId, \PDO::PARAM_INT);
+        $stmt->bindValue(5, $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 }
