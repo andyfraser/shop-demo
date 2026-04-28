@@ -5,6 +5,7 @@ use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\ProductServiceInterface;
 use App\Services\CategoryServiceInterface;
+use App\Services\AttributeServiceInterface;
 use App\Services\SecurityServiceInterface;
 use App\Services\SettingsServiceInterface;
 use RuntimeException;
@@ -13,6 +14,7 @@ class AdminProductsController {
     public function __construct(
         private ProductServiceInterface $productService,
         private CategoryServiceInterface $categoryService,
+        private AttributeServiceInterface $attributeService,
         private Renderer $renderer,
         private Validator $validator,
         private SecurityServiceInterface $security,
@@ -38,6 +40,11 @@ class AdminProductsController {
     }
 
     public function create() {
+        $allAttributes = $this->attributeService->getAll();
+        foreach ($allAttributes as &$attr) {
+            $attr['values'] = $this->attributeService->getValues($attr['id']);
+        }
+
         $this->renderer->adminRender('products_form', [
             'page_title' => 'Add Product',
             'active'     => 'products',
@@ -47,6 +54,8 @@ class AdminProductsController {
             ],
             'product_id' => 0,
             'categories' => $this->categoryService->getFlat(),
+            'all_attributes' => $allAttributes,
+            'product_attribute_ids' => [],
             'errors'     => [],
         ]);
     }
@@ -55,6 +64,11 @@ class AdminProductsController {
         $product_id = (int)($_GET['id'] ?? 0);
         $product = $this->productService->findById($product_id);
 
+        $allAttributes = $this->attributeService->getAll();
+        foreach ($allAttributes as &$attr) {
+            $attr['values'] = $this->attributeService->getValues($attr['id']);
+        }
+
         $this->renderer->adminRender('products_form', [
             'page_title' => 'Edit Product',
             'active'     => 'products',
@@ -62,6 +76,8 @@ class AdminProductsController {
             'product'    => $product,
             'product_id' => $product_id,
             'categories' => $this->categoryService->getFlat(),
+            'all_attributes' => $allAttributes,
+            'product_attribute_ids' => $this->attributeService->getProductAttributeValues($product_id),
             'errors'     => [],
         ]);
     }
@@ -135,6 +151,18 @@ class AdminProductsController {
             $saved_id = $this->productService->save($data, $product_id);
             $final_id = $product_id ?: $saved_id;
 
+            // Handle attributes
+            $attrValueIds = isset($_POST['attribute_value_ids']) && is_array($_POST['attribute_value_ids']) 
+                ? array_map('intval', $_POST['attribute_value_ids']) 
+                : [];
+            $this->attributeService->saveProductAttributeValues($final_id, $attrValueIds);
+
+            // Handle variant-defining attributes
+            $variantAttrIds = isset($_POST['variant_attribute_ids']) && is_array($_POST['variant_attribute_ids'])
+                ? array_map('intval', $_POST['variant_attribute_ids'])
+                : [];
+            $this->attributeService->saveVariantAttributes($final_id, $variantAttrIds);
+
             // Handle variants
             if (isset($_POST['variants']) && is_array($_POST['variants'])) {
                 foreach ($_POST['variants'] as $v) {
@@ -143,19 +171,25 @@ class AdminProductsController {
                         continue;
                     }
 
-                    if (empty($v['name'])) continue;
+                    if (empty($v['name']) && empty($v['attr_values'])) continue;
 
                     $vData = [
                         'product_id' => $final_id,
-                        'name'       => trim($v['name']),
+                        'name'       => trim($v['name'] ?? ''),
                         'sku'        => trim($v['sku'] ?? ''),
-                        'price'      => $v['price'] !== '' ? (float)$v['price'] : null,
+                        'price'      => isset($v['price']) && $v['price'] !== '' ? (float)$v['price'] : null,
                         'stock'      => (int)($v['stock'] ?? 0),
                         'active'     => 1,
                         'sort_order' => (int)($v['sort_order'] ?? 0)
                     ];
                     $vId = !empty($v['id']) ? (int)$v['id'] : 0;
-                    $this->productService->saveVariant($vData, $vId);
+                    $savedVId = $this->productService->saveVariant($vData, $vId);
+                    
+                    // Save variant attribute values
+                    $vAttrValueIds = isset($v['attr_values']) && is_array($v['attr_values'])
+                        ? array_values(array_filter(array_map('intval', $v['attr_values'])))
+                        : [];
+                    $this->attributeService->saveVariantAttributeValues($vId ?: $savedVId, $vAttrValueIds);
                 }
             }
 
@@ -182,6 +216,8 @@ class AdminProductsController {
             'product'    => $data, // Still passing array for the re-populated form on error
             'product_id' => $product_id,
             'categories' => $this->categoryService->getFlat(),
+            'all_attributes' => $allAttributes ?? [], // Use $allAttributes from earlier if available
+            'product_attribute_ids' => $_POST['attribute_value_ids'] ?? [],
             'errors'     => $errors,
         ]);
     }

@@ -153,6 +153,10 @@ foreach ($testFiles as $file) {
                                 'line' => $e->getLine()
                             ];
                         }
+                    } finally {
+                        if ($reflection->hasMethod('tearDown')) {
+                            $instance->tearDown();
+                        }
                     }
                 }
             }

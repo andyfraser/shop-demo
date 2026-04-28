@@ -37,6 +37,22 @@ class Renderer {
     }
 
     /**
+     * Render a template without any layout wrapping.
+     */
+    public function renderPartial(string $template, array $vars = []) {
+        $globals = $this->viewComposer->getStorefrontGlobals();
+        $data = array_merge($globals, $vars);
+        extract($data);
+        
+        $templateFile = __DIR__ . '/../../templates/' . $template . '.php';
+        if (file_exists($templateFile)) {
+            require $templateFile;
+        } else {
+            echo "Template not found: " . htmlspecialchars($template, ENT_QUOTES, 'UTF-8');
+        }
+    }
+
+    /**
      * Render an admin template wrapped in admin header/footer.
      */
     public function adminRender(string $template, array $vars = []) {

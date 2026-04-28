@@ -10,6 +10,7 @@ use App\Core\Database;
 use App\Services\AuthService;
 use App\Services\ProductService;
 use App\Services\SettingsService;
+use App\Services\AttributeService;
 
 class CartServiceTest extends TestCase {
     private CartServiceInterface $cart;
@@ -20,7 +21,8 @@ class CartServiceTest extends TestCase {
         $logger = new \Tests\NullLogger();
         $settings = new SettingsService($db, $logger);
         $auth = new AuthService($db, $settings, $logger);
-        $productService = new ProductService($db, $logger);
+        $attrService = new AttributeService($db, $logger);
+        $productService = new ProductService($db, $attrService, $logger);
         $vatService = new \App\Services\VatService();
         $this->cart = new CartService($productService, $auth, $vatService);
     }

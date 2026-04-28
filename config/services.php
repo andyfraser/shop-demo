@@ -33,6 +33,8 @@ use App\Services\BackupServiceInterface;
 use App\Services\BackupService;
 use App\Services\DeliveryServiceInterface;
 use App\Services\DeliveryService;
+use App\Services\AttributeServiceInterface;
+use App\Services\AttributeService;
 
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
@@ -63,7 +65,7 @@ return function(array $config) {
             return new AuthService($c->get(\PDO::class), $c->get(SettingsServiceInterface::class), $c->get(LoggerInterface::class));
         },
         ProductServiceInterface::class => function($c) {
-            return new ProductService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+            return new ProductService($c->get(\PDO::class), $c->get(AttributeServiceInterface::class), $c->get(LoggerInterface::class));
         },
         CartServiceInterface::class => function($c) {
             return new CartService($c->get(ProductServiceInterface::class), $c->get(AuthServiceInterface::class), $c->get(VatServiceInterface::class));
@@ -88,6 +90,9 @@ return function(array $config) {
         },
         DeliveryServiceInterface::class => function($c) {
             return new DeliveryService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+        },
+        AttributeServiceInterface::class => function($c) {
+            return new AttributeService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
     ];
 };

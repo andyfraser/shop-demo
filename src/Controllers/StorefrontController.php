@@ -33,26 +33,38 @@ class StorefrontController {
         $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
 
+        $filters = $this->getFiltersFromRequest();
+
         if ($query) {
-            $total_products = $this->productService->countSearch($query);
-            $products = $this->productService->search($query, $per_page, $current_page, $sort);
+            $total_products = $this->productService->countSearch($query, $filters);
+            $products = $this->productService->search($query, $per_page, $current_page, $sort, $filters);
             
             if ($per_page !== null) {
                 $total_pages = (int)ceil($total_products / $per_page);
             }
         }
 
-        $this->renderer->render('search', [
-            'page_title'     => $query ? 'Search: ' . $query : 'Search',
-            'search_query'   => $query,
-            'query'          => $query,
-            'products'       => $products,
-            'total_products' => $total_products,
-            'total_pages'    => $total_pages,
-            'current_page'   => $current_page,
-            'sort'           => $sort,
-            'per_page_param' => $per_page_param,
-        ]);
+        $available_filters = $this->productService->getAvailableFilters([], $query);
+
+        $data = [
+            'page_title'        => $query ? 'Search: ' . $query : 'Search',
+            'search_query'      => $query,
+            'query'             => $query,
+            'products'          => $products,
+            'total_products'    => $total_products,
+            'total_pages'       => $total_pages,
+            'current_page'      => $current_page,
+            'sort'              => $sort,
+            'per_page_param'    => $per_page_param,
+            'available_filters' => $available_filters,
+            'active_filters'    => $filters,
+        ];
+
+        if ($this->isAjax()) {
+            $this->renderer->renderPartial('partials/product_list', $data);
+        } else {
+            $this->renderer->render('search', $data);
+        }
     }
 
     public function category($slug = '') {
@@ -65,14 +77,8 @@ class StorefrontController {
 
         $subcategories = $this->categoryService->getSubcategories($category->id);
 
-        // Collect all descendant category IDs to include products from subcategories
         $cat_ids = [$category->id];
-        $queue = array_column($subcategories, 'id');
-        // If array_column doesn't work on objects directly in all PHP versions, 
-        // we might need to map it, but it should work for public properties.
-        if (empty($queue) && !empty($subcategories)) {
-            $queue = array_map(fn($c) => $c->id, $subcategories);
-        }
+        $queue = array_map(fn($c) => $c->id, $subcategories);
 
         while ($queue) {
             $id = array_shift($queue);
@@ -87,25 +93,36 @@ class StorefrontController {
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
         $current_page = max(1, (int)($_GET['page'] ?? 1));
 
-        $total_products = $this->productService->countByCategory($cat_ids);
-        $products = $this->productService->getByCategory($cat_ids, $per_page, $current_page, $sort);
+        $filters = $this->getFiltersFromRequest();
+
+        $total_products = $this->productService->countByCategory($cat_ids, $filters);
+        $products = $this->productService->getByCategory($cat_ids, $per_page, $current_page, $sort, $filters);
         
         $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
+        $available_filters = $this->productService->getAvailableFilters($cat_ids);
         $breadcrumb = $this->categoryService->getBreadcrumb($category->id);
 
-        $this->renderer->render('category', [
-            'page_title'     => $category->name,
-            'category'       => $category,
-            'subcategories'  => $subcategories,
-            'products'       => $products,
-            'breadcrumb'     => $breadcrumb,
-            'total_products' => $total_products,
-            'total_pages'    => $total_pages,
-            'current_page'   => $current_page,
-            'sort'           => $sort,
-            'per_page_param' => $per_page_param,
-        ]);
+        $data = [
+            'page_title'        => $category->name,
+            'category'          => $category,
+            'subcategories'     => $subcategories,
+            'products'          => $products,
+            'breadcrumb'        => $breadcrumb,
+            'total_products'    => $total_products,
+            'total_pages'       => $total_pages,
+            'current_page'      => $current_page,
+            'sort'              => $sort,
+            'per_page_param'    => $per_page_param,
+            'available_filters' => $available_filters,
+            'active_filters'    => $filters,
+        ];
+
+        if ($this->isAjax()) {
+            $this->renderer->renderPartial('partials/product_list', $data);
+        } else {
+            $this->renderer->render('category', $data);
+        }
     }
 
     public function products() {
@@ -115,19 +132,43 @@ class StorefrontController {
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
         $current_page = max(1, (int)($_GET['page'] ?? 1));
 
-        $total_products = $this->productService->countAllActive();
-        $products = $this->productService->getAllActive($per_page, $current_page, $sort);
+        $filters = $this->getFiltersFromRequest();
+
+        $total_products = $this->productService->countAllActive($filters);
+        $products = $this->productService->getAllActive($per_page, $current_page, $sort, $filters);
         $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
-        $this->renderer->render('products', [
-            'page_title'     => 'All Products',
-            'products'       => $products,
-            'total_products' => $total_products,
-            'total_pages'    => $total_pages,
-            'current_page'   => $current_page,
-            'sort'           => $sort,
-            'per_page_param' => $per_page_param,
-        ]);
+        $available_filters = $this->productService->getAvailableFilters();
+
+        $data = [
+            'page_title'        => 'All Products',
+            'products'          => $products,
+            'total_products'    => $total_products,
+            'total_pages'       => $total_pages,
+            'current_page'      => $current_page,
+            'sort'              => $sort,
+            'per_page_param'    => $per_page_param,
+            'available_filters' => $available_filters,
+            'active_filters'    => $filters,
+        ];
+
+        if ($this->isAjax()) {
+            $this->renderer->renderPartial('partials/product_list', $data);
+        } else {
+            $this->renderer->render('products', $data);
+        }
+    }
+
+    private function getFiltersFromRequest(): array {
+        return [
+            'price_min'  => $_GET['price_min'] ?? null,
+            'price_max'  => $_GET['price_max'] ?? null,
+            'attributes' => isset($_GET['attr']) && is_array($_GET['attr']) ? array_map('intval', $_GET['attr']) : []
+        ];
+    }
+
+    private function isAjax(): bool {
+        return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_GET['ajax']);
     }
 
     public function product($slug = '') {

@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 class ProductService implements ProductServiceInterface {
     public function __construct(
         private \PDO $db,
+        private AttributeServiceInterface $attributeService,
         private LoggerInterface $logger
     ) {}
 
@@ -46,6 +47,7 @@ class ProductService implements ProductServiceInterface {
         $product = $stmt->fetch() ?: null;
         if ($product) {
             $product->variants = $this->getVariants($id);
+            $product->variant_attribute_ids = $this->attributeService->getVariantAttributes($id);
         }
         return $product;
     }
@@ -65,6 +67,7 @@ class ProductService implements ProductServiceInterface {
         $product = $stmt->fetch() ?: null;
         if ($product) {
             $product->variants = $this->getVariants($product->id);
+            $product->variant_attribute_ids = $this->attributeService->getVariantAttributes($product->id);
         }
         return $product;
     }
@@ -133,15 +136,18 @@ class ProductService implements ProductServiceInterface {
     /**
      * Search products with pagination and sorting.
      */
-    public function search(string $query, ?int $perPage, int $currentPage, string $sort): array {
-        $like = '%' . $query . '%';
+    public function search(string $query, ?int $perPage, int $currentPage, string $sort, array $filters = []): array {
+        $params = ['%' . $query . '%', '%' . $query . '%'];
         $order_by = $this->getSortSql($sort);
         
         $sql = "SELECT p.*, c.name as cat_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
-                WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)
-                ORDER BY $order_by";
+                WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)";
+        
+        $this->applyFilters($sql, $params, $filters);
+        
+        $sql .= " ORDER BY $order_by";
         
         if ($perPage !== null) {
             $offset = ($currentPage - 1) * $perPage;
@@ -149,33 +155,41 @@ class ProductService implements ProductServiceInterface {
         }
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$like, $like]);
+        $stmt->execute($params);
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     /**
      * Count products matching search query.
      */
-    public function countSearch(string $query): int {
-        $like = '%' . $query . '%';
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM products p WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)");
-        $stmt->execute([$like, $like]);
+    public function countSearch(string $query, array $filters = []): int {
+        $params = ['%' . $query . '%', '%' . $query . '%'];
+        $sql = "SELECT COUNT(*) FROM products p WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)";
+        
+        $this->applyFilters($sql, $params, $filters);
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return (int)$stmt->fetchColumn();
     }
 
     /**
      * Get products in categories (including subcategories) with pagination and sorting.
      */
-    public function getByCategory(array $categoryIds, ?int $perPage, int $currentPage, string $sort): array {
+    public function getByCategory(array $categoryIds, ?int $perPage, int $currentPage, string $sort, array $filters = []): array {
         if (empty($categoryIds)) return [];
         $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
+        $params = $categoryIds;
         $order_by = $this->getSortSql($sort);
 
         $sql = "SELECT p.*, c.name as cat_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
-                WHERE p.category_id IN ($placeholders) AND p.active = 1
-                ORDER BY $order_by";
+                WHERE p.category_id IN ($placeholders) AND p.active = 1";
+
+        $this->applyFilters($sql, $params, $filters);
+
+        $sql .= " ORDER BY $order_by";
 
         if ($perPage !== null) {
             $offset = ($currentPage - 1) * $perPage;
@@ -183,45 +197,165 @@ class ProductService implements ProductServiceInterface {
         }
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute($categoryIds);
+        $stmt->execute($params);
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     /**
      * Count products in categories.
      */
-    public function countByCategory(array $categoryIds): int {
+    public function countByCategory(array $categoryIds, array $filters = []): int {
         if (empty($categoryIds)) return 0;
         $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM products WHERE category_id IN ($placeholders) AND active = 1");
-        $stmt->execute($categoryIds);
+        $params = $categoryIds;
+        $sql = "SELECT COUNT(*) FROM products p WHERE p.category_id IN ($placeholders) AND p.active = 1";
+        
+        $this->applyFilters($sql, $params, $filters);
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return (int)$stmt->fetchColumn();
     }
 
     /**
      * Get all active products with pagination and sorting.
      */
-    public function getAllActive(?int $perPage, int $currentPage, string $sort): array {
+    public function getAllActive(?int $perPage, int $currentPage, string $sort, array $filters = []): array {
+        $params = [];
         $order_by = $this->getSortSql($sort);
         $sql = "SELECT p.*, c.name as cat_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
-                WHERE p.active = 1
-                ORDER BY $order_by";
+                WHERE p.active = 1";
+
+        $this->applyFilters($sql, $params, $filters);
+
+        $sql .= " ORDER BY $order_by";
 
         if ($perPage !== null) {
             $offset = ($currentPage - 1) * $perPage;
             $sql .= " LIMIT " . (int)$perPage . " OFFSET " . (int)$offset;
         }
 
-        return $this->db->query($sql)->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     /**
      * Count all active products.
      */
-    public function countAllActive(): int {
-        return (int)$this->db->query("SELECT COUNT(*) FROM products WHERE active = 1")->fetchColumn();
+    public function countAllActive(array $filters = []): int {
+        $params = [];
+        $sql = "SELECT COUNT(*) FROM products p WHERE p.active = 1";
+        $this->applyFilters($sql, $params, $filters);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getAvailableFilters(array $categoryIds = [], string $query = ''): array {
+        $params = [];
+        $where = "p.active = 1";
+        
+        if (!empty($categoryIds)) {
+            $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
+            $where .= " AND p.category_id IN ($placeholders)";
+            foreach ($categoryIds as $id) $params[] = $id;
+        }
+        
+        if ($query !== '') {
+            $where .= " AND (p.name LIKE ? OR p.description LIKE ?)";
+            $params[] = '%' . $query . '%';
+            $params[] = '%' . $query . '%';
+        }
+
+        // Get Min/Max prices
+        $priceStmt = $this->db->prepare("SELECT MIN(price) as min_price, MAX(price) as max_price FROM products p WHERE $where");
+        $priceStmt->execute($params);
+        $prices = $priceStmt->fetch(\PDO::FETCH_ASSOC);
+
+        // Get Attributes and their values present in this result set
+        $attrSql = "
+            SELECT a.id as attr_id, a.name as attr_name, av.id as val_id, av.value as val_name, av.sort_order as val_sort, COUNT(DISTINCT p.id) as count
+            FROM attributes a
+            JOIN attribute_values av ON a.id = av.attribute_id
+            JOIN product_attribute_values pav ON av.id = pav.attribute_value_id
+            JOIN products p ON pav.product_id = p.id
+            LEFT JOIN product_variant_attributes pva ON p.id = pva.product_id AND a.id = pva.attribute_id
+            LEFT JOIN product_variants pv ON p.id = pv.product_id AND pv.active = 1
+            LEFT JOIN product_variant_attribute_values pvav ON pv.id = pvav.variant_id AND av.id = pvav.attribute_value_id
+            WHERE $where 
+              AND (p.force_variant = 0 OR (pva.attribute_id IS NOT NULL AND pvav.attribute_value_id IS NOT NULL))
+            GROUP BY a.id, a.name, av.id, av.value, av.sort_order
+            ORDER BY a.name ASC, av.sort_order ASC, av.value ASC
+        ";
+        
+        $attrStmt = $this->db->prepare($attrSql);
+        $attrStmt->execute($params);
+        $rows = $attrStmt->fetchAll(\PDO::FETCH_ASSOC);
+        
+        $attributes = [];
+        foreach ($rows as $row) {
+            $attrId = $row['attr_id'];
+            if (!isset($attributes[$attrId])) {
+                $attributes[$attrId] = [
+                    'id' => $attrId,
+                    'name' => $row['attr_name'],
+                    'values' => []
+                ];
+            }
+            $attributes[$attrId]['values'][] = [
+                'id' => $row['val_id'],
+                'name' => $row['val_name'],
+                'count' => $row['count']
+            ];
+        }
+
+        return [
+            'min_price' => (float)($prices['min_price'] ?? 0),
+            'max_price' => (float)($prices['max_price'] ?? 0),
+            'attributes' => array_values($attributes)
+        ];
+    }
+
+    private function applyFilters(string &$sql, array &$params, array $filters): void {
+        if (!empty($filters['price_min'])) {
+            $sql .= " AND p.price >= ?";
+            $params[] = (float)$filters['price_min'];
+        }
+        if (!empty($filters['price_max'])) {
+            $sql .= " AND p.price <= ?";
+            $params[] = (float)$filters['price_max'];
+        }
+        
+        if (!empty($filters['attributes']) && is_array($filters['attributes'])) {
+            $placeholders = implode(',', array_fill(0, count($filters['attributes']), '?'));
+            
+            $stmt = $this->db->prepare("SELECT COUNT(DISTINCT attribute_id) FROM attribute_values WHERE id IN ($placeholders)");
+            $stmt->execute($filters['attributes']);
+            $expectedGroups = (int)$stmt->fetchColumn();
+
+            if ($expectedGroups > 0) {
+                $expectedGroupsInt = (int)$expectedGroups;
+                $sql .= " AND p.id IN (
+                    SELECT pav2.product_id 
+                    FROM product_attribute_values pav2
+                    JOIN attribute_values av2 ON pav2.attribute_value_id = av2.id
+                    JOIN products p2 ON pav2.product_id = p2.id
+                    LEFT JOIN product_variant_attributes pva ON p2.id = pva.product_id AND av2.attribute_id = pva.attribute_id
+                    LEFT JOIN product_variants pv2 ON p2.id = pv2.product_id AND pv2.active = 1
+                    LEFT JOIN product_variant_attribute_values pvav2 ON pv2.id = pvav2.variant_id AND av2.id = pvav2.attribute_value_id
+                    WHERE pav2.attribute_value_id IN ($placeholders)
+                      AND (p2.force_variant = 0 OR (pva.attribute_id IS NOT NULL AND pvav2.attribute_value_id IS NOT NULL))
+                    GROUP BY pav2.product_id
+                    HAVING COUNT(DISTINCT av2.attribute_id) = $expectedGroupsInt
+                )";
+                foreach ($filters['attributes'] as $attrId) {
+                    $params[] = $attrId;
+                }
+            }
+        }
     }
 
     /**
@@ -266,7 +400,13 @@ class ProductService implements ProductServiceInterface {
     public function getVariants(int $productId): array {
         $stmt = $this->db->prepare("SELECT * FROM product_variants WHERE product_id = ? AND active = 1 ORDER BY sort_order ASC, name ASC");
         $stmt->execute([$productId]);
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, ProductVariant::class, [$this->logger]);
+        $variants = $stmt->fetchAll(\PDO::FETCH_CLASS, ProductVariant::class, [$this->logger]);
+        
+        foreach ($variants as $variant) {
+            $variant->attribute_value_ids = $this->attributeService->getVariantAttributeValues($variant->id);
+        }
+        
+        return $variants;
     }
 
     public function findVariantById(int $variantId): ?ProductVariant {

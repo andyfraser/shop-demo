@@ -7,6 +7,7 @@ use App\Services\ProductServiceInterface;
 use App\Services\ProductService;
 use App\Models\Product;
 use App\Core\Database;
+use App\Services\AttributeService;
 
 class ProductServiceTest extends TestCase {
     private ProductServiceInterface $service;
@@ -14,7 +15,9 @@ class ProductServiceTest extends TestCase {
 
     public function setUp() {
         $this->db = Database::getConnection();
-        $this->service = new ProductService($this->db, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $attrService = new AttributeService($this->db, $logger);
+        $this->service = new ProductService($this->db, $attrService, $logger);
     }
 
     public function testFindById() {
@@ -106,5 +109,85 @@ class ProductServiceTest extends TestCase {
         $this->assertEquals('Variant C', $variants[0]->name);
         $this->assertEquals('Variant A', $variants[1]->name);
         $this->assertEquals('Variant B', $variants[2]->name);
+    }
+
+    public function testFilteringByPrice() {
+        // Find products between 800 and 1500
+        $results = $this->service->getAllActive(10, 1, 'name', ['price_min' => 800, 'price_max' => 1500]);
+        $this->assertNotEmpty($results);
+        foreach ($results as $p) {
+            $this->assertTrue($p->price >= 800, "Expected price {$p->price} >= 800");
+            $this->assertTrue($p->price <= 1500, "Expected price {$p->price} <= 1500");
+        }
+    }
+
+    public function testFilteringByAttributes() {
+        // Seed data has attribute values: 1 is Brand: ProBook, 10 is Color: Silver
+        // Product 1 has both 1 and 10.
+        $results = $this->service->getAllActive(10, 1, 'name', ['attributes' => [1, 10]]);
+        $this->assertNotEmpty($results, "Filtering by attributes 1 and 10 returned no results");
+        
+        $foundProduct1 = false;
+        foreach ($results as $p) {
+            if ($p->id === 1) $foundProduct1 = true;
+        }
+        $this->assertTrue($foundProduct1, "Product 1 not found in filtered results");
+
+        // Selection 1 and 2 (two different brands) should return products that have EITHER 1 OR 2 
+        $results = $this->service->getAllActive(10, 1, 'name', ['attributes' => [1, 2]]);
+        $this->assertTrue(count($results) >= 2, "Expected at least 2 products for attributes 1 or 2"); 
+    }
+
+    public function testGetAvailableFiltersOrdering() {
+        // Create an attribute
+        $this->db->exec("INSERT INTO attributes (name) VALUES ('Order Test')");
+        $attrId = $this->db->lastInsertId();
+
+        // Create values with specific sort order
+        $this->db->exec("INSERT INTO attribute_values (attribute_id, value, sort_order) VALUES ($attrId, 'Z', 10)");
+        $valZ = $this->db->lastInsertId();
+        $this->db->exec("INSERT INTO attribute_values (attribute_id, value, sort_order) VALUES ($attrId, 'A', 30)");
+        $valA = $this->db->lastInsertId();
+        $this->db->exec("INSERT INTO attribute_values (attribute_id, value, sort_order) VALUES ($attrId, 'M', 20)");
+        $valM = $this->db->lastInsertId();
+
+        // Create product and link it
+        $productId = $this->service->save([
+            'name' => 'Order Test Product',
+            'price' => 100,
+            'vat_rate' => 20,
+            'stock' => 10,
+            'active' => 1,
+            'featured' => 0,
+            'image' => null,
+            'category_id' => null
+        ]);
+        $this->db->exec("INSERT INTO product_attribute_values (product_id, attribute_value_id) VALUES ($productId, $valZ)");
+        $this->db->exec("INSERT INTO product_attribute_values (product_id, attribute_value_id) VALUES ($productId, $valA)");
+        $this->db->exec("INSERT INTO product_attribute_values (product_id, attribute_value_id) VALUES ($productId, $valM)");
+
+        $filters = $this->service->getAvailableFilters();
+        
+        $testAttr = null;
+        foreach ($filters['attributes'] as $attr) {
+            if ($attr['name'] === 'Order Test') {
+                $testAttr = $attr;
+                break;
+            }
+        }
+
+        $this->assertNotNull($testAttr, "Order Test attribute not found");
+        $values = array_map(fn($v) => $v['name'], $testAttr['values']);
+        
+        // Should be sorted by sort_order: Z (10), M (20), A (30)
+        $this->assertEquals(['Z', 'M', 'A'], $values);
+    }
+
+    public function testGetAvailableFilters() {
+        $filters = $this->service->getAvailableFilters([4, 5, 6]); // Electronics subcategories
+        $this->assertTrue(isset($filters['min_price']), "min_price missing");
+        $this->assertTrue(isset($filters['max_price']), "max_price missing");
+        $this->assertTrue(isset($filters['attributes']), "attributes missing");
+        $this->assertNotEmpty($filters['attributes'], "Available attributes list is empty");
     }
 }

@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Core\Database;
 use App\Services\VatService;
+use App\Services\AttributeService;
 
 class OrderServiceTest extends TestCase {
     private OrderServiceInterface $orderService;
@@ -19,8 +20,10 @@ class OrderServiceTest extends TestCase {
 
     public function setUp() {
         $this->db = Database::getConnection();
-        $this->orderService = new OrderService($this->db, new \Tests\NullLogger(), new VatService());
-        $this->productService = new ProductService($this->db, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $this->orderService = new OrderService($this->db, $logger, new VatService());
+        $attrService = new AttributeService($this->db, $logger);
+        $this->productService = new ProductService($this->db, $attrService, $logger);
     }
 
     public function testCreateOrder() {

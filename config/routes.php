@@ -11,6 +11,7 @@ use App\Controllers\AdminOrdersController;
 use App\Controllers\AdminDeliveryController;
 use App\Controllers\AdminUsersController;
 use App\Controllers\AdminSettingsController;
+use App\Controllers\AdminAttributesController;
 use App\Controllers\AccountController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
@@ -81,6 +82,13 @@ return [
     ['method' => 'POST', 'path' => '/admin/delivery/new', 'handler' => [AdminDeliveryController::class, 'save'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/delivery/edit', 'handler' => [AdminDeliveryController::class, 'save'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/delivery/delete', 'handler' => [AdminDeliveryController::class, 'delete'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/attributes', 'handler' => [AdminAttributesController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/attributes/new', 'handler' => [AdminAttributesController::class, 'create'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/attributes/edit', 'handler' => [AdminAttributesController::class, 'edit'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/attributes/new', 'handler' => [AdminAttributesController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/attributes/edit', 'handler' => [AdminAttributesController::class, 'save'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/attributes/delete', 'handler' => [AdminAttributesController::class, 'delete'], 'middlewares' => $adminMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/users', 'handler' => [AdminUsersController::class, 'list'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/users/new', 'handler' => [AdminUsersController::class, 'create'], 'middlewares' => $adminMiddleware],

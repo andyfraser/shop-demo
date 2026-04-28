@@ -14,6 +14,11 @@ class ProductVariant extends Model {
     public string $created_at;
 
     /**
+     * @var int[] IDs of attribute values assigned to this variant.
+     */
+    public array $attribute_value_ids = [];
+
+    /**
      * Get effective price (falling back to product price if null).
      */
     public function getEffectivePrice(float $productPrice): float {

@@ -225,3 +225,94 @@ if (cookieBanner) {
         dismissBanner();
     });
 }
+
+// ── Faceted Filtering (AJAX) ──────────────────────────────────────────────────
+
+const filtersForm = document.getElementById('filters-form');
+const productsList = document.getElementById('products-list');
+
+if (filtersForm && productsList) {
+    const updateProducts = async () => {
+        productsList.classList.add('loading');
+        
+        const formData = new FormData(filtersForm);
+        const params = new URLSearchParams(formData);
+        
+        const url = new URL(window.location.href);
+        // Clear existing params to rebuild
+        const preservedParams = ['q']; // Preserve search query
+        const oldQ = url.searchParams.get('q');
+        
+        url.search = ''; 
+        if (oldQ) url.searchParams.set('q', oldQ);
+
+        params.forEach((value, key) => {
+            if (key === 'attr[]') {
+                url.searchParams.append(key, value);
+            } else if (value !== '') {
+                url.searchParams.set(key, value);
+            }
+        });
+
+        const fetchUrl = url.pathname + url.search + (url.search ? '&' : '?') + 'ajax=1';
+        
+        try {
+            const res = await fetch(fetchUrl, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const html = await res.text();
+            productsList.innerHTML = html;
+            window.history.pushState({}, '', url.toString());
+        } catch (e) {
+            console.error('Filtering failed', e);
+            if (typeof showToast === 'function') showToast('Failed to update products.', 'error');
+        } finally {
+            productsList.classList.remove('loading');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    filtersForm.addEventListener('change', (e) => {
+        // Debounce text inputs if needed, but for now just update
+        if (e.target.type === 'number') {
+             // Optional: add a small delay for typing
+        }
+        updateProducts();
+    });
+
+    filtersForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        updateProducts();
+    });
+    
+    productsList.addEventListener('click', (e) => {
+        const link = e.target.closest('.pagination a');
+        if (link) {
+            e.preventDefault();
+            const url = new URL(link.href);
+            const fetchUrl = url.pathname + url.search + (url.search ? '&' : '?') + 'ajax=1';
+            
+            productsList.classList.add('loading');
+            fetch(fetchUrl, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                productsList.innerHTML = html;
+                window.history.pushState({}, '', url.toString());
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            })
+            .catch(err => {
+                console.error('Pagination failed', err);
+                if (typeof showToast === 'function') showToast('Failed to load page.', 'error');
+            })
+            .finally(() => {
+                productsList.classList.remove('loading');
+            });
+        }
+    });
+
+    window.addEventListener('popstate', () => {
+        window.location.reload();
+    });
+}

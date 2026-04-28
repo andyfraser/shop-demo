@@ -32,6 +32,9 @@
     <a href="/admin/categories" class="<?= $active === 'categories' ? 'active' : '' ?>">
       <span class="ico">🏷</span> Categories
     </a>
+    <a href="/admin/attributes" class="<?= $active === 'attributes' ? 'active' : '' ?>">
+      <span class="ico">🔧</span> Attributes
+    </a>
     <a href="/admin/orders"     class="<?= $active === 'orders'     ? 'active' : '' ?>">
       <span class="ico">🧾</span> Orders
     </a>

@@ -23,6 +23,11 @@ class Product extends Model {
      */
     public array $variants = [];
 
+    /**
+     * @var int[] IDs of attributes that define variants for this product.
+     */
+    public array $variant_attribute_ids = [];
+
     // Join fields (explicitly defined)
     public ?string $cat_name = null;
     public ?string $cat_slug = null;
