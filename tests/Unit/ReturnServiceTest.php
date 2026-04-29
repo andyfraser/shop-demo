@@ -86,7 +86,7 @@ class ReturnServiceTest extends TestCase {
         // 4. Approve Return 1
         $this->returnService->approveReturn($return1Id);
         $order = $this->orderService->findById($orderId);
-        $this->assertEquals(Order::STATUS_REFUNDED, $order->status);
+        $this->assertEquals(Order::STATUS_PARTIAL_REFUND, $order->status);
 
         // 5. Reject Return 2
         $this->returnService->rejectReturn($return2Id, 'Too late');

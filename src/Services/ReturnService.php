@@ -138,17 +138,10 @@ class ReturnService implements ReturnServiceInterface {
                     $newRefundedAmount = $order->refunded_amount + $refundAmount;
                     $refundStatus = ($newRefundedAmount >= $order->total) ? 'fully_refunded' : 'partially_refunded';
                     
-                    // Check if there are any rejected returns for this order
-                    $stmtRejected = $this->db->prepare("SELECT COUNT(*) FROM returns WHERE order_id = ? AND status = ?");
-                    $stmtRejected->execute([$order->id, ReturnOrder::STATUS_REJECTED]);
-                    $hasRejected = $stmtRejected->fetchColumn() > 0;
-
                     if ($newRefundedAmount >= $order->total) {
                         $orderStatus = Order::STATUS_FULLY_REFUNDED;
-                    } elseif ($hasRejected) {
-                        $orderStatus = Order::STATUS_PARTIAL_REFUND;
                     } else {
-                        $orderStatus = Order::STATUS_REFUNDED;
+                        $orderStatus = Order::STATUS_PARTIAL_REFUND;
                     }
 
                     $stmt = $this->db->prepare("UPDATE orders SET refund_status = ?, refunded_amount = ?, status = ?, delivery_refunded = CASE WHEN ? = 1 THEN 1 ELSE delivery_refunded END WHERE id = ?");
@@ -162,17 +155,10 @@ class ReturnService implements ReturnServiceInterface {
                 // If no payment method (e.g. manual), just update order status
                 $newRefundedAmount = $order->refunded_amount + $refundAmount;
 
-                // Check if there are any rejected returns for this order
-                $stmtRejected = $this->db->prepare("SELECT COUNT(*) FROM returns WHERE order_id = ? AND status = ?");
-                $stmtRejected->execute([$order->id, ReturnOrder::STATUS_REJECTED]);
-                $hasRejected = $stmtRejected->fetchColumn() > 0;
-
                 if ($newRefundedAmount >= $order->total) {
                     $orderStatus = Order::STATUS_FULLY_REFUNDED;
-                } elseif ($hasRejected) {
-                    $orderStatus = Order::STATUS_PARTIAL_REFUND;
                 } else {
-                    $orderStatus = Order::STATUS_REFUNDED;
+                    $orderStatus = Order::STATUS_PARTIAL_REFUND;
                 }
 
                 $stmt = $this->db->prepare("UPDATE orders SET refunded_amount = ?, status = ?, delivery_refunded = CASE WHEN ? = 1 THEN 1 ELSE delivery_refunded END WHERE id = ?");

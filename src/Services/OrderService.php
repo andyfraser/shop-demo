@@ -134,7 +134,11 @@ class OrderService implements OrderServiceInterface {
             Order::STATUS_CONFIRMED,
             Order::STATUS_SHIPPED,
             Order::STATUS_DELIVERED,
-            Order::STATUS_CANCELLED
+            Order::STATUS_CANCELLED,
+            Order::STATUS_RETURNING,
+            Order::STATUS_NOT_REFUNDED,
+            Order::STATUS_FULLY_REFUNDED,
+            Order::STATUS_PARTIAL_REFUND
         ];
         
         $sql = "SELECT o.*, 

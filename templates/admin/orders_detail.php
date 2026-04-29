@@ -11,7 +11,6 @@ $getStatusBadgeClass = function($status) {
         'delivered'      => 'badge-success',
         'cancelled'      => 'badge-danger',
         'returning'      => 'badge-warning',
-        'refunded'       => 'badge-success',
         'not refunded'   => 'badge-danger',
         'fully refunded' => 'badge-success',
         'partial refund' => 'badge-success',
@@ -280,7 +279,7 @@ switch($order_status) {
             <input type="hidden" name="id" value="<?= (int)$order->id ?>">
           <div class="form-group" style="margin-bottom:.5rem;">
             <select name="status" class="form-control" style="font-size:.85rem;min-height:32px;padding:.3rem .6rem;">
-              <?php foreach (['pending','confirmed','shipped','delivered','cancelled','returning','refunded','not refunded','fully refunded', 'partial refund'] as $s): ?>
+              <?php foreach (['pending','confirmed','shipped','delivered','cancelled','returning','not refunded','fully refunded', 'partial refund'] as $s): ?>
                 <option value="<?= $s ?>" <?= $order->status === $s ? 'selected' : '' ?>>
                   <?= ucfirst($s) ?>
                 </option>

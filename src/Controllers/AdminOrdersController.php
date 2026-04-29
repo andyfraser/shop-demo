@@ -74,7 +74,6 @@ class AdminOrdersController {
             \App\Models\Order::STATUS_DELIVERED,
             \App\Models\Order::STATUS_CANCELLED,
             \App\Models\Order::STATUS_RETURNING,
-            \App\Models\Order::STATUS_REFUNDED,
             \App\Models\Order::STATUS_NOT_REFUNDED,
             \App\Models\Order::STATUS_FULLY_REFUNDED,
             \App\Models\Order::STATUS_PARTIAL_REFUND

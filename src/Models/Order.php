@@ -9,7 +9,6 @@ class Order extends Model {
     public const STATUS_DELIVERED      = 'delivered';
     public const STATUS_CANCELLED      = 'cancelled';
     public const STATUS_RETURNING      = 'returning';
-    public const STATUS_REFUNDED       = 'refunded';
     public const STATUS_NOT_REFUNDED   = 'not refunded';
     public const STATUS_FULLY_REFUNDED = 'fully refunded';
     public const STATUS_PARTIAL_REFUND = 'partial refund';
@@ -49,7 +48,6 @@ class Order extends Model {
         return in_array($this->status, [
             self::STATUS_DELIVERED,
             self::STATUS_RETURNING,
-            self::STATUS_REFUNDED,
             self::STATUS_NOT_REFUNDED,
             self::STATUS_PARTIAL_REFUND
         ]);
@@ -67,7 +65,6 @@ class Order extends Model {
             self::STATUS_DELIVERED      => 'badge-success',
             self::STATUS_CANCELLED      => 'badge-danger',
             self::STATUS_RETURNING      => 'badge-warning',
-            self::STATUS_REFUNDED       => 'badge-success',
             self::STATUS_NOT_REFUNDED   => 'badge-danger',
             self::STATUS_FULLY_REFUNDED => 'badge-success',
             self::STATUS_PARTIAL_REFUND => 'badge-success',
