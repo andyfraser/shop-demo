@@ -36,7 +36,7 @@
       <?php foreach ($products as $p): ?>
         <tr>
           <td>
-            <?php product_img($p->image ?? '', $p->name, 'thumb') ?>
+            <?php product_img($p->image ?? '', $p->name, 'thumb', '', 'thumb') ?>
           </td>
           <td>
             <strong><?= h($p->name) ?></strong>

@@ -8,6 +8,7 @@ use App\Services\SecurityServiceInterface;
 use App\Services\SettingsServiceInterface;
 use App\Services\EmailServiceInterface;
 use App\Services\UserServiceInterface;
+use App\Services\CartServiceInterface;
 
 class AuthController {
     public function __construct(
@@ -18,6 +19,7 @@ class AuthController {
         private SettingsServiceInterface $settingsService,
         private EmailServiceInterface $emailService,
         private UserServiceInterface $userService,
+        private CartServiceInterface $cartService,
         private Validator $validator,
         private \Psr\Log\LoggerInterface $logger
     ) {}
@@ -65,6 +67,7 @@ class AuthController {
             $this->securityService->clearRateLimit('login', $_SERVER['REMOTE_ADDR']);
             $remember = !empty($_POST['remember_me']);
             $this->authService->login($user, $remember);
+            $this->cartService->syncOnLogin($user->id);
             redirect($_SESSION['redirect_after_login'] ?? '/');
         }
     }
@@ -130,6 +133,7 @@ class AuthController {
 
                 $user = $this->userService->findByEmail($email);
                 $this->authService->login($user);
+                $this->cartService->syncOnLogin($user->id);
                 redirect('/?msg=verify_sent');
             }
         }

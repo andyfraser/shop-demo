@@ -8,6 +8,17 @@
 </div>
 
 <div class="content">
+  <?php if ($low_stock): ?>
+    <div class="alert alert-warning" style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;">
+      <span style="font-size:1.5rem;">⚠️</span>
+      <div>
+        <h4 style="margin:0;font-size:1rem;">Low Stock Warning</h4>
+        <p style="margin:0;font-size:.85rem;color:var(--ink-2);">There are <?= count($low_stock) ?> products running low on stock. Please review the inventory below.</p>
+      </div>
+      <a href="/admin/products" class="btn btn-outline btn-sm" style="margin-left:auto;">Manage Products</a>
+    </div>
+  <?php endif; ?>
+
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-val"><?= $stats['products'] ?></div>

@@ -10,6 +10,7 @@ use App\Services\DeliveryServiceInterface;
 use App\Services\EmailServiceInterface;
 use App\Services\OrderServiceInterface;
 use App\Services\SettingsServiceInterface;
+use App\Services\AddressServiceInterface;
 use App\Services\Payment\PaymentServiceInterface;
 
 class CheckoutController {
@@ -23,6 +24,7 @@ class CheckoutController {
         private EmailServiceInterface $email,
         private SettingsServiceInterface $settings,
         private PaymentServiceInterface $payment,
+        private AddressServiceInterface $addressService,
         private Validator $validator,
         private \Psr\Log\LoggerInterface $logger
     ) {}
@@ -38,6 +40,18 @@ class CheckoutController {
             redirect('/cart?msg=verify_required');
         }
 
+        $addresses = [];
+        $defaultAddress = null;
+        if ($user) {
+            $addresses = $this->addressService->getByUserId($user->id);
+            foreach ($addresses as $addr) {
+                if ($addr['is_default']) {
+                    $defaultAddress = $addr;
+                    break;
+                }
+            }
+        }
+
         $this->renderer->render('checkout', [
             'page_title' => 'Checkout',
             'items'      => $items,
@@ -46,7 +60,11 @@ class CheckoutController {
             'errors'     => [],
             'name'       => $user->name ?? '',
             'email'      => $user->email ?? '',
-            'address'    => $user->address ?? '',
+            'address'    => $defaultAddress['address'] ?? ($user->address ?? ''),
+            'city'       => $defaultAddress['city'] ?? '',
+            'postcode'   => $defaultAddress['postcode'] ?? '',
+            'country'    => $defaultAddress['country'] ?? '',
+            'addresses'  => $addresses,
             'notes'      => '',
             'delivery_options' => $this->delivery->active($this->cart->total()),
             'delivery_id' => null,
@@ -65,6 +83,9 @@ class CheckoutController {
         $name       = trim($_POST['name'] ?? '');
         $email      = trim($_POST['email'] ?? '');
         $address    = trim($_POST['address'] ?? '');
+        $city       = trim($_POST['city'] ?? '');
+        $postcode   = trim($_POST['postcode'] ?? '');
+        $country    = trim($_POST['country'] ?? '');
         $notes      = trim($_POST['notes'] ?? '');
         $deliveryId = (int)($_POST['delivery_option_id'] ?? 0);
 
@@ -72,6 +93,9 @@ class CheckoutController {
             'name'               => 'required',
             'email'              => 'required|email',
             'address'            => 'required',
+            'city'               => 'required',
+            'postcode'           => 'required',
+            'country'            => 'required',
             'delivery_option_id' => 'required',
         ];
 
@@ -90,13 +114,15 @@ class CheckoutController {
             $deliveryVat = $deliveryOption->price * ($defaultVatRate / (100 + $defaultVatRate));
             $totalVat = $this->cart->totalVat() + $deliveryVat;
             
+            $fullAddress = $address . "\n" . $city . "\n" . $postcode . "\n" . $country;
+
             $orderData = [
                 'user_id'          => $user->id ?? null,
                 'customer_name'    => $name,
                 'customer_email'   => $email,
                 'total'            => $total,
                 'total_vat_amount' => $totalVat,
-                'shipping_address' => $address,
+                'shipping_address' => $fullAddress,
                 'notes'            => $notes,
                 'delivery_method'  => $deliveryOption->name,
                 'delivery_cost'    => $deliveryOption->price

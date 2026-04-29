@@ -23,13 +23,13 @@ function settings(): \App\Models\Settings {
     return $settings->getSettings();
 }
 
-function product_img(string $filename = '', string $alt = '', string $class = '', string $style = ''): void {
-    $placeholder = '/public/images/placeholder.svg';
-    $src   = $filename ? h('/public/images/' . $filename) : $placeholder;
+function product_img(string $filename = '', string $alt = '', string $class = '', string $style = '', string $size = 'original'): void {
+    $imageService = Container::getInstance()->get(\App\Services\ImageServiceInterface::class);
+    $src   = $imageService->getUrl($filename, $size);
     $alt   = h($alt);
     $class = $class ? ' class="' . h($class) . '"' : '';
     $style = $style ? ' style="' . h($style) . '"' : '';
-    echo "<img src=\"{$src}\" alt=\"{$alt}\"{$class}{$style} onerror=\"this.onerror=null;this.src='{$placeholder}'\">";
+    echo "<img src=\"{$src}\" alt=\"{$alt}\"{$class}{$style}>";
 }
 
 function flash(string $key, ?string $msg = null): ?string {

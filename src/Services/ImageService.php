@@ -1,0 +1,141 @@
+<?php
+namespace App\Services;
+
+use Psr\Log\LoggerInterface;
+
+class ImageService implements ImageServiceInterface {
+    private string $uploadDir;
+    private string $baseUrl;
+
+    public function __construct(
+        private LoggerInterface $logger,
+        ?string $uploadDir = null,
+        ?string $baseUrl = null
+    ) {
+        $this->uploadDir = $testUploadDir ?? (__DIR__ . '/../../public/uploads/');
+        $this->baseUrl = $testBaseUrl ?? '/uploads/';
+        
+        if (!is_dir($this->uploadDir)) {
+            mkdir($this->uploadDir, 0755, true);
+        }
+    }
+
+    public function processUpload(array $file): ?string {
+        if (!$file || $file['error'] !== UPLOAD_ERR_OK) return null;
+
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $baseName = uniqid('img_', true);
+        $originalName = $baseName . '.' . $ext;
+        
+        if (!move_uploaded_file($file['tmp_name'], $this->uploadDir . $originalName)) {
+            return null;
+        }
+
+        $this->generateResized($originalName, $baseName . '_thumb.webp', 400, 400);
+        $this->generateResized($originalName, $baseName . '_large.webp', 1200, 1200);
+
+        return $baseName . '.' . $ext;
+    }
+
+    public function getUrl(?string $filename, string $size = 'original'): string {
+        if (!$filename) return '/public/images/placeholder.svg';
+        
+        $pathInfo = pathinfo($filename);
+        $base = $pathInfo['filename'];
+        
+        if ($size === 'thumb') {
+            $thumbFile = $base . '_thumb.webp';
+            if (file_exists($this->uploadDir . $thumbFile)) return $this->baseUrl . $thumbFile;
+        } elseif ($size === 'large') {
+            $largeFile = $base . '_large.webp';
+            if (file_exists($this->uploadDir . $largeFile)) return $this->baseUrl . $largeFile;
+        }
+        
+        // If optimized size not found or original requested, check new uploads dir then old images dir
+        if (file_exists($this->uploadDir . $filename)) {
+            return $this->baseUrl . $filename;
+        }
+        
+        // Fallback for old images
+        $oldPath = __DIR__ . '/../../public/images/' . $filename;
+        if (file_exists($oldPath)) {
+            return '/public/images/' . $filename;
+        }
+        
+        return '/public/images/placeholder.svg';
+    }
+
+    public function delete(?string $filename): void {
+        if (!$filename) return;
+        
+        $pathInfo = pathinfo($filename);
+        $base = $pathInfo['filename'];
+        
+        $filesToDelete = [
+            $filename,
+            $base . '_thumb.webp',
+            $base . '_large.webp'
+        ];
+
+        foreach ($filesToDelete as $f) {
+            $fullPath = $this->uploadDir . $f;
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+        }
+    }
+
+    private function generateResized(string $sourceFile, string $targetName, int $maxWidth, int $maxHeight): bool {
+        $sourcePath = $this->uploadDir . $sourceFile;
+        if (!file_exists($sourcePath)) return false;
+
+        $info = getimagesize($sourcePath);
+        if (!$info) return false;
+
+        [$width, $height, $type] = $info;
+        
+        $srcImage = match($type) {
+            IMAGETYPE_JPEG => imagecreatefromjpeg($sourcePath),
+            IMAGETYPE_PNG  => imagecreatefrompng($sourcePath),
+            IMAGETYPE_GIF  => imagecreatefromgif($sourcePath),
+            IMAGETYPE_WEBP => imagecreatefromwebp($sourcePath),
+            default        => null
+        };
+
+        if (!$srcImage) return false;
+
+        $ratio = min($maxWidth / $width, $maxHeight / $height);
+        if ($ratio >= 1.0) {
+            $newWidth = $width;
+            $newHeight = $height;
+        } else {
+            $newWidth = (int)($width * $ratio);
+            $newHeight = (int)($height * $ratio);
+        }
+
+        $dstImage = imagecreatetruecolor($newWidth, $newHeight);
+        
+        // Preserve transparency for PNG/GIF/WebP
+        if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_GIF || $type === IMAGETYPE_WEBP) {
+            imagealphablending($dstImage, false);
+            imagesavealpha($dstImage, true);
+            $transparent = imagecolorallocatealpha($dstImage, 255, 255, 255, 127);
+            imagefilledrectangle($dstImage, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+
+        imagecopyresampled($dstImage, $srcImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+        $result = false;
+        if (function_exists('imagewebp')) {
+            $result = imagewebp($dstImage, $this->uploadDir . $targetName, 80);
+        } else {
+            // Fallback to JPEG if WebP not supported
+            $result = imagejpeg($dstImage, $this->uploadDir . str_replace('.webp', '.jpg', $targetName), 80);
+        }
+
+        imagedestroy($srcImage);
+        imagedestroy($dstImage);
+
+        return $result;
+    }
+}

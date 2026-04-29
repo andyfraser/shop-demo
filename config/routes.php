@@ -13,6 +13,7 @@ use App\Controllers\AdminUsersController;
 use App\Controllers\AdminSettingsController;
 use App\Controllers\AdminAttributesController;
 use App\Controllers\AdminReturnsController;
+use App\Controllers\AdminReviewsController;
 use App\Controllers\AccountController;
 use App\Controllers\WishlistController;
 use App\Middleware\AuthMiddleware;
@@ -29,6 +30,7 @@ return [
     ['method' => 'GET', 'path' => '/category/:slug', 'handler' => [StorefrontController::class, 'category']],
     ['method' => 'GET', 'path' => '/product/:slug', 'handler' => [StorefrontController::class, 'product']],
     ['method' => 'POST', 'path' => '/product/:slug', 'handler' => [CartController::class, 'add']],
+    ['method' => 'POST', 'path' => '/product/:slug/review', 'handler' => [StorefrontController::class, 'submitReview'], 'middlewares' => $authMiddleware],
 
     // Auth routes
     ['method' => 'GET', 'path' => '/login', 'handler' => [AuthController::class, 'showLogin']],
@@ -38,8 +40,13 @@ return [
     ['method' => 'GET', 'path' => '/verify-email', 'handler' => [AuthController::class, 'verifyEmail']],
     ['method' => 'GET', 'path' => '/verify-email/resend', 'handler' => [AuthController::class, 'resendVerification']],
     ['method' => 'GET', 'path' => '/logout', 'handler' => [AuthController::class, 'logout']],
+    
     ['method' => 'GET', 'path' => '/account', 'handler' => [AccountController::class, 'show'], 'middlewares' => $authMiddleware],
-    ['method' => 'POST', 'path' => '/account/address', 'handler' => [AccountController::class, 'saveAddress'], 'middlewares' => $authMiddleware],
+    ['method' => 'GET', 'path' => '/account/addresses/new', 'handler' => [AccountController::class, 'newAddress'], 'middlewares' => $authMiddleware],
+    ['method' => 'GET', 'path' => '/account/addresses/edit', 'handler' => [AccountController::class, 'editAddress'], 'middlewares' => $authMiddleware],
+    ['method' => 'POST', 'path' => '/account/addresses/save', 'handler' => [AccountController::class, 'saveAddress'], 'middlewares' => $authMiddleware],
+    ['method' => 'POST', 'path' => '/account/addresses/delete', 'handler' => [AccountController::class, 'deleteAddress'], 'middlewares' => $authMiddleware],
+    ['method' => 'POST', 'path' => '/account/addresses/default', 'handler' => [AccountController::class, 'setDefaultAddress'], 'middlewares' => $authMiddleware],
     ['method' => 'POST', 'path' => '/account/cancel-order', 'handler' => [AccountController::class, 'cancelOrder'], 'middlewares' => $authMiddleware],
     ['method' => 'POST', 'path' => '/account/request-return', 'handler' => [AccountController::class, 'requestReturn'], 'middlewares' => $authMiddleware],
     ['method' => 'GET', 'path' => '/account/orders/:id', 'handler' => [AccountController::class, 'orderDetail'], 'middlewares' => $authMiddleware],
@@ -88,6 +95,9 @@ return [
     ['method' => 'GET', 'path' => '/admin/returns/detail', 'handler' => [AdminReturnsController::class, 'detail'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/returns/approve', 'handler' => [AdminReturnsController::class, 'approve'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/returns/reject', 'handler' => [AdminReturnsController::class, 'reject'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/reviews', 'handler' => [AdminReviewsController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/reviews/update-status', 'handler' => [AdminReviewsController::class, 'updateStatus'], 'middlewares' => $adminMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/delivery', 'handler' => [AdminDeliveryController::class, 'list'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/delivery/new', 'handler' => [AdminDeliveryController::class, 'create'], 'middlewares' => $adminMiddleware],

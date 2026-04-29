@@ -29,16 +29,26 @@ class FileLogger extends AbstractLogger {
     }
 
     private function rotate(): void {
-        if (!file_exists($this->logFile)) {
+        $this->rotateFile($this->logFile);
+
+        // Also rotate recovery.log if it exists in the same directory
+        $recoveryLog = dirname($this->logFile) . '/recovery.log';
+        if (file_exists($recoveryLog)) {
+            $this->rotateFile($recoveryLog);
+        }
+    }
+
+    private function rotateFile(string $filePath): void {
+        if (!file_exists($filePath)) {
             return;
         }
 
-        $lastModified = filemtime($this->logFile);
+        $lastModified = filemtime($filePath);
         if (date('Y-m-d', $lastModified) === date('Y-m-d')) {
             return;
         }
 
-        $info = pathinfo($this->logFile);
+        $info = pathinfo($filePath);
         $rotatedFile = sprintf(
             "%s/%s-%s.%s",
             $info['dirname'],
@@ -47,12 +57,12 @@ class FileLogger extends AbstractLogger {
             $info['extension']
         );
 
-        rename($this->logFile, $rotatedFile);
-        $this->cleanup();
+        rename($filePath, $rotatedFile);
+        $this->cleanupFile($filePath);
     }
 
-    private function cleanup(): void {
-        $info = pathinfo($this->logFile);
+    private function cleanupFile(string $filePath): void {
+        $info = pathinfo($filePath);
         $pattern = sprintf("%s/%s-*.%s", $info['dirname'], $info['filename'], $info['extension']);
         $files = glob($pattern);
         $threshold = strtotime("-{$this->retentionDays} days");

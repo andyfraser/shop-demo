@@ -27,7 +27,7 @@
         <?php elseif ($p->isNew()): ?>
           <span class="product-badge badge-new">New</span>
         <?php endif; ?>
-        <?php product_img($p->image ?? '', $p->name) ?>
+        <?php product_img($p->image ?? '', $p->name, '', '', 'thumb') ?>
       </div>
       <div class="card-body">
         <?php if (isset($category) && $p->cat_name !== $category->name): ?>

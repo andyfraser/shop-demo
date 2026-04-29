@@ -79,6 +79,18 @@ class EmailService implements EmailServiceInterface {
         return $this->sendHtmlEmail($toEmail, $subject, $message);
     }
 
+    public function sendAbandonedCartEmail(string $toEmail, string $name): bool {
+        $subject = "You left something in your cart! - " . $this->getCleanSiteName();
+        
+        $message = $this->renderTemplate('abandoned_cart', [
+            'name' => $name,
+            'subject' => $subject,
+            'cartUrl' => $this->getBaseUrl() . '/cart'
+        ]);
+
+        return $this->sendHtmlEmail($toEmail, $subject, $message);
+    }
+
     private function getBaseUrl(): string {
         if (isset($_SERVER['HTTP_HOST'])) {
             return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";

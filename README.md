@@ -14,12 +14,14 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 **Storefront**
 - Hierarchical product categories with dropdown navigation
 - Product listings with breadcrumbs, detailed attribute-based related products, and detail pages. **Note:** Out-of-stock products are automatically hidden from the featured homepage list.
+- **Product Reviews:** Customer rating and comment system with admin moderation workflow.
 - **Recently Viewed Products:** Session-based tracking of browsing history on product pages with automatic sorting by time.
 - **Smart Recommendations:** A weighted relevance algorithm that prioritizes products based on shared attributes (e.g., Brand, Color) and categories.
 - Full-text product search with sorting and configurable pagination (12 / 24 / all)
-- Session-based shopping cart with AJAX add/update/remove and live badge counter
+- **Persistent Shopping Cart:** Database-backed cart that persists across sessions and devices, with automatic merging upon login.
 - Checkout with saved shipping address pre-fill and dynamic delivery options
-- Customer accounts with order history, saved shipping address, and **order cancellation for pending orders**
+- **Enhanced Address Book:** Customer management of multiple shipping addresses with labels and default selection.
+- Customer accounts with order history and **order cancellation for pending orders**
 - User registration with email verification, **resend verification functionality**, and login
 - **PSR-3 compliant logging** with file-based output and conditional debug mode
 - Privacy-compliant cookie consent banner with persistence logic
@@ -27,9 +29,11 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
 - Full CRUD for products (including image upload and featured status), categories, users, delivery options (with minimum order thresholds), and orders
+- **Review Moderation:** Approve or reject customer product reviews.
 - Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
 - **Detailed Order History:** Comprehensive tracking of all status changes, return requests, and refunds, with clear attribution to the customer or admin who performed the action.
 - **Return & Refund Tracking:** Admin visibility into return requests, item-level return details, and automated refund status updates.
+- **Abandoned Cart Emails:** Automated transactional emails for users with items left in their carts.
 - Hierarchical category management with parent/child relationships
 - Role-based access control (admin / customer)
 - Configurable site settings: name, currency symbol, password policy, rate-limit thresholds, and low-stock threshold for inventory badges and alerts

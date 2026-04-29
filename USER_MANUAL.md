@@ -59,6 +59,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 *   **Hierarchical Navigation:** Explore products through a multi-tier category menu.
 *   **Advanced Search:** Use the search bar to find products. Sort results by price, name, or date.
 *   **Product Details:** View high-quality images, descriptions, inventory status, and related products.
+*   **Customer Reviews:** Read and submit ratings (1-5 stars) and comments. New reviews are moderated by admins before appearing publicly.
 *   **Smart Related Products:** Discovers items using a weighted relevance algorithm (prioritizing shared attributes like Brand/Color and same-category items).
 *   **Recently Viewed:** Automatically tracks your last 7 viewed items in a dedicated section at the bottom of the page, sorted with the most recent items on the left.
 *   **Inventory Logic:** Out-of-stock products are automatically hidden from the "Featured" homepage list but remain accessible via direct links or category pages.
@@ -66,13 +67,14 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 
 ### Shopping Experience
 *   **Dynamic Cart:** Add, update, or remove items without page reloads using the AJAX-powered cart.
-*   **Seamless Checkout:** Logged-in users benefit from pre-filled shipping addresses. Choose from multiple delivery tiers based on order total.
+*   **Persistent Cart:** Your items stay in your cart even if you close your browser or switch devices. Cart contents are automatically merged when you log in.
+*   **Seamless Checkout:** Logged-in users can choose from their saved address book. Choose from multiple delivery tiers based on order total.
 *   **Order Tracking:** Registered customers can view their complete order history and track status (Pending, Confirmed, Shipped, Delivered).
 *   **Self-Service Cancellation:** Customers can cancel orders directly while they are in the `pending` status.
 
 ### Account Management
 *   **Email Verification:** New accounts require verification via a secure token sent to their email.
-*   **Profile Updates:** Manage shipping addresses and account details from the "My Account" dashboard.
+*   **Address Book:** Manage multiple shipping addresses with identifying labels (e.g., "Home", "Work"). Set a default address for faster checkout.
 
 ---
 
@@ -86,14 +88,16 @@ The dashboard provides an immediate overview of your business:
 *   **Low-Stock Alerts:** Automatically identifies products below the configured threshold.
 *   **Recent Orders:** A quick-view list of the latest customer activity.
 
-### Inventory Management
+### Inventory & Reviews
 *   **Products:** CRUD operations for items, including image uploads (JPEG, PNG, GIF, WebP up to 5MB), pricing, and "Featured" status.
 *   **Categories:** Create complex parent-child relationships with custom icons.
+*   **Review Moderation:** Review, approve, or reject customer product ratings and comments.
 
 ### Order Fulfillment
 *   **Status Workflow:** Transition orders through `Pending` → `Confirmed` → `Shipped` → `Delivered`.
 *   **Enhanced History:** View a detailed timeline of all order events, including status updates, return requests, and refund processing.
 *   **Action Attribution:** Every status change is logged with the name of the user or administrator who authorized it.
+*   **Abandoned Carts:** Automated transactional emails reach out to users who leave items in their carts without completing checkout.
 *   **Return Management:** Review and approve or reject customer return requests with optional notes.
 *   **Refund Tracking:** Monitor refund status (Partially Refunded, Fully Refunded) and amounts directly within the order detail view.
 *   **Inventory Sync:** Stock levels are automatically adjusted when orders are placed, cancelled, or when items are returned and approved.
@@ -123,7 +127,7 @@ Demoshop stores its core settings in the database, manageable via **Admin > Sett
 Demoshop features a built-in PSR-3 compliant logging system to help monitor application activity and troubleshoot issues.
 
 ### Log Files
-Logs are stored in the `logs/` directory. The primary log file is `logs/app.log`. This file contains timestamped entries for various system events, such as 404 errors or security alerts.
+Logs are stored in the `logs/` directory. The primary log file is `logs/app.log`, which contains timestamped entries for system events. If enabled, `logs/recovery.log` tracks cart recovery operations. Both files are automatically rotated daily and subject to the configured retention policy.
 
 ### Debug Mode
 You can control the verbosity of the logs and the detail of error messages via the `config.php` file. 

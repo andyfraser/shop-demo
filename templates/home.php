@@ -40,7 +40,7 @@
             <?php elseif ($p->isNew()): ?>
               <span class="product-badge badge-new">New</span>
             <?php endif; ?>
-            <?php product_img($p->image ?? '', $p->name, '', 'loading:lazy') ?>
+            <?php product_img($p->image ?? '', $p->name, '', 'loading:lazy', 'thumb') ?>
           </div>
           <div class="card-body">
             <div class="card-cat"><?= h($p->cat_name ?? 'Uncategorised') ?></div>

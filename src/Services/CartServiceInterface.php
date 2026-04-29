@@ -11,4 +11,5 @@ interface CartServiceInterface {
     public function items(): array;
     public function total(): float;
     public function totalVat(): float;
+    public function syncOnLogin(int $userId): void;
 }

@@ -42,6 +42,12 @@ use App\Services\ReturnServiceInterface;
 use App\Services\ReturnService;
 use App\Services\WishlistServiceInterface;
 use App\Services\WishlistService;
+use App\Services\ReviewServiceInterface;
+use App\Services\ReviewService;
+use App\Services\AddressServiceInterface;
+use App\Services\AddressService;
+use App\Services\ImageServiceInterface;
+use App\Services\ImageService;
 
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
@@ -75,7 +81,7 @@ return function(array $config) {
             return new ProductService($c->get(\PDO::class), $c->get(AttributeServiceInterface::class), $c->get(LoggerInterface::class));
         },
         CartServiceInterface::class => function($c) {
-            return new CartService($c->get(ProductServiceInterface::class), $c->get(AuthServiceInterface::class), $c->get(VatServiceInterface::class));
+            return new CartService($c->get(\PDO::class), $c->get(ProductServiceInterface::class), $c->get(AuthServiceInterface::class), $c->get(VatServiceInterface::class));
         },
         CategoryServiceInterface::class => function($c) {
             return new CategoryService($c->get(\PDO::class), $c->get(LoggerInterface::class));
@@ -127,6 +133,15 @@ return function(array $config) {
                 $c->get(ProductServiceInterface::class),
                 $c->get(LoggerInterface::class)
             );
+        },
+        ReviewServiceInterface::class => function($c) {
+            return new ReviewService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+        },
+        AddressServiceInterface::class => function($c) {
+            return new AddressService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+        },
+        ImageServiceInterface::class => function($c) {
+            return new ImageService($c->get(LoggerInterface::class));
         },
     ];
 };

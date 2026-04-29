@@ -6,6 +6,7 @@ use App\Services\ProductServiceInterface;
 use App\Services\CategoryServiceInterface;
 use App\Services\WishlistServiceInterface;
 use App\Services\AuthServiceInterface;
+use App\Services\ReviewServiceInterface;
 
 class StorefrontController {
     public function __construct(
@@ -13,6 +14,7 @@ class StorefrontController {
         private CategoryServiceInterface $categoryService,
         private WishlistServiceInterface $wishlistService,
         private AuthServiceInterface $authService,
+        private ReviewServiceInterface $reviewService,
         private Renderer $renderer
     ) {}
 
@@ -214,6 +216,9 @@ class StorefrontController {
             $is_in_wishlist = $this->wishlistService->isInWishlist($user->id, $product->id);
         }
 
+        $reviews = $this->reviewService->getByProductId($product->id);
+        $avg_rating = $this->reviewService->getAverageRating($product->id);
+
         $this->renderer->render('product', [
             'page_title'      => $product->name,
             'product'         => $product,
@@ -222,8 +227,34 @@ class StorefrontController {
             'recently_viewed'  => $recently_viewed,
             'is_in_wishlist'   => $is_in_wishlist,
             'is_logged_in'    => (bool)$user,
+            'reviews'         => $reviews,
+            'avg_rating'      => $avg_rating,
             'flash_success'   => flash('success'),
+            'flash_error'     => flash('error'),
         ]);
+    }
+
+    public function submitReview($slug) {
+        $product = $this->productService->findBySlug($slug);
+        if (!$product) redirect('/');
+
+        $user = $this->authService->currentUser();
+        if (!$user) {
+            flash('error', 'You must be logged in to leave a review.');
+            redirect('/product/' . $slug);
+        }
+
+        $rating = (int)($_POST['rating'] ?? 0);
+        $comment = trim($_POST['comment'] ?? '');
+
+        if ($rating < 1 || $rating > 5) {
+            flash('error', 'Please provide a rating between 1 and 5.');
+            redirect('/product/' . $slug);
+        }
+
+        $this->reviewService->submit($product->id, $user->id, $rating, $comment);
+        flash('success', 'Your review has been submitted and is awaiting moderation.');
+        redirect('/product/' . $slug);
     }
 
     public function handleIcon() {

@@ -7,6 +7,7 @@ use App\Services\SecurityServiceInterface;
 use App\Services\EmailServiceInterface;
 use App\Services\OrderServiceInterface;
 use App\Services\UserServiceInterface;
+use App\Services\AddressServiceInterface;
 use App\Services\ReturnServiceInterface;
 
 class AccountController {
@@ -18,36 +19,97 @@ class AccountController {
         private SecurityServiceInterface $security,
         private EmailServiceInterface $email,
         private ReturnServiceInterface $returnService,
+        private AddressServiceInterface $addressService,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function show() {
         $user = $this->auth->currentUser();
         $orders = $this->orderService->getForUser($user->id);
+        $addresses = $this->addressService->getByUserId($user->id);
 
         $this->renderer->render('account', [
             'page_title'      => 'My Account',
             'orders'          => $orders,
+            'addresses'       => $addresses,
             'address_saved'   => flash('address_saved'),
             'msg'             => flash('msg'),
             'msg_error'       => flash('msg_error'),
         ]);
     }
 
+    public function newAddress() {
+        $user = $this->auth->currentUser();
+        $addresses = $this->addressService->getByUserId($user->id);
+
+        $this->renderer->render('account_address_form', [
+            'page_title' => 'Add New Address',
+            'address' => null,
+            'is_new' => true,
+            'is_first' => empty($addresses),
+        ]);
+    }
+
+    public function editAddress() {
+        $id = (int)($_GET['id'] ?? 0);
+        $user = $this->auth->currentUser();
+        $address = $this->addressService->findById($id);
+
+        if (!$address || $address['user_id'] !== $user->id) {
+            redirect('/account');
+        }
+
+        $this->renderer->render('account_address_form', [
+            'page_title' => 'Edit Address',
+            'address' => $address,
+            'is_new' => false,
+        ]);
+    }
+
     public function saveAddress() {
         $this->security->verifyCsrf();
+        $user = $this->auth->currentUser();
+        $id = (int)($_POST['id'] ?? 0);
 
-        $user    = $this->auth->currentUser();
-        $address = trim($_POST['address'] ?? '');
+        $data = [
+            'label'    => trim($_POST['label'] ?? ''),
+            'name'     => trim($_POST['name'] ?? ''),
+            'address'  => trim($_POST['address'] ?? ''),
+            'city'     => trim($_POST['city'] ?? ''),
+            'postcode' => trim($_POST['postcode'] ?? ''),
+            'country'  => trim($_POST['country'] ?? ''),
+            'is_default' => isset($_POST['is_default']) ? 1 : 0,
+        ];
 
-        $this->userService->updateAddress($user->id, $address);
+        if (empty($data['label']) || empty($data['name']) || empty($data['address'])) {
+            flash('msg_error', 'Label, Name and Address are required.');
+            redirect($id ? '/account/addresses/edit?id='.$id : '/account/addresses/new');
+        }
 
-        $this->logger->notice("User {email} updated their address", ['email' => $user->email]);
+        $this->addressService->save($user->id, $data, $id);
+        flash('msg', 'Address saved.');
+        redirect('/account');
+    }
 
-        // Refresh session object
-        $user->address = $address;
+    public function deleteAddress() {
+        $this->security->verifyCsrf();
+        $user = $this->auth->currentUser();
+        $id = (int)($_POST['id'] ?? 0);
 
-        flash('address_saved', '1');
+        if ($this->addressService->delete($id, $user->id)) {
+            flash('msg', 'Address deleted.');
+        }
+        redirect('/account');
+    }
+
+    public function setDefaultAddress() {
+        $this->security->verifyCsrf();
+        $user = $this->auth->currentUser();
+        $id = (int)($_POST['id'] ?? 0);
+
+        if ($this->addressService->setDefault($id, $user->id)) {
+            flash('msg', 'Default address updated.');
+        }
         redirect('/account');
     }
 

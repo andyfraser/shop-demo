@@ -14,18 +14,54 @@
       <div>
         <div class="card">
           <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1.2rem;">Delivery Details</h2>
+          
+          <?php if (!empty($addresses)): ?>
+            <div class="form-group">
+              <label for="address-selector">Saved Addresses</label>
+              <select id="address-selector" class="form-control">
+                <option value="">— Use a new address —</option>
+                <?php foreach ($addresses as $addr): ?>
+                  <option value="<?= $addr['id'] ?>" 
+                          data-name="<?= h($addr['name']) ?>"
+                          data-address="<?= h($addr['address']) ?>"
+                          data-city="<?= h($addr['city']) ?>"
+                          data-postcode="<?= h($addr['postcode']) ?>"
+                          data-country="<?= h($addr['country']) ?>"
+                          <?= $addr['is_default'] ? 'selected' : '' ?>>
+                    <?= h($addr['label'] ?? 'Address') ?> (<?= h($addr['postcode']) ?>)
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--line);">
+          <?php endif; ?>
+
           <div class="form-group">
             <label for="name">Full Name <span style="color:var(--accent)">*</span></label>
-            <input type="text" id="name" name="name" class="form-control" value="<?= h($name ?? '') ?>" <?= !$is_guest ? 'readonly' : '' ?> required>
+            <input type="text" id="name" name="name" class="form-control" value="<?= h($name ?? '') ?>" required>
           </div>
           <div class="form-group">
             <label for="email">Email <span style="color:var(--accent)">*</span></label>
             <input type="email" id="email" name="email" class="form-control" value="<?= h($email ?? '') ?>" <?= !$is_guest ? 'readonly' : '' ?> required>
           </div>
           <div class="form-group">
-            <label for="address">Shipping Address <span style="color:var(--accent)">*</span></label>
+            <label for="address">Street Address <span style="color:var(--accent)">*</span></label>
             <textarea id="address" name="address" class="form-control"
-                      placeholder="Enter your full shipping address" rows="4"><?= h($address ?? '') ?></textarea>
+                      placeholder="Enter your street address" rows="2" required><?= h($address ?? '') ?></textarea>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="city">City <span style="color:var(--accent)">*</span></label>
+              <input type="text" id="city" name="city" class="form-control" value="<?= h($city ?? '') ?>" required>
+            </div>
+            <div class="form-group">
+              <label for="postcode">Postcode <span style="color:var(--accent)">*</span></label>
+              <input type="text" id="postcode" name="postcode" class="form-control" value="<?= h($postcode ?? '') ?>" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="country">Country <span style="color:var(--accent)">*</span></label>
+            <input type="text" id="country" name="country" class="form-control" value="<?= h($country ?? 'United Kingdom') ?>" required>
           </div>
           <div class="form-group">
             <label for="notes">Order Notes (optional)</label>
@@ -126,6 +162,20 @@ window.addEventListener('load', () => {
   if (checked) {
     const price = parseFloat(checked.closest('label').querySelector('strong').innerText.replace(currencySymbol, ''));
     updateTotal(price);
+  }
+
+  const selector = document.getElementById('address-selector');
+  if (selector) {
+    selector.addEventListener('change', function() {
+      const opt = selector.options[selector.selectedIndex];
+      if (opt.value) {
+        document.getElementById('name').value = opt.dataset.name;
+        document.getElementById('address').value = opt.dataset.address;
+        document.getElementById('city').value = opt.dataset.city;
+        document.getElementById('postcode').value = opt.dataset.postcode;
+        document.getElementById('country').value = opt.dataset.country;
+      }
+    });
   }
 });
 </script>

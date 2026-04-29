@@ -4,12 +4,14 @@ namespace App\Core;
 use App\Services\CartServiceInterface;
 use App\Services\AuthServiceInterface;
 use App\Services\CategoryServiceInterface;
+use App\Services\ImageServiceInterface;
 
 class ViewComposer {
     public function __construct(
         private CartServiceInterface $cart,
         private AuthServiceInterface $auth,
-        private CategoryServiceInterface $categoryService
+        private CategoryServiceInterface $categoryService,
+        private ImageServiceInterface $imageService
     ) {}
 
     /**
@@ -20,6 +22,7 @@ class ViewComposer {
             'cart_count' => $this->cart->count(),
             'current_user' => $this->auth->currentUser(),
             'nav_tree' => $this->categoryService->getTree(),
+            'imageService' => $this->imageService,
         ];
     }
 
@@ -29,6 +32,7 @@ class ViewComposer {
     public function getAdminGlobals(): array {
         return [
             'current_user' => $this->auth->currentUser(),
+            'imageService' => $this->imageService,
         ];
     }
 }

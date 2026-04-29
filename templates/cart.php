@@ -40,7 +40,7 @@
                 ?>
                   <tr data-item-key="<?= h($key) ?>">
                     <td style="width:80px;">
-                      <?php product_img($p->image ?? '', $p->name, 'cart-thumb') ?>
+                      <?php product_img($p->image ?? '', $p->name, 'cart-thumb', '', 'thumb') ?>
                     </td>
                     <td>
                       <a href="/product/<?= h($p->slug) ?>" class="cart-product-name">

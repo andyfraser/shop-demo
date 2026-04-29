@@ -116,6 +116,65 @@
     </div>
   </div>
 
+  <section style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--line);">
+    <div style="display:grid;grid-template-columns: 1fr 400px; gap: 4rem; align-items: start;">
+      <div>
+        <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Customer Reviews</h2>
+        <?php if ($reviews): ?>
+          <?php foreach ($reviews as $r): ?>
+            <div style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--line);">
+              <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div style="font-weight: 600;"><?= h($r['user_name']) ?></div>
+                <div style="font-size: 0.85rem; color: var(--ink-2);"><?= date('d M Y', strtotime($r['created_at'])) ?></div>
+              </div>
+              <div style="color:var(--gold); font-size: 0.85rem; margin-bottom: 0.75rem;">
+                <?= str_repeat('★', (int)$r['rating']) ?><?= str_repeat('☆', 5 - (int)$r['rating']) ?>
+              </div>
+              <div style="line-height: 1.6;"><?= nl2br(h($r['comment'])) ?></div>
+            </div>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <p style="color: var(--ink-2); font-style: italic;">No reviews yet. Be the first to review this product!</p>
+        <?php endif; ?>
+      </div>
+
+      <div class="card" style="position: sticky; top: 2rem;">
+        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">Write a Review</h3>
+        <?php if ($is_logged_in): ?>
+          <?php if (isset($flash_error)): ?>
+            <div class="alert alert-danger" style="margin-bottom: 1rem;"><?= h($flash_error) ?></div>
+          <?php endif; ?>
+          <form action="/product/<?= h($product->slug) ?>/review" method="post">
+            <?= csrf_field() ?>
+            <div class="form-group">
+              <label for="rating"><strong>Rating</strong></label>
+              <select name="rating" id="rating" class="form-control" required>
+                <option value="5">5 Stars - Excellent</option>
+                <option value="4">4 Stars - Very Good</option>
+                <option value="3">3 Stars - Good</option>
+                <option value="2">2 Stars - Poor</option>
+                <option value="1">1 Star - Terrible</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="comment"><strong>Comment</strong></label>
+              <textarea name="comment" id="comment" class="form-control" rows="5" placeholder="Share your experience with this product..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Submit Review</button>
+            <p style="font-size: 0.75rem; color: var(--ink-2); margin-top: 1rem; text-align: center;">
+              Your review will be public after it has been approved by our team.
+            </p>
+          </form>
+        <?php else: ?>
+          <div style="text-align: center; padding: 1rem;">
+            <p>Please log in to share your thoughts.</p>
+            <a href="/login?redirect=<?= urlencode($_SERVER['REQUEST_URI']) ?>" class="btn btn-outline btn-sm">Login to Review</a>
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </section>
+
   <?php if ($related_products): ?>
     <section>
       <h2 class="page-title" style="font-size:1.4rem;">Related Products</h2>
@@ -128,7 +187,7 @@
               <?php elseif ($r->isNew()): ?>
                 <span class="product-badge badge-new">New</span>
               <?php endif; ?>
-              <?php product_img($r->image ?? '', $r->name) ?>
+              <?php product_img($r->image ?? '', $r->name, '', '', 'thumb') ?>
             </div>
             <div class="card-body">
               <div class="card-name"><?= h($r->name) ?></div>

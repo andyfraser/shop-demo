@@ -19,9 +19,20 @@
     --trans: .18s ease;
 
     /* Status Colors */
+    --error:       #c0392b;
     --danger-ink:  #922b21;
     --warning-ink: #b7770d;
     --warning-bg:  #fef9e7;
+}
+
+.btn-delete {
+    color: var(--error) !important;
+    border-color: var(--line) !important;
+}
+.btn-delete:hover {
+    background: var(--error) !important;
+    color: var(--white) !important;
+    border-color: var(--error) !important;
 }
 
 body {
@@ -284,12 +295,13 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 select.form-control  { cursor: pointer; }
 
 /* ── Toggle Switch ────────────────────────────────────────────────────────── */
-.toggle-row {
+label.toggle-row {
     display: flex; align-items: center; gap: .6rem;
     margin-bottom: 1.2rem; cursor: pointer; user-select: none;
 }
-.toggle-row input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+label.toggle-row input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
 .toggle-track {
+    display: inline-block;
     position: relative; width: 40px; height: 22px; flex-shrink: 0;
     background: var(--warm); border: 1.5px solid var(--line);
     border-radius: 11px; transition: background var(--trans), border-color var(--trans);
@@ -300,10 +312,10 @@ select.form-control  { cursor: pointer; }
     background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,.2);
     transition: transform var(--trans);
 }
-.toggle-row input:checked + .toggle-track {
+label.toggle-row input:checked + .toggle-track {
     background: var(--accent); border-color: var(--accent);
 }
-.toggle-row input:checked + .toggle-track::after { transform: translateX(18px); }
+label.toggle-row input:checked + .toggle-track::after { transform: translateX(18px); }
 .toggle-label { font-size: .875rem; color: var(--ink-2); }
 
 /* ── Alerts ───────────────────────────────────────────────────────────────── */

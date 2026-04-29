@@ -8,6 +8,7 @@ use App\Services\CategoryServiceInterface;
 use App\Services\AttributeServiceInterface;
 use App\Services\SecurityServiceInterface;
 use App\Services\SettingsServiceInterface;
+use App\Services\ImageServiceInterface;
 use RuntimeException;
 
 class AdminProductsController {
@@ -19,12 +20,9 @@ class AdminProductsController {
         private Validator $validator,
         private SecurityServiceInterface $security,
         private SettingsServiceInterface $settings,
+        private ImageServiceInterface $imageService,
         private \Psr\Log\LoggerInterface $logger
     ) {}
-    
-    private function getUploadDir() {
-        return __DIR__ . '/../../public/images/';
-    }
     
     public function list() {
         $search = trim($_GET['search'] ?? '');
@@ -82,27 +80,6 @@ class AdminProductsController {
         ]);
     }
 
-    private function handleUpload(): ?string {
-        $file = $_FILES['image'] ?? null;
-        if (!$file || $file['error'] === UPLOAD_ERR_NO_FILE) return null;
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            throw new RuntimeException('Upload error code: ' . $file['error']);
-        }
-        if ($file['size'] > 5 * 1024 * 1024) {
-            throw new RuntimeException('Image must be under 5MB.');
-        }
-        $mime = mime_content_type($file['tmp_name']);
-        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'])) {
-            throw new RuntimeException('Only JPEG, PNG, GIF and WebP images are allowed.');
-        }
-        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = uniqid('img_', true) . '.' . strtolower($ext);
-        if (!move_uploaded_file($file['tmp_name'], $this->getUploadDir() . $filename)) {
-            throw new RuntimeException('Failed to save uploaded file.');
-        }
-        return $filename;
-    }
-
     public function save() {
         $this->security->verifyCsrf();
         
@@ -128,17 +105,18 @@ class AdminProductsController {
 
         if (!$errors) {
             try {
-                $uploaded = $this->handleUpload();
-                if ($uploaded) {
-                    $old = $data['image'];
-                    if ($old && file_exists($this->getUploadDir() . $old)) {
-                        unlink($this->getUploadDir() . $old);
+                $file = $_FILES['image'] ?? null;
+                if ($file && $file['error'] !== UPLOAD_ERR_NO_FILE) {
+                    $uploaded = $this->imageService->processUpload($file);
+                    if ($uploaded) {
+                        if ($data['image']) {
+                            $this->imageService->delete($data['image']);
+                        }
+                        $data['image'] = $uploaded;
                     }
-                    $data['image'] = $uploaded;
                 } elseif (isset($_POST['remove_image'])) {
-                    $old = $data['image'];
-                    if ($old && file_exists($this->getUploadDir() . $old)) {
-                        unlink($this->getUploadDir() . $old);
+                    if ($data['image']) {
+                        $this->imageService->delete($data['image']);
                     }
                     $data['image'] = null;
                 }
@@ -213,10 +191,10 @@ class AdminProductsController {
             'page_title' => ($product_id ? 'Edit' : 'Add') . ' Product',
             'active'     => 'products',
             'is_new'     => !$product_id,
-            'product'    => $data, // Still passing array for the re-populated form on error
+            'product'    => $data, 
             'product_id' => $product_id,
             'categories' => $this->categoryService->getFlat(),
-            'all_attributes' => $allAttributes ?? [], // Use $allAttributes from earlier if available
+            'all_attributes' => $allAttributes ?? [], 
             'product_attribute_ids' => $_POST['attribute_value_ids'] ?? [],
             'errors'     => $errors,
         ]);
