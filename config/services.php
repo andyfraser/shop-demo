@@ -46,8 +46,6 @@ use App\Services\WishlistService;
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
 
-use App\Controllers\AdminReturnsController;
-
 return function(array $config) {
     return [
         // PSR-3 compliant file logger
@@ -108,16 +106,6 @@ return function(array $config) {
         },
         AttributeServiceInterface::class => function($c) {
             return new AttributeService($c->get(\PDO::class), $c->get(LoggerInterface::class));
-        },
-        AdminReturnsController::class => function($c) {
-            return new AdminReturnsController(
-                $c->get(ReturnServiceInterface::class),
-                $c->get(OrderServiceInterface::class),
-                $c->get(AuthServiceInterface::class),
-                $c->get(\App\Core\Renderer::class),
-                $c->get(SecurityServiceInterface::class),
-                $c->get(LoggerInterface::class)
-            );
         },
         PaymentServiceInterface::class => function($c) {
             $service = new PaymentService($c->get(LoggerInterface::class));
