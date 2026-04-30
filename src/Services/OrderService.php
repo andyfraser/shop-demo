@@ -57,11 +57,19 @@ class OrderService implements OrderServiceInterface {
             $variantStockStmt = $this->db->prepare("UPDATE product_variants SET stock = stock - ? WHERE id = ?");
 
             foreach ($items as $item) {
-                $product = $item['product'];
-                $variant = $item['variant'] ?? null;
-                $qty = $item['qty'];
-                $unitPrice = $item['unit_price'];
-                $vatAmount = $item['vat_amount'];
+                if ($item instanceof \App\Models\CartItem) {
+                    $product = $item->product;
+                    $variant = $item->variant;
+                    $qty = $item->qty;
+                    $unitPrice = $item->unit_price;
+                    $vatAmount = $item->getVatAmount();
+                } else {
+                    $product = $item['product'];
+                    $variant = $item['variant'] ?? null;
+                    $qty = $item['qty'];
+                    $unitPrice = $item['unit_price'];
+                    $vatAmount = $item['vat_amount'];
+                }
 
                 $itemStmt->execute([
                     $orderId,
@@ -246,7 +254,7 @@ class OrderService implements OrderServiceInterface {
              ORDER BY h.id DESC"
         );
         $stmt->execute([$orderId]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, \App\Models\OrderStatusHistory::class, [$this->logger]);
     }
 
     /**

@@ -3,7 +3,7 @@ namespace App\Services;
 
 interface AttributeServiceInterface {
     public function getAll(): array;
-    public function findById(int $id): ?array;
+    public function findById(int $id): ?\App\Models\Attribute;
     public function save(array $data, int $id = 0): int;
     public function delete(int $id): void;
     

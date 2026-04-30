@@ -55,7 +55,7 @@ class AccountController {
         $user = $this->auth->currentUser();
         $address = $this->addressService->findById($id);
 
-        if (!$address || $address['user_id'] !== $user->id) {
+        if (!$address || $address->user_id !== $user->id) {
             redirect('/account');
         }
 

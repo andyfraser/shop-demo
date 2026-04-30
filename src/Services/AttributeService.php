@@ -10,13 +10,14 @@ class AttributeService implements AttributeServiceInterface {
     ) {}
 
     public function getAll(): array {
-        return $this->db->query("SELECT * FROM attributes ORDER BY name ASC")->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->db->query("SELECT * FROM attributes ORDER BY name ASC")->fetchAll(\PDO::FETCH_CLASS, \App\Models\Attribute::class, [$this->logger]);
     }
 
-    public function findById(int $id): ?array {
+    public function findById(int $id): ?\App\Models\Attribute {
         $stmt = $this->db->prepare("SELECT * FROM attributes WHERE id = ?");
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, \App\Models\Attribute::class, [$this->logger]);
         $stmt->execute([$id]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+        return $stmt->fetch() ?: null;
     }
 
     public function save(array $data, int $id = 0): int {
@@ -38,7 +39,7 @@ class AttributeService implements AttributeServiceInterface {
     public function getValues(int $attributeId): array {
         $stmt = $this->db->prepare("SELECT * FROM attribute_values WHERE attribute_id = ? ORDER BY sort_order ASC, value ASC");
         $stmt->execute([$attributeId]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, \App\Models\AttributeValue::class, [$this->logger]);
     }
 
     public function saveValue(array $data, int $id = 0): int {

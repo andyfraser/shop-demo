@@ -14,45 +14,45 @@
         <form action="/account/addresses/save" method="post">
             <?= csrf_field() ?>
             <?php if (!$is_new): ?>
-                <input type="hidden" name="id" value="<?= $address['id'] ?>">
+                <input type="hidden" name="id" value="<?= $address?->id ?>">
             <?php endif; ?>
 
             <div class="form-group">
                 <label for="label">Address Label</label>
-                <input type="text" name="label" id="label" class="form-control" value="<?= h($address['label'] ?? '') ?>" required placeholder="e.g. Home, Work, or Mom's House">
+                <input type="text" name="label" id="label" class="form-control" value="<?= h($address?->label ?? '') ?>" required placeholder="e.g. Home, Work, or Mom's House">
                 <small style="color:var(--ink-2);">A simple name to help you identify this address.</small>
             </div>
 
             <div class="form-group">
                 <label for="name">Recipient Full Name</label>
-                <input type="text" name="name" id="name" class="form-control" value="<?= h($address['name'] ?? '') ?>" required placeholder="e.g. John Doe">
+                <input type="text" name="name" id="name" class="form-control" value="<?= h($address?->name ?? '') ?>" required placeholder="e.g. John Doe">
                 <small style="color:var(--ink-2);">The name of the person receiving the package.</small>
             </div>
 
             <div class="form-group">
                 <label for="address">Street Address</label>
-                <textarea name="address" id="address" class="form-control" rows="3" required><?= h($address['address'] ?? '') ?></textarea>
+                <textarea name="address" id="address" class="form-control" rows="3" required><?= h($address?->address ?? '') ?></textarea>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label for="city">City</label>
-                    <input type="text" name="city" id="city" class="form-control" value="<?= h($address['city'] ?? '') ?>" required>
+                    <input type="text" name="city" id="city" class="form-control" value="<?= h($address?->city ?? '') ?>" required>
                 </div>
                 <div class="form-group">
                     <label for="postcode">Postcode</label>
-                    <input type="text" name="postcode" id="postcode" class="form-control" value="<?= h($address['postcode'] ?? '') ?>" required>
+                    <input type="text" name="postcode" id="postcode" class="form-control" value="<?= h($address?->postcode ?? '') ?>" required>
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="country">Country</label>
-                <input type="text" name="country" id="country" class="form-control" value="<?= h($address['country'] ?? 'United Kingdom') ?>" required>
+                <input type="text" name="country" id="country" class="form-control" value="<?= h($address?->country ?? 'United Kingdom') ?>" required>
             </div>
 
             <div class="form-group">
                 <label class="toggle-row">
-                    <input type="checkbox" name="is_default" value="1" <?= (!empty($address['is_default']) || ($is_new && ($is_first ?? false))) ? 'checked' : '' ?>>
+                    <input type="checkbox" name="is_default" value="1" <?= (($address && $address->isDefault()) || ($is_new && ($is_first ?? false))) ? 'checked' : '' ?>>
                     <span class="toggle-track"></span>
                     <span class="toggle-label">Set as default address</span>
                 </label>

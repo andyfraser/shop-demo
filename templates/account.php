@@ -28,29 +28,29 @@
 
       <?php if (!empty($addresses)): ?>
         <?php foreach ($addresses as $addr): ?>
-          <div class="card" style="margin-bottom: 1rem; padding: 1rem; border: 1px solid <?= $addr['is_default'] ? 'var(--accent)' : 'var(--line)' ?>;">
-            <?php if ($addr['is_default']): ?>
+          <div class="card" style="margin-bottom: 1rem; padding: 1rem; border: 1px solid <?= $addr->isDefault() ? 'var(--accent)' : 'var(--line)' ?>;">
+            <?php if ($addr->isDefault()): ?>
               <span class="badge badge-success" style="font-size: 0.65rem; margin-bottom: 0.5rem; display: inline-block;">Default</span>
             <?php endif; ?>
-            <div style="font-weight: 600; margin-bottom: 0.25rem; font-size: 1rem; color: var(--accent);"><?= h($addr['label'] ?? 'Address') ?></div>
-            <div style="font-weight: 500; margin-bottom: 0.25rem; font-size: 0.9rem;"><?= h($addr['name']) ?></div>
+            <div style="font-weight: 600; margin-bottom: 0.25rem; font-size: 1rem; color: var(--accent);"><?= h($addr->label ?? 'Address') ?></div>
+            <div style="font-weight: 500; margin-bottom: 0.25rem; font-size: 0.9rem;"><?= h($addr->name) ?></div>
             <div style="font-size: 0.8rem; line-height: 1.4; color: var(--ink-2);">
-              <?= nl2br(h($addr['address'])) ?><br>
-              <?= h($addr['city']) ?>, <?= h($addr['postcode']) ?><br>
-              <?= h($addr['country']) ?>
+              <?= nl2br(h($addr->address)) ?><br>
+              <?= h($addr->city) ?>, <?= h($addr->postcode) ?><br>
+              <?= h($addr->country) ?>
             </div>
             <div style="margin-top: 1rem; display: flex; gap: 0.4rem;">
-              <a href="/account/addresses/edit?id=<?= $addr['id'] ?>" class="btn btn-outline btn-sm" style="flex:1; justify-content: center; font-size: 0.75rem;">Edit</a>
+              <a href="/account/addresses/edit?id=<?= $addr->id ?>" class="btn btn-outline btn-sm" style="flex:1; justify-content: center; font-size: 0.75rem;">Edit</a>
               <form action="/account/addresses/delete" method="post" style="flex:1;" onsubmit="return confirm('Delete this address?')">
                 <?= csrf_field() ?>
-                <input type="hidden" name="id" value="<?= $addr['id'] ?>">
+                <input type="hidden" name="id" value="<?= $addr->id ?>">
                 <button type="submit" class="btn btn-outline btn-sm btn-delete" style="width:100%; justify-content: center; font-size: 0.75rem;">Delete</button>
               </form>
             </div>
-            <?php if (!$addr['is_default']): ?>
+            <?php if (!$addr->isDefault()): ?>
               <form action="/account/addresses/default" method="post" style="margin-top: 0.4rem;">
                 <?= csrf_field() ?>
-                <input type="hidden" name="id" value="<?= $addr['id'] ?>">
+                <input type="hidden" name="id" value="<?= $addr->id ?>">
                 <button type="submit" class="btn btn-outline btn-sm" style="width:100%; justify-content: center; font-size: 0.75rem;">Set as Default</button>
               </form>
             <?php endif; ?>

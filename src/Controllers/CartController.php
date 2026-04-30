@@ -47,8 +47,8 @@ class CartController
         if (is_ajax()) {
             $items = $this->cartService->items();
             $lineItems = array_map(fn($i) => [
-                'key'      => $i['key'],
-                'subtotal' => money($i['subtotal']),
+                'key'      => $i->key,
+                'subtotal' => money($i->getSubtotal()),
             ], $items);
 
             header('Content-Type: application/json');

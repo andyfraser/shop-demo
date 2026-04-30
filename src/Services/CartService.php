@@ -6,7 +6,8 @@ class CartService implements CartServiceInterface {
         private \PDO $db,
         private ProductServiceInterface $productService,
         private AuthServiceInterface $auth,
-        private VatServiceInterface $vatService
+        private VatServiceInterface $vatService,
+        private \Psr\Log\LoggerInterface $logger
     ) {}
 
     public function get(): array {
@@ -123,28 +124,27 @@ class CartService implements CartServiceInterface {
             $variant = $vid ? ($variants[$vid] ?? null) : null;
 
             $unitPrice = $variant ? $variant->getEffectivePrice($product->price) : $product->price;
-            $subtotal = $unitPrice * $qty;
-            $vatAmount = $this->vatService->calculateVatFromGross($subtotal, $product->vat_rate);
 
-            $items[] = [
-                'key'        => $key,
-                'product'    => $product,
-                'variant'    => $variant,
-                'qty'        => $qty,
-                'unit_price' => $unitPrice,
-                'subtotal'   => $subtotal,
-                'vat_amount' => $vatAmount,
-            ];
+            $item = new \App\Models\CartItem($this->logger);
+            $item->key = $key;
+            $item->product_id = $pid;
+            $item->variant_id = $vid;
+            $item->qty = $qty;
+            $item->product = $product;
+            $item->variant = $variant;
+            $item->unit_price = $unitPrice;
+
+            $items[] = $item;
         }
         return $items;
     }
 
     public function total(): float {
-        return array_sum(array_column($this->items(), 'subtotal'));
+        return array_sum(array_map(fn($item) => $item->getSubtotal(), $this->items()));
     }
 
     public function totalVat(): float {
-        return array_sum(array_column($this->items(), 'vat_amount'));
+        return array_sum(array_map(fn($item) => $item->getVatAmount(), $this->items()));
     }
 
     public function syncOnLogin(int $userId): void {

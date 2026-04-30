@@ -33,9 +33,9 @@
               </thead>
               <tbody>
                 <?php foreach ($items as $item): 
-                  $p = $item['product'];
-                  $v = $item['variant'] ?? null;
-                  $key = $item['key'];
+                  $p = $item->product;
+                  $v = $item->variant;
+                  $key = $item->key;
                   $maxStock = $v ? $v->stock : $p->stock;
                 ?>
                   <tr data-item-key="<?= h($key) ?>">
@@ -52,12 +52,12 @@
                         </div>
                       <?php endif; ?>
                     </td>
-                    <td><?= money($item['unit_price']) ?></td>
+                    <td><?= money($item->unit_price) ?></td>
                     <td>
-                      <input type="number" name="qty[<?= h($key) ?>]" value="<?= $item['qty'] ?>" min="0"
+                      <input type="number" name="qty[<?= h($key) ?>]" value="<?= $item->qty ?>" min="0"
                         max="<?= $maxStock ?>" class="form-control qty-ctrl">
                     </td>
-                    <td class="item-subtotal" data-item-key="<?= h($key) ?>"><strong><?= money($item['subtotal']) ?></strong></td>
+                    <td class="item-subtotal" data-item-key="<?= h($key) ?>"><strong><?= money($item->getSubtotal()) ?></strong></td>
                     <td>
                       <button type="submit" name="remove" value="<?= h($key) ?>" class="btn btn-outline btn-sm"
                         style="padding:.3rem .7rem;color:var(--accent)">✕</button>

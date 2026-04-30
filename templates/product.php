@@ -51,7 +51,8 @@
       <?php if (!empty($product->variants)): ?>
         <div class="form-group" style="margin: 1.5rem 0;">
           <label for="variant-select"><strong>Option</strong></label>
-          <select id="variant-select" class="form-control" style="max-width:300px;">
+          <select id="variant-select" class="form-control" style="max-width:300px;"
+                  data-low-stock-threshold="<?= settings()->low_stock_threshold ?>">
             <?php if ($product->force_variant): ?>
               <option value="" disabled selected>— Please choose —</option>
             <?php else: ?>
@@ -124,13 +125,13 @@
           <?php foreach ($reviews as $r): ?>
             <div style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--line);">
               <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <div style="font-weight: 600;"><?= h($r['user_name']) ?></div>
-                <div style="font-size: 0.85rem; color: var(--ink-2);"><?= date('d M Y', strtotime($r['created_at'])) ?></div>
+                <div style="font-weight: 600;"><?= h($r->user_name) ?></div>
+                <div style="font-size: 0.85rem; color: var(--ink-2);"><?= date('d M Y', strtotime($r->created_at)) ?></div>
               </div>
               <div style="color:var(--gold); font-size: 0.85rem; margin-bottom: 0.75rem;">
-                <?= str_repeat('★', (int)$r['rating']) ?><?= str_repeat('☆', 5 - (int)$r['rating']) ?>
+                <?= $r->getStarRating() ?>
               </div>
-              <div style="line-height: 1.6;"><?= nl2br(h($r['comment'])) ?></div>
+              <div style="line-height: 1.6;"><?= nl2br(h($r->comment)) ?></div>
             </div>
           <?php endforeach; ?>
         <?php else: ?>
@@ -224,54 +225,3 @@
   <?php endif; ?>
 
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const variantSelect = document.getElementById('variant-select');
-    if (!variantSelect) return;
-
-    const displayPrice = document.getElementById('display-price');
-    const stockStatus = document.getElementById('stock-status');
-    const variantIdInput = document.getElementById('selected-variant-id');
-    const qtyInput = document.getElementById('qty');
-    const addToCartBtn = document.getElementById('add-to-cart-btn');
-    const lowStockThreshold = <?= settings()->low_stock_threshold ?>;
-
-    function formatMoney(amount) {
-        return '£' + parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    }
-
-    variantSelect.addEventListener('change', function() {
-        const option = variantSelect.options[variantSelect.selectedIndex];
-        const price = option.dataset.price;
-        const stock = parseInt(option.dataset.stock);
-        const vid = option.value;
-
-        // Update price
-        displayPrice.textContent = formatMoney(price);
-
-        // Update hidden variant ID
-        variantIdInput.value = vid;
-
-        // Update stock status
-        let badgeHtml = '';
-        if (stock > lowStockThreshold) {
-            badgeHtml = '<span class="badge badge-success">✓ In Stock</span>';
-            addToCartBtn.disabled = false;
-        } else if (stock > 0) {
-            badgeHtml = '<span class="badge badge-warning">⚠ Only ' + stock + ' left</span>';
-            addToCartBtn.disabled = false;
-        } else {
-            badgeHtml = '<span class="badge badge-danger">✗ Out of Stock</span>';
-            addToCartBtn.disabled = true;
-        }
-        stockStatus.innerHTML = badgeHtml;
-
-        // Update quantity max
-        qtyInput.max = stock;
-        if (parseInt(qtyInput.value) > stock) {
-            qtyInput.value = stock || 1;
-        }
-    });
-});
-</script>

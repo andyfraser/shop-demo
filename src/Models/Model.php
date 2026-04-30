@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Psr\Log\LoggerInterface;
 
-abstract class Model {
+abstract class Model implements \ArrayAccess {
     /**
      * Internal storage for properties that aren't explicitly defined in the class.
      * This avoids the need for #[AllowDynamicProperties] and prevents PHP 8.2+ deprecation notices.
@@ -87,5 +87,26 @@ abstract class Model {
             }
         }
         return $this;
+    }
+
+    // ArrayAccess implementation for backwards compatibility in templates
+    public function offsetExists(mixed $offset): bool {
+        return property_exists($this, $offset) || isset($this->unmappedData[$offset]);
+    }
+
+    public function offsetGet(mixed $offset): mixed {
+        return $this->$offset ?? $this->unmappedData[$offset] ?? null;
+    }
+
+    public function offsetSet(mixed $offset, mixed $value): void {
+        if (property_exists($this, $offset)) {
+            $this->$offset = $value;
+        } else {
+            $this->unmappedData[$offset] = $value;
+        }
+    }
+
+    public function offsetUnset(mixed $offset): void {
+        unset($this->unmappedData[$offset]);
     }
 }

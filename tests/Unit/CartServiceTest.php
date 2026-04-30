@@ -26,7 +26,7 @@ class CartServiceTest extends TestCase {
         $attrService = new AttributeService($db, $logger);
         $productService = new ProductService($db, $attrService, $logger);
         $vatService = new \App\Services\VatService();
-        $this->cart = new CartService($db, $productService, $auth, $vatService);
+        $this->cart = new CartService($db, $productService, $auth, $vatService, $logger);
     }
 
     public function testAdd() {

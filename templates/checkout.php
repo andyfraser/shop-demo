@@ -8,7 +8,11 @@
     </div>
   <?php endif; ?>
 
-  <form method="POST">
+  <form method="POST" id="checkout-form"
+        data-base-total="<?= (float)$total ?>"
+        data-base-vat="<?= (float)$total_item_vat ?>"
+        data-vat-rate="<?= settings()->default_vat_rate ?>"
+        data-currency-symbol="<?= settings()->currency_symbol ?>">
     <?= csrf_field() ?>
     <div class="checkout-grid">
       <div>
@@ -21,14 +25,14 @@
               <select id="address-selector" class="form-control">
                 <option value="">— Use a new address —</option>
                 <?php foreach ($addresses as $addr): ?>
-                  <option value="<?= $addr['id'] ?>" 
-                          data-name="<?= h($addr['name']) ?>"
-                          data-address="<?= h($addr['address']) ?>"
-                          data-city="<?= h($addr['city']) ?>"
-                          data-postcode="<?= h($addr['postcode']) ?>"
-                          data-country="<?= h($addr['country']) ?>"
-                          <?= $addr['is_default'] ? 'selected' : '' ?>>
-                    <?= h($addr['label'] ?? 'Address') ?> (<?= h($addr['postcode']) ?>)
+                  <option value="<?= $addr->id ?>" 
+                          data-name="<?= h($addr->name) ?>"
+                          data-address="<?= h($addr->address) ?>"
+                          data-city="<?= h($addr->city) ?>"
+                          data-postcode="<?= h($addr->postcode) ?>"
+                          data-country="<?= h($addr->country) ?>"
+                          <?= $addr->isDefault() ? 'selected' : '' ?>>
+                    <?= h($addr->label ?? 'Address') ?> (<?= h($addr->postcode) ?>)
                   </option>
                 <?php endforeach; ?>
               </select>
@@ -96,8 +100,8 @@
         <div class="card" style="position:sticky;top:84px;">
           <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem;">Order Summary</h2>
           <?php foreach ($items as $item): 
-             $p = $item['product'];
-             $v = $item['variant'] ?? null;
+             $p = $item->product;
+             $v = $item->variant;
           ?>
             <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--line);font-size:.875rem;">
               <span>
@@ -105,9 +109,9 @@
                 <?php if ($v): ?>
                   <div style="font-size:0.75rem;color:var(--ink-2);margin-top:0.1rem;">Option: <?= h($v->name) ?></div>
                 <?php endif; ?>
-                × <?= $item['qty'] ?>
+                × <?= $item->qty ?>
               </span>
-              <strong><?= money($item['subtotal']) ?></strong>
+              <strong><?= money($item->getSubtotal()) ?></strong>
             </div>
           <?php endforeach; ?>
           <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;margin-top:.5rem;">
@@ -137,45 +141,3 @@
     </div>
   </form>
 </div>
-
-<script>
-const baseTotal = <?= (float)$total ?>;
-const baseVat = <?= (float)$total_item_vat ?>;
-const s = <?= json_encode(settings()) ?>;
-const defaultVatRate = s.default_vat_rate;
-const currencySymbol = s.currency_symbol;
-
-function updateTotal(price) {
-  const deliveryVat = price * (defaultVatRate / (100 + defaultVatRate));
-  const totalVat = baseVat + deliveryVat;
-
-  document.getElementById('delivery-row').style.display = 'flex';
-  document.getElementById('delivery-cost').innerText = currencySymbol + price.toFixed(2);
-  document.getElementById('final-total').innerText = currencySymbol + (baseTotal + price).toFixed(2);
-  document.getElementById('vat-amount').innerText = currencySymbol + totalVat.toFixed(2);
-  document.getElementById('place-order-btn').disabled = false;
-}
-
-// Handle initial selection if errors occurred and page reloaded
-window.addEventListener('load', () => {
-  const checked = document.querySelector('input[name="delivery_option_id"]:checked');
-  if (checked) {
-    const price = parseFloat(checked.closest('label').querySelector('strong').innerText.replace(currencySymbol, ''));
-    updateTotal(price);
-  }
-
-  const selector = document.getElementById('address-selector');
-  if (selector) {
-    selector.addEventListener('change', function() {
-      const opt = selector.options[selector.selectedIndex];
-      if (opt.value) {
-        document.getElementById('name').value = opt.dataset.name;
-        document.getElementById('address').value = opt.dataset.address;
-        document.getElementById('city').value = opt.dataset.city;
-        document.getElementById('postcode').value = opt.dataset.postcode;
-        document.getElementById('country').value = opt.dataset.country;
-      }
-    });
-  }
-});
-</script>

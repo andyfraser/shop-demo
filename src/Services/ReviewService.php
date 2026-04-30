@@ -21,7 +21,7 @@ class ReviewService implements ReviewServiceInterface {
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$productId]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, \App\Models\Review::class, [$this->logger]);
     }
 
     public function submit(int $productId, int $userId, int $rating, ?string $comment): bool {
@@ -38,7 +38,7 @@ class ReviewService implements ReviewServiceInterface {
              JOIN users u ON r.user_id = u.id 
              JOIN products p ON r.product_id = p.id 
              ORDER BY r.created_at DESC"
-        )->fetchAll(\PDO::FETCH_ASSOC);
+        )->fetchAll(\PDO::FETCH_CLASS, \App\Models\Review::class, [$this->logger]);
     }
 
     public function updateStatus(int $reviewId, string $status): bool {

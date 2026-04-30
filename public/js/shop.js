@@ -35,6 +35,13 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+function formatMoney(amount, symbol = '£') {
+    return symbol + parseFloat(amount).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 function updateCartBadge(count) {
     const link = document.getElementById('cart-link');
     if (!link) return;
@@ -176,6 +183,108 @@ if (cartForm) {
             submitter.textContent = originalText;
         }
     });
+}
+
+// ── Product Details ─────────────────────────────────────────────────────────
+
+const variantSelect = document.getElementById('variant-select');
+if (variantSelect) {
+    const displayPrice = document.getElementById('display-price');
+    const stockStatus = document.getElementById('stock-status');
+    const variantIdInput = document.getElementById('selected-variant-id');
+    const qtyInput = document.getElementById('qty');
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    const lowStockThreshold = parseInt(variantSelect.dataset.lowStockThreshold || 0);
+
+    variantSelect.addEventListener('change', function() {
+        const option = variantSelect.options[variantSelect.selectedIndex];
+        const price = option.dataset.price;
+        const stock = parseInt(option.dataset.stock);
+        const vid = option.value;
+
+        // Update price
+        displayPrice.textContent = formatMoney(price);
+
+        // Update hidden variant ID
+        variantIdInput.value = vid;
+
+        // Update stock status
+        let badgeHtml = '';
+        if (stock > lowStockThreshold) {
+            badgeHtml = '<span class="badge badge-success">✓ In Stock</span>';
+            addToCartBtn.disabled = false;
+        } else if (stock > 0) {
+            badgeHtml = `<span class="badge badge-warning">⚠ Only ${stock} left</span>`;
+            addToCartBtn.disabled = false;
+        } else {
+            badgeHtml = '<span class="badge badge-danger">✗ Out of Stock</span>';
+            addToCartBtn.disabled = true;
+        }
+        stockStatus.innerHTML = badgeHtml;
+
+        // Update quantity max
+        qtyInput.max = stock;
+        if (parseInt(qtyInput.value) > stock) {
+            qtyInput.value = stock || 1;
+        }
+    });
+}
+
+// ── Checkout ────────────────────────────────────────────────────────────────
+
+const checkoutForm = document.getElementById('checkout-form');
+if (checkoutForm) {
+    const baseTotal = parseFloat(checkoutForm.dataset.baseTotal || 0);
+    const baseVat = parseFloat(checkoutForm.dataset.baseVat || 0);
+    const defaultVatRate = parseFloat(checkoutForm.dataset.vatRate || 0);
+    const currencySymbol = checkoutForm.dataset.currencySymbol || '£';
+
+    const deliveryRow = document.getElementById('delivery-row');
+    const deliveryCostEl = document.getElementById('delivery-cost');
+    const finalTotalEl = document.getElementById('final-total');
+    const vatAmountEl = document.getElementById('vat-amount');
+    const placeOrderBtn = document.getElementById('place-order-btn');
+
+    const updateTotal = (price) => {
+        const deliveryVat = price * (defaultVatRate / (100 + defaultVatRate));
+        const totalVat = baseVat + deliveryVat;
+
+        if (deliveryRow) deliveryRow.style.display = 'flex';
+        if (deliveryCostEl) deliveryCostEl.textContent = formatMoney(price, currencySymbol);
+        if (finalTotalEl) finalTotalEl.textContent = formatMoney(baseTotal + price, currencySymbol);
+        if (vatAmountEl) vatAmountEl.textContent = formatMoney(totalVat, currencySymbol);
+        if (placeOrderBtn) placeOrderBtn.disabled = false;
+    };
+
+    checkoutForm.addEventListener('change', (e) => {
+        if (e.target.name === 'delivery_option_id') {
+            const label = e.target.closest('label');
+            const priceText = label.querySelector('strong').innerText.replace(currencySymbol, '');
+            updateTotal(parseFloat(priceText));
+        }
+    });
+
+    // Handle initial selection if page reloaded
+    const checked = checkoutForm.querySelector('input[name="delivery_option_id"]:checked');
+    if (checked) {
+        const priceText = checked.closest('label').querySelector('strong').innerText.replace(currencySymbol, '');
+        updateTotal(parseFloat(priceText));
+    }
+
+    // Address selector logic
+    const addressSelector = document.getElementById('address-selector');
+    if (addressSelector) {
+        addressSelector.addEventListener('change', function() {
+            const opt = addressSelector.options[addressSelector.selectedIndex];
+            if (opt.value) {
+                document.getElementById('name').value = opt.dataset.name || '';
+                document.getElementById('address').value = opt.dataset.address || '';
+                document.getElementById('city').value = opt.dataset.city || '';
+                document.getElementById('postcode').value = opt.dataset.postcode || '';
+                document.getElementById('country').value = opt.dataset.country || '';
+            }
+        });
+    }
 }
 
 // ── Mobile nav toggle ────────────────────────────────────────────────────────

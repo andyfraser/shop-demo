@@ -23,18 +23,13 @@
     <tbody>
       <?php foreach ($attributes as $attr): ?>
         <tr>
-          <td><strong><?= h($attr['name']) ?></strong></td>
+          <td><strong><?= h($attr->name) ?></strong></td>
           <td>
-            <?php 
-              // We don't have a count in the basic getAll, but we could add it.
-              // For now, let's just show the name.
-              // Actually, most other lists show some details.
-            ?>
             <span style="color:var(--ink-2);font-size:.8rem;">Managed globally</span>
           </td>
           <td>
-            <a href="/admin/attributes/edit?id=<?= $attr['id'] ?>" class="btn btn-outline btn-sm">Edit</a>
-            <a href="/admin/attributes/delete?id=<?= $attr['id'] ?>" class="btn btn-danger btn-sm"
+            <a href="/admin/attributes/edit?id=<?= $attr->id ?>" class="btn btn-outline btn-sm">Edit</a>
+            <a href="/admin/attributes/delete?id=<?= $attr->id ?>" class="btn btn-danger btn-sm"
                onclick="return confirm('Delete this attribute and all its values?')">Delete</a>
           </td>
         </tr>

@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Models\UserAddress;
 use Psr\Log\LoggerInterface;
 
 class AddressService implements AddressServiceInterface {
@@ -9,16 +10,20 @@ class AddressService implements AddressServiceInterface {
         private LoggerInterface $logger
     ) {}
 
+    /**
+     * @return UserAddress[]
+     */
     public function getByUserId(int $userId): array {
         $stmt = $this->db->prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY is_default DESC, created_at DESC");
         $stmt->execute([$userId]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, UserAddress::class, [$this->logger]);
     }
 
-    public function findById(int $id): ?array {
+    public function findById(int $id): ?UserAddress {
         $stmt = $this->db->prepare("SELECT * FROM user_addresses WHERE id = ?");
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, UserAddress::class, [$this->logger]);
         $stmt->execute([$id]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+        return $stmt->fetch() ?: null;
     }
 
     public function save(int $userId, array $data, int $id = 0): int {

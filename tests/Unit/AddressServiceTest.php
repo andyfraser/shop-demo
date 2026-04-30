@@ -34,8 +34,8 @@ class AddressServiceTest extends TestCase {
 
         $addresses = $this->service->getByUserId(1);
         $this->assertCount(1, $addresses);
-        $this->assertEquals('Home', $addresses[0]['label']);
-        $this->assertEquals(0, $addresses[0]['is_default']);
+        $this->assertEquals('Home', $addresses[0]->label);
+        $this->assertEquals(0, $addresses[0]->is_default);
     }
 
     public function testSetDefault() {
@@ -66,20 +66,20 @@ class AddressServiceTest extends TestCase {
 
         // Address 2 should be default
         $addr2 = $this->service->findById($id2);
-        $this->assertEquals(1, $addr2['is_default']);
+        $this->assertEquals(1, $addr2->is_default);
 
         // Address 1 should NOT be default
         $addr1 = $this->service->findById($id1);
-        $this->assertEquals(0, $addr1['is_default']);
+        $this->assertEquals(0, $addr1->is_default);
 
         // Set Address 1 as default
         $this->service->setDefault($id1, 1);
 
         $addr1 = $this->service->findById($id1);
-        $this->assertEquals(1, $addr1['is_default']);
+        $this->assertEquals(1, $addr1->is_default);
 
         $addr2 = $this->service->findById($id2);
-        $this->assertEquals(0, $addr2['is_default']);
+        $this->assertEquals(0, $addr2->is_default);
     }
 
     public function testDelete() {

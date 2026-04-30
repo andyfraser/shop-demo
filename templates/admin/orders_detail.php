@@ -305,16 +305,16 @@ switch($order_status) {
               <div class="timeline-dot"></div>
               <div class="timeline-content">
                 <div class="timeline-header">
-                  <span class="timeline-status badge <?= $getStatusBadgeClass($h['status']) ?>" style="font-size:.7rem;">
-                    <?= h(ucfirst($h['status'])) ?>
+                  <span class="timeline-status badge <?= $h->getStatusBadgeClass() ?>" style="font-size:.7rem;">
+                    <?= h(ucfirst($h->status)) ?>
                   </span>
-                  <span class="timeline-date"><?= date('d M, H:i', strtotime($h['created_at'])) ?></span>
+                  <span class="timeline-date"><?= date('d M, H:i', strtotime($h->created_at)) ?></span>
                 </div>
-                <?php if ($h['notes']): ?>
-                  <div class="timeline-notes"><?= h($h['notes']) ?></div>
+                <?php if ($h->notes): ?>
+                  <div class="timeline-notes"><?= h($h->notes) ?></div>
                 <?php endif; ?>
-                <?php if ($h['user_name']): ?>
-                  <div class="timeline-user">by <?= h($h['user_name']) ?></div>
+                <?php if ($h->user_name): ?>
+                  <div class="timeline-user">by <?= h($h->user_name) ?></div>
                 <?php endif; ?>
               </div>
             </div>

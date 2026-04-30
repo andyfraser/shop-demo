@@ -45,7 +45,7 @@ class CheckoutController {
         if ($user) {
             $addresses = $this->addressService->getByUserId($user->id);
             foreach ($addresses as $addr) {
-                if ($addr['is_default']) {
+                if ($addr->isDefault()) {
                     $defaultAddress = $addr;
                     break;
                 }
@@ -60,10 +60,10 @@ class CheckoutController {
             'errors'     => [],
             'name'       => $user->name ?? '',
             'email'      => $user->email ?? '',
-            'address'    => $defaultAddress['address'] ?? ($user->address ?? ''),
-            'city'       => $defaultAddress['city'] ?? '',
-            'postcode'   => $defaultAddress['postcode'] ?? '',
-            'country'    => $defaultAddress['country'] ?? '',
+            'address'    => $defaultAddress?->address ?? ($user->address ?? ''),
+            'city'       => $defaultAddress?->city ?? '',
+            'postcode'   => $defaultAddress?->postcode ?? '',
+            'country'    => $defaultAddress?->country ?? '',
             'addresses'  => $addresses,
             'notes'      => '',
             'delivery_options' => $this->delivery->active($this->cart->total()),
