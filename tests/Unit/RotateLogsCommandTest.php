@@ -30,7 +30,10 @@ class RotateLogsCommandTest extends TestCase {
         touch($logFile, $yesterday);
         
         $command = new RotateLogsCommand($this->testLogDir, 30);
+        
+        ob_start();
         $command->execute();
+        ob_end_clean();
         
         $expectedRotatedFile = $this->testLogDir . '/app-' . date('Y-m-d', $yesterday) . '.log';
         $this->assertTrue(file_exists($expectedRotatedFile), 'Log file should be rotated');
@@ -44,7 +47,10 @@ class RotateLogsCommandTest extends TestCase {
         touch($oldFile, strtotime('-40 days')); // Older than 30 days
         
         $command = new RotateLogsCommand($this->testLogDir, 30);
+        
+        ob_start();
         $command->execute();
+        ob_end_clean();
         
         $this->assertFalse(file_exists($oldFile), 'Old rotated file should be deleted');
     }
@@ -61,7 +67,10 @@ class RotateLogsCommandTest extends TestCase {
         touch($log2, $yesterday);
         
         $command = new RotateLogsCommand($this->testLogDir, 30);
+        
+        ob_start();
         $command->execute();
+        ob_end_clean();
         
         $this->assertTrue(file_exists($this->testLogDir . '/web-' . date('Y-m-d', $yesterday) . '.log'));
         $this->assertTrue(file_exists($this->testLogDir . '/db-' . date('Y-m-d', $yesterday) . '.log'));

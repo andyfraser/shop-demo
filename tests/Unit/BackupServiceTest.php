@@ -31,7 +31,8 @@ class BackupServiceTest extends TestCase {
         $this->service = new BackupService($this->db);
     }
 
-    public function __destruct() {
+    public function tearDown(): void {
+        $this->db = null;
         if ($this->dbFile && file_exists($this->dbFile)) {
             @unlink($this->dbFile);
         }
