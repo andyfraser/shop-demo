@@ -70,6 +70,18 @@ class Router {
     public function match(string $uri, string $method): ?array {
         $path = parse_url($uri, PHP_URL_PATH);
         
+        // Strip BASE_URL from the beginning of the path if it exists
+        if (defined('BASE_URL') && BASE_URL !== '' && strpos($path, BASE_URL) === 0) {
+            $baseUrlLen = strlen(BASE_URL);
+            $nextChar = substr($path, $baseUrlLen, 1);
+            if ($nextChar === '/' || $nextChar === '' || $nextChar === false) {
+                $path = substr($path, $baseUrlLen);
+                if ($path === '' || $path === false) {
+                    $path = '/';
+                }
+            }
+        }
+        
         foreach ($this->routes as $route) {
             // Replace dynamic parts like :slug with a regex group
             $pattern = preg_replace('/:[a-zA-Z0-9_]+/', '([a-zA-Z0-9_-]+)', $route['path']);

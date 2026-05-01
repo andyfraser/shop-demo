@@ -6,10 +6,11 @@ use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 
 class FileLogger extends AbstractLogger {
+    private int $retentionDays = 30;
+
     public function __construct(
         private string $logFile,
-        private bool $isDebug = false,
-        private int $retentionDays = 30
+        private bool $isDebug = false
     ) {
         $this->ensureDirectoryExists();
     }
@@ -19,59 +20,11 @@ class FileLogger extends AbstractLogger {
             return;
         }
 
-        $this->rotate();
-
         $message = $this->interpolate((string)$message, $context);
         $date = date('Y-m-d H:i:s');
         $logEntry = sprintf("[%s] %s: %s" . PHP_EOL, $date, strtoupper($level), $message);
 
         file_put_contents($this->logFile, $logEntry, FILE_APPEND);
-    }
-
-    private function rotate(): void {
-        $this->rotateFile($this->logFile);
-
-        // Also rotate recovery.log if it exists in the same directory
-        $recoveryLog = dirname($this->logFile) . '/recovery.log';
-        if (file_exists($recoveryLog)) {
-            $this->rotateFile($recoveryLog);
-        }
-    }
-
-    private function rotateFile(string $filePath): void {
-        if (!file_exists($filePath)) {
-            return;
-        }
-
-        $lastModified = filemtime($filePath);
-        if (date('Y-m-d', $lastModified) === date('Y-m-d')) {
-            return;
-        }
-
-        $info = pathinfo($filePath);
-        $rotatedFile = sprintf(
-            "%s/%s-%s.%s",
-            $info['dirname'],
-            $info['filename'],
-            date('Y-m-d', $lastModified),
-            $info['extension']
-        );
-
-        rename($filePath, $rotatedFile);
-        $this->cleanupFile($filePath);
-    }
-
-    private function cleanupFile(string $filePath): void {
-        $info = pathinfo($filePath);
-        $pattern = sprintf("%s/%s-*.%s", $info['dirname'], $info['filename'], $info['extension']);
-        $files = glob($pattern);
-        $threshold = strtotime("-{$this->retentionDays} days");
-
-        foreach ($files as $file) {
-            if (filemtime($file) < $threshold) {
-                unlink($file);
-            }
-        }
     }
 
     private function ensureDirectoryExists(): void {

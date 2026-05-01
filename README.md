@@ -25,6 +25,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - User registration with email verification, **resend verification functionality**, and login
 - **PSR-3 compliant logging** with file-based output and conditional debug mode
 - Privacy-compliant cookie consent banner with persistence logic
+- **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery) with a single crontab entry and database-backed state tracking.
 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
@@ -80,7 +81,7 @@ git clone https://github.com/yourname/shop-demo.git
 cd shop-demo
 cp config.example.php config.php
 php migrate.php
-php -S localhost:8080
+php -S localhost:8080 index.php
 ```
 
 Open **http://localhost:8080** in your browser.
@@ -124,11 +125,14 @@ shop-demo/
 ├── index.php               # Front controller — bootstraps app and registers all routes
 ├── config.php              # Local configuration (ignored by Git)
 ├── config.example.php      # Configuration template
-├── migrate.php               # Database migration runner
-├── migrations/               # Database migration files
-├── shop.db                   # SQLite database (auto-created if using SQLite)
+├── migrate.php             # Deprecated migration runner (wraps cli/console.php)
+├── migrations/             # Database migration files
+├── shop.db                 # SQLite database (auto-created if using SQLite)
 ├── logs/                   # Application log files (ignored by Git)
 │   └── app.log             # Main application log
+│
+├── cli/                    # Command-line scripts
+│   └── console.php         # Central CLI entry point and task scheduler runner
 │
 ├── config/                 # Application configuration files
 │   ├── routes.php          # Route definitions
@@ -147,13 +151,21 @@ shop-demo/
 │   │   ├── FileLogger.php  # PSR-3 compliant file-based logger
 │   │   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
 │   │   ├── Router.php      # HTTP router with middleware and DI support
-│   │   └── Validator.php   # Field validation logic
+│   │   ├── Scheduler.php   # Centralized task scheduling logic
+│   │   ├── Validator.php   # Field validation logic
 │   │   └── ViewComposer.php # Shared view data logic
 │   │
 │   ├── Psr/
 │   │   └── Log/            # Standard PSR-3 logging interfaces
 │   │
 │   ├── Models/             # Data models (User, Product, Order, Category, etc.)
+│   │
+│   ├── Commands/           # CLI Command implementations
+│   │   ├── CommandInterface.php
+│   │   ├── MigrateCommand.php
+│   │   ├── MigrateRollbackCommand.php
+│   │   ├── RecoverCartsCommand.php
+│   │   └── RotateLogsCommand.php
 │   │
 │   ├── Controllers/
 │   │   ├── AccountController.php      # Customer account, order history, address
@@ -258,6 +270,20 @@ This application uses modern CSS (Grid, Flexbox gap, CSS variables, `aspect-rati
 
 | Browser | Minimum Version | Release Date |
 | :--- | :--- | :--- |
+| **Chrome** | 88+ | Jan 2021 |
+| **Edge** | 88+ | Jan 2021 |
+| **Firefox** | 84+ | Dec 2020 |
+| **Safari** | 14.1+ | Apr 2021 |
+| **Opera** | 74+ | Feb 2021 |
+
+**Internet Explorer is not supported.**
+
+---
+
+## No External Dependencies
+
+Do not add Composer packages or any external libraries. Use only PHP 8 built-ins.
+ |
 | **Chrome** | 88+ | Jan 2021 |
 | **Edge** | 88+ | Jan 2021 |
 | **Firefox** | 84+ | Dec 2020 |

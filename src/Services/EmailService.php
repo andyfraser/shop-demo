@@ -93,9 +93,13 @@ class EmailService implements EmailServiceInterface {
 
     private function getBaseUrl(): string {
         if (isset($_SERVER['HTTP_HOST'])) {
-            return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+            $host = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+        } else {
+            $host = $this->settings->get('site_url') ?: 'http://localhost';
         }
-        return $this->settings->get('site_url') ?: 'http://localhost';
+
+        $path = defined('BASE_URL') ? BASE_URL : '';
+        return rtrim(rtrim($host, '/') . $path, '/');
     }
 
     private function renderTemplate(string $template, array $vars = []): string {

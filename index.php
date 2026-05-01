@@ -96,9 +96,14 @@ foreach ($services as $id => $factory) {
     $container->set($id, $factory);
 }
 
-// Other constants
-define('BASE_URL', $config['site']['base_url'] ?? '');
+// Load settings and define core constants
 $settings = $container->get(\App\Services\SettingsService::class);
+
+if (!defined('BASE_URL')) {
+    $baseUrlSetting = $settings->get('base_url');
+    define('BASE_URL', $baseUrlSetting !== null ? (string)$baseUrlSetting : ($config['site']['base_url'] ?? ''));
+}
+
 define('SITE_NAME', $settings->get('site_name'));
 define('SITE_NAME_PLAIN', str_replace('|', '', SITE_NAME));
 

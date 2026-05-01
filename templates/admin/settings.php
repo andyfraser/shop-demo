@@ -41,6 +41,20 @@
       </div>
 
       <div class="form-group">
+        <label>Site URL (for CLI links)</label>
+        <input type="url" name="site_url" class="form-control"
+               value="<?= h($settings->site_url) ?>" required>
+        <small style="color:var(--ink-2);">The full domain (e.g. <code>http://shop-demo.test</code>) used for links in emails sent from the CLI.</small>
+      </div>
+
+      <div class="form-group">
+        <label>Base URL (subdirectory)</label>
+        <input type="text" name="base_url" class="form-control"
+               value="<?= h($settings->base_url) ?>">
+        <small style="color:var(--ink-2);">If the shop is in a subdirectory, include it here (e.g. <code>/shop</code>). Leave empty if running at the root.</small>
+      </div>
+
+      <div class="form-group">
         <label>Low Stock Threshold</label>
         <input type="number" name="low_stock_threshold" class="form-control"
                value="<?= h($settings->low_stock_threshold) ?>" min="0" required style="max-width:6rem;">

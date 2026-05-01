@@ -53,6 +53,25 @@ class RouterTest extends TestCase {
 
     public function testTrailingSlashMatch() {
         $route = $this->router->match('/cart/add/', 'POST');
-        $this->assertTrue($route !== null);
+        $this->assertNotNull($route);
+    }
+
+    public function testBaseUrlStripping() {
+        if (!defined('BASE_URL')) {
+            define('BASE_URL', '/shop-demo');
+        }
+        
+        // Match with BASE_URL prefix
+        $route = $this->router->match('/shop-demo/cart/add', 'POST');
+        $this->assertNotNull($route);
+        $this->assertEquals(['CartController', 'add'], $route['handler']);
+
+        // Match with BASE_URL and trailing slash
+        $route = $this->router->match('/shop-demo/cart/add/', 'POST');
+        $this->assertNotNull($route);
+
+        // Should NOT strip if it's just a prefix but not a full segment
+        $route = $this->router->match('/shop-demo-plus/cart/add', 'POST');
+        $this->assertNull($route);
     }
 }

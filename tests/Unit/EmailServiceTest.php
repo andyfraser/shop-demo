@@ -65,4 +65,18 @@ class EmailServiceTest extends TestCase {
         $this->assertStringContainsString('Order Status Updated #123', $mock_emails[0]['subject']);
         $this->assertStringContainsString('Shipped', $mock_emails[0]['message']);
     }
+
+    public function testSendAbandonedCartEmailWithBaseUrl() {
+        global $mock_emails;
+
+        if (!defined('BASE_URL')) {
+            define('BASE_URL', '/shop-demo');
+        }
+
+        $this->service->sendAbandonedCartEmail('user@example.com', 'User');
+
+        $this->assertCount(1, $mock_emails);
+        // The URL should contain both the host and the BASE_URL
+        $this->assertStringContainsString('http://localhost/shop-demo/cart', $mock_emails[0]['message']);
+    }
 }

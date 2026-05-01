@@ -17,6 +17,7 @@ class Settings extends Model {
     public int $mobile_nav_max_combined = 20;
     public string $email_from = 'noreply@shop.local';
     public string $site_url = 'http://localhost';
+    public string $base_url = '';
 
     /**
      * Fill settings from an associative array of key => value pairs.

@@ -52,14 +52,23 @@ use App\Services\ImageService;
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
 
+use App\Commands\RotateLogsCommand;
+
 return function(array $config) {
     return [
         // PSR-3 compliant file logger
         LoggerInterface::class => function() use ($config) {
             $isDebug = $config['app']['debug'] ?? false;
             $logPath = $config['app']['log_path'] ?? __DIR__ . '/../logs/app.log';
+            return new FileLogger($logPath, $isDebug);
+        },
+
+        // Commands
+        RotateLogsCommand::class => function($c) use ($config) {
+            $logPath = $config['app']['log_path'] ?? __DIR__ . '/../logs/app.log';
+            $logDir = dirname($logPath);
             $retention = $config['app']['log_retention_days'] ?? 30;
-            return new FileLogger($logPath, $isDebug, $retention);
+            return new RotateLogsCommand($logDir, $retention);
         },
 
         // PDO instance for database connectivity

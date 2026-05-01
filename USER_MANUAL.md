@@ -13,6 +13,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 6. [Technical Architecture](#6-technical-architecture)
 7. [Security & Privacy](#7-security--privacy)
 8. [Running Tests](#8-running-tests)
+9. [Task Scheduling](#9-task-scheduling)
 
 ---
 
@@ -136,7 +137,13 @@ You can control the verbosity of the logs and the detail of error messages via t
 *   **Debug Mode (`'debug' => true`):** Detailed error messages, stack traces, and environment information are displayed directly in the browser to assist with development.
 
 ### Log Rotation & Retention
-Logs are automatically rotated daily. By default, rotated log files are kept for **30 days**. You can adjust this threshold in the `config.php` file:
+Logs are automatically rotated daily by the task scheduler. By default, rotated log files are kept for **30 days**. You can also trigger rotation manually:
+
+```bash
+php cli/console.php logs:rotate
+```
+
+You can adjust the retention threshold in the `config.php` file:
 
 ```php
 'app' => [
@@ -204,6 +211,33 @@ php tests/run.php
 *   **Service Testing:** Unit tests for all services verify logic via their interface contracts.
 *   **Isolation:** `setUp()` ensures each test runs in a clean environment.
 *   **Detailed Reporting:** The suite reports total tests, assertions, and detailed failure messages with file and line references.
+
+---
+
+## 9. Task Scheduling
+
+Demoshop includes a centralized task scheduler to handle background operations like abandoned cart recovery. Instead of managing multiple cron jobs, you only need to add a single entry to your server's crontab.
+
+### Setting up the Cron Job
+To run the scheduler every minute, add the following line to your server's crontab (replace `/path/to/shop-demo` with your actual project path):
+
+```bash
+* * * * * php /path/to/shop-demo/cli/console.php schedule:run >> /dev/null 2>&1
+```
+
+### Manual Execution
+You can also run specific commands manually via the console:
+
+```bash
+# List all available commands
+php cli/console.php
+
+# Run a specific command immediately
+php cli/console.php recover-carts
+```
+
+### How it Works
+The scheduler tracks the execution of each task in the `scheduled_tasks` database table. It ensures that tasks registered as `daily` or `hourly` only run once during their respective periods, even if the `schedule:run` command is executed every minute.
 
 ---
 *For developer support or feature requests, please consult the `README.md`.*
