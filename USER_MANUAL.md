@@ -32,17 +32,17 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
     cd shop-demo
     ```
 2.  **Configure the Environment:**
-    *   Copy `config.example.php` to `config.php`.
-    *   Edit `config.php` to select your database driver (`sqlite` or `mysql`) and provide credentials.
+    *   Copy `config/config.example.php` to `config/config.php`.
+    *   Edit `config/config.php` to select your database driver (`sqlite` or `mysql`) and provide credentials.
 3.  **Initialize the Database:**
     *   Run the migration script to create tables and seed initial data:
         ```bash
-        php migrate.php
+        php cli/console.php migrate
         ```
 4.  **Start the Server:**
     *   Using the PHP built-in server:
         ```bash
-        php -S localhost:8080
+        php -S localhost:8080 index.php
         ```
     *   Visit `http://localhost:8080` in your browser.
 
@@ -175,8 +175,8 @@ The logging system follows the PHP Standard Recommendation for logging (PSR-3). 
 
 ### Database Migrations
 Demoshop uses a migration system to manage database schema and seed data.
-*   **Applying Migrations:** To apply new updates, run `php migrate.php` from the project root.
-*   **Rollback:** To undo the last migration, run `php migrate.php --rollback`.
+*   **Applying Migrations:** To apply new updates, run `php cli/console.php migrate` from the project root.
+*   **Rollback:** To undo the last migration, run `php cli/console.php migrate:rollback`.
 *   **Files:** Migration logic is stored in the `migrations/` directory.
 
 ---

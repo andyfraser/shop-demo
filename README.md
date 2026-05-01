@@ -53,23 +53,23 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 
 The application uses a `config.php` file for database and site settings. 
 
-1. Copy `config.example.php` to `config.php`.
-2. Update the `db` settings with your preferred driver (`sqlite` or `mysql`) and credentials.
+1. Copy `config/config.example.php` to `config/config.php`.
+2. Update the `config/config.php` settings with your preferred driver (`sqlite` or `mysql`) and credentials.
 
 ### SQLite Setup
 By default, the application is configured to use SQLite with a database file named `shop.db`. 
 
 1. Run the migrations to create the schema and seed initial data:
    ```bash
-   php migrate.php
+   php cli/console.php migrate
    ```
 
 ### MySQL / MariaDB Setup
 1. Ensure your MySQL server is running.
-2. Provide your server host, user, and password in `config.php`.
+2. Provide your server host, user, and password in `config/config.php`.
 3. The application will automatically create the database if it doesn't exist, but you must run the migrations to apply the schema and seed data:
    ```bash
-   php migrate.php
+   php cli/console.php migrate
    ```
 
 ---
@@ -79,8 +79,8 @@ By default, the application is configured to use SQLite with a database file nam
 ```bash
 git clone https://github.com/yourname/shop-demo.git
 cd shop-demo
-cp config.example.php config.php
-php migrate.php
+cp config/config.example.php config/config.php
+php cli/console.php migrate
 php -S localhost:8080 index.php
 ```
 
@@ -123,8 +123,6 @@ Product images are stored in `public/images/`. When adding or editing a product 
 shop-demo/
 │
 ├── index.php               # Front controller — bootstraps app and registers all routes
-├── config.php              # Local configuration (ignored by Git)
-├── config.example.php      # Configuration template
 ├── migrate.php             # Deprecated migration runner (wraps cli/console.php)
 ├── migrations/             # Database migration files
 ├── shop.db                 # SQLite database (auto-created if using SQLite)
@@ -135,6 +133,8 @@ shop-demo/
 │   └── console.php         # Central CLI entry point and task scheduler runner
 │
 ├── config/                 # Application configuration files
+│   ├── config.php          # Local configuration (ignored by Git)
+│   ├── config.example.php  # Configuration template
 │   ├── routes.php          # Route definitions
 │   └── services.php        # DI service registrations (Interface to Implementation)
 │

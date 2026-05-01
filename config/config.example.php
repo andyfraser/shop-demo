@@ -17,7 +17,7 @@ return [
         'charset'  => 'utf8mb4',
         
         // SQLite settings
-        'path'     => __DIR__ . '/shop.db',
+        'path'     => __DIR__ . '/../shop.db',
     ],
     
     // Site settings
