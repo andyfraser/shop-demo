@@ -50,4 +50,14 @@ class SettingsServiceTest extends TestCase {
         $this->assertEquals('Legacy Test', $all['site_name']);
         $this->assertEquals('£', $all['currency_symbol']);
     }
+
+    public function testHandlesMissingTableGracefully() {
+        $emptyDb = new \PDO('sqlite::memory:');
+        $emptyDb->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $service = new SettingsService($emptyDb, new \Tests\NullLogger());
+        
+        $settings = $service->getSettings();
+        $this->assertInstanceOf(Settings::class, $settings);
+        $this->assertEquals('Demo|shop', $settings->site_name); // Should use defaults
+    }
 }

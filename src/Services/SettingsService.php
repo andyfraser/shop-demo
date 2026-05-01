@@ -48,8 +48,16 @@ class SettingsService implements SettingsServiceInterface {
     }
 
     private function loadFromDb(): array {
-        $rows = $this->db->query("SELECT `key`, value FROM settings")
-            ->fetchAll();
-        return array_column($rows, 'value', 'key');
+        try {
+            $rows = $this->db->query("SELECT `key`, value FROM settings")
+                ->fetchAll();
+            return array_column($rows, 'value', 'key');
+        } catch (\PDOException $e) {
+            // Handle case where table doesn't exist yet (e.g., during fresh install)
+            if ($e->getCode() === 'HY000' || $e->getCode() === '42S02') {
+                return [];
+            }
+            throw $e;
+        }
     }
 }
