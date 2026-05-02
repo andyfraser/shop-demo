@@ -81,8 +81,6 @@ class AdminProductsController {
     }
 
     public function save() {
-        $this->security->verifyCsrf();
-        
         $data = [
             'name'        => trim($_POST['name'] ?? ''),
             'sku'         => trim($_POST['sku'] ?? ''),

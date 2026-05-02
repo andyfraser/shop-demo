@@ -46,7 +46,6 @@ class AdminReturnsController {
     }
 
     public function approve() {
-        $this->security->verifyCsrf();
         $id = (int)($_POST['id'] ?? 0);
         $refundDelivery = isset($_POST['refund_delivery']) && $_POST['refund_delivery'] === '1';
         $redirectTo = $_POST['redirect_to'] ?? '/admin/returns';
@@ -62,7 +61,6 @@ class AdminReturnsController {
     }
 
     public function reject() {
-        $this->security->verifyCsrf();
         $id = (int)($_POST['id'] ?? 0);
         $reason = trim($_POST['reject_reason'] ?? '');
         $redirectTo = $_POST['redirect_to'] ?? '/admin/returns';

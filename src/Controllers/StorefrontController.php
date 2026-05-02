@@ -239,10 +239,6 @@ class StorefrontController {
         if (!$product) redirect('/');
 
         $user = $this->authService->currentUser();
-        if (!$user) {
-            flash('error', 'You must be logged in to leave a review.');
-            redirect('/product/' . $slug);
-        }
 
         $rating = (int)($_POST['rating'] ?? 0);
         $comment = trim($_POST['comment'] ?? '');

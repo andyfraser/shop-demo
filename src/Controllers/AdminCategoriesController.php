@@ -58,7 +58,6 @@ class AdminCategoriesController {
     }
 
     public function save() {
-        $this->security->verifyCsrf();
         $category_id = (int)($_POST['id'] ?? 0);
         
         $data = [

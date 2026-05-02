@@ -23,7 +23,6 @@ class AdminReviewsController {
     }
 
     public function updateStatus() {
-        $this->security->verifyCsrf();
         $id = (int)($_POST['id'] ?? 0);
         $status = $_POST['status'] ?? 'pending';
 

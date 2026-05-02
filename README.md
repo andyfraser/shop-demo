@@ -236,6 +236,12 @@ shop-demo/
 - **Constructor Injection:** Controllers, middlewares, and services receive their dependencies via interfaces in their constructors. 
 - **Decoupling:** This design decouples business logic from specific implementations, allowing for easier testing and future extensibility (e.g., swapping a local `FileLogger` for a different PSR-3 implementation).
 
+**Middleware System:** Decouples security and cross-cutting concerns from business logic.
+- **`AuthMiddleware`**: Protects routes requiring authentication.
+- **`AdminMiddleware`**: Protects routes requiring administrator privileges.
+- **`CsrfMiddleware`**: Automatically validates CSRF tokens for all protected POST routes.
+- **`GuestMiddleware` & `VerifiedMiddleware`**: Manage access for non-authenticated and unverified users respectively.
+
 **Front Controller:** All requests enter through `index.php`, which bootstraps the **Dependency Injection (DI) Container**, registers the autoloader, defines constants, and dispatches to `src/Core/Router`. 
 
 **Error Handling:** The application includes a global error and exception handler. In production, errors are logged to `logs/app.log` and a user-friendly `500.php` template is rendered.
@@ -246,7 +252,7 @@ shop-demo/
 
 **Database:** Support for SQLite and MySQL via PDO. The appropriate schema runs automatically on first connection. 
 
-**Security:** Every POST form includes a CSRF token (`csrf_field()`). Login and registration are rate-limited. Admin routes are protected by `AdminMiddleware`.
+**Security:** Every POST form includes a CSRF token (`csrf_field()`). Validation is enforced via `CsrfMiddleware`. Login and registration are rate-limited via `SecurityService`. Admin routes are protected by `AdminMiddleware`.
 
 ---
 
@@ -262,8 +268,9 @@ shop-demo/
 ## Adding a New Route
 
 1. Register the route in `config/routes.php`.
-2. Add the action method to the appropriate controller in `src/Controllers/`. Ensure the controller defines its dependencies (via interfaces) in the constructor for autowiring.
-3. Create a template in `templates/` and call `$this->renderer->render()` from the controller.
+2. Assign the appropriate middleware stack using the pre-defined variables at the top of the file (e.g., `$adminPostMiddleware` for an admin-only POST route).
+3. Add the action method to the appropriate controller in `src/Controllers/`. Ensure the controller defines its dependencies (via interfaces) in the constructor for autowiring.
+4. Create a template in `templates/` and call `$this->renderer->render()` from the controller.
 
 ---
 

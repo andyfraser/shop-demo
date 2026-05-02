@@ -56,7 +56,6 @@ class AdminAttributesController {
     }
 
     public function save() {
-        $this->security->verifyCsrf();
         $id = (int)($_POST['id'] ?? 0);
         $data = ['name' => trim($_POST['name'] ?? '')];
 

@@ -61,7 +61,6 @@ class AdminUsersController {
     }
 
     public function save() {
-        $this->security->verifyCsrf();
         $user_id = (int)($_POST['id'] ?? 0);
         
         $data = [

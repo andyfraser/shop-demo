@@ -31,8 +31,15 @@ class SecurityService implements SecurityServiceInterface {
                     'method' => $_SERVER['REQUEST_METHOD'],
                     'uri' => $_SERVER['REQUEST_URI']
                 ]);
+                
                 http_response_code(403);
-                die('Invalid CSRF token. Please go back and try again.');
+                if (is_ajax()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['ok' => false, 'message' => 'Invalid CSRF token.']);
+                } else {
+                    echo 'Invalid CSRF token. Please go back and try again.';
+                }
+                exit;
             }
         }
     }

@@ -36,10 +36,6 @@ class CheckoutController {
         }
 
         $user = $this->auth->currentUser();
-        if ($user && !$user->isVerified()) {
-            redirect('/cart?msg=verify_required');
-        }
-
         $addresses = [];
         $defaultAddress = null;
         if ($user) {
@@ -77,8 +73,6 @@ class CheckoutController {
         if (empty($items)) {
             redirect('/cart');
         }
-
-        $this->security->verifyCsrf();
 
         $name       = trim($_POST['name'] ?? '');
         $email      = trim($_POST['email'] ?? '');

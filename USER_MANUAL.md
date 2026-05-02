@@ -184,8 +184,9 @@ Demoshop uses a migration system to manage database schema and seed data.
 ## 7. Security & Privacy
 
 ### Security Measures
-*   **CSRF Protection:** All state-changing forms require a unique session token, verified by `SecurityService`.
-*   **Rate Limiting:** Protects login and registration routes against brute-force attacks by tracking attempts in the `rate_limits` table.
+*   **Middleware-Based Protection:** All routes are protected by a centralized middleware system that enforces authentication, role-based access, and security policies.
+*   **CSRF Protection:** All state-changing forms require a unique session token. Verification is automatically enforced via `CsrfMiddleware` for all protected POST routes.
+*   **Rate Limiting:** Protects login and registration routes against brute-force attacks by tracking attempts in the `rate_limits` table, managed by `SecurityService`.
 *   **Secure Sessions:** Automatic session regeneration and role-based access control (RBAC).
 *   **Input Handling:** Rigorous use of `h()` for HTML escaping and PDO prepared statements for database queries to prevent XSS and SQL injection.
 

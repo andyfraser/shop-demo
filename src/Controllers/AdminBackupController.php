@@ -24,8 +24,6 @@ class AdminBackupController {
     }
 
     public function download() {
-        $this->securityService->verifyCsrf();
-
         try {
             $backup = $this->backupService->export();
             
@@ -51,8 +49,6 @@ class AdminBackupController {
     }
 
     public function restore() {
-        $this->securityService->verifyCsrf();
-
         $file = $_FILES['backup_file'] ?? null;
         if (!$file || $file['error'] === UPLOAD_ERR_NO_FILE) {
             flash('error', 'Please select a file to restore.');

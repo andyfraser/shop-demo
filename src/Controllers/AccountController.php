@@ -67,7 +67,6 @@ class AccountController {
     }
 
     public function saveAddress() {
-        $this->security->verifyCsrf();
         $user = $this->auth->currentUser();
         $id = (int)($_POST['id'] ?? 0);
 
@@ -92,7 +91,6 @@ class AccountController {
     }
 
     public function deleteAddress() {
-        $this->security->verifyCsrf();
         $user = $this->auth->currentUser();
         $id = (int)($_POST['id'] ?? 0);
 
@@ -103,7 +101,6 @@ class AccountController {
     }
 
     public function setDefaultAddress() {
-        $this->security->verifyCsrf();
         $user = $this->auth->currentUser();
         $id = (int)($_POST['id'] ?? 0);
 
@@ -114,7 +111,6 @@ class AccountController {
     }
 
     public function cancelOrder() {
-        $this->security->verifyCsrf();
         $user = $this->auth->currentUser();
         $order_id = (int)($_POST['id'] ?? 0);
 
@@ -136,7 +132,6 @@ class AccountController {
     }
 
     public function requestReturn() {
-        $this->security->verifyCsrf();
         $user = $this->auth->currentUser();
         $order_id = (int)($_POST['order_id'] ?? 0);
         $reason = trim($_POST['reason'] ?? '');

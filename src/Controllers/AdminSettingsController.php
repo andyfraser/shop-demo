@@ -25,8 +25,6 @@ class AdminSettingsController {
     }
 
     public function save() {
-        $this->securityService->verifyCsrf();
-
         $errors = [];
         $site_name = trim($_POST['site_name'] ?? '');
         $currency  = trim($_POST['currency_symbol'] ?? '');

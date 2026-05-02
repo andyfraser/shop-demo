@@ -46,7 +46,6 @@ class AdminDeliveryController {
     }
 
     public function save() {
-        $this->security->verifyCsrf();
         $id = (int)($_POST['id'] ?? 0);
         $data = [
             'id'              => $id,

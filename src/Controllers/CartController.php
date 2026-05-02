@@ -26,12 +26,6 @@ class CartController
 
     public function update()
     {
-        if (is_ajax()) {
-            $this->verifyCsrfAjax();
-        } else {
-            $this->securityService->verifyCsrf();
-        }
-
         $message = 'Cart updated.';
 
         if (isset($_POST['update'])) {
@@ -70,12 +64,6 @@ class CartController
 
     public function add($slug = '')
     {
-        if (is_ajax()) {
-            $this->verifyCsrfAjax();
-        } else {
-            $this->securityService->verifyCsrf();
-        }
-
         $productId = (int) ($_POST['product_id'] ?? 0);
         $variantId = isset($_POST['variant_id']) && $_POST['variant_id'] !== '' ? (int)$_POST['variant_id'] : null;
         $slug = $slug ?: ($_POST['slug'] ?? '');
@@ -95,18 +83,5 @@ class CartController
 
         flash('success', 'Items added to your cart.');
         redirect('/product/' . urlencode($slug));
-    }
-
-    private function verifyCsrfAjax(): void
-    {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        $passed = $_POST['csrf_token'] ?? '';
-        $stored = $_SESSION['csrf_token'] ?? '';
-        if (empty($passed) || !hash_equals($stored, $passed)) {
-            http_response_code(403);
-            header('Content-Type: application/json');
-            echo json_encode(['ok' => false, 'message' => 'Invalid CSRF token.']);
-            exit;
-        }
     }
 }

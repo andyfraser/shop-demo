@@ -25,9 +25,6 @@ class AuthController {
     ) {}
 
     public function showLogin() {
-        if ($this->authService->currentUser()) {
-            redirect('/');
-        }
         $this->renderer->render('login', [
             'page_title' => 'Sign In',
             'errors'     => [],
@@ -36,11 +33,6 @@ class AuthController {
     }
 
     public function login() {
-        if ($this->authService->currentUser()) {
-            redirect('/');
-        }
-        
-        $this->securityService->verifyCsrf();
         $this->securityService->checkRateLimit('login', $_SERVER['REMOTE_ADDR'],
             (int)$this->settingsService->get('login_max_attempts'),
             (int)$this->settingsService->get('login_window_minutes') * 60
@@ -73,9 +65,6 @@ class AuthController {
     }
 
     public function showRegister() {
-        if ($this->authService->currentUser()) {
-            redirect('/');
-        }
         $this->renderer->render('register', [
             'page_title' => 'Create Account',
             'errors'     => [],
@@ -85,11 +74,6 @@ class AuthController {
     }
 
     public function register() {
-        if ($this->authService->currentUser()) {
-            redirect('/');
-        }
-
-        $this->securityService->verifyCsrf();
         $this->securityService->checkRateLimit('register', $_SERVER['REMOTE_ADDR'],
             (int)$this->settingsService->get('register_max_attempts'),
             (int)$this->settingsService->get('register_window_minutes') * 60

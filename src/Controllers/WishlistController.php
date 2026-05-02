@@ -16,10 +16,6 @@ class WishlistController {
 
     public function index() {
         $user = $this->authService->currentUser();
-        if (!$user) {
-            redirect('/login');
-        }
-
         $wishlist = $this->wishlistService->getUserWishlist($user->id);
 
         $this->renderer->render('wishlist', [
@@ -29,14 +25,7 @@ class WishlistController {
     }
 
     public function add($productId) {
-        $this->securityService->verifyCsrf();
-        
         $user = $this->authService->currentUser();
-        if (!$user) {
-            flash('error', 'You must be logged in to add items to your wishlist.');
-            redirect('/login');
-        }
-
         $this->wishlistService->addToWishlist($user->id, (int)$productId);
 
         if (is_ajax()) {
@@ -51,13 +40,7 @@ class WishlistController {
     }
 
     public function remove($productId) {
-        $this->securityService->verifyCsrf();
-
         $user = $this->authService->currentUser();
-        if (!$user) {
-            redirect('/login');
-        }
-
         $this->wishlistService->removeFromWishlist($user->id, (int)$productId);
 
         if (is_ajax()) {

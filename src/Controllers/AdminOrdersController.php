@@ -61,7 +61,6 @@ class AdminOrdersController {
     }
 
     public function updateStatus() {
-        $this->security->verifyCsrf();
         $order_id = (int)($_POST['id'] ?? 0);
         $status   = $_POST['status'] ?? '';
         $notes    = trim($_POST['notes'] ?? '');
