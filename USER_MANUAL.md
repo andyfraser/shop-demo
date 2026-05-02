@@ -237,7 +237,12 @@ php cli/console.php recover-carts
 ```
 
 ### How it Works
-The scheduler tracks the execution of each task in the `scheduled_tasks` database table. It ensures that tasks registered as `daily` or `hourly` only run once during their respective periods, even if the `schedule:run` command is executed every minute.
+The scheduler tracks the execution of each task in the `scheduled_tasks` database table. It ensures that tasks registered with a specific frequency only run once during their respective periods, even if the `schedule:run` command is executed every minute.
+
+Supported frequencies include:
+*   **High-Frequency:** `everyMinute`, `everyFiveMinutes`, `everyFifteenMinutes`, `everyThirtyMinutes`
+*   **Standard:** `hourly`, `twiceDaily` (every 12 hours), `daily`, `weekdays` (Mon-Fri)
+*   **Long-Term:** `weekly`, `monthly`, `yearly`
 
 ---
 *For developer support or feature requests, please consult the `README.md`.*

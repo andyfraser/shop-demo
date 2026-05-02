@@ -23,8 +23,11 @@ interface CommandInterface {
     public function getDescription(): string;
 
     /**
-     * Get the schedule frequency (e.g., 'everyMinute', 'hourly', 'daily') 
-     * or null if the command should not be scheduled automatically.
+     * Get the schedule frequency or null if the command should not be scheduled automatically.
+     * 
+     * Supported values: 
+     * - 'everyMinute', 'everyFiveMinutes', 'everyFifteenMinutes', 'everyThirtyMinutes'
+     * - 'hourly', 'twiceDaily', 'daily', 'weekdays', 'weekly', 'monthly', 'yearly'
      */
     public function getSchedule(): ?string;
 }

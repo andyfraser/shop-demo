@@ -25,7 +25,10 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - User registration with email verification, **resend verification functionality**, and login
 - **PSR-3 compliant logging** with file-based output and conditional debug mode
 - Privacy-compliant cookie consent banner with persistence logic
-- **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery) with a single crontab entry and database-backed state tracking.
+- **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery, log rotation) with a single crontab entry and database-backed state tracking. Supports various frequencies:
+    - High-frequency: `everyMinute`, `everyFiveMinutes`, `everyFifteenMinutes`, `everyThirtyMinutes`
+    - Standard: `hourly`, `twiceDaily`, `daily`, `weekdays`
+    - Long-term: `weekly`, `monthly`, `yearly`
 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts

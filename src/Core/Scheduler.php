@@ -59,13 +59,27 @@ class Scheduler {
 
         switch ($frequency) {
             case 'everyMinute':
-                return ($now - $lastRun) >= 59; 
+                return ($now - $lastRun) >= 59;
+            case 'everyFiveMinutes':
+                return ($now - $lastRun) >= 299;
+            case 'everyFifteenMinutes':
+                return ($now - $lastRun) >= 899;
+            case 'everyThirtyMinutes':
+                return ($now - $lastRun) >= 1799;
             case 'hourly':
                 return date('Y-m-d H', $now) !== date('Y-m-d H', $lastRun);
+            case 'twiceDaily':
+                return ($now - $lastRun) >= 43199;
             case 'daily':
                 return date('Y-m-d', $now) !== date('Y-m-d', $lastRun);
+            case 'weekdays':
+                return (date('Y-m-d', $now) !== date('Y-m-d', $lastRun)) && (date('N', $now) <= 5);
             case 'weekly':
                 return (date('W', $now) !== date('W', $lastRun)) || (date('Y', $now) !== date('Y', $lastRun));
+            case 'monthly':
+                return date('Y-m', $now) !== date('Y-m', $lastRun);
+            case 'yearly':
+                return date('Y', $now) !== date('Y', $lastRun);
             default:
                 return false;
         }
