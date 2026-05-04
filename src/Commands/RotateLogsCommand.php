@@ -44,36 +44,50 @@ class RotateLogsCommand implements CommandInterface {
                 continue;
             }
 
+            // Skip empty files
+            if (filesize($file) === 0) {
+                continue;
+            }
+
             $lastModified = filemtime($file);
             $lastModifiedDate = date('Y-m-d', $lastModified);
 
-            if ($lastModifiedDate < $today) {
-                $info = pathinfo($file);
-                $rotatedFile = sprintf(
-                    "%s/%s-%s.%s",
-                    $info['dirname'],
-                    $info['filename'],
-                    $lastModifiedDate,
-                    $info['extension']
-                );
+            $info = pathinfo($file);
+            $rotatedFile = sprintf(
+                "%s/%s-%s.%s",
+                $info['dirname'],
+                $info['filename'],
+                $lastModifiedDate,
+                $info['extension']
+            );
+            $compressedFile = $rotatedFile . '.gz';
 
-                if (!file_exists($rotatedFile)) {
-                    if (rename($file, $rotatedFile)) {
-                        echo "Rotated: {$filename} -> " . basename($rotatedFile) . "\n";
+            // Rotate and compress if we haven't already done so for this date.
+            if (!file_exists($compressedFile) && !file_exists($rotatedFile)) {
+                // We first rename to the rotated name, then compress it.
+                // This minimizes the time the original log file is "gone".
+                if (rename($file, $rotatedFile)) {
+                    $content = file_get_contents($rotatedFile);
+                    $gzdata = gzencode($content, 9);
+                    if ($gzdata !== false && file_put_contents($compressedFile, $gzdata) !== false) {
+                        unlink($rotatedFile);
+                        echo "Rotated and compressed: {$filename} -> " . basename($compressedFile) . "\n";
                     } else {
-                        echo "Failed to rotate: {$filename}\n";
+                        echo "Rotated but failed to compress: {$filename}\n";
                     }
+                } else {
+                    echo "Failed to rotate: {$filename}\n";
                 }
             }
         }
 
         // 2. Cleanup old rotated files
-        $allRotatedFiles = glob($this->logDir . '/*-*-*-*.log');
+        $allRotatedFiles = glob($this->logDir . '/*-*-*-*.log*');
         $threshold = strtotime("-{$this->retentionDays} days");
 
         foreach ($allRotatedFiles as $file) {
             // Verify it matches the date pattern YYYY-MM-DD
-            if (preg_match('/-\d{4}-\d{2}-\d{2}\.log$/', basename($file))) {
+            if (preg_match('/-\d{4}-\d{2}-\d{2}\.log(\.gz)?$/', basename($file))) {
                 if (filemtime($file) < $threshold) {
                     if (unlink($file)) {
                         echo "Deleted old log: " . basename($file) . "\n";

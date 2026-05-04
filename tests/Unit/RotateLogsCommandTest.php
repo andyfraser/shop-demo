@@ -24,7 +24,8 @@ class RotateLogsCommandTest extends TestCase {
 
     public function testRotation() {
         $logFile = $this->testLogDir . '/app.log';
-        file_put_contents($logFile, 'Yesterday log content');
+        $content = 'Yesterday log content';
+        file_put_contents($logFile, $content);
         
         $yesterday = strtotime('-1 day');
         touch($logFile, $yesterday);
@@ -35,15 +36,17 @@ class RotateLogsCommandTest extends TestCase {
         $command->execute();
         ob_end_clean();
         
-        $expectedRotatedFile = $this->testLogDir . '/app-' . date('Y-m-d', $yesterday) . '.log';
-        $this->assertTrue(file_exists($expectedRotatedFile), 'Log file should be rotated');
+        $expectedRotatedFile = $this->testLogDir . '/app-' . date('Y-m-d', $yesterday) . '.log.gz';
+        $this->assertTrue(file_exists($expectedRotatedFile), 'Log file should be rotated and compressed');
         $this->assertFalse(file_exists($logFile), 'Original log file should be moved');
-        $this->assertStringContainsString('Yesterday log content', file_get_contents($expectedRotatedFile));
+        
+        $decompressed = gzdecode(file_get_contents($expectedRotatedFile));
+        $this->assertStringContainsString($content, $decompressed);
     }
 
     public function testCleanup() {
-        $oldFile = $this->testLogDir . '/app-2000-01-01.log';
-        file_put_contents($oldFile, 'Ancient content');
+        $oldFile = $this->testLogDir . '/app-2000-01-01.log.gz';
+        file_put_contents($oldFile, gzencode('Ancient content'));
         touch($oldFile, strtotime('-40 days')); // Older than 30 days
         
         $command = new RotateLogsCommand($this->testLogDir, 30);
@@ -52,7 +55,7 @@ class RotateLogsCommandTest extends TestCase {
         $command->execute();
         ob_end_clean();
         
-        $this->assertFalse(file_exists($oldFile), 'Old rotated file should be deleted');
+        $this->assertFalse(file_exists($oldFile), 'Old compressed rotated file should be deleted');
     }
 
     public function testHandlesMultipleLogFiles() {
@@ -72,8 +75,48 @@ class RotateLogsCommandTest extends TestCase {
         $command->execute();
         ob_end_clean();
         
-        $this->assertTrue(file_exists($this->testLogDir . '/web-' . date('Y-m-d', $yesterday) . '.log'));
-        $this->assertTrue(file_exists($this->testLogDir . '/db-' . date('Y-m-d', $yesterday) . '.log'));
+        $this->assertTrue(file_exists($this->testLogDir . '/web-' . date('Y-m-d', $yesterday) . '.log.gz'));
+        $this->assertTrue(file_exists($this->testLogDir . '/db-' . date('Y-m-d', $yesterday) . '.log.gz'));
+    }
+
+    public function testRotatesLogModifiedToday() {
+        $logFile = $this->testLogDir . '/active.log';
+        $content = 'Today log content';
+        file_put_contents($logFile, $content);
+        
+        // Ensure mtime is today
+        touch($logFile, time());
+        
+        $command = new RotateLogsCommand($this->testLogDir, 30);
+        
+        ob_start();
+        $command->execute();
+        ob_end_clean();
+        
+        $expectedRotatedFile = $this->testLogDir . '/active-' . date('Y-m-d') . '.log.gz';
+        $this->assertTrue(file_exists($expectedRotatedFile), 'Active log file should be rotated and compressed even if modified today');
+        $this->assertFalse(file_exists($logFile), 'Original active log file should be moved');
+        
+        $decompressed = gzdecode(file_get_contents($expectedRotatedFile));
+        $this->assertStringContainsString($content, $decompressed);
+    }
+
+    public function testDoesNotRotateEmptyFiles() {
+        $logFile = $this->testLogDir . '/empty.log';
+        file_put_contents($logFile, '');
+        
+        $yesterday = strtotime('-1 day');
+        touch($logFile, $yesterday);
+        
+        $command = new RotateLogsCommand($this->testLogDir, 30);
+        
+        ob_start();
+        $command->execute();
+        ob_end_clean();
+        
+        $expectedRotatedFile = $this->testLogDir . '/empty-' . date('Y-m-d', $yesterday) . '.log';
+        $this->assertFalse(file_exists($expectedRotatedFile), 'Empty log file should not be rotated');
+        $this->assertTrue(file_exists($logFile), 'Original empty log file should remain');
     }
 
     public function tearDown(): void {

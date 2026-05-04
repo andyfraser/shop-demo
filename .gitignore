@@ -10,3 +10,5 @@ public/images/*
 .htaccess
 /logs/*.log
 *.log
+/logs/*.log.gz
+*.log.gz
