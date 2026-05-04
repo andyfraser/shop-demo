@@ -46,6 +46,8 @@ use App\Services\ReviewServiceInterface;
 use App\Services\ReviewService;
 use App\Services\AddressServiceInterface;
 use App\Services\AddressService;
+use App\Services\ImageCleanupServiceInterface;
+use App\Services\ImageCleanupService;
 use App\Services\ImageServiceInterface;
 use App\Services\ImageService;
 
@@ -53,6 +55,7 @@ use App\Services\VatServiceInterface;
 use App\Services\VatService;
 
 use App\Commands\RotateLogsCommand;
+use App\Commands\ImageCleanupCommand;
 
 return function(array $config) {
     return [
@@ -69,6 +72,9 @@ return function(array $config) {
             $logDir = dirname($logPath);
             $retention = $config['app']['log_retention_days'] ?? 30;
             return new RotateLogsCommand($logDir, $retention);
+        },
+        ImageCleanupCommand::class => function($c) {
+            return new ImageCleanupCommand($c->get(ImageCleanupServiceInterface::class));
         },
 
         // PDO instance for database connectivity
@@ -151,6 +157,9 @@ return function(array $config) {
         },
         ImageServiceInterface::class => function($c) {
             return new ImageService($c->get(LoggerInterface::class));
+        },
+        ImageCleanupServiceInterface::class => function($c) {
+            return new ImageCleanupService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
     ];
 };
