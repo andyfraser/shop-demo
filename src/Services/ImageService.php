@@ -12,8 +12,8 @@ class ImageService implements ImageServiceInterface {
         ?string $uploadDir = null,
         ?string $baseUrl = null
     ) {
-        $this->uploadDir = $testUploadDir ?? (__DIR__ . '/../../public/uploads/');
-        $this->baseUrl = $testBaseUrl ?? '/uploads/';
+        $this->uploadDir = $uploadDir ?? (__DIR__ . '/../../public/uploads/');
+        $this->baseUrl = $baseUrl ?? '/public/uploads/';
         
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0755, true);
@@ -132,9 +132,6 @@ class ImageService implements ImageServiceInterface {
             // Fallback to JPEG if WebP not supported
             $result = imagejpeg($dstImage, $this->uploadDir . str_replace('.webp', '.jpg', $targetName), 80);
         }
-
-        imagedestroy($srcImage);
-        imagedestroy($dstImage);
 
         return $result;
     }

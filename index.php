@@ -127,8 +127,16 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 // Serve static files via built-in server correctly
 if (php_sapi_name() === 'cli-server') {
     $path = parse_url($uri, PHP_URL_PATH);
-    if ($path !== '/' && file_exists(__DIR__ . '/public' . $path)) {
-        return false;
+    if ($path !== '/') {
+        $publicPath = __DIR__ . '/public' . $path;
+        // If the path already starts with /public, don't prepend it again
+        if (strpos($path, '/public/') === 0) {
+            $publicPath = __DIR__ . $path;
+        }
+        
+        if (file_exists($publicPath) && is_file($publicPath)) {
+            return false;
+        }
     }
     // Also check if they mistakenly request the root file directly
     if (file_exists(__DIR__ . $path) && is_file(__DIR__ . $path) && $path !== '/index.php') {

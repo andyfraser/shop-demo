@@ -23,9 +23,14 @@ function settings(): \App\Models\Settings {
     return $settings->getSettings();
 }
 
-function product_img(string $filename = '', string $alt = '', string $class = '', string $style = '', string $size = 'original'): void {
+function product_img_url(string $filename = '', string $size = 'original'): string {
     $imageService = Container::getInstance()->get(\App\Services\ImageServiceInterface::class);
-    $src   = $imageService->getUrl($filename, $size);
+    $url = $imageService->getUrl($filename, $size);
+    return (defined('BASE_URL') ? BASE_URL : '') . $url;
+}
+
+function product_img(string $filename = '', string $alt = '', string $class = '', string $style = '', string $size = 'original'): void {
+    $src   = product_img_url($filename, $size);
     $alt   = h($alt);
     $class = $class ? ' class="' . h($class) . '"' : '';
     $style = $style ? ' style="' . h($style) . '"' : '';

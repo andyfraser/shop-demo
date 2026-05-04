@@ -6,6 +6,8 @@ shop.db
 public/images/*
 !public/images/placeholder.svg
 !public/images/favicon.svg
+public/uploads/*
+!public/uploads/.gitkeep
 .DS_Store
 .htaccess
 /logs/*.log

@@ -87,7 +87,7 @@
             <label>Product Image</label>
             <?php
               $img_file = $get('image');
-              $img_url  = $img_file ? BASE_URL . '/public/images/' . h($img_file) : null;
+              $img_url  = $img_file ? product_img_url($img_file, 'thumb') : null;
             ?>
             <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
                 <?php if ($img_url): ?>
