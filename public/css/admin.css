@@ -232,3 +232,158 @@ select.form-control   { cursor: pointer; }
 .drag-handle:active { cursor: grabbing; }
 tr.dragging { opacity: 0.5; background: var(--sand); }
 tr.drag-over { border-top: 2px solid var(--accent); }
+
+/* ── Attribute Master-Detail ────────────────────────────────────────────── */
+.attr-master-detail {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--white);
+    overflow: hidden;
+    height: 520px;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+.attr-master {
+    width: 260px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    background: #fcfcfb;
+}
+.attr-master-search {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--white);
+    position: relative;
+}
+.attr-search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.attr-search-icon {
+    position: absolute;
+    left: 10px;
+    color: var(--ink-2);
+    opacity: 0.5;
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+.attr-master-search input {
+    padding-left: 1.8rem !important;
+    background: #f9f9f9;
+    border-color: rgba(0,0,0,0.08);
+}
+.attr-master-search input:focus {
+    background: var(--white);
+}
+
+.attr-list {
+    flex: 1;
+    overflow-y: auto;
+}
+.attr-item {
+    padding: 0.9rem 1.25rem;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    transition: all var(--trans);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--ink-2);
+    font-weight: 500;
+}
+.attr-item:hover { 
+    background: #f4f1ed; 
+    color: var(--ink); 
+}
+.attr-item.active { 
+    background: var(--white); 
+    color: var(--accent); 
+    font-weight: 600;
+    box-shadow: inset 4px 0 0 var(--accent);
+}
+.attr-item.has-selection {
+    color: var(--ink);
+}
+.attr-item .badge { 
+    font-size: 0.65rem; 
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-family: var(--font-body);
+}
+
+.attr-detail {
+    flex: 1;
+    padding: 1.5rem 2.5rem;
+    overflow-y: auto;
+    background: var(--white);
+}
+.attr-detail-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-2);
+    text-align: center;
+}
+.attr-detail-empty .ico { 
+    font-size: 2.5rem; 
+    margin-bottom: 0.75rem; 
+    background: var(--sand);
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    opacity: 0.8;
+}
+.attr-detail-empty h4 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+    color: var(--ink);
+}
+.attr-detail-empty p {
+    font-size: 0.85rem;
+    max-width: 240px;
+    line-height: 1.4;
+    opacity: 0.7;
+}
+
+.attr-values-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: #fdfdfd;
+    margin: 1.25rem 0;
+}
+.attr-val-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: 2px;
+    transition: background var(--trans);
+    color: var(--ink-2);
+}
+.attr-val-label:hover { 
+    background: var(--sand);
+}
+.attr-val-label input { 
+    width: 15px; 
+    height: 15px; 
+    cursor: pointer;
+    accent-color: var(--accent);
+}

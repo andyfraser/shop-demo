@@ -136,39 +136,66 @@
 
         <div class="span-2" style="margin-top: 1rem;">
           <h3 style="font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;">
-            Product Attributes (for filtering)
+            Product Attributes
           </h3>
           <p style="font-size: 0.85rem; color: var(--ink-2); margin-bottom: 1rem;">
-            Select all applicable attributes for this product. These are used for faceted filtering on the storefront.
-            Mark an attribute as <strong>"Use as Variant"</strong> to enable specific dropdowns in the variants table below.
+            Manage attributes for filtering and variants. Select an attribute from the list to edit its values.
           </p>
           
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
-            <?php 
-              $variant_attr_ids = is_object($product) ? ($product->variant_attribute_ids ?? []) : ($_POST['variant_attribute_ids'] ?? []);
-            ?>
-            <?php foreach ($all_attributes as $attr): ?>
-              <div class="attr-group" data-attr-id="<?= $attr['id'] ?>" data-attr-name="<?= h($attr['name']) ?>">
-                <strong style="display: block; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--ink);"><?= h($attr['name']) ?></strong>
-                <div style="display: flex; flex-direction: column; gap: 0.4rem; max-height: 150px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--line); border-radius: var(--radius); background: #fdfdfd;">
-                  <?php foreach ($attr['values'] as $val): ?>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer; font-weight: 400;" class="attr-val-label" data-val-id="<?= $val['id'] ?>" data-val-name="<?= h($val['value']) ?>">
-                      <input type="checkbox" name="attribute_value_ids[]" value="<?= $val['id'] ?>" class="attr-val-checkbox"
-                        <?= in_array($val['id'], $product_attribute_ids) ? 'checked' : '' ?>>
-                      <?= h($val['value']) ?>
-                    </label>
-                  <?php endforeach; ?>
+          <div class="attr-master-detail">
+            <div class="attr-master">
+                <div class="attr-master-search">
+                    <div class="attr-search-container">
+                        <span class="attr-search-icon">🔍</span>
+                        <input type="text" id="attr-search" class="form-control" placeholder="Search attributes..." style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+                    </div>
                 </div>
-                <div style="margin-top: 0.5rem;">
-                    <label class="toggle-label" style="font-size: 0.75rem;">
-                        <input type="checkbox" name="variant_attribute_ids[]" value="<?= $attr['id'] ?>" class="use-as-variant-checkbox"
-                            <?= in_array($attr['id'], $variant_attr_ids) ? 'checked' : '' ?>>
-                        <span class="toggle-track"></span>
-                        Use as Variant
-                    </label>
+                <div class="attr-list" id="attr-master-list">
+                    <?php foreach ($all_attributes as $attr): ?>
+                        <div class="attr-item" data-id="<?= $attr['id'] ?>">
+                            <span><?= h($attr['name']) ?></span>
+                            <span class="badge badge-neutral attr-count-badge">0</span>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-              </div>
-            <?php endforeach; ?>
+            </div>
+
+            <div class="attr-detail" id="attr-detail-container">
+                <div class="attr-detail-empty">
+                    <div class="ico">🔧</div>
+                    <h4>No Attribute Selected</h4>
+                    <p>Select an attribute from the list to manage its values and variant settings.</p>
+                </div>
+
+                <?php 
+                  $variant_attr_ids = is_object($product) ? ($product->variant_attribute_ids ?? []) : ($_POST['variant_attribute_ids'] ?? []);
+                  foreach ($all_attributes as $attr): 
+                ?>
+                    <div class="attr-group" id="attr-group-<?= $attr['id'] ?>" data-attr-id="<?= $attr['id'] ?>" data-attr-name="<?= h($attr['name']) ?>" style="display: none;">
+                        <h3 style="margin-bottom: 0.5rem; font-family: var(--font-display);"><?= h($attr['name']) ?></h3>
+                        
+                        <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--sand); border-radius: var(--radius);">
+                            <label class="toggle-label" style="font-size: 0.85rem;">
+                                <input type="checkbox" name="variant_attribute_ids[]" value="<?= $attr['id'] ?>" class="use-as-variant-checkbox"
+                                    <?= in_array($attr['id'], $variant_attr_ids) ? 'checked' : '' ?>>
+                                <span class="toggle-track"></span>
+                                <strong>Use as Variant</strong> — Enables this attribute in the variants table below.
+                            </label>
+                        </div>
+
+                        <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.25rem;">Available Values</h4>
+                        <div class="attr-values-box">
+                            <?php foreach ($attr['values'] as $val): ?>
+                                <label class="attr-val-label" data-val-id="<?= $val['id'] ?>" data-val-name="<?= h($val['value']) ?>">
+                                    <input type="checkbox" name="attribute_value_ids[]" value="<?= $val['id'] ?>" class="attr-val-checkbox"
+                                        <?= in_array($val['id'], $product_attribute_ids) ? 'checked' : '' ?>>
+                                    <?= h($val['value']) ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
           </div>
         </div>
 
@@ -245,6 +272,59 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ── Attribute Master-Detail Logic ──────────────────────────────────────
+    const attrItems = document.querySelectorAll('.attr-item');
+    const attrGroups = document.querySelectorAll('.attr-group');
+    const detailEmpty = document.querySelector('.attr-detail-empty');
+    const attrSearch = document.getElementById('attr-search');
+
+    function updateAttrCounts() {
+        attrItems.forEach(item => {
+            const id = item.dataset.id;
+            const group = document.getElementById('attr-group-' + id);
+            const count = group.querySelectorAll('.attr-val-checkbox:checked').length;
+            const badge = item.querySelector('.attr-count-badge');
+            badge.textContent = count;
+            badge.className = count > 0 ? 'badge badge-success' : 'badge badge-neutral';
+            
+            if (count > 0) {
+                item.classList.add('has-selection');
+            } else {
+                item.classList.remove('has-selection');
+            }
+        });
+    }
+
+    attrItems.forEach(item => {
+        item.addEventListener('click', () => {
+            attrItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            
+            attrGroups.forEach(g => g.style.display = 'none');
+            detailEmpty.style.display = 'none';
+            
+            const target = document.getElementById('attr-group-' + item.dataset.id);
+            if (target) target.style.display = 'block';
+        });
+    });
+
+    if (attrSearch) {
+        attrSearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            attrItems.forEach(item => {
+                const name = item.querySelector('span').textContent.toLowerCase();
+                item.style.display = name.includes(term) ? 'flex' : 'none';
+            });
+        });
+    }
+
+    document.querySelectorAll('.attr-val-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateAttrCounts);
+    });
+
+    updateAttrCounts();
+
+    // ── Variants Table Logic ───────────────────────────────────────────────
     const btn = document.getElementById('add-variant');
     const tbody = document.querySelector('#variants-table tbody');
     const headerRow = document.getElementById('variant-header-row');
