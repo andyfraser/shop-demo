@@ -77,12 +77,65 @@ button, input, select, textarea { font: inherit; }
     background: var(--sand);
     border: 1px solid var(--line);
     border-radius: 2px;
-    overflow: hidden;
+}
+.search-input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
 }
 .header-search input {
     flex: 1; padding: .45rem 1rem;
     background: transparent; border: none; outline: none;
     color: var(--ink); font-size: .875rem;
+    width: 100%;
+}
+.search-suggestions {
+    position: absolute;
+    top: 100%; left: -1px; right: -1px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-top: none;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--line);
+    transition: background var(--trans);
+}
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover, .suggestion-item.active {
+    background: var(--sand);
+}
+.suggestion-img {
+    width: 40px; height: 40px;
+    object-fit: cover;
+    border-radius: 2px;
+    background: var(--sand);
+}
+.suggestion-info {
+    flex: 1;
+    min-width: 0;
+}
+.suggestion-name {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.suggestion-price {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
 }
 .header-search button {
     padding: .45rem 1rem;

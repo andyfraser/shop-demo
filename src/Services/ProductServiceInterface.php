@@ -25,4 +25,5 @@ interface ProductServiceInterface {
     public function saveVariant(array $data, int $id = 0): int;
     public function deleteVariant(int $id): void;
     public function getRelatedProducts(int $productId, int $limit = 4): array;
+    public function searchSuggestions(string $query, int $limit = 5): array;
 }

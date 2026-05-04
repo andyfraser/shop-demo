@@ -209,4 +209,43 @@ class ProductServiceTest extends TestCase {
         }
         $this->assertTrue($found8, "Product 8 (similar laptop) should be in related results");
     }
+
+    public function testSearchPunctuation() {
+        // Create a product with punctuation
+        $productId = $this->service->save([
+            'name' => "Men's T-Shirt",
+            'price' => 19.99,
+            'vat_rate' => 20,
+            'stock' => 50,
+            'active' => 1,
+            'featured' => 0,
+            'image' => null,
+            'category_id' => null
+        ]);
+
+        // Search with punctuation - should match
+        $results = $this->service->search("Men's T-Shirt", 10, 1, 'name');
+        $this->assertNotEmpty($results);
+        $this->assertEquals("Men's T-Shirt", $results[0]->name);
+
+        // Search without punctuation - should match
+        $results = $this->service->search("Mens TShirt", 10, 1, 'name');
+        $this->assertNotEmpty($results);
+        $this->assertEquals("Men's T-Shirt", $results[0]->name);
+        
+        // Search mixed
+        $results = $this->service->search("men's tshirt", 10, 1, 'name');
+        $this->assertNotEmpty($results);
+    }
+
+    public function testSearchSuggestions() {
+        // 'ProBook' in seed data
+        $results = $this->service->searchSuggestions('ProB', 5);
+        $this->assertNotEmpty($results);
+        $this->assertStringContainsString('ProBook', $results[0]->name);
+        
+        // Test limit
+        $results = $this->service->searchSuggestions('P', 1);
+        $this->assertCount(1, $results);
+    }
 }

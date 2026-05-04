@@ -37,8 +37,11 @@ $mobile_nav_expanded = (
     <a href="<?= BASE_URL ?>/" class="logo"><?= h($logo_prefix) ?><?php if ($logo_suffix !== ''): ?><span><?= h($logo_suffix) ?></span><?php endif ?></a>
 
     <form class="header-search" action="<?= BASE_URL ?>/search" method="GET">
-      <input type="text" name="q" placeholder="Search products…"
-             value="<?= h($search_query ?? '') ?>">
+      <div class="search-input-wrapper">
+        <input type="text" name="q" placeholder="Search products…"
+               value="<?= h($search_query ?? '') ?>" autocomplete="off">
+        <div class="search-suggestions" style="display: none;"></div>
+      </div>
       <button type="submit">Search</button>
     </form>
 
@@ -72,7 +75,10 @@ $mobile_nav_expanded = (
 
 <div class="mobile-search-bar">
   <form action="<?= BASE_URL ?>/search" method="GET">
-    <input type="text" name="q" placeholder="Search products…" value="<?= h($search_query ?? '') ?>">
+    <div class="search-input-wrapper">
+      <input type="text" name="q" placeholder="Search products…" value="<?= h($search_query ?? '') ?>" autocomplete="off">
+      <div class="search-suggestions" style="display: none;"></div>
+    </div>
     <button type="submit">Search</button>
   </form>
 </div>

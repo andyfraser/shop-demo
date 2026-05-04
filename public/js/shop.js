@@ -287,6 +287,92 @@ if (checkoutForm) {
     }
 }
 
+// ── Search Autocomplete ──────────────────────────────────────────────────────
+
+const searchInputs = document.querySelectorAll('.search-input-wrapper input[name="q"]');
+searchInputs.forEach(input => {
+    const wrapper = input.closest('.search-input-wrapper');
+    const suggestionsBox = wrapper.querySelector('.search-suggestions');
+    let debounceTimer;
+
+    input.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const query = input.value.trim();
+
+        if (query.length < 3) {
+            suggestionsBox.style.display = 'none';
+            suggestionsBox.innerHTML = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+            try {
+                const res = await fetch(`/search/suggestions?q=${encodeURIComponent(query)}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const suggestions = await res.json();
+
+                if (suggestions.length > 0) {
+                    renderSuggestions(suggestions, suggestionsBox);
+                    suggestionsBox.style.display = 'block';
+                } else {
+                    suggestionsBox.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Autocomplete fetch failed', err);
+            }
+        }, 300);
+    });
+
+    input.addEventListener('keydown', (e) => {
+        const items = suggestionsBox.querySelectorAll('.suggestion-item');
+        let activeIndex = Array.from(items).findIndex(item => item.classList.contains('active'));
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (suggestionsBox.style.display === 'none') return;
+            if (activeIndex < items.length - 1) {
+                if (activeIndex >= 0) items[activeIndex].classList.remove('active');
+                items[activeIndex + 1].classList.add('active');
+                items[activeIndex + 1].scrollIntoView({ block: 'nearest' });
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (suggestionsBox.style.display === 'none') return;
+            if (activeIndex > 0) {
+                items[activeIndex].classList.remove('active');
+                items[activeIndex - 1].classList.add('active');
+                items[activeIndex - 1].scrollIntoView({ block: 'nearest' });
+            }
+        } else if (e.key === 'Enter') {
+            if (activeIndex >= 0) {
+                e.preventDefault();
+                items[activeIndex].click();
+            }
+        } else if (e.key === 'Escape') {
+            suggestionsBox.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!wrapper.contains(e.target)) {
+            suggestionsBox.style.display = 'none';
+        }
+    });
+});
+
+function renderSuggestions(suggestions, container) {
+    container.innerHTML = suggestions.map(s => `
+        <a href="${s.url}" class="suggestion-item">
+            <img src="${s.image}" alt="" class="suggestion-img">
+            <div class="suggestion-info">
+                <span class="suggestion-name">${s.name}</span>
+                <span class="suggestion-price">${s.price}</span>
+            </div>
+        </a>
+    `).join('');
+}
+
 // ── Mobile nav toggle ────────────────────────────────────────────────────────
 
 const navToggle = document.getElementById('nav-toggle');

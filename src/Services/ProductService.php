@@ -138,13 +138,17 @@ class ProductService implements ProductServiceInterface {
      * Search products with pagination and sorting.
      */
     public function search(string $query, ?int $perPage, int $currentPage, string $sort, array $filters = []): array {
-        $params = ['%' . $query . '%', '%' . $query . '%'];
+        $normalized = $this->normalizeQuery($query);
+        $params = ['%' . $normalized . '%', '%' . $normalized . '%'];
         $order_by = $this->getSortSql($sort);
+        
+        $searchField = $this->getSearchableFieldSql('p.name');
+        $descField   = $this->getSearchableFieldSql('p.description');
         
         $sql = "SELECT p.*, c.name as cat_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
-                WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)";
+                WHERE p.active = 1 AND ($searchField LIKE ? OR $descField LIKE ?)";
         
         $this->applyFilters($sql, $params, $filters);
         
@@ -164,14 +168,55 @@ class ProductService implements ProductServiceInterface {
      * Count products matching search query.
      */
     public function countSearch(string $query, array $filters = []): int {
-        $params = ['%' . $query . '%', '%' . $query . '%'];
-        $sql = "SELECT COUNT(*) FROM products p WHERE p.active = 1 AND (p.name LIKE ? OR p.description LIKE ?)";
+        $normalized = $this->normalizeQuery($query);
+        $params = ['%' . $normalized . '%', '%' . $normalized . '%'];
+        
+        $searchField = $this->getSearchableFieldSql('p.name');
+        $descField   = $this->getSearchableFieldSql('p.description');
+        
+        $sql = "SELECT COUNT(*) FROM products p WHERE p.active = 1 AND ($searchField LIKE ? OR $descField LIKE ?)";
         
         $this->applyFilters($sql, $params, $filters);
         
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
+    }
+
+    private function normalizeQuery(string $query): string {
+        return preg_replace('/[^\p{L}\p{N}\s]/u', '', $query);
+    }
+
+    private function getSearchableFieldSql(string $column): string {
+        // We'll use a series of REPLACE calls to strip common punctuation.
+        // This works across both SQLite and MySQL.
+        // Note: We no longer strip spaces to avoid merging words like "AI Phone" into "AIPHONE".
+        $chars = ["'", "-", ".", ",", "!", "?", "(", ")", "/"];
+        $sql = $column;
+        foreach ($chars as $char) {
+            $escapedChar = str_replace("'", "''", $char);
+            $sql = "REPLACE($sql, '$escapedChar', '')";
+        }
+        return $sql;
+    }
+
+    public function searchSuggestions(string $query, int $limit = 5): array {
+        $normalized = $this->normalizeQuery($query);
+        $params = ['%' . $normalized . '%'];
+        
+        $searchField = $this->getSearchableFieldSql('name');
+        
+        $stmt = $this->db->prepare(
+            "SELECT * FROM products 
+             WHERE active = 1 AND $searchField LIKE ? 
+             ORDER BY featured DESC, name ASC 
+             LIMIT ?"
+        );
+        $stmt->bindValue(1, '%' . $normalized . '%', \PDO::PARAM_STR);
+        $stmt->bindValue(2, $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
     /**

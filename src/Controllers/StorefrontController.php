@@ -27,6 +27,32 @@ class StorefrontController {
         ]);
     }
 
+    public function suggestions() {
+        $query = trim($_GET['q'] ?? '');
+        if (mb_strlen($query) < 3) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            return;
+        }
+
+        $products = $this->productService->searchSuggestions($query, 5);
+        
+        $suggestions = [];
+        foreach ($products as $p) {
+            $suggestions[] = [
+                'id'    => $p->id,
+                'name'  => $p->name,
+                'slug'  => $p->slug,
+                'price' => money($p->price),
+                'image' => product_img_url($p->image, 'small'),
+                'url'   => BASE_URL . '/product/' . $p->slug
+            ];
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($suggestions);
+    }
+
     public function search() {
         $query    = trim($_GET['q'] ?? '');
         $products = [];
