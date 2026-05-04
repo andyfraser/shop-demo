@@ -16,7 +16,7 @@
 
   <?php
     // Helper to handle both object and array during transition or error repopulation
-    $get = fn($key) => is_object($product) ? ($product->$key ?? null) : ($product[$key] ?? null);
+    $get = fn($key) => isset($product) && $product ? (is_object($product) ? ($product->$key ?? null) : ($product[$key] ?? null)) : null;
   ?>
 
   <div class="card" style="max-width:1100px;">
