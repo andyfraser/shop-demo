@@ -21,13 +21,32 @@
             <div class="filter-group">
               <h4><?= h($attr['name']) ?></h4>
               <div class="filter-options">
-                <?php foreach ($attr['values'] as $val): ?>
+                <?php 
+                  $total_vals = count($attr['values']);
+                  $initial_vals = array_slice($attr['values'], 0, 4);
+                  $extra_vals = array_slice($attr['values'], 4);
+                ?>
+
+                <?php foreach ($initial_vals as $val): ?>
                   <label>
                     <input type="checkbox" name="attr[]" value="<?= $val['id'] ?>" 
                       <?= in_array($val['id'], $active_filters['attributes']) ? 'checked' : '' ?>>
                     <?= h($val['name']) ?> <span class="count">(<?= $val['count'] ?>)</span>
                   </label>
                 <?php endforeach; ?>
+
+                <?php if ($extra_vals): ?>
+                  <div class="filter-extra">
+                    <?php foreach ($extra_vals as $val): ?>
+                      <label>
+                        <input type="checkbox" name="attr[]" value="<?= $val['id'] ?>" 
+                          <?= in_array($val['id'], $active_filters['attributes']) ? 'checked' : '' ?>>
+                        <?= h($val['name']) ?> <span class="count">(<?= $val['count'] ?>)</span>
+                      </label>
+                    <?php endforeach; ?>
+                  </div>
+                  <button type="button" class="btn-toggle-filters">Show more</button>
+                <?php endif; ?>
               </div>
             </div>
           <?php endforeach; ?>

@@ -786,6 +786,40 @@ label.toggle-row input:checked + .toggle-track::after { transform: translateX(18
     font-size: 0.75rem;
 }
 
+.filter-extra {
+    display: none;
+    overflow: hidden;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.btn-toggle-filters {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.btn-toggle-filters:hover {
+    color: var(--accent-2);
+}
+
+.btn-toggle-filters::after {
+    content: '+';
+}
+
+.btn-toggle-filters.active::after {
+    content: '-';
+}
+
 @media (max-width: 768px) {
     .storefront-layout {
         flex-direction: column;

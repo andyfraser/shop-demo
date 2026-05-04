@@ -425,3 +425,40 @@ if (filtersForm && productsList) {
         window.location.reload();
     });
 }
+
+// ── Filter Show More/Less ──────────────────────────────────────────────────
+
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-toggle-filters');
+    if (!btn) return;
+
+    const group = btn.closest('.filter-group');
+    const extra = group.querySelector('.filter-extra');
+    if (!extra) return;
+
+    const isExpanded = btn.classList.toggle('active');
+    btn.textContent = isExpanded ? 'Show less' : 'Show more';
+
+    if (isExpanded) {
+        extra.style.display = 'flex';
+        const height = extra.scrollHeight;
+        extra.style.maxHeight = '0';
+        extra.style.opacity = '0';
+        extra.style.transition = 'max-height .3s ease, opacity .3s ease';
+        
+        // Force reflow
+        extra.offsetHeight;
+        
+        extra.style.maxHeight = height + 'px';
+        extra.style.opacity = '1';
+    } else {
+        extra.style.maxHeight = '0';
+        extra.style.opacity = '0';
+        
+        extra.addEventListener('transitionend', () => {
+            if (!btn.classList.contains('active')) {
+                extra.style.display = 'none';
+            }
+        }, { once: true });
+    }
+});
