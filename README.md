@@ -19,20 +19,22 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - **Smart Recommendations:** A weighted relevance algorithm that prioritizes products based on shared attributes (e.g., Brand, Color) and categories.
 - Full-text product search with sorting and configurable pagination (12 / 24 / all)
 - **Persistent Shopping Cart:** Database-backed cart that persists across sessions and devices, with automatic merging upon login.
+- **Wishlist:** Authenticated users can save products to a personal wishlist for later viewing.
 - Checkout with saved shipping address pre-fill and dynamic delivery options
 - **Enhanced Address Book:** Customer management of multiple shipping addresses with labels and default selection.
 - Customer accounts with order history and **order cancellation for pending orders**
 - User registration with email verification, **resend verification functionality**, and login
 - **PSR-3 compliant logging** with file-based output and conditional debug mode
 - Privacy-compliant cookie consent banner with persistence logic
-- **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery, log rotation) with a single crontab entry and database-backed state tracking. Supports various frequencies:
+- **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery, log rotation, image cleanup) with a single crontab entry and database-backed state tracking. Supports various frequencies:
     - High-frequency: `everyMinute`, `everyFiveMinutes`, `everyFifteenMinutes`, `everyThirtyMinutes`
     - Standard: `hourly`, `twiceDaily`, `daily`, `weekdays`
-    - Long-term: `weekly`, `monthly`, `yearly`
+    - Long-term: `weekly` (e.g., image cleanup), `monthly`, `yearly`
 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
 - Full CRUD for products (including image upload and featured status), categories, users, delivery options (with minimum order thresholds), and orders
+- **Database Backup & Restore:** Export the entire database (SQLite or MySQL) and restore from a backup file directly through the interface.
 - **Review Moderation:** Approve or reject customer product reviews.
 - Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
 - **Detailed Order History:** Comprehensive tracking of all status changes, return requests, and refunds, with clear attribution to the customer or admin who performed the action.

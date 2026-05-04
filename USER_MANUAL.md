@@ -69,6 +69,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 ### Shopping Experience
 *   **Dynamic Cart:** Add, update, or remove items without page reloads using the AJAX-powered cart.
 *   **Persistent Cart:** Your items stay in your cart even if you close your browser or switch devices. Cart contents are automatically merged when you log in.
+*   **Wishlist:** Save products you're interested in for later. Authenticated users can manage their wishlist from a dedicated page or directly from product listings.
 *   **Seamless Checkout:** Logged-in users can choose from their saved address book. Choose from multiple delivery tiers based on order total.
 *   **Order Tracking:** Registered customers can view their complete order history and track status (Pending, Confirmed, Shipped, Delivered).
 *   **Self-Service Cancellation:** Customers can cancel orders directly while they are in the `pending` status.
@@ -106,6 +107,7 @@ The dashboard provides an immediate overview of your business:
 ### User & Delivery Management
 *   **Role Control:** Manage users and assign `Admin` or `Customer` roles.
 *   **Delivery Tiers:** Configure shipping options with specific costs and "Free Shipping" thresholds.
+*   **Backup & Restore:** Safeguard your data by exporting the entire database to your local machine. Restore your shop's state by uploading a previous backup file.
 
 ---
 
@@ -235,10 +237,17 @@ php cli/console.php
 
 # Run a specific command immediately
 php cli/console.php recover-carts
+php cli/console.php images:cleanup
+php cli/console.php logs:rotate
 ```
 
 ### How it Works
 The scheduler tracks the execution of each task in the `scheduled_tasks` database table. It ensures that tasks registered with a specific frequency only run once during their respective periods, even if the `schedule:run` command is executed every minute.
+
+Common tasks include:
+*   **`recover-carts`**: Sends email reminders for abandoned carts (Daily).
+*   **`logs:rotate`**: Rotates and compresses application logs (Daily).
+*   **`images:cleanup`**: Removes orphaned images that are no longer referenced by any product (Weekly).
 
 Supported frequencies include:
 *   **High-Frequency:** `everyMinute`, `everyFiveMinutes`, `everyFifteenMinutes`, `everyThirtyMinutes`
