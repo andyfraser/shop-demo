@@ -38,6 +38,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
     *   Run the migration script to create tables and seed initial data:
         ```bash
         php cli/console.php migrate
+        php cli/console.php db:seed
         ```
 4.  **Start the Server:**
     *   Using the PHP built-in server:
