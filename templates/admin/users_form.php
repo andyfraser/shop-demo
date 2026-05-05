@@ -19,7 +19,7 @@
     </div>
   <?php endif; ?>
 
-  <div class="card" style="max-width:480px;">
+  <div class="card card-sm" style="max-width:480px;">
     <form method="POST">
         <?= csrf_field() ?>
       <?php if ($user_id): ?>
@@ -58,7 +58,7 @@
                <?= $is_new ? 'required' : '' ?> minlength="<?= $password_min_len ?>">
       </div>
 
-      <div style="display:flex;gap:.75rem;margin-top:.5rem;">
+      <div class="flex gap-2 mt-2">
         <button type="submit" name="save" class="btn btn-primary">
           <?= $is_new ? 'Create User' : 'Save Changes' ?>
         </button>

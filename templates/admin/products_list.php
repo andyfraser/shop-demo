@@ -3,7 +3,7 @@
 <div class="admin-topbar">
   <h1>Products</h1>
   <div class="actions">
-    <form method="get" action="/admin/products" style="display:inline-flex;gap:.5rem;">
+    <form method="get" action="/admin/products" class="d-inline-flex gap-1">
       <input type="text" name="search" value="<?= h($search ?? '') ?>"
              placeholder="Filter by name…" class="form-control" style="width:220px;">
       <button type="submit" class="btn btn-outline">Filter</button>
@@ -41,7 +41,7 @@
           <td>
             <strong><?= h($p->name) ?></strong>
             <?php if ($p->featured): ?>
-              <span title="Featured Product" style="color:var(--gold);margin-left:.25rem;">★</span>
+              <span title="Featured Product" class="ms-1" style="color:var(--gold);">★</span>
             <?php endif; ?>
           </td>
           <td><?= h($p->cat_name ?? '—') ?></td>

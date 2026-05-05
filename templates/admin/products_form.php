@@ -19,7 +19,7 @@
     $get = fn($key) => isset($product) && $product ? (is_object($product) ? ($product->$key ?? null) : ($product[$key] ?? null)) : null;
   ?>
 
-  <div class="card" style="max-width:1100px;">
+  <div class="card card-lg" style="max-width:1100px;">
     <form method="POST" enctype="multipart/form-data">
         <?= csrf_field() ?>
       <?php if ($product_id): ?>
@@ -47,7 +47,7 @@
                         value="<?= h($get('sku') ?? '') ?>">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-grid">
                     <div class="form-group">
                         <label>Base Price (£) *</label>
                         <input type="number" name="price" step="0.01" min="0.01" class="form-control"
@@ -89,12 +89,12 @@
               $img_file = $get('image');
               $img_url  = $img_file ? product_img_url($img_file, 'thumb') : null;
             ?>
-            <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
+            <div class="flex gap-3 flex-start">
                 <?php if ($img_url): ?>
                 <div style="flex-shrink: 0;">
                     <img src="<?= $img_url ?>" alt=""
                         style="height:140px;width:140px;object-fit:cover;border-radius:var(--radius);display:block;border:1px solid var(--line);">
-                    <label style="display:flex;align-items:center;gap:.4rem;margin-top:.5rem;font-weight:400;cursor:pointer;font-size:0.8rem;">
+                    <label class="flex-center gap-1 mt-1 text-sm" style="font-weight:400;cursor:pointer;">
                     <input type="checkbox" name="remove_image" value="1">
                     Remove image
                     </label>
@@ -105,7 +105,7 @@
                     <input type="file" name="image" class="form-control"
                         accept="image/jpeg,image/png,image/gif,image/webp"
                         style="padding:.4rem;">
-                    <div style="font-size:.75rem;color:var(--ink-2);margin-top:.35rem;">
+                    <div class="form-hint">
                     JPEG, PNG, GIF or WebP — max 5MB
                     </div>
                 </div>
@@ -113,32 +113,32 @@
           </div>
         </div>
 
-        <div class="span-2" style="display:flex;gap:2rem;padding:1rem;background:var(--sand);border-radius:var(--radius);margin-bottom:1rem;">
+        <div class="span-2 flex gap-3 bg-sand mb-2" style="padding:1rem;border-radius:var(--radius);">
           <label class="toggle-label">
             <input type="checkbox" name="active" value="1"
                    <?= ($get('active') ?? 1) ? 'checked' : '' ?>>
             <span class="toggle-track"></span>
-            Active (visible in store)
+            Active
           </label>
           <label class="toggle-label">
             <input type="checkbox" name="featured" value="1"
                    <?= ($get('featured') ?? 0) ? 'checked' : '' ?>>
             <span class="toggle-track"></span>
-            Featured Product
+            Featured
           </label>
           <label class="toggle-label">
             <input type="checkbox" name="force_variant" value="1"
                    <?= ($get('force_variant') ?? 0) ? 'checked' : '' ?>>
             <span class="toggle-track"></span>
-            Force Variant Selection
+            Force Variant
           </label>
         </div>
 
-        <div class="span-2" style="margin-top: 1rem;">
-          <h3 style="font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;">
+        <div class="span-2 mt-2">
+          <h3 class="section-title border-bottom">
             Product Attributes
           </h3>
-          <p style="font-size: 0.85rem; color: var(--ink-2); margin-bottom: 1rem;">
+          <p class="text-sm text-muted mb-2">
             Manage attributes for filtering and variants. Select an attribute from the list to edit its values.
           </p>
           
@@ -147,7 +147,7 @@
                 <div class="attr-master-search">
                     <div class="attr-search-container">
                         <span class="attr-search-icon">🔍</span>
-                        <input type="text" id="attr-search" class="form-control" placeholder="Search attributes..." style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+                        <input type="text" id="attr-search" class="form-control text-sm" placeholder="Search attributes..." style="padding: 0.4rem 0.6rem;">
                     </div>
                 </div>
                 <div class="attr-list" id="attr-master-list">
@@ -172,10 +172,10 @@
                   foreach ($all_attributes as $attr): 
                 ?>
                     <div class="attr-group" id="attr-group-<?= $attr['id'] ?>" data-attr-id="<?= $attr['id'] ?>" data-attr-name="<?= h($attr['name']) ?>" style="display: none;">
-                        <h3 style="margin-bottom: 0.5rem; font-family: var(--font-display);"><?= h($attr['name']) ?></h3>
+                        <h3 class="font-display mb-1"><?= h($attr['name']) ?></h3>
                         
-                        <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--sand); border-radius: var(--radius);">
-                            <label class="toggle-label" style="font-size: 0.85rem;">
+                        <div class="bg-sand mb-3" style="padding: 1rem; border-radius: var(--radius);">
+                            <label class="toggle-label text-sm">
                                 <input type="checkbox" name="variant_attribute_ids[]" value="<?= $attr['id'] ?>" class="use-as-variant-checkbox"
                                     <?= in_array($attr['id'], $variant_attr_ids) ? 'checked' : '' ?>>
                                 <span class="toggle-track"></span>
@@ -183,7 +183,7 @@
                             </label>
                         </div>
 
-                        <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.25rem;">Available Values</h4>
+                        <h4 class="text-sm mb-1 border-bottom" style="padding-bottom: 0.25rem;">Available Values</h4>
                         <div class="attr-values-box">
                             <?php foreach ($attr['values'] as $val): ?>
                                 <label class="attr-val-label" data-val-id="<?= $val['id'] ?>" data-val-name="<?= h($val['value']) ?>">
@@ -199,26 +199,26 @@
           </div>
         </div>
 
-        <div class="span-2" style="margin-top: 1rem;">
-          <h3 style="font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;">
+        <div class="span-2 mt-2">
+          <h3 class="section-title border-bottom">
             Product Variants
           </h3>
-          <p style="font-size: 0.85rem; color: var(--ink-2); margin-bottom: 1rem;">
+          <p class="text-sm text-muted mb-2">
             Add variations like size or color. If using variant attributes, select them from the dropdowns. 
             Variant Name is optional if attributes are selected.
           </p>
 
           <div style="overflow-x: auto;">
-            <table class="table" id="variants-table" style="width: 100%; min-width: 800px;">
+            <table class="w-100" id="variants-table" style="min-width: 800px; border-collapse: collapse;">
               <thead>
-                <tr id="variant-header-row">
+                <tr id="variant-header-row" class="border-bottom" style="text-align: left;">
                   <th style="width: 40px;"></th>
                   <!-- Dynamic columns will be inserted here -->
-                  <th>Variant Name / Label</th>
-                  <th>SKU</th>
-                  <th>Price Override</th>
-                  <th>Stock</th>
-                  <th></th>
+                  <th class="text-xs text-muted font-bold" style="padding: 0.5rem 0;">Variant Name / Label</th>
+                  <th class="text-xs text-muted font-bold" style="padding: 0.5rem 0; width: 140px;">SKU</th>
+                  <th class="text-xs text-muted font-bold" style="padding: 0.5rem 0; width: 120px;">Price Override</th>
+                  <th class="text-xs text-muted font-bold" style="padding: 0.5rem 0; width: 80px;">Stock</th>
+                  <th style="width: 80px;"></th>
                 </tr>
               </thead>
               <tbody>
@@ -227,18 +227,18 @@
                   foreach ($variants as $index => $v): 
                 ?>
                   <tr draggable="true" class="variant-row" data-index="<?= $index ?>">
-                    <td class="drag-handle" title="Drag to reorder">⋮⋮</td>
+                    <td class="drag-handle" title="Drag to reorder" style="padding: 0.5rem 0;">⋮⋮</td>
                     <!-- Dynamic values will be inserted here by JS -->
-                    <td>
+                    <td style="padding: 0.5rem 0; padding-right: 1rem;">
                       <input type="hidden" name="variants[<?= $index ?>][id]" value="<?= $v->id ?>">
                       <input type="hidden" name="variants[<?= $index ?>][sort_order]" class="sort-order-input" value="<?= $v->sort_order ?>">
                       <input type="text" name="variants[<?= $index ?>][name]" class="form-control" value="<?= h($v->name) ?>" placeholder="e.g. Blue Small">
                     </td>
-                    <td><input type="text" name="variants[<?= $index ?>][sku]" class="form-control" value="<?= h($v->sku ?? '') ?>" placeholder="SKU"></td>
-                    <td><input type="number" name="variants[<?= $index ?>][price]" step="0.01" class="form-control" value="<?= h($v->price ?? '') ?>" placeholder="<?= h($get('price')) ?>"></td>
-                    <td><input type="number" name="variants[<?= $index ?>][stock]" class="form-control" value="<?= h($v->stock) ?>"></td>
-                    <td>
-                      <label style="color: var(--accent); cursor: pointer; font-size: 0.8rem;">
+                    <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="text" name="variants[<?= $index ?>][sku]" class="form-control" value="<?= h($v->sku ?? '') ?>" placeholder="SKU"></td>
+                    <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[<?= $index ?>][price]" step="0.01" class="form-control" value="<?= h($v->price ?? '') ?>" placeholder="<?= h($get('price')) ?>"></td>
+                    <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[<?= $index ?>][stock]" class="form-control" value="<?= h($v->stock) ?>"></td>
+                    <td style="padding: 0.5rem 0;">
+                      <label class="text-sm" style="color: var(--accent); cursor: pointer;">
                         <input type="checkbox" name="variants[<?= $index ?>][delete]" value="1"> Remove
                       </label>
                     </td>
@@ -254,13 +254,13 @@
             </table>
           </div>
 
-          <button type="button" class="btn btn-outline btn-sm" id="add-variant" style="margin-top: 0.5rem;">
+          <button type="button" class="btn btn-outline btn-sm mt-1" id="add-variant">
             + Add Variant
           </button>
         </div>
       </div>
 
-      <div style="display:flex;gap:.75rem;margin-top:2rem;">
+      <div class="flex gap-2 mt-4">
         <button type="submit" name="save" class="btn btn-primary">
           <?= $is_new ? 'Create Product' : 'Save Changes' ?>
         </button>
@@ -358,7 +358,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Insert new headers before the 'Variant Name' column (which is now index 1+n)
         newActiveAttrs.forEach((attr, i) => {
             const th = document.createElement('th');
-            th.className = 'dynamic-header';
+            th.className = 'dynamic-header text-xs text-muted font-bold';
+            th.style.padding = '0.5rem 0';
             th.textContent = attr.name;
             headerRow.insertBefore(th, headerRow.children[1 + i]);
         });
@@ -388,10 +389,12 @@ document.addEventListener('DOMContentLoaded', function() {
             newActiveAttrs.forEach((attr, i) => {
                 const td = document.createElement('td');
                 td.className = 'dynamic-cell';
+                td.style.padding = '0.5rem 0';
+                td.style.paddingRight = '1rem';
                 
                 const select = document.createElement('select');
                 select.name = `variants[${rowIndex}][attr_values][]`;
-                select.className = 'form-control dynamic-attr-select';
+                select.className = 'form-control dynamic-attr-select text-sm';
                 select.style.minWidth = '120px';
                 
                 const optNone = document.createElement('option');
@@ -439,19 +442,19 @@ document.addEventListener('DOMContentLoaded', function() {
         tr.dataset.index = index;
         tr.draggable = true;
         
-        let html = `<td class="drag-handle" title="Drag to reorder">⋮⋮</td>`;
+        let html = `<td class="drag-handle" title="Drag to reorder" style="padding: 0.5rem 0;">⋮⋮</td>`;
         
         // Dynamic columns will be added by updateVariantColumns() immediately after this
         
         html += `
-            <td>
+            <td style="padding: 0.5rem 0; padding-right: 1rem;">
                 <input type="hidden" name="variants[${index}][sort_order]" class="sort-order-input" value="${index}">
                 <input type="text" name="variants[${index}][name]" class="form-control" placeholder="e.g. Large">
             </td>
-            <td><input type="text" name="variants[${index}][sku]" class="form-control" placeholder="SKU"></td>
-            <td><input type="number" name="variants[${index}][price]" step="0.01" class="form-control" placeholder="Override"></td>
-            <td><input type="number" name="variants[${index}][stock]" class="form-control" value="0"></td>
-            <td></td>
+            <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="text" name="variants[${index}][sku]" class="form-control" placeholder="SKU"></td>
+            <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[${index}][price]" step="0.01" class="form-control" placeholder="Override"></td>
+            <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[${index}][stock]" class="form-control" value="0"></td>
+            <td style="padding: 0.5rem 0;"></td>
         `;
         tr.innerHTML = html;
         tbody.appendChild(tr);

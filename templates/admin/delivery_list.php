@@ -40,7 +40,7 @@
         </tr>
       <?php endforeach; ?>
       <?php if (empty($options)): ?>
-        <tr><td colspan="5" style="text-align:center;padding:2rem;opacity:.5;">No delivery options found.</td></tr>
+        <tr><td colspan="5" class="text-center p-4" style="opacity:.5;">No delivery options found.</td></tr>
       <?php endif; ?>
     </tbody>
   </table>

@@ -9,13 +9,13 @@
 
 <div class="content">
   <?php if ($low_stock): ?>
-    <div class="alert alert-warning" style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;">
+    <div class="alert alert-warning flex-center gap-2 mb-3">
       <span style="font-size:1.5rem;">⚠️</span>
       <div>
         <h4 style="margin:0;font-size:1rem;">Low Stock Warning</h4>
-        <p style="margin:0;font-size:.85rem;color:var(--ink-2);">There are <?= count($low_stock) ?> products running low on stock. Please review the inventory below.</p>
+        <p class="text-sm text-muted" style="margin:0;">There are <?= count($low_stock) ?> products running low on stock. Please review the inventory below.</p>
       </div>
-      <a href="/admin/products" class="btn btn-outline btn-sm" style="margin-left:auto;">Manage Products</a>
+      <a href="/admin/products" class="btn btn-outline btn-sm ms-auto">Manage Products</a>
     </div>
   <?php endif; ?>
 
@@ -38,10 +38,10 @@
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start;">
+  <div class="grid-sidebar">
     <div>
-      <div class="page-actions" style="margin-bottom:1rem;">
-        <strong style="font-size:.9rem;">Recent Orders</strong>
+      <div class="page-actions mb-2">
+        <strong class="text-sm">Recent Orders</strong>
         <a href="/admin/orders" class="btn btn-outline btn-sm">View All</a>
       </div>
       <table class="data-table">
@@ -65,7 +65,7 @@
             <?php endforeach; ?>
           <?php else: ?>
             <tr>
-              <td colspan="5" style="text-align:center;padding:1.5rem;color:var(--ink-2);">No orders yet</td>
+              <td colspan="5" class="text-center text-muted" style="padding:1.5rem;">No orders yet</td>
             </tr>
           <?php endif; ?>
         </tbody>
@@ -73,21 +73,21 @@
     </div>
 
     <div>
-      <div class="page-actions" style="margin-bottom:1rem;">
-        <strong style="font-size:.9rem;">Low Stock</strong>
+      <div class="page-actions mb-2">
+        <strong class="text-sm">Low Stock</strong>
       </div>
-      <div class="card" style="padding:0;overflow:hidden;">
+      <div class="card p-0 overflow-hidden">
         <?php if ($low_stock): ?>
           <?php foreach ($low_stock as $p): ?>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--line);">
-              <div style="font-size:.85rem;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            <div class="flex-between border-bottom" style="padding:.75rem 1rem;">
+              <div class="text-sm font-bold nowrap" style="flex:1;min-width:0;">
                 <?= h($p->name) ?>
               </div>
               <span class="badge <?= $p->stock == 0 ? 'badge-danger' : 'badge-warning' ?>"><?= $p->stock ?> left</span>
             </div>
           <?php endforeach; ?>
         <?php else: ?>
-          <div style="padding:1.5rem;text-align:center;color:var(--ink-2);font-size:.85rem;">
+          <div class="text-center text-muted text-sm" style="padding:1.5rem;">
             All products well stocked ✓
           </div>
         <?php endif; ?>

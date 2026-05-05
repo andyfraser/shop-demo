@@ -15,9 +15,9 @@
     <div class="alert alert-error"><?= h($error_msg) ?></div>
   <?php endif; ?>
 
-  <div class="card" style="max-width:600px;margin-bottom:1.5rem;">
-    <h3 style="margin:0 0 1rem;font-size:1rem;">Backup Database</h3>
-    <p style="font-size:.85rem;color:var(--ink-2);margin:0 0 1.5rem;">
+  <div class="card card-md mb-3">
+    <h3 class="mb-2 text-sm" style="margin-top:0;">Backup Database</h3>
+    <p class="text-sm text-muted mb-3">
       Download a copy of the current database. This is a complete snapshot of all products, categories, orders, and users.
     </p>
     
@@ -29,9 +29,9 @@
     </form>
   </div>
 
-  <div class="card" style="max-width:600px;margin-bottom:1.5rem;">
-    <h3 style="margin:0 0 1rem;font-size:1rem;">Restore Database</h3>
-    <p style="font-size:.85rem;color:var(--accent-2);font-weight:600;margin:0 0 1rem;">
+  <div class="card card-md mb-3">
+    <h3 class="mb-2 text-sm" style="margin-top:0;">Restore Database</h3>
+    <p class="text-sm mb-2" style="color:var(--accent-2);font-weight:600;">
       ⚠️ WARNING: Restoring a database will permanently overwrite all current data. This action cannot be undone.
     </p>
     
@@ -41,7 +41,7 @@
       <div class="form-group">
         <label for="backup_file">Select Backup File</label>
         <input type="file" id="backup_file" name="backup_file" class="form-control" required>
-        <small style="display:block;margin-top:.35rem;font-size:.8rem;color:var(--ink-2);">
+        <small class="form-hint">
           For SQLite, upload a <code>.db</code> file. For MySQL, upload a <code>.sql</code> file.
         </small>
       </div>

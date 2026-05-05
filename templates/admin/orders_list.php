@@ -37,9 +37,10 @@
         <?php endforeach; ?>
       <?php else: ?>
         <tr>
-          <td colspan="6" style="text-align:center;padding:2rem;color:var(--ink-2);">No orders found</td>
+          <td colspan="6" class="text-center p-4 text-muted">No orders found</td>
         </tr>
       <?php endif; ?>
+
     </tbody>
   </table>
 </div>

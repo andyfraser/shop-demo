@@ -14,7 +14,7 @@
     </div>
   <?php endif; ?>
 
-  <div class="card" style="max-width:500px;">
+  <div class="card card-sm">
     <form method="POST">
         <?= csrf_field() ?>
       <?php if ($category_id): ?>
@@ -47,7 +47,7 @@
       </div>
 
       <div class="form-group">
-        <label>Icon <small style="color:var(--ink-2);font-weight:400;">— paste any emoji</small></label>
+        <label>Icon <small class="text-muted" style="font-weight:400;">— paste any emoji</small></label>
         <input type="text" name="icon" class="form-control"
                value="<?= h($get('icon') ?? '') ?>"
                placeholder="e.g. 💻" style="max-width:120px;">
@@ -58,7 +58,7 @@
         <textarea name="description" class="form-control"><?= h($get('description') ?? '') ?></textarea>
       </div>
 
-      <div style="display:flex;gap:.75rem;">
+      <div class="flex gap-2">
         <button type="submit" name="save" class="btn btn-primary">
           <?= $is_new ? 'Create Category' : 'Save Changes' ?>
         </button>

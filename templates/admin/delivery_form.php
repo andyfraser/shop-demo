@@ -19,7 +19,7 @@
     </div>
   <?php endif; ?>
 
-  <div class="card" style="max-width:500px;">
+  <div class="card card-sm">
     <form method="POST">
       <?= csrf_field() ?>
       <?php if ($get('id')): ?>
@@ -42,10 +42,10 @@
         <label>Minimum Order Total</label>
         <input type="number" name="min_order_total" class="form-control" step="0.01" min="0" 
                value="<?= h($get('min_order_total') ?? '0') ?>" placeholder="0.00">
-        <small style="color:var(--ink-2)">Option only shows if order subtotal is at least this much. 0 for always.</small>
+        <small class="form-hint">Option only shows if order subtotal is at least this much. 0 for always.</small>
       </div>
 
-      <div style="margin-top:1.5rem;">
+      <div class="mt-3">
         <label class="toggle-label">
           <input type="checkbox" name="active" value="1" <?= ($get('active') ?? 1) ? 'checked' : '' ?>>
           <span class="toggle-track"></span>
@@ -53,7 +53,7 @@
         </label>
       </div>
 
-      <div style="display:flex;gap:.75rem;margin-top:2rem;">
+      <div class="flex gap-2 mt-4">
         <button type="submit" class="btn btn-primary">
           <?= $get('id') ? 'Save Changes' : 'Create Option' ?>
         </button>

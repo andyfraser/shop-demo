@@ -14,7 +14,7 @@
     </div>
   <?php endif; ?>
 
-  <div class="card" style="max-width:800px;">
+  <div class="card card-lg">
     <form action="<?= $is_new ? '/admin/attributes/new' : '/admin/attributes/edit' ?>" method="post">
       <?= csrf_field() ?>
       <input type="hidden" name="id" value="<?= $attribute_id ?>">
@@ -22,35 +22,35 @@
       <div class="form-group">
         <label for="name">Attribute Name *</label>
         <input type="text" id="name" name="name" value="<?= h($attribute['name'] ?? '') ?>" class="form-control" required autofocus>
-        <p style="font-size: 0.75rem; color: var(--ink-2); margin-top: 0.35rem;">e.g. Brand, Color, Material</p>
+        <p class="form-hint">e.g. Brand, Color, Material</p>
       </div>
 
-      <div style="margin-top: 2rem; margin-bottom: 1rem;">
-        <h3 style="font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;">
+      <div class="mt-4 mb-2">
+        <h3 class="section-title border-bottom">
           Attribute Values
         </h3>
-        <p style="font-size: 0.85rem; color: var(--ink-2); margin-bottom: 1rem;">
+        <p class="text-sm text-muted mb-2">
           Existing values can be edited or removed. Add new values in the empty rows.
         </p>
 
-        <table class="table" id="values-table" style="width: 100%; border-collapse: collapse;">
+        <table class="w-100" id="values-table" style="border-collapse: collapse;">
           <thead>
-            <tr style="text-align: left; border-bottom: 1.5px solid var(--line);">
+            <tr class="border-bottom" style="text-align: left;">
               <th style="width: 40px;"></th>
-              <th style="padding: 0.5rem 0; font-size: 0.8rem; font-weight: 600; color: var(--ink-2);">Value Name</th>
-              <th style="padding: 0.5rem 0; font-size: 0.8rem; font-weight: 600; color: var(--ink-2); width: 100px;">Remove?</th>
+              <th class="text-xs text-muted font-bold" style="padding: 0.5rem 0;">Value Name</th>
+              <th class="text-xs text-muted font-bold" style="padding: 0.5rem 0; width: 100px;">Remove?</th>
             </tr>
           </thead>
           <tbody>
             <?php foreach ($values as $index => $v): ?>
               <tr draggable="true" class="value-row">
-                <td class="drag-handle" title="Drag to reorder" style="cursor: grab; color: var(--ink-3); padding: 0.5rem 0;">⋮⋮</td>
+                <td class="drag-handle" title="Drag to reorder" style="padding: 0.5rem 0;">⋮⋮</td>
                 <td style="padding: 0.5rem 0; padding-right: 1rem;">
                   <input type="hidden" name="values[<?= $index ?>][id]" value="<?= $v['id'] ?>">
                   <input type="text" name="values[<?= $index ?>][value]" value="<?= h($v['value']) ?>" class="form-control">
                 </td>
                 <td style="padding: 0.5rem 0;">
-                  <label style="color: var(--accent); cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem; font-weight: 400;">
+                  <label class="flex-center gap-1 text-sm" style="color: var(--accent); cursor: pointer; font-weight: 400;">
                     <input type="checkbox" name="values[<?= $index ?>][delete]" value="1"> Remove
                   </label>
                 </td>
@@ -61,7 +61,7 @@
             <?php for ($i = 0; $i < 3; $i++): ?>
               <?php $newIdx = count($values) + $i; ?>
               <tr draggable="true" class="value-row">
-                <td class="drag-handle" title="Drag to reorder" style="cursor: grab; color: var(--ink-3); padding: 0.5rem 0;">⋮⋮</td>
+                <td class="drag-handle" title="Drag to reorder" style="padding: 0.5rem 0;">⋮⋮</td>
                 <td style="padding: 0.5rem 0; padding-right: 1rem;">
                   <input type="text" name="values[<?= $newIdx ?>][value]" value="" class="form-control" placeholder="New value...">
                 </td>
@@ -71,12 +71,12 @@
           </tbody>
         </table>
         
-        <button type="button" class="btn btn-outline btn-sm" id="add-value-row" style="margin-top: 0.75rem;">
+        <button type="button" class="btn btn-outline btn-sm mt-1" id="add-value-row">
           + Add More Rows
         </button>
       </div>
 
-      <div style="margin-top: 2rem; display: flex; gap: 0.75rem; border-top: 1px solid var(--line); padding-top: 1.5rem;">
+      <div class="mt-4 flex gap-2 border-top">
         <button type="submit" class="btn btn-primary">Save Attribute</button>
         <a href="/admin/attributes" class="btn btn-outline">Cancel</a>
       </div>
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
             tr.className = 'value-row';
             tr.draggable = true;
             tr.innerHTML = `
-                <td class="drag-handle" title="Drag to reorder" style="cursor: grab; color: var(--ink-3); padding: 0.5rem 0;">⋮⋮</td>
+                <td class="drag-handle" title="Drag to reorder" style="padding: 0.5rem 0;">⋮⋮</td>
                 <td style="padding: 0.5rem 0; padding-right: 1rem;">
                     <input type="text" name="values[${index}][value]" class="form-control" placeholder="New value...">
                 </td>
