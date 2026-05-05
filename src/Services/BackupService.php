@@ -6,70 +6,38 @@ use PDO;
 use Exception;
 
 class BackupService implements BackupServiceInterface {
-    public function __construct(private PDO $db) {}
+    public function __construct(
+        private PDO $db,
+        private MigrationServiceInterface $migrationService
+    ) {}
 
     public function export(): array {
-        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
         $timestamp = date('Ymd_His');
+        $tables = $this->getTables();
+        $backupData = [
+            'metadata' => [
+                'timestamp' => date('Y-m-d H:i:s'),
+                'driver' => $this->db->getAttribute(PDO::ATTR_DRIVER_NAME),
+                'version' => '1.0'
+            ],
+            'tables' => []
+        ];
 
-        if ($driver === 'sqlite') {
-            $dbPath = Database::getSqlitePath();
-            
-            if (!file_exists($dbPath)) {
-                throw new Exception("SQLite database file not found at: " . $dbPath);
-            }
-
-            return [
-                'path' => $dbPath,
-                'mime' => 'application/x-sqlite3',
-                'filename' => "shop_backup_{$timestamp}.db",
-                'temp' => false
-            ];
-        } else if ($driver === 'mysql') {
-            $sql = "-- Shop Demo Backup\n";
-            $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
-            $sql .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
-
-            $tables = $this->db->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-
-            foreach ($tables as $table) {
-                // Drop table
-                $sql .= "DROP TABLE IF EXISTS `{$table}`;\n";
-                
-                // Create table
-                $createRes = $this->db->query("SHOW CREATE TABLE `{$table}`")->fetch();
-                $sql .= $createRes['Create Table'] . ";\n\n";
-
-                // Inserts
-                $rows = $this->db->query("SELECT * FROM `{$table}`")->fetchAll(PDO::FETCH_ASSOC);
-                if ($rows) {
-                    $sql .= "INSERT INTO `{$table}` VALUES \n";
-                    $insertRows = [];
-                    foreach ($rows as $row) {
-                        $values = array_map(function($val) {
-                            if ($val === null) return 'NULL';
-                            return $this->db->quote($val);
-                        }, array_values($row));
-                        $insertRows[] = "(" . implode(', ', $values) . ")";
-                    }
-                    $sql .= implode(",\n", $insertRows) . ";\n\n";
-                }
-            }
-
-            $sql .= "SET FOREIGN_KEY_CHECKS=1;\n";
-
-            $tempFile = tempnam(sys_get_temp_dir(), 'shop_bak_');
-            file_put_contents($tempFile, $sql);
-
-            return [
-                'path' => $tempFile,
-                'mime' => 'application/sql',
-                'filename' => "shop_backup_{$timestamp}.sql",
-                'temp' => true
-            ];
+        foreach ($tables as $table) {
+            $stmt = $this->db->query("SELECT * FROM `{$table}`");
+            $backupData['tables'][$table] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        throw new Exception("Unsupported driver for export: " . $driver);
+        $json = json_encode($backupData, JSON_PRETTY_PRINT);
+        $tempFile = tempnam(sys_get_temp_dir(), 'shop_bak_');
+        file_put_contents($tempFile, $json);
+
+        return [
+            'path' => $tempFile,
+            'mime' => 'application/json',
+            'filename' => "shop_backup_{$timestamp}.json",
+            'temp' => true
+        ];
     }
 
     public function import(array $file): bool {
@@ -77,58 +45,80 @@ class BackupService implements BackupServiceInterface {
             throw new Exception("Upload failed with error code: " . $file['error']);
         }
 
-        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
-        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $json = file_get_contents($file['tmp_name']);
+        $backupData = json_decode($json, true);
 
-        if ($driver === 'sqlite') {
-            if ($extension !== 'db' && $extension !== 'sqlite') {
-                throw new Exception("Invalid file extension for SQLite. Expected .db or .sqlite");
-            }
-
-            // Simple SQLite validation: check first 16 bytes
-            $handle = fopen($file['tmp_name'], 'rb');
-            $header = fread($handle, 16);
-            fclose($handle);
-            if ($header !== "SQLite format 3\0") {
-                throw new Exception("The uploaded file is not a valid SQLite 3 database.");
-            }
-
-            $dbPath = Database::getSqlitePath();
-
-            // Close PDO connection to release lock
-            Database::closeConnection();
-            
-            // For good measure, try to trigger GC
-            gc_collect_cycles();
-
-            if (!copy($file['tmp_name'], $dbPath)) {
-                throw new Exception("Failed to overwrite database file. Check permissions.");
-            }
-
-            return true;
-        } else if ($driver === 'mysql') {
-            if ($extension !== 'sql') {
-                throw new Exception("Invalid file extension for MySQL. Expected .sql");
-            }
-
-            $sql = file_get_contents($file['tmp_name']);
-            if (!$sql) {
-                throw new Exception("Could not read uploaded SQL file.");
-            }
-
-            $this->db->exec("SET FOREIGN_KEY_CHECKS=0");
-            
-            // Execute the SQL. Since it might contain multiple statements, we can't just use exec() 
-            // if it has many statements on some PDO drivers, but MySQL usually allows it.
-            // However, it's safer to split or use a loop if possible, but for a backup file 
-            // produced by our export(), it should be fine.
-            $this->db->exec($sql);
-            
-            $this->db->exec("SET FOREIGN_KEY_CHECKS=1");
-
-            return true;
+        if (!$backupData || !isset($backupData['tables'])) {
+            // Check if it's an old SQL or DB file for backward compatibility?
+            // User requested cross-driver, so JSON is the new standard.
+            // But let's try to handle the old ones if we can, or just reject them.
+            // Given the complexity of "restoring MySQL SQL to SQLite", it's better to just move forward with JSON.
+            throw new Exception("Invalid backup file format. Expected portable JSON backup.");
         }
 
-        return false;
+        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+        // 1. Reset database (drop all tables)
+        $this->dropAllTables($driver);
+
+        // 2. Re-run migrations
+        $this->migrationService->applyMigrations();
+
+        // Disable foreign key checks for import
+        $this->setForeignKeyChecks(false, $driver);
+
+        try {
+            foreach ($backupData['tables'] as $table => $rows) {
+                if (empty($rows)) continue;
+
+                // 3. Truncate table (migrations might have seeded it)
+                $this->db->exec("DELETE FROM `{$table}`");
+
+                // 4. Insert data
+                $columns = array_keys($rows[0]);
+                $colList = implode('`, `', $columns);
+                $placeholders = implode(', ', array_fill(0, count($columns), '?'));
+                
+                $sql = "INSERT INTO `{$table}` (`{$colList}`) VALUES ({$placeholders})";
+                $stmt = $this->db->prepare($sql);
+
+                foreach ($rows as $row) {
+                    $stmt->execute(array_values($row));
+                }
+            }
+        } finally {
+            $this->setForeignKeyChecks(true, $driver);
+        }
+
+        return true;
+    }
+
+    private function getTables(): array {
+        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        if ($driver === 'sqlite') {
+            $stmt = $this->db->query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
+        } else {
+            $stmt = $this->db->query("SHOW TABLES");
+        }
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    private function dropAllTables(string $driver): void {
+        $tables = $this->getTables();
+        $this->setForeignKeyChecks(false, $driver);
+        
+        foreach ($tables as $table) {
+            $this->db->exec("DROP TABLE IF EXISTS `{$table}`");
+        }
+        
+        $this->setForeignKeyChecks(true, $driver);
+    }
+
+    private function setForeignKeyChecks(bool $enable, string $driver): void {
+        if ($driver === 'sqlite') {
+            $this->db->exec('PRAGMA foreign_keys = ' . ($enable ? 'ON' : 'OFF'));
+        } else {
+            $this->db->exec('SET FOREIGN_KEY_CHECKS = ' . ($enable ? '1' : '0'));
+        }
     }
 }

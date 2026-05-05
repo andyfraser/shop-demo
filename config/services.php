@@ -29,6 +29,8 @@ use App\Services\EmailServiceInterface;
 use App\Services\EmailService;
 use App\Services\SecurityServiceInterface;
 use App\Services\SecurityService;
+use App\Services\MigrationServiceInterface;
+use App\Services\MigrationService;
 use App\Services\BackupServiceInterface;
 use App\Services\BackupService;
 use App\Services\DeliveryServiceInterface;
@@ -77,6 +79,12 @@ return function(array $config) {
         },
         ImageCleanupCommand::class => function($c) {
             return new ImageCleanupCommand($c->get(ImageCleanupServiceInterface::class));
+        },
+        App\Commands\MigrateCommand::class => function($c) {
+            return new App\Commands\MigrateCommand($c->get(MigrationServiceInterface::class));
+        },
+        App\Commands\MigrateRollbackCommand::class => function($c) {
+            return new App\Commands\MigrateRollbackCommand($c->get(MigrationServiceInterface::class));
         },
 
         // PDO instance for database connectivity
@@ -133,8 +141,11 @@ return function(array $config) {
         SecurityServiceInterface::class => function($c) {
             return new SecurityService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
+        MigrationServiceInterface::class => function($c) {
+            return new MigrationService($c->get(\PDO::class));
+        },
         BackupServiceInterface::class => function($c) {
-            return new BackupService($c->get(\PDO::class));
+            return new BackupService($c->get(\PDO::class), $c->get(MigrationServiceInterface::class));
         },
         DeliveryServiceInterface::class => function($c) {
             return new DeliveryService($c->get(\PDO::class), $c->get(LoggerInterface::class));

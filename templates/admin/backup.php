@@ -42,7 +42,7 @@
         <label for="backup_file">Select Backup File</label>
         <input type="file" id="backup_file" name="backup_file" class="form-control" required>
         <small class="form-hint">
-          For SQLite, upload a <code>.db</code> file. For MySQL, upload a <code>.sql</code> file.
+          Upload a portable <code>.json</code> backup file. This format supports restoring between different database systems (e.g., MySQL to SQLite).
         </small>
       </div>
 

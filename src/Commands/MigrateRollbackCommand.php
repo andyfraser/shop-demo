@@ -2,15 +2,11 @@
 
 namespace App\Commands;
 
-use PDO;
+use App\Services\MigrationServiceInterface;
 use Exception;
 
 class MigrateRollbackCommand implements CommandInterface {
-    private PDO $db;
-
-    public function __construct(PDO $db) {
-        $this->db = $db;
-    }
+    public function __construct(private MigrationServiceInterface $migrationService) {}
 
     public function getName(): string {
         return 'migrate:rollback';
@@ -25,52 +21,12 @@ class MigrateRollbackCommand implements CommandInterface {
     }
 
     public function execute(): int {
-        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
-
-        // Get the last applied migration
-        $stmt = $this->db->query("SELECT migration FROM migrations ORDER BY id DESC LIMIT 1");
-        $lastMigration = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$lastMigration) {
-            echo "No migrations found to rollback.\n";
-            return 0;
-        }
-
-        $migrationName = $lastMigration['migration'];
-        $migrationsDir = __DIR__ . '/../../migrations';
-        $file = $migrationsDir . '/' . $migrationName . '.php';
-
-        if (!file_exists($file)) {
-            echo "Error: Migration file '{$file}' not found. Cannot rollback.\n";
-            return 1;
-        }
-
-        echo "Rolling back migration: {$migrationName}... ";
-
-        $migrationInstance = require $file;
-
         try {
-            $sql = $migrationInstance->down($driver);
-            
-            if (is_string($sql)) {
-                if ($driver === 'mysql') {
-                    $statements = array_filter(array_map('trim', explode(';', $sql)));
-                    foreach ($statements as $s) {
-                        if (!empty($s)) $this->db->exec($s);
-                    }
-                } else {
-                    $this->db->exec($sql);
-                }
-            } else if (is_array($sql)) {
-                foreach ($sql as $s) {
-                    $this->db->exec($s);
-                }
+            if ($this->migrationService->rollbackMigration()) {
+                echo "Rollback successful.\n";
+            } else {
+                echo "No migrations found to rollback.\n";
             }
-
-            $stmt = $this->db->prepare("DELETE FROM migrations WHERE migration = :migration");
-            $stmt->execute(['migration' => $migrationName]);
-
-            echo "Done.\n";
             return 0;
         } catch (Exception $e) {
             echo "Failed!\n";
