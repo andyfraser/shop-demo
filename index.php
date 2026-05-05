@@ -87,25 +87,52 @@ define('DB_CONFIG', $dbConfig);
 use App\Core\Container;
 use App\Core\Router;
 
-$container = new Container();
+try {
+    $container = new Container();
 
-// Register services
-$servicesFactory = require __DIR__ . '/config/services.php';
-$services = $servicesFactory($config);
-foreach ($services as $id => $factory) {
-    $container->set($id, $factory);
+    // Register services
+    $servicesFactory = require __DIR__ . '/config/services.php';
+    $services = $servicesFactory($config);
+    foreach ($services as $id => $factory) {
+        $container->set($id, $factory);
+    }
+
+    // Force database connection and check if initialized
+    $db = $container->get(\PDO::class);
+    
+    // Check if the settings table exists as a proxy for "is initialized"
+    $isInitialized = false;
+    try {
+        $db->query("SELECT 1 FROM settings LIMIT 1");
+        $isInitialized = true;
+    } catch (\PDOException $e) {
+        // Table likely doesn't exist
+    }
+
+    if (!$isInitialized) {
+        include __DIR__ . '/templates/setup_guide.php';
+        exit;
+    }
+
+    // Load settings and define core constants
+    $settings = $container->get(\App\Services\SettingsService::class);
+
+    if (!defined('BASE_URL')) {
+        $baseUrlSetting = $settings->get('base_url');
+        define('BASE_URL', $baseUrlSetting !== null ? (string)$baseUrlSetting : ($config['site']['base_url'] ?? ''));
+    }
+
+    define('SITE_NAME', $settings->get('site_name'));
+    define('SITE_NAME_PLAIN', str_replace('|', '', SITE_NAME));
+
+} catch (\PDOException $e) {
+    $error_message = $e->getMessage();
+    include __DIR__ . '/templates/setup_guide.php';
+    exit;
+} catch (\Exception $e) {
+    // Re-throw other exceptions to be handled by the global exception handler
+    throw $e;
 }
-
-// Load settings and define core constants
-$settings = $container->get(\App\Services\SettingsService::class);
-
-if (!defined('BASE_URL')) {
-    $baseUrlSetting = $settings->get('base_url');
-    define('BASE_URL', $baseUrlSetting !== null ? (string)$baseUrlSetting : ($config['site']['base_url'] ?? ''));
-}
-
-define('SITE_NAME', $settings->get('site_name'));
-define('SITE_NAME_PLAIN', str_replace('|', '', SITE_NAME));
 
 $router = new Router($container);
 
