@@ -52,6 +52,8 @@ use App\Services\ImageCleanupServiceInterface;
 use App\Services\ImageCleanupService;
 use App\Services\ImageServiceInterface;
 use App\Services\ImageService;
+use App\Services\DatabaseSeedServiceInterface;
+use App\Services\DatabaseSeedService;
 
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
@@ -60,6 +62,7 @@ use App\Services\PromotionService;
 
 use App\Commands\RotateLogsCommand;
 use App\Commands\ImageCleanupCommand;
+use App\Commands\SeedCommand;
 
 return function(array $config) {
     return [
@@ -85,6 +88,9 @@ return function(array $config) {
         },
         App\Commands\MigrateRollbackCommand::class => function($c) {
             return new App\Commands\MigrateRollbackCommand($c->get(MigrationServiceInterface::class));
+        },
+        SeedCommand::class => function($c) {
+            return new SeedCommand($c->get(DatabaseSeedServiceInterface::class));
         },
 
         // PDO instance for database connectivity
@@ -188,6 +194,9 @@ return function(array $config) {
         },
         PromotionServiceInterface::class => function($c) {
             return new PromotionService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+        },
+        DatabaseSeedServiceInterface::class => function($c) {
+            return new DatabaseSeedService($c->get(\PDO::class));
         },
     ];
 };
