@@ -72,3 +72,41 @@ function csrf_token(): string {
 function is_ajax(): bool {
     return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
 }
+
+/**
+ * Get the most prominent active promotion for a product.
+ */
+function get_active_promotion(mixed $product): ?\App\Models\Promotion {
+    $promos = is_object($product) ? ($product->active_promotions ?? []) : ($product['active_promotions'] ?? []);
+    if (empty($promos)) return null;
+    
+    // Sort by value descending to show best offer
+    usort($promos, fn($a, $b) => $b->value <=> $a->value);
+    return $promos[0];
+}
+
+/**
+ * Output a promotion badge for product listings.
+ * Returns true if a badge was rendered, false otherwise.
+ */
+function promotion_badge(mixed $product): bool {
+    $promo = get_active_promotion($product);
+    if (!$promo) return false;
+
+    $label = '';
+    if ($promo->type === 'percentage') {
+        $label = (int)$promo->value . '% OFF';
+    } elseif ($promo->type === 'fixed_amount') {
+        $label = 'SALE';
+    } elseif ($promo->type === 'free_shipping') {
+        $label = 'FREE SHIPPING';
+    } elseif ($promo->type === 'buy_x_get_y') {
+        $label = 'BUY ' . $promo->buy_qty . ' GET ' . $promo->get_qty;
+    }
+
+    if ($label) {
+        echo '<span class="product-badge badge-promo">' . h($label) . '</span>';
+        return true;
+    }
+    return false;
+}

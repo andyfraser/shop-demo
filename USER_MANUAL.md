@@ -64,6 +64,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 *   **Smart Related Products:** Discovers items using a weighted relevance algorithm (prioritizing shared attributes like Brand/Color and same-category items).
 *   **Recently Viewed:** Automatically tracks your last 7 viewed items in a dedicated section at the bottom of the page, sorted with the most recent items on the left.
 *   **Inventory Logic:** Out-of-stock products are automatically hidden from the "Featured" homepage list but remain accessible via direct links or category pages.
+*   **Promotions & Discounts:** Real-time visibility of active deals via badges on listings and callouts on product pages (including BOGO offers like "Buy 2 Get 1 Free"). Supports both automatic best-value application and manual promo codes.
 *   **SEO Friendly URLs:** Account and order detail pages use clean URL structures (e.g., `/account/orders/4`).
 
 ### Shopping Experience
@@ -93,6 +94,7 @@ The dashboard provides an immediate overview of your business:
 ### Inventory & Reviews
 *   **Products:** CRUD operations for items, including image uploads (JPEG, PNG, GIF, WebP up to 5MB), pricing, and "Featured" status.
 *   **Categories:** Create complex parent-child relationships with custom icons.
+*   **Promotions Management:** Design marketing campaigns with percentage, fixed, free shipping, or "Buy X Get Y" (BOGO) discounts. Target specific products, categories, or entire orders with date and usage limits.
 *   **Review Moderation:** Review, approve, or reject customer product ratings and comments.
 
 ### Order Fulfillment

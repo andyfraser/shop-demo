@@ -20,6 +20,7 @@ class StorefrontController {
 
     public function index() {
         $featured_products = $this->productService->getFeatured(8);
+        $this->productService->attachActivePromotions($featured_products);
 
         $this->renderer->render('home', [
             'page_title'       => 'Welcome',
@@ -70,6 +71,7 @@ class StorefrontController {
         if ($query) {
             $total_products = $this->productService->countSearch($query, $filters);
             $products = $this->productService->search($query, $per_page, $current_page, $sort, $filters);
+            $this->productService->attachActivePromotions($products);
             
             if ($per_page !== null) {
                 $total_pages = (int)ceil($total_products / $per_page);
@@ -129,6 +131,7 @@ class StorefrontController {
 
         $total_products = $this->productService->countByCategory($cat_ids, $filters);
         $products = $this->productService->getByCategory($cat_ids, $per_page, $current_page, $sort, $filters);
+        $this->productService->attachActivePromotions($products);
         
         $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
@@ -168,6 +171,7 @@ class StorefrontController {
 
         $total_products = $this->productService->countAllActive($filters);
         $products = $this->productService->getAllActive($per_page, $current_page, $sort, $filters);
+        $this->productService->attachActivePromotions($products);
         $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
         $available_filters = $this->productService->getAvailableFilters();
@@ -211,6 +215,8 @@ class StorefrontController {
             exit('Product not found.');
         }
 
+        $this->productService->attachActivePromotions([$product]);
+
         $breadcrumb = $product->category_id ? $this->categoryService->getBreadcrumb($product->category_id) : [];
 
         // Track Recently Viewed
@@ -235,6 +241,8 @@ class StorefrontController {
 
         // Related products logic (Smart Weighted)
         $related_products = $this->productService->getRelatedProducts($product->id, 4);
+        $this->productService->attachActivePromotions($related_products);
+        $this->productService->attachActivePromotions($recently_viewed);
 
         $is_in_wishlist = false;
         $user = $this->authService->currentUser();

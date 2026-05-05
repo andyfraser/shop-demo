@@ -52,8 +52,14 @@
     <div style="margin-top:1.2rem;border-top:2px solid var(--line);padding-top:1rem;">
       <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;">
         <span>Subtotal</span>
-        <strong><?= money($order->total - ($order->delivery_cost ?? 0)) ?></strong>
+        <strong><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount) ?></strong>
       </div>
+      <?php if ($order->discount_amount > 0): ?>
+      <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;color:var(--accent);">
+        <span>Discount (<?= h($order->promotion_name) ?>)</span>
+        <strong>-<?= money($order->discount_amount) ?></strong>
+      </div>
+      <?php endif; ?>
       <?php if ($order->delivery_method): ?>
       <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;">
         <span>Delivery (<?= h($order->delivery_method) ?>)</span>

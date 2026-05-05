@@ -140,6 +140,27 @@ if (cartForm) {
 
             updateCartBadge(data.cart_count);
 
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const totalEl = document.getElementById('cart-total');
+            const vatEl = document.getElementById('cart-vat');
+            const discountRow = document.getElementById('discount-row');
+            const discountEl = document.getElementById('cart-discount');
+            const discountLabel = document.getElementById('discount-label');
+
+            if (subtotalEl) subtotalEl.textContent = data.subtotal;
+            if (totalEl) totalEl.textContent = data.grand_total;
+            if (vatEl) vatEl.textContent = data.total_vat;
+
+            if (discountRow) {
+                if (data.has_discount) {
+                    discountRow.style.display = 'flex';
+                    if (discountEl) discountEl.textContent = '-' + data.discount;
+                    if (discountLabel) discountLabel.textContent = 'Discount (' + data.promo_name + ')';
+                } else {
+                    discountRow.style.display = 'none';
+                }
+            }
+
             if (isRemove) {
                 const row = cartForm.querySelector(`tr[data-item-key="${submitter.value}"]`);
                 if (row) {
@@ -153,12 +174,6 @@ if (cartForm) {
                         }
                     }, 260);
                 }
-                // Update totals
-                const totalEl = document.getElementById('cart-total');
-                if (totalEl) totalEl.textContent = data.total;
-
-                const subtotalEl = document.getElementById('cart-subtotal');
-                if (subtotalEl) subtotalEl.textContent = data.total;
             }
 
             if (isUpdate) {
@@ -167,12 +182,6 @@ if (cartForm) {
                     const cell = cartForm.querySelector(`.item-subtotal[data-item-key="${item.key}"]`);
                     if (cell) cell.innerHTML = `<strong>${item.subtotal}</strong>`;
                 });
-                // Update totals
-                const totalEl = document.getElementById('cart-total');
-                if (totalEl) totalEl.textContent = data.total;
-
-                const subtotalEl = document.getElementById('cart-subtotal');
-                if (subtotalEl) subtotalEl.textContent = data.total;
 
                 showToast(data.message, 'success');
             }

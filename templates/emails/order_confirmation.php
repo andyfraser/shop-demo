@@ -28,8 +28,14 @@
     <tfoot>
         <tr>
             <td colspan="2" style="text-align: right; padding-top: 20px; color: #666;">Subtotal</td>
-            <td style="text-align: right; padding-top: 20px;"><?= money($order->total - ($order->delivery_cost ?? 0)) ?></td>
+            <td style="text-align: right; padding-top: 20px;"><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount) ?></td>
         </tr>
+        <?php if ($order->discount_amount > 0): ?>
+        <tr>
+            <td colspan="2" style="text-align: right; color: #c8622a;">Discount (<?= h($order->promotion_name) ?>)</td>
+            <td style="text-align: right; color: #c8622a;">-<?= money($order->discount_amount) ?></td>
+        </tr>
+        <?php endif; ?>
         <?php if ($order->delivery_method): ?>
         <tr>
             <td colspan="2" style="text-align: right; color: #666;">Delivery (<?= h($order->delivery_method) ?>)</td>

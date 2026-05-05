@@ -34,6 +34,42 @@
       <h1 class="product-title"><?= h($product->name) ?></h1>
       <div class="product-price" id="display-price"><?= money($product->price) ?></div>
 
+      <?php if ($promo = get_active_promotion($product)): ?>
+        <div class="promo-callout">
+          <div class="promo-icon">🏷️</div>
+          <div class="promo-text">
+            <h4><?= h($promo->name) ?></h4>
+            <?php if ($promo->description || $promo->min_order_amount > 0 || $promo->type === 'buy_x_get_y'): ?>
+              <p>
+                <?php if ($promo->type === 'buy_x_get_y'): ?>
+                  <strong>Buy <?= $promo->buy_qty ?>, Get <?= $promo->get_qty ?> 
+                  <?= $promo->value >= 100 ? 'FREE' : (int)$promo->value . '% OFF' ?></strong>
+                  <?php if ($promo->description): ?><br><?= h($promo->description) ?><?php endif; ?>
+                <?php else: ?>
+                  <?= h($promo->description) ?>
+                <?php endif; ?>
+
+                <?php if ($promo->min_order_amount > 0): ?>
+                  <?= ($promo->description || $promo->type === 'buy_x_get_y') ? ' &bull; ' : '' ?>
+                  Min. spend <?= money($promo->min_order_amount) ?>
+                <?php endif; ?>
+              </p>
+            <?php endif; ?>
+          </div>
+          <div class="promo-badge">
+            <?php if ($promo->type === 'percentage'): ?>
+              <?= (int)$promo->value ?>% OFF
+            <?php elseif ($promo->type === 'fixed_amount'): ?>
+              SALE
+            <?php elseif ($promo->type === 'buy_x_get_y'): ?>
+              BOGO
+            <?php else: ?>
+              OFFER
+            <?php endif; ?>
+          </div>
+        </div>
+      <?php endif; ?>
+
       <?php if ($product->description): ?>
         <p class="product-desc"><?= nl2br(h($product->description)) ?></p>
       <?php endif; ?>
@@ -183,11 +219,14 @@
         <?php foreach ($related_products as $r): ?>
           <a href="/product/<?= h($r->slug) ?>" class="product-card">
             <div class="img-wrap">
-              <?php if ($r->featured): ?>
+              <?php 
+                if (!promotion_badge($r)):
+                  if ($r->featured): 
+              ?>
                 <span class="product-badge badge-featured">Featured</span>
               <?php elseif ($r->isNew()): ?>
                 <span class="product-badge badge-new">New</span>
-              <?php endif; ?>
+              <?php endif; endif; ?>
               <?php product_img($r->image ?? '', $r->name, '', '', 'thumb') ?>
             </div>
             <div class="card-body">
@@ -207,11 +246,14 @@
         <?php foreach ($recently_viewed as $r): ?>
           <a href="/product/<?= h($r->slug) ?>" class="product-card" style="font-size: 0.85rem; min-height: auto;">
             <div class="img-wrap" style="aspect-ratio: 4/3; height: auto; min-height: auto;">
-              <?php if ($r->featured): ?>
+              <?php 
+                if (!promotion_badge($r)):
+                  if ($r->featured): 
+              ?>
                 <span class="product-badge badge-featured" style="font-size: 0.65rem; padding: 1px 4px;">Featured</span>
               <?php elseif ($r->isNew()): ?>
                 <span class="product-badge badge-new" style="font-size: 0.65rem; padding: 1px 4px;">New</span>
-              <?php endif; ?>
+              <?php endif; endif; ?>
               <?php product_img($r->image ?? '', $r->name, '', 'width: 100%; height: 100%; object-fit: cover;') ?>
             </div>
             <div class="card-body" style="padding: 0.5rem;">

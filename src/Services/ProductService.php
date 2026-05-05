@@ -10,8 +10,31 @@ class ProductService implements ProductServiceInterface {
     public function __construct(
         private \PDO $db,
         private AttributeServiceInterface $attributeService,
+        private PromotionServiceInterface $promotionService,
         private LoggerInterface $logger
     ) {}
+
+    public function attachActivePromotions(array $products): void {
+        $activePromos = $this->promotionService->getActiveAutomaticPromotions();
+        if (empty($activePromos)) return;
+
+        foreach ($products as $product) {
+            $product->active_promotions = [];
+            foreach ($activePromos as $promo) {
+                if ($promo->target_type === \App\Models\Promotion::TARGET_ORDER) {
+                    $product->active_promotions[] = $promo;
+                } elseif ($promo->target_type === \App\Models\Promotion::TARGET_PRODUCT) {
+                    if (in_array($product->id, $promo->target_ids)) {
+                        $product->active_promotions[] = $promo;
+                    }
+                } elseif ($promo->target_type === \App\Models\Promotion::TARGET_CATEGORY) {
+                    if (in_array($product->category_id, $promo->target_ids)) {
+                        $product->active_promotions[] = $promo;
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Get all products for admin list, optionally filtered by search.

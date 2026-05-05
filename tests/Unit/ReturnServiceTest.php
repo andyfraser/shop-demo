@@ -42,7 +42,8 @@ class ReturnServiceTest extends TestCase {
         $vatService = new VatService();
         $this->orderService = new OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
         $attrService = new AttributeService($this->db, $logger);
-        $this->productService = new ProductService($this->db, $attrService, $logger);
+        $promoService = new \App\Services\PromotionService($this->db, $logger);
+        $this->productService = new ProductService($this->db, $attrService, $promoService, $logger);
         
         $this->returnService = new ReturnService(
             $this->db,

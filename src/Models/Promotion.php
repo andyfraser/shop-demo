@@ -1,0 +1,68 @@
+<?php
+
+namespace App\Models;
+
+class Promotion extends Model {
+    public const TYPE_PERCENTAGE = 'percentage';
+    public const TYPE_FIXED_AMOUNT = 'fixed_amount';
+    public const TYPE_FREE_SHIPPING = 'free_shipping';
+    public const TYPE_BUY_X_GET_Y = 'buy_x_get_y';
+
+    public const TARGET_ORDER = 'order';
+    public const TARGET_PRODUCT = 'product';
+    public const TARGET_CATEGORY = 'category';
+
+    public int $id;
+    public string $name;
+    public ?string $description = null;
+    public ?string $code = null;
+    public string $type;
+    public float $value;
+    public ?int $buy_qty = null;
+    public ?int $get_qty = null;
+    public string $target_type;
+    public float $min_order_amount;
+    public ?string $start_date = null;
+    public ?string $end_date = null;
+    public ?int $usage_limit = null;
+    public int $used_count;
+    public int|bool $active;
+    public string $created_at;
+
+    /**
+     * @var int[] IDs of target products or categories.
+     */
+    public array $target_ids = [];
+
+    /**
+     * Check if the promotion is currently active based on dates and usage limit.
+     */
+    public function isActive(): bool {
+        if (!$this->active) {
+            return false;
+        }
+
+        $now = time();
+
+        if ($this->start_date && strtotime($this->start_date) > $now) {
+            return false;
+        }
+
+        if ($this->end_date && strtotime($this->end_date) < $now) {
+            return false;
+        }
+
+        if ($this->usage_limit !== null && $this->used_count >= $this->usage_limit) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if the promotion is automatic (no code required).
+     */
+    public function isAutomatic(): bool {
+        return empty($this->code);
+    }
+}

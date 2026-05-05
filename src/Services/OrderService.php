@@ -27,8 +27,8 @@ class OrderService implements OrderServiceInterface {
             $this->db->beginTransaction();
 
             $stmt = $this->db->prepare(
-                "INSERT INTO orders (user_id, customer_name, customer_email, total, total_vat_amount, shipping_address, notes, status, delivery_method, delivery_cost)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO orders (user_id, customer_name, customer_email, total, total_vat_amount, shipping_address, notes, status, delivery_method, delivery_cost, promotion_id, discount_amount)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
             $stmt->execute([
                 $orderData['user_id'] ?? null,
@@ -40,10 +40,18 @@ class OrderService implements OrderServiceInterface {
                 $orderData['notes'],
                 Order::STATUS_PENDING,
                 $orderData['delivery_method'],
-                $orderData['delivery_cost']
+                $orderData['delivery_cost'],
+                $orderData['promotion_id'] ?? null,
+                $orderData['discount_amount'] ?? 0.0
             ]);
 
             $orderId = (int)$this->db->lastInsertId();
+
+            // Update promotion usage if applicable
+            if (!empty($orderData['promotion_id'])) {
+                $this->db->prepare("UPDATE promotions SET used_count = used_count + 1 WHERE id = ?")
+                    ->execute([$orderData['promotion_id']]);
+            }
 
             // Record initial status in history
             $historyStmt = $this->db->prepare("INSERT INTO order_status_history (order_id, status, notes, created_by_user_id) VALUES (?, ?, ?, ?)");
@@ -103,9 +111,11 @@ class OrderService implements OrderServiceInterface {
         $stmt = $this->db->prepare(
             "SELECT o.*, 
                     COALESCE(u.name, o.customer_name) as user_name,
-                    COALESCE(u.email, o.customer_email) as user_email
+                    COALESCE(u.email, o.customer_email) as user_email,
+                    p.name as promotion_name
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
+             LEFT JOIN promotions p ON o.promotion_id = p.id
              WHERE o.id = ?"
         );
         $stmt->setFetchMode(\PDO::FETCH_CLASS, Order::class, [$this->logger]);

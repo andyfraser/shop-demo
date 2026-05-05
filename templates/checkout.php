@@ -9,8 +9,8 @@
   <?php endif; ?>
 
   <form method="POST" id="checkout-form"
-        data-base-total="<?= (float)$total ?>"
-        data-base-vat="<?= (float)$total_item_vat ?>"
+        data-base-total="<?= (float)$grand_total ?>"
+        data-base-vat="<?= (float)($total_item_vat * ($total > 0 ? (1 - ($discount / $total)) : 1)) ?>"
         data-vat-rate="<?= settings()->default_vat_rate ?>"
         data-currency-symbol="<?= settings()->currency_symbol ?>">
     <?= csrf_field() ?>
@@ -118,16 +118,22 @@
             <span>Subtotal</span>
             <strong><?= money($total) ?></strong>
           </div>
+          <?php if ($discount > 0): ?>
+            <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;color:var(--accent);">
+              <span>Discount (<?= h($applied_promotion->name) ?>)</span>
+              <strong>-<?= money($discount) ?></strong>
+            </div>
+          <?php endif; ?>
           <div id="delivery-row" style="display:none;justify-content:space-between;padding:.4rem 0;font-size:.875rem;">
             <span>Delivery</span>
             <strong id="delivery-cost"></strong>
           </div>
           <div style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.15rem;font-weight:700;margin-top:.5rem;border-top:2px solid var(--line);">
             <span>Total</span>
-            <span id="final-total" style="color:var(--accent-2)"><?= money($total) ?></span>
+            <span id="final-total" style="color:var(--accent-2)"><?= money($grand_total) ?></span>
           </div>
           <div id="vat-row" style="font-size:.85rem;color:var(--ink-2);text-align:right;margin-top:.25rem;">
-            Includes <span id="vat-amount"><?= money($total_item_vat) ?></span> VAT
+            Includes <span id="vat-amount"><?= money($total_item_vat * ($total > 0 ? (1 - ($discount / $total)) : 1)) ?></span> VAT
           </div>
           <div class="alert alert-info" style="margin-top:1rem;font-size:.8rem;">
             🔒 No payment required — this is a demo store.

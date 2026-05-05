@@ -53,6 +53,8 @@ use App\Services\ImageService;
 
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
+use App\Services\PromotionServiceInterface;
+use App\Services\PromotionService;
 
 use App\Commands\RotateLogsCommand;
 use App\Commands\ImageCleanupCommand;
@@ -93,10 +95,22 @@ return function(array $config) {
             return new AuthService($c->get(\PDO::class), $c->get(SettingsServiceInterface::class), $c->get(LoggerInterface::class));
         },
         ProductServiceInterface::class => function($c) {
-            return new ProductService($c->get(\PDO::class), $c->get(AttributeServiceInterface::class), $c->get(LoggerInterface::class));
+            return new ProductService(
+                $c->get(\PDO::class), 
+                $c->get(AttributeServiceInterface::class), 
+                $c->get(PromotionServiceInterface::class),
+                $c->get(LoggerInterface::class)
+            );
         },
         CartServiceInterface::class => function($c) {
-            return new CartService($c->get(\PDO::class), $c->get(ProductServiceInterface::class), $c->get(AuthServiceInterface::class), $c->get(VatServiceInterface::class), $c->get(LoggerInterface::class));
+            return new CartService(
+                $c->get(\PDO::class), 
+                $c->get(ProductServiceInterface::class), 
+                $c->get(AuthServiceInterface::class), 
+                $c->get(VatServiceInterface::class), 
+                $c->get(PromotionServiceInterface::class),
+                $c->get(LoggerInterface::class)
+            );
         },
         CategoryServiceInterface::class => function($c) {
             return new CategoryService($c->get(\PDO::class), $c->get(LoggerInterface::class));
@@ -160,6 +174,9 @@ return function(array $config) {
         },
         ImageCleanupServiceInterface::class => function($c) {
             return new ImageCleanupService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+        },
+        PromotionServiceInterface::class => function($c) {
+            return new PromotionService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
     ];
 };

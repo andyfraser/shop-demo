@@ -17,7 +17,8 @@ class ProductServiceTest extends TestCase {
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
         $attrService = new AttributeService($this->db, $logger);
-        $this->service = new ProductService($this->db, $attrService, $logger);
+        $promoService = new \App\Services\PromotionService($this->db, $logger);
+        $this->service = new ProductService($this->db, $attrService, $promoService, $logger);
     }
 
     public function testFindById() {

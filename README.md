@@ -20,6 +20,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - Full-text product search with sorting and configurable pagination (12 / 24 / all)
 - **Persistent Shopping Cart:** Database-backed cart that persists across sessions and devices, with automatic merging upon login.
 - **Wishlist:** Authenticated users can save products to a personal wishlist for later viewing.
+- **Advanced Promotions:** Automatic and code-based discounts (percentage, fixed, free shipping, and BOGO) with real-time AJAX cart updates.
 - Checkout with saved shipping address pre-fill and dynamic delivery options
 - **Enhanced Address Book:** Customer management of multiple shipping addresses with labels and default selection.
 - Customer accounts with order history and **order cancellation for pending orders**
@@ -35,6 +36,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
 - Full CRUD for products (including image upload and featured status), categories, users, delivery options (with minimum order thresholds), and orders
 - **Database Backup & Restore:** Export the entire database (SQLite or MySQL) and restore from a backup file directly through the interface.
+- **Promotions Management:** Create complex discount rules targeting specific products, categories, or entire orders (percentage, fixed, or Buy X Get Y) with date and usage limits.
 - **Review Moderation:** Approve or reject customer product reviews.
 - Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
 - **Detailed Order History:** Comprehensive tracking of all status changes, return requests, and refunds, with clear attribution to the customer or admin who performed the action.
@@ -163,7 +165,7 @@ shop-demo/
 │   ├── Psr/
 │   │   └── Log/            # Standard PSR-3 logging interfaces
 │   │
-│   ├── Models/             # Data models (User, Product, Order, Category, etc.)
+│   ├── Models/             # Data models (User, Product, Order, Category, Promotion, etc.)
 │   │
 │   ├── Commands/           # CLI Command implementations
 │   │   ├── CommandInterface.php
@@ -180,6 +182,7 @@ shop-demo/
 │   │   ├── AdminDeliveryController.php
 │   │   ├── AdminOrdersController.php
 │   │   ├── AdminProductsController.php
+│   │   ├── AdminPromotionsController.php
 │   │   ├── AdminSettingsController.php
 │   │   ├── AdminUsersController.php
 │   │   ├── AuthController.php         # Login, register, logout, email verification
@@ -201,6 +204,7 @@ shop-demo/
 │   │   ├── EmailService.php            # Transactional emails (verification, orders)
 │   │   ├── OrderService.php            # Order creation and management
 │   │   ├── ProductService.php          # Product catalog and search
+│   │   ├── PromotionService.php        # Discount rules and validation engine
 │   │   ├── SecurityService.php         # CSRF tokens and rate limiting
 │   │   ├── SettingsService.php         # DB-backed key/value settings with defaults
 │   │   └── UserService.php             # User management and profile updates
@@ -216,6 +220,7 @@ shop-demo/
 │   │   ├── header.php / footer.php / dashboard.php
 │   │   ├── categories_list.php / categories_form.php
 │   │   ├── products_list.php / products_form.php
+│   │   ├── promotions_list.php / promotions_form.php
 │   │   ├── delivery_list.php / delivery_form.php
 │   │   ├── orders_list.php / orders_detail.php
 │   │   ├── users_list.php / users_form.php
@@ -282,20 +287,6 @@ This application uses modern CSS (Grid, Flexbox gap, CSS variables, `aspect-rati
 
 | Browser | Minimum Version | Release Date |
 | :--- | :--- | :--- |
-| **Chrome** | 88+ | Jan 2021 |
-| **Edge** | 88+ | Jan 2021 |
-| **Firefox** | 84+ | Dec 2020 |
-| **Safari** | 14.1+ | Apr 2021 |
-| **Opera** | 74+ | Feb 2021 |
-
-**Internet Explorer is not supported.**
-
----
-
-## No External Dependencies
-
-Do not add Composer packages or any external libraries. Use only PHP 8 built-ins.
- |
 | **Chrome** | 88+ | Jan 2021 |
 | **Edge** | 88+ | Jan 2021 |
 | **Firefox** | 84+ | Dec 2020 |

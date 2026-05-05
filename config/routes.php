@@ -75,6 +75,7 @@ return [
     // Cart routes
     ['method' => 'GET', 'path' => '/cart', 'handler' => [CartController::class, 'show']],
     ['method' => 'POST', 'path' => '/cart', 'handler' => [CartController::class, 'update'], 'middlewares' => $csrfMiddleware],
+    ['method' => 'POST', 'path' => '/cart/promo', 'handler' => [CartController::class, 'applyPromo'], 'middlewares' => $csrfMiddleware],
 
     // Checkout routes
     ['method' => 'GET', 'path' => '/checkout', 'handler' => [CheckoutController::class, 'show'], 'middlewares' => $verifiedMiddleware],
@@ -130,6 +131,13 @@ return [
     ['method' => 'POST', 'path' => '/admin/users/new', 'handler' => [AdminUsersController::class, 'save'], 'middlewares' => $adminPostMiddleware],
     ['method' => 'POST', 'path' => '/admin/users/edit', 'handler' => [AdminUsersController::class, 'save'], 'middlewares' => $adminPostMiddleware],
     ['method' => 'GET', 'path' => '/admin/users/delete', 'handler' => [AdminUsersController::class, 'delete'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/promotions', 'handler' => [\App\Controllers\AdminPromotionsController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/promotions/new', 'handler' => [\App\Controllers\AdminPromotionsController::class, 'create'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/promotions/edit', 'handler' => [\App\Controllers\AdminPromotionsController::class, 'edit'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/promotions/new', 'handler' => [\App\Controllers\AdminPromotionsController::class, 'save'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'POST', 'path' => '/admin/promotions/edit', 'handler' => [\App\Controllers\AdminPromotionsController::class, 'save'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'GET', 'path' => '/admin/promotions/delete', 'handler' => [\App\Controllers\AdminPromotionsController::class, 'delete'], 'middlewares' => $adminMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/settings', 'handler' => [AdminSettingsController::class, 'show'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/settings', 'handler' => [AdminSettingsController::class, 'save'], 'middlewares' => $adminPostMiddleware],

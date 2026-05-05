@@ -33,6 +33,9 @@ class Product extends Model {
     public ?string $cat_slug = null;
     public ?int $relevance_score = null;
 
+    /** @var \App\Models\Promotion[] */
+    public array $active_promotions = [];
+
     /**
      * Calculate subtotal for a given quantity.
      */

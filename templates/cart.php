@@ -6,6 +6,10 @@
     <div class="alert alert-success"><?= h($flash_success) ?></div>
   <?php endif; ?>
 
+  <?php if ($flash_error): ?>
+    <div class="alert alert-danger"><?= h($flash_error) ?></div>
+  <?php endif; ?>
+
   <?php if (empty($items)): ?>
     <div class="empty-state">
       <div class="icon">🛒</div>
@@ -81,13 +85,35 @@
             style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);margin-bottom:.5rem;">
             <span>Subtotal</span><strong id="cart-subtotal"><?= money($total) ?></strong>
           </div>
+          
+          <div id="discount-row" style="display: <?= $discount > 0 ? 'flex' : 'none' ?>; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--line); margin-bottom:.5rem; color:var(--accent);">
+            <span id="discount-label">Discount <?= $applied_promotion ? '(' . h($applied_promotion->name) . ')' : '' ?></span>
+            <strong id="cart-discount">-<?= money($discount) ?></strong>
+          </div>
+
           <div
             style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.2rem;font-weight:700;margin-bottom:1.2rem;">
-            <span>Total</span><span id="cart-total" style="color:var(--accent-2)"><?= money($total) ?></span>
+            <span>Total</span><span id="cart-total" style="color:var(--accent-2)"><?= money($grand_total) ?></span>
           </div>
           <div style="font-size:.85rem;color:var(--ink-2);margin-bottom:1.2rem;text-align:right;">
-            Includes <?= money($total_vat) ?> VAT
+            Includes <span id="cart-vat"><?= money($total_vat) ?></span> VAT
           </div>
+
+          <form action="/cart/promo" method="POST" style="margin-bottom:1.5rem;">
+            <?= csrf_field() ?>
+            <label style="font-size:0.85rem;margin-bottom:0.5rem;display:block;">Promo Code</label>
+            <div style="display:flex;gap:0.5rem;">
+              <input type="text" name="promo_code" class="form-control" placeholder="Enter code" 
+                value="<?= $applied_promotion && $applied_promotion->code ? h($applied_promotion->code) : '' ?>"
+                <?= $applied_promotion && $applied_promotion->code ? 'readonly' : '' ?>>
+              <?php if ($applied_promotion && $applied_promotion->code): ?>
+                <button type="submit" name="remove_promo" class="btn btn-outline btn-sm">Remove</button>
+              <?php else: ?>
+                <button type="submit" class="btn btn-outline btn-sm">Apply</button>
+              <?php endif; ?>
+            </div>
+          </form>
+
           <a href="/checkout" class="btn btn-primary" style="width:100%;justify-content:center;">
             Proceed to Checkout
           </a>

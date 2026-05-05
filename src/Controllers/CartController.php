@@ -20,8 +20,28 @@ class CartController
             'items' => $this->cartService->items(),
             'total' => $this->cartService->total(),
             'total_vat' => $this->cartService->totalVat(),
+            'discount' => $this->cartService->discount(),
+            'grand_total' => $this->cartService->grandTotal(),
+            'applied_promotion' => $this->cartService->getAppliedPromotion(),
             'flash_success' => flash('success'),
+            'flash_error' => flash('error'),
         ]);
+    }
+
+    public function applyPromo()
+    {
+        if (isset($_POST['remove_promo'])) {
+            $this->cartService->removePromoCode();
+            flash('success', 'Promo code removed.');
+        } else {
+            $code = trim($_POST['promo_code'] ?? '');
+            if ($this->cartService->applyPromoCode($code)) {
+                flash('success', 'Promo code applied!');
+            } else {
+                flash('error', 'Invalid or expired promo code.');
+            }
+        }
+        redirect('/cart');
     }
 
     public function update()
@@ -45,11 +65,18 @@ class CartController
                 'subtotal' => money($i->getSubtotal()),
             ], $items);
 
+            $promo = $this->cartService->getAppliedPromotion();
+
             header('Content-Type: application/json');
             echo json_encode([
                 'ok'         => true,
                 'cart_count' => $this->cartService->count(),
-                'total'      => money($this->cartService->total()),
+                'subtotal'   => money($this->cartService->total()),
+                'discount'   => money($this->cartService->discount()),
+                'grand_total'=> money($this->cartService->grandTotal()),
+                'total_vat'  => money($this->cartService->totalVat()),
+                'has_discount'=> $this->cartService->discount() > 0,
+                'promo_name' => $promo ? $promo->name : '',
                 'items'      => $lineItems,
                 'message'    => $message,
             ]);

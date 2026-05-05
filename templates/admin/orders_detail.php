@@ -150,9 +150,17 @@ switch($order_status) {
             <tr>
               <td colspan="4" class="text-right font-bold" style="padding:.8rem 1rem;">Subtotal</td>
               <td style="padding:.8rem 1rem;">
-                <strong><?= money($order->total - ($order->delivery_cost ?? 0)) ?></strong>
+                <strong><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount) ?></strong>
               </td>
             </tr>
+            <?php if ($order->discount_amount > 0): ?>
+            <tr>
+              <td colspan="4" class="text-right font-bold" style="padding:.8rem 1rem;color:var(--accent);">Discount (<?= h($order->promotion_name) ?>)</td>
+              <td style="padding:.8rem 1rem;color:var(--accent);">
+                <strong>-<?= money($order->discount_amount) ?></strong>
+              </td>
+            </tr>
+            <?php endif; ?>
             <?php if ($order->delivery_method): ?>
             <tr>
               <td colspan="4" class="text-right font-bold" style="padding:.8rem 1rem;">Delivery (<?= h($order->delivery_method) ?>)</td>

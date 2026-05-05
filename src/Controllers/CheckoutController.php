@@ -53,6 +53,9 @@ class CheckoutController {
             'items'      => $items,
             'total'      => $this->cart->total(),
             'total_item_vat' => $this->cart->totalVat(),
+            'discount'   => $this->cart->discount(),
+            'grand_total' => $this->cart->grandTotal(),
+            'applied_promotion' => $this->cart->getAppliedPromotion(),
             'errors'     => [],
             'name'       => $user->name ?? '',
             'email'      => $user->email ?? '',
@@ -102,11 +105,17 @@ class CheckoutController {
 
         if (!$errors) {
             $user  = $this->auth->currentUser();
-            $total = $this->cart->total() + $deliveryOption->price;
+            $discount = $this->cart->discount();
+            $promo = $this->cart->getAppliedPromotion();
+            $total = $this->cart->grandTotal() + $deliveryOption->price;
             
             $defaultVatRate = (float)$this->settings->get('default_vat_rate');
             $deliveryVat = $deliveryOption->price * ($defaultVatRate / (100 + $defaultVatRate));
-            $totalVat = $this->cart->totalVat() + $deliveryVat;
+            
+            // Proportional reduction of VAT based on discount
+            // For simplicity, we'll reduce total VAT by the same percentage as the total discount
+            $vatReductionFactor = $this->cart->total() > 0 ? (1 - ($discount / $this->cart->total())) : 1;
+            $totalVat = ($this->cart->totalVat() * $vatReductionFactor) + $deliveryVat;
             
             $fullAddress = $address . "\n" . $city . "\n" . $postcode . "\n" . $country;
 
@@ -119,7 +128,9 @@ class CheckoutController {
                 'shipping_address' => $fullAddress,
                 'notes'            => $notes,
                 'delivery_method'  => $deliveryOption->name,
-                'delivery_cost'    => $deliveryOption->price
+                'delivery_cost'    => $deliveryOption->price,
+                'promotion_id'     => $promo?->id,
+                'discount_amount'  => $discount
             ];
 
             try {
@@ -184,6 +195,9 @@ class CheckoutController {
             'items'      => $items,
             'total'      => $this->cart->total(),
             'total_item_vat' => $this->cart->totalVat(),
+            'discount'   => $this->cart->discount(),
+            'grand_total' => $this->cart->grandTotal(),
+            'applied_promotion' => $this->cart->getAppliedPromotion(),
             'errors'     => $errors,
             'name'       => $name,
             'email'      => $email,

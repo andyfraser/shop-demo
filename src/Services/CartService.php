@@ -7,6 +7,7 @@ class CartService implements CartServiceInterface {
         private ProductServiceInterface $productService,
         private AuthServiceInterface $auth,
         private VatServiceInterface $vatService,
+        private PromotionServiceInterface $promotionService,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
@@ -145,6 +146,88 @@ class CartService implements CartServiceInterface {
 
     public function totalVat(): float {
         return array_sum(array_map(fn($item) => $item->getVatAmount(), $this->items()));
+    }
+
+    public function applyPromoCode(string $code): bool {
+        $cartId = $this->getCartId();
+        if (!$cartId) return false;
+
+        $promo = $this->promotionService->validateCode($code, $this->items(), $this->total());
+        if (!$promo) return false;
+
+        $this->db->prepare("UPDATE carts SET applied_promo_code = ? WHERE id = ?")
+            ->execute([$code, $cartId]);
+        
+        return true;
+    }
+
+    public function removePromoCode(): void {
+        $cartId = $this->getCartId();
+        if (!$cartId) return;
+
+        $this->db->prepare("UPDATE carts SET applied_promo_code = NULL WHERE id = ?")
+            ->execute([$cartId]);
+    }
+
+    public function getAppliedPromotion(): ?\App\Models\Promotion {
+        $cartId = $this->getCartId();
+        if (!$cartId) return null;
+
+        $stmt = $this->db->prepare("SELECT applied_promo_code FROM carts WHERE id = ?");
+        $stmt->execute([$cartId]);
+        $code = $stmt->fetchColumn();
+
+        if ($code) {
+            $promo = $this->promotionService->validateCode($code, $this->items(), $this->total());
+            if ($promo) return $promo;
+            
+            // Code no longer valid, clear it
+            $this->removePromoCode();
+        }
+
+        // Check for automatic promotions
+        $autoPromos = $this->promotionService->getActiveAutomaticPromotions();
+        foreach ($autoPromos as $promo) {
+            if ($this->total() >= $promo->min_order_amount) {
+                // If it's product/category specific, validate if cart contains targets
+                if ($promo->target_type !== \App\Models\Promotion::TARGET_ORDER) {
+                    $hasTarget = false;
+                    foreach ($this->items() as $item) {
+                        if ($this->itemMatchesTarget($item, $promo)) {
+                            $hasTarget = true;
+                            break;
+                        }
+                    }
+                    if (!$hasTarget) continue;
+                }
+                return $promo;
+            }
+        }
+
+        return null;
+    }
+
+    public function discount(): float {
+        $promo = $this->getAppliedPromotion();
+        if (!$promo) return 0.0;
+
+        return $this->promotionService->calculateDiscount($promo, $this->items(), $this->total());
+    }
+
+    public function grandTotal(): float {
+        return max(0, $this->total() - $this->discount());
+    }
+
+    private function itemMatchesTarget(\App\Models\CartItem $item, \App\Models\Promotion $promotion): bool {
+        if ($promotion->target_type === \App\Models\Promotion::TARGET_PRODUCT) {
+            return in_array($item->product_id, $promotion->target_ids);
+        }
+        
+        if ($promotion->target_type === \App\Models\Promotion::TARGET_CATEGORY) {
+            return in_array($item->product->category_id, $promotion->target_ids);
+        }
+
+        return false;
     }
 
     public function syncOnLogin(int $userId): void {

@@ -11,5 +11,10 @@ interface CartServiceInterface {
     public function items(): array;
     public function total(): float;
     public function totalVat(): float;
+    public function applyPromoCode(string $code): bool;
+    public function removePromoCode(): void;
+    public function getAppliedPromotion(): ?\App\Models\Promotion;
+    public function discount(): float;
+    public function grandTotal(): float;
     public function syncOnLogin(int $userId): void;
 }

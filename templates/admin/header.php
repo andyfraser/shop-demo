@@ -47,6 +47,9 @@
     <a href="/admin/delivery"   class="<?= $active === 'delivery'   ? 'active' : '' ?>">
       <span class="ico">🚚</span> Delivery
     </a>
+    <a href="/admin/promotions" class="<?= $active === 'promotions' ? 'active' : '' ?>">
+      <span class="ico">🎟</span> Promotions
+    </a>
     <div class="sidebar-section">Users</div>
     <a href="/admin/users"      class="<?= $active === 'users'      ? 'active' : '' ?>">
       <span class="ico">👥</span> Users

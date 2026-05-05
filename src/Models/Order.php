@@ -30,11 +30,14 @@ class Order extends Model {
     public ?string $payment_transaction_id = null;
     public ?string $refund_status = null;
     public float $refunded_amount = 0.0;
+    public ?int $promotion_id = null;
+    public float $discount_amount = 0.0;
     public string $created_at;
 
     // Join fields
     public ?string $user_name = null;
     public ?string $user_email = null;
+    public ?string $promotion_name = null;
     public ?int $item_count = 0;
 
     /** @var OrderItem[] */

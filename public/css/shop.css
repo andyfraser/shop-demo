@@ -287,6 +287,46 @@ main        { flex: 1; }
 }
 .badge-featured { background: var(--accent); color: var(--white); }
 .badge-new      { background: var(--ink); color: var(--white); }
+.badge-promo    { background: #e67e22; color: var(--white); }
+
+/* ── Promotion Callout ────────────────────────────────────────────────────── */
+.promo-callout {
+    background: #fff8f5;
+    border: 1px solid rgba(200,98,42,0.2);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: -0.4rem 0 -0.2rem;
+}
+.promo-callout .promo-icon {
+    font-size: 1.2rem;
+}
+.promo-callout .promo-text {
+    flex: 1;
+}
+.promo-callout h4 {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    margin-bottom: 0.05rem;
+    color: var(--accent-2);
+}
+.promo-callout p {
+    font-size: 0.78rem;
+    color: var(--ink-2);
+    margin: 0;
+    line-height: 1.3;
+}
+.promo-callout .promo-badge {
+    background: var(--accent);
+    color: var(--white);
+    padding: 0.15rem 0.45rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border-radius: 2px;
+    text-transform: uppercase;
+}
 .product-card img {
     width: 100%; height: 100%; object-fit: cover;
     transition: transform .4s ease;
