@@ -327,6 +327,40 @@ main        { flex: 1; }
     border-radius: 2px;
     text-transform: uppercase;
 }
+.promo-code-box {
+    margin-top: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(200,98,42,0.1);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    border: 1px dashed var(--accent);
+}
+.promo-code-label {
+    font-size: 0.7rem;
+    color: var(--ink-2);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.promo-code-value {
+    font-family: monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-2);
+}
+.promo-link {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+}
+.promo-link:hover {
+    text-decoration: underline;
+    color: var(--accent-2);
+}
 .product-card img {
     width: 100%; height: 100%; object-fit: cover;
     transition: transform .4s ease;
@@ -420,6 +454,30 @@ label.toggle-row input:checked + .toggle-track::after { transform: translateX(18
 .alert-info    { background: #eaf4fb; border-color: #2980b9; color: #1a5276; }
 .alert-warning { background: #fef9e7; border-color: #f1c40f; color: #7d6608; }
 .alert-danger, .alert-error { background: #fdedec; border-color: #c0392b; color: #922b21; }
+
+.flash-container {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 10000;
+    width: 90%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+.flash-container .alert {
+    pointer-events: auto;
+    margin-bottom: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-left: 5px solid;
+    animation: toast-in .3s ease forwards;
+    cursor: pointer;
+}
+.flash-container .alert:hover {
+    transform: scale(1.02);
+}
 
 /* ── Tables ───────────────────────────────────────────────────────────────── */
 .data-table {

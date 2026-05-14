@@ -25,7 +25,7 @@ class PromotionServiceTest extends TestCase {
             'name' => 'Test Promo',
             'type' => Promotion::TYPE_PERCENTAGE,
             'value' => 10,
-            'target_type' => Promotion::TARGET_ORDER,
+            'target_type' => Promotion::TARGET_PRODUCT,
             'code' => 'SAVE10',
             'active' => 1,
             'min_order_amount' => 50,
@@ -188,6 +188,34 @@ class PromotionServiceTest extends TestCase {
         
         $this->assertEquals('2026-05-05 10:00', $row['start_date']);
         $this->assertEquals('2026-05-06 10:00', $row['end_date']);
+    }
+
+    public function testClearsTargetsWhenSwitchingToOrderType() {
+        $data = [
+            'name' => 'Product Promo',
+            'type' => Promotion::TYPE_PERCENTAGE,
+            'value' => 10,
+            'target_type' => Promotion::TARGET_PRODUCT,
+            'active' => 1,
+            'target_ids' => [1, 2]
+        ];
+
+        $id = $this->service->save($data);
+        $promo = $this->service->findById($id);
+        $this->assertEquals([1, 2], $promo->target_ids);
+
+        $updateData = [
+            'name' => 'Order Promo',
+            'type' => Promotion::TYPE_PERCENTAGE,
+            'value' => 10,
+            'target_type' => Promotion::TARGET_ORDER,
+            'active' => 1,
+            'target_ids' => [1, 2]
+        ];
+
+        $this->service->save($updateData, $id);
+        $updatedPromo = $this->service->findById($id);
+        $this->assertEquals([], $updatedPromo->target_ids);
     }
 
     public function testCalculateBogoDiscount() {

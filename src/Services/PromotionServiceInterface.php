@@ -18,6 +18,13 @@ interface PromotionServiceInterface {
     public function getActiveAutomaticPromotions(): array;
 
     /**
+     * Get all promotions that are currently active.
+     * @param bool $onlyAutomatic
+     * @return Promotion[]
+     */
+    public function getActivePromotions(bool $onlyAutomatic = false): array;
+
+    /**
      * Validate a promo code against a cart and return the Promotion if valid.
      */
     public function validateCode(string $code, array $cartItems, float $subtotal): ?Promotion;

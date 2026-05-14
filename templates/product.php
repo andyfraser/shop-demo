@@ -55,6 +55,14 @@
                 <?php endif; ?>
               </p>
             <?php endif; ?>
+
+            <?php if ($promo->code): ?>
+              <div class="promo-code-box">
+                <span class="promo-code-label">Use code:</span>
+                <span class="promo-code-value"><?= h($promo->code) ?></span>
+              </div>
+              <a href="/promotion/<?= h($promo->code) ?>" class="promo-link">View all qualifying products →</a>
+            <?php endif; ?>
           </div>
           <div class="promo-badge">
             <?php if ($promo->type === 'percentage'): ?>

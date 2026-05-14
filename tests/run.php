@@ -99,6 +99,12 @@ foreach ($migrationFiles as $file) {
     }
 }
 
+// Seed the database
+echo "Seeding test database... ";
+$seedService = new \App\Services\DatabaseSeedService($pdo);
+$seedService->seed();
+echo "Done.\n";
+
 echo "\nRunning tests...\n\n";
 
 foreach ($testFiles as $file) {

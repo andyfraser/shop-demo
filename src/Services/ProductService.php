@@ -15,22 +15,27 @@ class ProductService implements ProductServiceInterface {
     ) {}
 
     public function attachActivePromotions(array $products): void {
-        $activePromos = $this->promotionService->getActiveAutomaticPromotions();
+        $activePromos = $this->promotionService->getActivePromotions();
         if (empty($activePromos)) return;
 
         foreach ($products as $product) {
             $product->active_promotions = [];
             foreach ($activePromos as $promo) {
+                $matches = false;
                 if ($promo->target_type === \App\Models\Promotion::TARGET_ORDER) {
-                    $product->active_promotions[] = $promo;
+                    $matches = true;
                 } elseif ($promo->target_type === \App\Models\Promotion::TARGET_PRODUCT) {
                     if (in_array($product->id, $promo->target_ids)) {
-                        $product->active_promotions[] = $promo;
+                        $matches = true;
                     }
                 } elseif ($promo->target_type === \App\Models\Promotion::TARGET_CATEGORY) {
                     if (in_array($product->category_id, $promo->target_ids)) {
-                        $product->active_promotions[] = $promo;
+                        $matches = true;
                     }
+                }
+
+                if ($matches) {
+                    $product->active_promotions[] = $promo;
                 }
             }
         }
@@ -389,6 +394,17 @@ class ProductService implements ProductServiceInterface {
     }
 
     private function applyFilters(string &$sql, array &$params, array $filters): void {
+        if (!empty($filters['product_ids']) && is_array($filters['product_ids'])) {
+            $ids = array_map('intval', $filters['product_ids']);
+            if (!empty($ids)) {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $sql .= " AND p.id IN ($placeholders)";
+                foreach ($ids as $id) {
+                    $params[] = $id;
+                }
+            }
+        }
+
         if (!empty($filters['price_min'])) {
             $sql .= " AND p.price >= ?";
             $params[] = (float)$filters['price_min'];

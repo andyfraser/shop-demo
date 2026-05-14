@@ -137,6 +137,34 @@ select.form-control   { cursor: pointer; }
 .alert-error   { background: #fdedec; border-color: #c0392b; color: #922b21; }
 .alert-info    { background: #eaf4fb; border-color: #2980b9; color: #1a5276; }
 
+.flash-container {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 10000;
+    width: 90%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+.flash-container .alert {
+    pointer-events: auto;
+    margin-bottom: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-left: 5px solid;
+    animation: toast-in .3s ease forwards;
+    cursor: pointer;
+}
+.flash-container .alert:hover {
+    transform: scale(1.02);
+}
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(1rem); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
 /* ── Tables ───────────────────────────────────────────────────────────────── */
 .data-table {
     width: 100%; border-collapse: collapse;

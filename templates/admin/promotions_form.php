@@ -210,16 +210,22 @@ function toggleTargets() {
 
     if (targetType === 'order') {
         selector.style.display = 'none';
+        productTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
+        categoryTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
     } else if (targetType === 'product') {
         selector.style.display = 'block';
         productTargets.style.display = 'block';
         categoryTargets.style.display = 'none';
         label.innerText = 'Select Products';
+        productTargets.querySelectorAll('input').forEach(i => i.disabled = false);
+        categoryTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
     } else if (targetType === 'category') {
         selector.style.display = 'block';
         productTargets.style.display = 'none';
         categoryTargets.style.display = 'block';
         label.innerText = 'Select Categories';
+        productTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
+        categoryTargets.querySelectorAll('input').forEach(i => i.disabled = false);
     }
 }
 

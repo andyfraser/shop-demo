@@ -70,3 +70,28 @@
 </aside>
 
 <div class="admin-main">
+  <div class="flash-container">
+    <?php foreach (['success', 'msg', 'error', 'msg_error', 'info', 'warning'] as $key): ?>
+      <?php if ($f = flash($key)): ?>
+        <?php 
+          $type = (strpos($key, 'error') !== false || $key === 'err') ? 'error' : 
+                  ((strpos($key, 'success') !== false || $key === 'msg') ? 'success' : $key);
+        ?>
+        <div class="alert alert-<?= $type ?>" onclick="this.remove()"><?= h($f) ?></div>
+      <?php endif; ?>
+    <?php endforeach; ?>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const alerts = document.querySelectorAll('.flash-container .alert');
+      alerts.forEach(alert => {
+        setTimeout(() => {
+          alert.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+          alert.style.opacity = '0';
+          alert.style.transform = 'translateX(20px)';
+          setTimeout(() => alert.remove(), 500);
+        }, 10000);
+      });
+    });
+  </script>

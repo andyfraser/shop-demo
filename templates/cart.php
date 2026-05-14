@@ -2,14 +2,6 @@
 <div class="container">
   <h1 class="page-title">Shopping Cart</h1>
 
-  <?php if ($flash_success): ?>
-    <div class="alert alert-success"><?= h($flash_success) ?></div>
-  <?php endif; ?>
-
-  <?php if ($flash_error): ?>
-    <div class="alert alert-danger"><?= h($flash_error) ?></div>
-  <?php endif; ?>
-
   <?php if (empty($items)): ?>
     <div class="empty-state">
       <div class="icon">🛒</div>

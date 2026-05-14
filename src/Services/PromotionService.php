@@ -98,6 +98,9 @@ class PromotionService implements PromotionServiceInterface {
 
             // Sync targets
             $targetIds = $isObject ? $data->target_ids : ($data['target_ids'] ?? []);
+            if ($params['target_type'] === Promotion::TARGET_ORDER) {
+                $targetIds = [];
+            }
             $this->syncTargets($promotionId, $targetIds);
 
             $this->db->commit();
@@ -113,13 +116,21 @@ class PromotionService implements PromotionServiceInterface {
     }
 
     public function getActiveAutomaticPromotions(): array {
+        return $this->getActivePromotions(true);
+    }
+
+    public function getActivePromotions(bool $onlyAutomatic = false): array {
         $sql = "SELECT * FROM promotions 
                 WHERE active = 1 
-                AND (code IS NULL OR code = '') 
                 AND (start_date IS NULL OR start_date <= CURRENT_TIMESTAMP) 
                 AND (end_date IS NULL OR end_date >= CURRENT_TIMESTAMP) 
-                AND (usage_limit IS NULL OR used_count < usage_limit)
-                ORDER BY value DESC";
+                AND (usage_limit IS NULL OR used_count < usage_limit)";
+        
+        if ($onlyAutomatic) {
+            $sql .= " AND (code IS NULL OR code = '')";
+        }
+
+        $sql .= " ORDER BY value DESC";
         
         $stmt = $this->db->prepare($sql);
         $stmt->setFetchMode(PDO::FETCH_CLASS, Promotion::class, [$this->logger]);

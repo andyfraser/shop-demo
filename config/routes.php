@@ -39,6 +39,7 @@ return [
     ['method' => 'GET', 'path' => '/search', 'handler' => [StorefrontController::class, 'search']],
     ['method' => 'GET', 'path' => '/search/suggestions', 'handler' => [StorefrontController::class, 'suggestions']],
     ['method' => 'GET', 'path' => '/category/:slug', 'handler' => [StorefrontController::class, 'category']],
+    ['method' => 'GET', 'path' => '/promotion/:code', 'handler' => [StorefrontController::class, 'promotion']],
     ['method' => 'GET', 'path' => '/product/:slug', 'handler' => [StorefrontController::class, 'product']],
     ['method' => 'POST', 'path' => '/product/:slug', 'handler' => [CartController::class, 'add'], 'middlewares' => $csrfMiddleware],
     ['method' => 'POST', 'path' => '/product/:slug/review', 'handler' => [StorefrontController::class, 'submitReview'], 'middlewares' => $authPostMiddleware],

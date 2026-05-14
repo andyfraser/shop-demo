@@ -149,12 +149,12 @@ class CartService implements CartServiceInterface {
     }
 
     public function applyPromoCode(string $code): bool {
-        $cartId = $this->getCartId();
-        if (!$cartId) return false;
+        $promo = $this->promotionService->findByCode($code);
+        if (!$promo || !$promo->isActive()) {
+            return false;
+        }
 
-        $promo = $this->promotionService->validateCode($code, $this->items(), $this->total());
-        if (!$promo) return false;
-
+        $cartId = $this->ensureCart();
         $this->db->prepare("UPDATE carts SET applied_promo_code = ? WHERE id = ?")
             ->execute([$code, $cartId]);
         
@@ -178,11 +178,13 @@ class CartService implements CartServiceInterface {
         $code = $stmt->fetchColumn();
 
         if ($code) {
-            $promo = $this->promotionService->validateCode($code, $this->items(), $this->total());
-            if ($promo) return $promo;
-            
-            // Code no longer valid, clear it
-            $this->removePromoCode();
+            $promo = $this->promotionService->findByCode($code);
+            if ($promo && $promo->isActive()) {
+                return $promo;
+            } else {
+                // Code no longer valid, clear it
+                $this->removePromoCode();
+            }
         }
 
         // Check for automatic promotions
@@ -234,9 +236,11 @@ class CartService implements CartServiceInterface {
         $sessionId = session_id();
         
         // Find session cart
-        $stmt = $this->db->prepare("SELECT id FROM carts WHERE session_id = ? AND user_id IS NULL");
+        $stmt = $this->db->prepare("SELECT id, applied_promo_code FROM carts WHERE session_id = ? AND user_id IS NULL");
         $stmt->execute([$sessionId]);
-        $sessionCartId = $stmt->fetchColumn();
+        $sessionCart = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $sessionCartId = $sessionCart['id'] ?? null;
+        $sessionPromoCode = $sessionCart['applied_promo_code'] ?? null;
 
         // Find user cart
         $stmt = $this->db->prepare("SELECT id FROM carts WHERE user_id = ?");
@@ -250,6 +254,11 @@ class CartService implements CartServiceInterface {
             }
         } elseif ($sessionCartId) {
             // Merge session cart into user cart
+            if ($sessionPromoCode) {
+                $this->db->prepare("UPDATE carts SET applied_promo_code = ? WHERE id = ?")
+                    ->execute([$sessionPromoCode, $userCartId]);
+            }
+
             $stmt = $this->db->prepare("SELECT * FROM cart_items WHERE cart_id = ?");
             $stmt->execute([$sessionCartId]);
             $sessionItems = $stmt->fetchAll(\PDO::FETCH_ASSOC);

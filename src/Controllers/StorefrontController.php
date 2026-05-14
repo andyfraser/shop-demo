@@ -7,6 +7,8 @@ use App\Services\CategoryServiceInterface;
 use App\Services\WishlistServiceInterface;
 use App\Services\AuthServiceInterface;
 use App\Services\ReviewServiceInterface;
+use App\Services\PromotionServiceInterface;
+use App\Services\CartServiceInterface;
 
 class StorefrontController {
     public function __construct(
@@ -15,6 +17,8 @@ class StorefrontController {
         private WishlistServiceInterface $wishlistService,
         private AuthServiceInterface $authService,
         private ReviewServiceInterface $reviewService,
+        private PromotionServiceInterface $promotionService,
+        private CartServiceInterface $cartService,
         private Renderer $renderer
     ) {}
 
@@ -157,6 +161,123 @@ class StorefrontController {
             $this->renderer->renderPartial('partials/product_list', $data);
         } else {
             $this->renderer->render('category', $data);
+        }
+    }
+
+    public function promotion($code) {
+        $promo = $this->promotionService->findByCode($code);
+
+        if (!$promo) {
+            http_response_code(404);
+            flash('error', 'This promo code does not exist.');
+            $this->renderer->render('404', ['page_title' => 'Promotion Not Found']);
+            exit;
+        }
+
+        if (!$promo->isActive()) {
+            $now = time();
+            $msg = 'This promotion is no longer active.';
+
+            if (!$promo->active) {
+                $msg = 'This promotion is currently disabled.';
+            } elseif ($promo->start_date && strtotime($promo->start_date) > $now) {
+                $msg = 'This promotion hasn\'t started yet.';
+            } elseif ($promo->end_date && strtotime($promo->end_date) < $now) {
+                $msg = 'This promotion has expired.';
+            } elseif ($promo->usage_limit !== null && $promo->used_count >= $promo->usage_limit) {
+                $msg = 'This promotion has reached its usage limit.';
+            }
+
+            flash('error', $msg);
+            redirect('/');
+        }
+
+
+        // Apply promo code automatically
+        $this->cartService->applyPromoCode($code);
+
+        // 1. If targets 1 category -> go to category page
+        if ($promo->target_type === \App\Models\Promotion::TARGET_CATEGORY && count($promo->target_ids) === 1) {
+            $category = $this->categoryService->findById($promo->target_ids[0]);
+            if ($category) {
+                redirect('/category/' . $category->slug);
+            }
+        }
+
+        // 2. If targets 1 product -> go to product page
+        if ($promo->target_type === \App\Models\Promotion::TARGET_PRODUCT && count($promo->target_ids) === 1) {
+            $product = $this->productService->findById($promo->target_ids[0]);
+            if ($product) {
+                redirect('/product/' . $product->slug);
+            }
+        }
+
+        // 3. Otherwise show a list of qualifying products
+        $this->promotionProducts($promo);
+    }
+
+    private function promotionProducts(\App\Models\Promotion $promo) {
+        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
+        $per_page_raw = $_GET['per_page'] ?? '12';
+        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
+        $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
+        $current_page = max(1, (int)($_GET['page'] ?? 1));
+
+        $filters = $this->getFiltersFromRequest();
+        $cat_ids = [];
+
+        if ($promo->target_type === \App\Models\Promotion::TARGET_CATEGORY) {
+            $cat_ids = $promo->target_ids;
+            // Also include subcategories for these categories?
+            // The current logic in category() does it. Let's be consistent.
+            $expanded_cat_ids = $cat_ids;
+            $queue = $cat_ids;
+            while ($queue) {
+                $id = array_shift($queue);
+                $subs = $this->categoryService->getSubcategories($id);
+                foreach ($subs as $sub) {
+                    if (!in_array($sub->id, $expanded_cat_ids)) {
+                        $expanded_cat_ids[] = $sub->id;
+                        $queue[] = $sub->id;
+                    }
+                }
+            }
+            $total_products = $this->productService->countByCategory($expanded_cat_ids, $filters);
+            $products = $this->productService->getByCategory($expanded_cat_ids, $per_page, $current_page, $sort, $filters);
+        } elseif ($promo->target_type === \App\Models\Promotion::TARGET_PRODUCT) {
+            $filters['product_ids'] = $promo->target_ids;
+            $total_products = $this->productService->countAllActive($filters);
+            $products = $this->productService->getAllActive($per_page, $current_page, $sort, $filters);
+        } else {
+            // Target: ORDER (all products)
+            $total_products = $this->productService->countAllActive($filters);
+            $products = $this->productService->getAllActive($per_page, $current_page, $sort, $filters);
+        }
+
+        $this->productService->attachActivePromotions($products);
+        $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
+
+        $available_filters = $this->productService->getAvailableFilters($cat_ids);
+
+        $data = [
+            'page_title'        => 'Promotion: ' . $promo->name,
+            'promotion'         => $promo,
+            'products'          => $products,
+            'total_products'    => $total_products,
+            'total_pages'       => $total_pages,
+            'current_page'      => $current_page,
+            'sort'              => $sort,
+            'per_page_param'    => $per_page_param,
+            'available_filters' => $available_filters,
+            'active_filters'    => $filters,
+        ];
+
+        if ($this->isAjax()) {
+            $this->renderer->renderPartial('partials/product_list', $data);
+        } else {
+            // We can reuse the products template if it's generic enough,
+            // or create a new one. The products.php template seems okay.
+            $this->renderer->render('products', $data);
         }
     }
 
