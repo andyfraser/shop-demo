@@ -27,8 +27,8 @@ class OrderService implements OrderServiceInterface {
             $this->db->beginTransaction();
 
             $stmt = $this->db->prepare(
-                "INSERT INTO orders (user_id, customer_name, customer_email, total, total_vat_amount, shipping_address, notes, status, delivery_method, delivery_cost, promotion_id, discount_amount)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO orders (user_id, customer_name, customer_email, total, total_vat_amount, shipping_address, notes, status, delivery_method, delivery_cost, promotion_id, discount_amount, applied_promo_name, applied_promo_code)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
             $stmt->execute([
                 $orderData['user_id'] ?? null,
@@ -42,15 +42,27 @@ class OrderService implements OrderServiceInterface {
                 $orderData['delivery_method'],
                 $orderData['delivery_cost'],
                 $orderData['promotion_id'] ?? null,
-                $orderData['discount_amount'] ?? 0.0
+                $orderData['discount_amount'] ?? 0.0,
+                $orderData['applied_promo_name'] ?? null,
+                $orderData['applied_promo_code'] ?? null
             ]);
 
             $orderId = (int)$this->db->lastInsertId();
 
             // Update promotion usage if applicable
-            if (!empty($orderData['promotion_id'])) {
-                $this->db->prepare("UPDATE promotions SET used_count = used_count + 1 WHERE id = ?")
-                    ->execute([$orderData['promotion_id']]);
+            if (!empty($orderData['applied_promotions'])) {
+                $promoUpdateStmt = $this->db->prepare("UPDATE promotions SET used_count = used_count + 1 WHERE id = ?");
+                $orderPromoStmt = $this->db->prepare("INSERT INTO order_promotions (order_id, promotion_id, discount_amount, promo_code) VALUES (?, ?, ?, ?)");
+                
+                foreach ($orderData['applied_promotions'] as $promo) {
+                    $promoUpdateStmt->execute([$promo['promotion_id']]);
+                    $orderPromoStmt->execute([
+                        $orderId,
+                        $promo['promotion_id'],
+                        $promo['discount_amount'],
+                        $promo['promo_code'] ?? null
+                    ]);
+                }
             }
 
             // Record initial status in history
@@ -124,9 +136,24 @@ class OrderService implements OrderServiceInterface {
 
         if ($order) {
             $order->items = $this->getItems($id);
+            $order->applied_promotions = $this->getAppliedPromotions($id);
         }
 
         return $order;
+    }
+
+    /**
+     * Get applied promotions for an order.
+     */
+    public function getAppliedPromotions(int $orderId): array {
+        $stmt = $this->db->prepare(
+            "SELECT op.*, p.name as promotion_name
+             FROM order_promotions op
+             JOIN promotions p ON op.promotion_id = p.id
+             WHERE op.order_id = ?"
+        );
+        $stmt->execute([$orderId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
@@ -192,6 +219,12 @@ class OrderService implements OrderServiceInterface {
         );
         $stmt->execute([$userId]);
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Order::class, [$this->logger]);
+    }
+
+    public function hasOrders(int $userId): bool {
+        $stmt = $this->db->prepare("SELECT EXISTS(SELECT 1 FROM orders WHERE user_id = ? AND status != ?)");
+        $stmt->execute([$userId, Order::STATUS_CANCELLED]);
+        return (bool)$stmt->fetchColumn();
     }
 
     public function countAll(): int {

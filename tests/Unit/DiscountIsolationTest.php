@@ -25,8 +25,11 @@ class DiscountIsolationTest extends TestCase {
         $settingsService = new SettingsService($this->db, $logger);
         $authService = new AuthService($this->db, $settingsService, $logger);
         $vatService = new VatService();
+        $emailService = new \App\Services\EmailService($settingsService, $logger);
+        $paymentService = new \App\Services\Payment\PaymentService($logger);
+        $orderService = new \App\Services\OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
         $attrService = new AttributeService($this->db, $logger);
-        $this->promotionService = new PromotionService($this->db, $logger);
+        $this->promotionService = new PromotionService($this->db, $logger, null, $orderService);
         $productService = new ProductService($this->db, $attrService, $this->promotionService, $logger);
         
         $this->cart = new CartService(
@@ -35,6 +38,7 @@ class DiscountIsolationTest extends TestCase {
             $authService,
             $vatService,
             $this->promotionService,
+            $orderService,
             $logger
         );
 

@@ -27,8 +27,11 @@ class PromotionAutoApplyTest extends TestCase {
         $settingsService = new SettingsService($this->db, $logger);
         $authService = new AuthService($this->db, $settingsService, $logger);
         $vatService = new VatService();
+        $emailService = new \App\Services\EmailService($settingsService, $logger);
+        $paymentService = new \App\Services\Payment\PaymentService($logger);
+        $orderService = new \App\Services\OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
         $attrService = new AttributeService($this->db, $logger);
-        $this->promotionService = new PromotionService($this->db, $logger);
+        $this->promotionService = new PromotionService($this->db, $logger, null, $orderService);
         $productService = new ProductService($this->db, $attrService, $this->promotionService, $logger);
         
         $this->cartService = new CartService(
@@ -37,6 +40,7 @@ class PromotionAutoApplyTest extends TestCase {
             $authService,
             $vatService,
             $this->promotionService,
+            $orderService,
             $logger
         );
 
@@ -58,16 +62,16 @@ class PromotionAutoApplyTest extends TestCase {
         ]);
 
         // Initially no promotion
-        $this->assertNull($this->cartService->getAppliedPromotion());
+        $this->assertCount(0, $this->cartService->getAppliedPromotions());
 
         // Apply promo code (simulating URL visit logic)
         $result = $this->cartService->applyPromoCode('AUTO10');
         $this->assertTrue($result);
 
         // Should be applied (staged)
-        $applied = $this->cartService->getAppliedPromotion();
-        $this->assertNotNull($applied);
-        $this->assertEquals('AUTO10', $applied->code);
+        $applied = $this->cartService->getAppliedPromotions();
+        $this->assertCount(1, $applied);
+        $this->assertEquals('AUTO10', $applied[0]->code);
         
         // Discount should be 0 because cart is empty (min_order_amount 100)
         $this->assertEquals(0.0, $this->cartService->discount());
@@ -104,7 +108,7 @@ class PromotionAutoApplyTest extends TestCase {
 
         $result = $this->cartService->applyPromoCode('INACTIVE');
         $this->assertFalse($result);
-        $this->assertNull($this->cartService->getAppliedPromotion());
+        $this->assertCount(0, $this->cartService->getAppliedPromotions());
     }
 
     public function testPromotionNotStartedMessage() {

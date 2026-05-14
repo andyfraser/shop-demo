@@ -31,10 +31,19 @@
             <td style="text-align: right; padding-top: 20px;"><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount) ?></td>
         </tr>
         <?php if ($order->discount_amount > 0): ?>
-        <tr>
-            <td colspan="2" style="text-align: right; color: #c8622a;">Discount (<?= h($order->promotion_name) ?>)</td>
-            <td style="text-align: right; color: #c8622a;">-<?= money($order->discount_amount) ?></td>
-        </tr>
+          <?php if (!empty($order->applied_promotions)): ?>
+            <?php foreach ($order->applied_promotions as $promo): ?>
+              <tr>
+                <td colspan="2" style="text-align: right; color: #c8622a;">Discount (<?= h($promo['promotion_name'] ?? $promo['name']) ?>)</td>
+                <td style="text-align: right; color: #c8622a;">-<?= money($promo['discount_amount']) ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <tr>
+              <td colspan="2" style="text-align: right; color: #c8622a;">Discount (<?= h($order->promotion_name ?: $order->applied_promo_name) ?>)</td>
+              <td style="text-align: right; color: #c8622a;">-<?= money($order->discount_amount) ?></td>
+            </tr>
+          <?php endif; ?>
         <?php endif; ?>
         <?php if ($order->delivery_method): ?>
         <tr>

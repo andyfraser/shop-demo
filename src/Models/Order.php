@@ -32,6 +32,8 @@ class Order extends Model {
     public float $refunded_amount = 0.0;
     public ?int $promotion_id = null;
     public float $discount_amount = 0.0;
+    public ?string $applied_promo_name = null;
+    public ?string $applied_promo_code = null;
     public string $created_at;
 
     // Join fields
@@ -42,6 +44,9 @@ class Order extends Model {
 
     /** @var OrderItem[] */
     public array $items = [];
+
+    /** @var array List of all applied promotions [{promotion_id, name, discount_amount, promo_code}] */
+    public array $applied_promotions = [];
 
     public function canBeCancelled(): bool {
         return in_array($this->status, [self::STATUS_PENDING, self::STATUS_CONFIRMED]);

@@ -6,10 +6,12 @@ use App\Core\Validator;
 use App\Services\SecurityServiceInterface;
 use App\Services\SettingsServiceInterface;
 use App\Services\UserServiceInterface;
+use App\Services\UserRoleServiceInterface;
 
 class AdminUsersController {
     public function __construct(
         private UserServiceInterface $userService,
+        private UserRoleServiceInterface $roleService,
         private Renderer $renderer,
         private Validator $validator,
         private SecurityServiceInterface $security,
@@ -37,6 +39,7 @@ class AdminUsersController {
             'user'             => [],
             'user_id'          => 0,
             'errors'           => [],
+            'roles'            => $this->roleService->getAll(),
             'password_min_len' => (int)$this->settings->get('password_min_length'),
         ]);
     }
@@ -56,6 +59,7 @@ class AdminUsersController {
             'user'             => $user,
             'user_id'          => $user_id,
             'errors'           => [],
+            'roles'            => $this->roleService->getAll(),
             'password_min_len' => (int)$this->settings->get('password_min_length'),
         ]);
     }
@@ -63,10 +67,13 @@ class AdminUsersController {
     public function save() {
         $user_id = (int)($_POST['id'] ?? 0);
         
+        $roleSlugs = array_map(fn($r) => $r->slug, $this->roleService->getAll());
+        $roleSlugs[] = 'admin';
+        
         $data = [
             'name'        => trim($_POST['name'] ?? ''),
             'email'       => trim($_POST['email'] ?? ''),
-            'role'        => in_array($_POST['role'] ?? '', ['admin', 'customer']) ? $_POST['role'] : 'customer',
+            'role'        => in_array($_POST['role'] ?? '', $roleSlugs) ? $_POST['role'] : 'customer',
             'address'     => trim($_POST['address'] ?? ''),
             'is_verified' => isset($_POST['is_verified']) ? 1 : 0,
         ];
@@ -118,6 +125,7 @@ class AdminUsersController {
             'user'             => $data,
             'user_id'          => $user_id,
             'errors'           => $errors,
+            'roles'            => $this->roleService->getAll(),
             'password_min_len' => (int)$this->settings->get('password_min_length'),
         ]);
     }

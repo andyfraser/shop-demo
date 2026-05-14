@@ -17,12 +17,13 @@ class CartController
     {
         $this->renderer->render('cart', [
             'page_title' => 'Shopping Cart',
+            'cartService' => $this->cartService,
             'items' => $this->cartService->items(),
             'total' => $this->cartService->total(),
             'total_vat' => $this->cartService->totalVat(),
             'discount' => $this->cartService->discount(),
             'grand_total' => $this->cartService->grandTotal(),
-            'applied_promotion' => $this->cartService->getAppliedPromotion(),
+            'applied_promotions' => $this->cartService->getAppliedPromotions(),
             'flash_success' => flash('success'),
             'flash_error' => flash('error'),
         ]);
@@ -31,7 +32,8 @@ class CartController
     public function applyPromo()
     {
         if (isset($_POST['remove_promo'])) {
-            $this->cartService->removePromoCode();
+            $code = trim($_POST['promo_code'] ?? '');
+            $this->cartService->removePromoCode($code ?: null);
             flash('success', 'Promo code removed.');
         } else {
             $code = trim($_POST['promo_code'] ?? '');
@@ -65,7 +67,8 @@ class CartController
                 'subtotal' => money($i->getSubtotal()),
             ], $items);
 
-            $promo = $this->cartService->getAppliedPromotion();
+            $promos = $this->cartService->getAppliedPromotions();
+            $promoNames = array_map(fn($p) => $p->name, $promos);
 
             header('Content-Type: application/json');
             echo json_encode([
@@ -76,7 +79,7 @@ class CartController
                 'grand_total'=> money($this->cartService->grandTotal()),
                 'total_vat'  => money($this->cartService->totalVat()),
                 'has_discount'=> $this->cartService->discount() > 0,
-                'promo_name' => $promo ? $promo->name : '',
+                'promo_names' => $promoNames,
                 'items'      => $lineItems,
                 'message'    => $message,
             ]);

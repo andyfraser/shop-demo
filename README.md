@@ -17,7 +17,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - **Product Reviews:** Customer rating and comment system with admin moderation workflow.
 - **Recently Viewed Products:** Session-based tracking of browsing history on product pages with automatic sorting by time.
 - **Smart Recommendations:** A weighted relevance algorithm that prioritizes products based on shared attributes (e.g., Brand, Color) and categories.
-- Full-text product search with sorting and configurable pagination (12 / 24 / all)
+- Full-text product search with sorting and configurable pagination (12 / 24 / 48 / all)
 - **Persistent Shopping Cart:** Database-backed cart that persists across sessions and devices, with automatic merging upon login.
 - **Wishlist:** Authenticated users can save products to a personal wishlist for later viewing.
 - **Advanced Promotions:** Automatic and code-based discounts (percentage, fixed, free shipping, and BOGO) with real-time AJAX cart updates.

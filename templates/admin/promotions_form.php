@@ -44,17 +44,33 @@
 
           <div>
             <div class="form-group">
-              <label>Promo Code</label>
+              <label>Primary Promo Code</label>
               <input type="text" name="code" class="form-control"
                 value="<?= h($get('code') ?? '') ?>" placeholder="e.g. SAVE10">
-              <div class="form-hint">Leave blank for automatic application.</div>
+              <div class="form-hint">Main code for this promotion.</div>
             </div>
 
-            <div class="bg-sand p-3 mb-3" style="border-radius:var(--radius);">
+            <div class="form-group">
+              <label>Additional Promo Codes</label>
+              <?php 
+                $extra_codes = $get('additional_codes') ?? []; 
+                $extra_codes_str = is_array($extra_codes) ? implode(', ', $extra_codes) : '';
+              ?>
+              <input type="text" name="additional_codes" class="form-control"
+                value="<?= h($extra_codes_str) ?>" placeholder="e.g. BLOGGER20, YOUTUBER20">
+              <div class="form-hint">Comma-separated list of extra codes.</div>
+            </div>
+
+            <div class="bg-sand p-3 mb-3" style="border-radius:var(--radius); display: flex; flex-direction: column; gap: 0.5rem;">
               <label class="toggle-label">
                 <input type="checkbox" name="active" value="1" <?= ($get('active') ?? 1) ? 'checked' : '' ?>>
                 <span class="toggle-track"></span>
                 Active
+              </label>
+              <label class="toggle-label">
+                <input type="checkbox" name="stackable" value="1" <?= ($get('stackable') ?? 0) ? 'checked' : '' ?>>
+                <span class="toggle-track"></span>
+                Stackable
               </label>
             </div>
           </div>
@@ -94,6 +110,22 @@
               <input type="number" name="get_qty" class="form-control" value="<?= h($get('get_qty') ?? '') ?>">
               <div class="form-hint">Number of items discounted.</div>
             </div>
+          </div>
+
+          <div class="mt-4">
+            <h4 class="text-sm font-bold mb-2">Tiered Discounts (Optional)</h4>
+            <div id="tiers-container">
+              <?php $tiers = $get('tiers') ?? []; ?>
+              <?php foreach ($tiers as $i => $tier): ?>
+                <div class="tier-row flex gap-2 mb-2">
+                  <input type="number" name="tier_min[]" class="form-control" step="0.01" value="<?= h($tier['min_amount']) ?>" placeholder="Min Subtotal">
+                  <input type="number" name="tier_value[]" class="form-control" step="0.01" value="<?= h($tier['value']) ?>" placeholder="Discount Value">
+                  <button type="button" class="btn btn-outline btn-sm text-danger" onclick="this.parentElement.remove()">×</button>
+                </div>
+              <?php endforeach; ?>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addTier()">+ Add Tier</button>
+            <div class="form-hint">Tiers override the base value if the subtotal threshold is met.</div>
           </div>
         </div>
 
@@ -136,6 +168,32 @@
               </div>
             </div>
           </div>
+
+          <div id="exclusion-selector" class="form-group" style="display:none;">
+            <?php $excluded_ids = $get('excluded_ids') ?? []; ?>
+            <div class="flex flex-center gap-3 mb-2">
+              <label id="exclusion-label" class="mb-0">Select Exclusions</label>
+            </div>
+            <div class="bg-sand p-3" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius);">
+              <div id="product-exclusions" style="display:none;">
+                <?php foreach ($products as $p): ?>
+                  <label class="flex gap-2 mb-1 exclusion-item" style="font-weight:400;cursor:pointer;">
+                    <input type="checkbox" name="excluded_ids[]" value="<?= $p->id ?>" <?= in_array($p->id, $excluded_ids) ? 'checked' : '' ?>>
+                    <span class="exclusion-name"><?= h($p->name) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+              <div id="category-exclusions" style="display:none;">
+                <?php foreach ($categories as $c): ?>
+                  <label class="flex gap-2 mb-1 exclusion-item" style="font-weight:400;cursor:pointer;">
+                    <input type="checkbox" name="excluded_ids[]" value="<?= $c->id ?>" <?= in_array($c->id, $excluded_ids) ? 'checked' : '' ?>>
+                    <span class="exclusion-name"><?= $c->parent_name ? h($c->parent_name) . ' › ' : '' ?><?= h($c->name) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </div>
+            <div class="form-hint">Selected items will be excluded from the promotion even if they meet the target criteria.</div>
+          </div>
         </div>
 
         <div class="span-2 mt-2">
@@ -155,6 +213,40 @@
               <label>Usage Limit</label>
               <input type="number" name="usage_limit" class="form-control" value="<?= h($get('usage_limit') ?? '') ?>">
               <div class="form-hint">Max overall uses.</div>
+            </div>
+          </div>
+
+          <div class="form-grid mt-2" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="form-group">
+              <label>Limit per User</label>
+              <input type="number" name="usage_limit_per_user" class="form-control" value="<?= h($get('usage_limit_per_user') ?? '') ?>">
+              <div class="form-hint">Max uses per customer.</div>
+            </div>
+            <div class="form-group">
+              <label>Priority</label>
+              <input type="number" name="priority" class="form-control" value="<?= h($get('priority') ?? 0) ?>">
+              <div class="form-hint">Higher priority runs first.</div>
+            </div>
+            <div class="form-group">
+              <label>Target User Role</label>
+              <select name="target_role" class="form-control">
+                <option value="">Everyone</option>
+                <option value="first_time" <?= ($get('target_role') ?? '') === 'first_time' ? 'selected' : '' ?>>First-time Customers</option>
+                <optgroup label="Specific Roles">
+                  <?php foreach ($roles as $role): ?>
+                    <option value="<?= h($role->slug) ?>" <?= ($get('target_role') ?? '') === $role->slug ? 'selected' : '' ?>>
+                      <?= h($role->name) ?>
+                    </option>
+                  <?php endforeach; ?>
+                  <?php 
+                    $roleSlugs = array_map(fn($r) => $r->slug, $roles);
+                    if (!in_array('admin', $roleSlugs)): 
+                  ?>
+                    <option value="admin" <?= ($get('target_role') ?? '') === 'admin' ? 'selected' : '' ?>>Admins Only</option>
+                  <?php endif; ?>
+                </optgroup>
+              </select>
+              <div class="form-hint">Restrict to specific role or first-time buyers.</div>
             </div>
           </div>
           <?php if (!$is_new): ?>
@@ -200,8 +292,11 @@ function toggleBogoFields() {
 function toggleTargets() {
     const targetType = document.getElementById('target_type').value;
     const selector = document.getElementById('target-selector');
+    const exclusionSelector = document.getElementById('exclusion-selector');
     const productTargets = document.getElementById('product-targets');
     const categoryTargets = document.getElementById('category-targets');
+    const productExclusions = document.getElementById('product-exclusions');
+    const categoryExclusions = document.getElementById('category-exclusions');
     const label = document.getElementById('target-label');
     const search = document.getElementById('target-search');
 
@@ -210,23 +305,49 @@ function toggleTargets() {
 
     if (targetType === 'order') {
         selector.style.display = 'none';
+        exclusionSelector.style.display = 'none';
         productTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
         categoryTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
-    } else if (targetType === 'product') {
+        productExclusions.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
+        categoryExclusions.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
+    } else {
         selector.style.display = 'block';
-        productTargets.style.display = 'block';
-        categoryTargets.style.display = 'none';
-        label.innerText = 'Select Products';
-        productTargets.querySelectorAll('input').forEach(i => i.disabled = false);
-        categoryTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
-    } else if (targetType === 'category') {
-        selector.style.display = 'block';
-        productTargets.style.display = 'none';
-        categoryTargets.style.display = 'block';
-        label.innerText = 'Select Categories';
-        productTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
-        categoryTargets.querySelectorAll('input').forEach(i => i.disabled = false);
+        exclusionSelector.style.display = 'block';
+        
+        if (targetType === 'product') {
+            productTargets.style.display = 'block';
+            categoryTargets.style.display = 'none';
+            productExclusions.style.display = 'block';
+            categoryExclusions.style.display = 'none';
+            label.innerText = 'Select Products';
+            productTargets.querySelectorAll('input').forEach(i => i.disabled = false);
+            categoryTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
+            productExclusions.querySelectorAll('input').forEach(i => i.disabled = false);
+            categoryExclusions.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
+        } else if (targetType === 'category') {
+            productTargets.style.display = 'none';
+            categoryTargets.style.display = 'block';
+            productExclusions.style.display = 'none';
+            categoryExclusions.style.display = 'block';
+            label.innerText = 'Select Categories';
+            productTargets.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
+            categoryTargets.querySelectorAll('input').forEach(i => i.disabled = false);
+            productExclusions.querySelectorAll('input').forEach(i => { i.disabled = true; i.checked = false; });
+            categoryExclusions.querySelectorAll('input').forEach(i => i.disabled = false);
+        }
     }
+}
+
+function addTier() {
+    const container = document.getElementById('tiers-container');
+    const div = document.createElement('div');
+    div.className = 'tier-row flex gap-2 mb-2';
+    div.innerHTML = `
+        <input type="number" name="tier_min[]" class="form-control" step="0.01" placeholder="Min Subtotal">
+        <input type="number" name="tier_value[]" class="form-control" step="0.01" placeholder="Discount Value">
+        <button type="button" class="btn btn-outline btn-sm text-danger" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(div);
 }
 
 function filterTargets(term) {

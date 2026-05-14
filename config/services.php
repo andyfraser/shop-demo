@@ -54,6 +54,8 @@ use App\Services\ImageServiceInterface;
 use App\Services\ImageService;
 use App\Services\DatabaseSeedServiceInterface;
 use App\Services\DatabaseSeedService;
+use App\Services\UserRoleServiceInterface;
+use App\Services\UserRoleService;
 
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
@@ -123,6 +125,7 @@ return function(array $config) {
                 $c->get(AuthServiceInterface::class), 
                 $c->get(VatServiceInterface::class), 
                 $c->get(PromotionServiceInterface::class),
+                $c->get(OrderServiceInterface::class),
                 $c->get(LoggerInterface::class)
             );
         },
@@ -193,10 +196,18 @@ return function(array $config) {
             return new ImageCleanupService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
         PromotionServiceInterface::class => function($c) {
-            return new PromotionService($c->get(\PDO::class), $c->get(LoggerInterface::class));
+            return new PromotionService(
+                $c->get(\PDO::class), 
+                $c->get(LoggerInterface::class),
+                $c->get(CategoryServiceInterface::class),
+                $c->get(OrderServiceInterface::class)
+            );
         },
         DatabaseSeedServiceInterface::class => function($c) {
             return new DatabaseSeedService($c->get(\PDO::class));
+        },
+        UserRoleServiceInterface::class => function($c) {
+            return new UserRoleService($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
     ];
 };

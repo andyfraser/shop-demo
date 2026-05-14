@@ -9,7 +9,14 @@ interface OrderServiceInterface {
     public function getItems(int $orderId): array;
     public function getAllForAdmin(string $status = ''): array;
     public function getForUser(int $userId): array;
+
+    /**
+     * Check if a user has any existing orders.
+     */
+    public function hasOrders(int $userId): bool;
+
     public function countAll(): int;
+
     public function getTotalRevenue(): float;
     public function getRecentOrders(int $limit = 10): array;
     public function updateStatus(int $id, string $status, ?int $userId = null, string $notes = ''): void;

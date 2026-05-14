@@ -19,6 +19,7 @@ class StorefrontController {
         private ReviewServiceInterface $reviewService,
         private PromotionServiceInterface $promotionService,
         private CartServiceInterface $cartService,
+        private \App\Services\OrderServiceInterface $orderService,
         private Renderer $renderer
     ) {}
 
@@ -67,7 +68,7 @@ class StorefrontController {
 
         $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
         $per_page_raw = $_GET['per_page'] ?? '12';
-        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
+        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24, 48]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
 
         $filters = $this->getFiltersFromRequest();
@@ -127,7 +128,7 @@ class StorefrontController {
 
         $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
         $per_page_raw = $_GET['per_page'] ?? '12';
-        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
+        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24, 48]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
         $current_page = max(1, (int)($_GET['page'] ?? 1));
 
@@ -174,7 +175,10 @@ class StorefrontController {
             exit;
         }
 
-        if (!$promo->isActive()) {
+        $user = $this->authService->currentUser();
+        $isFirstOrder = $user ? !$this->orderService->hasOrders($user->id) : true;
+
+        if (!$promo->isActive($user, $isFirstOrder)) {
             $now = time();
             $msg = 'This promotion is no longer active.';
 
@@ -186,6 +190,8 @@ class StorefrontController {
                 $msg = 'This promotion has expired.';
             } elseif ($promo->usage_limit !== null && $promo->used_count >= $promo->usage_limit) {
                 $msg = 'This promotion has reached its usage limit.';
+            } elseif ($promo->target_role === \App\Models\Promotion::ROLE_FIRST_TIME && !$isFirstOrder) {
+                $msg = 'This promotion is only available for your first order.';
             }
 
             flash('error', $msg);
@@ -219,43 +225,57 @@ class StorefrontController {
     private function promotionProducts(\App\Models\Promotion $promo) {
         $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
         $per_page_raw = $_GET['per_page'] ?? '12';
-        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
+        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24, 48]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
         $current_page = max(1, (int)($_GET['page'] ?? 1));
 
         $filters = $this->getFiltersFromRequest();
         $cat_ids = [];
 
+        // We need to fetch all potentially qualifying products to count them correctly
+        // because isProductQualifying can have complex logic (exclusions, etc.)
+        $all_products = [];
         if ($promo->target_type === \App\Models\Promotion::TARGET_CATEGORY) {
-            $cat_ids = $promo->target_ids;
-            // Also include subcategories for these categories?
-            // The current logic in category() does it. Let's be consistent.
-            $expanded_cat_ids = $cat_ids;
-            $queue = $cat_ids;
-            while ($queue) {
-                $id = array_shift($queue);
-                $subs = $this->categoryService->getSubcategories($id);
-                foreach ($subs as $sub) {
-                    if (!in_array($sub->id, $expanded_cat_ids)) {
-                        $expanded_cat_ids[] = $sub->id;
-                        $queue[] = $sub->id;
+            if (empty($promo->target_ids)) {
+                $all_products = $this->productService->getAllActive(null, 1, $sort, $filters);
+            } else {
+                $cat_ids = $promo->target_ids;
+                $expanded_cat_ids = $cat_ids;
+                $queue = $cat_ids;
+                while ($queue) {
+                    $id = array_shift($queue);
+                    $subs = $this->categoryService->getSubcategories($id);
+                    foreach ($subs as $sub) {
+                        if (!in_array($sub->id, $expanded_cat_ids)) {
+                            $expanded_cat_ids[] = $sub->id;
+                            $queue[] = $sub->id;
+                        }
                     }
                 }
+                $all_products = $this->productService->getByCategory($expanded_cat_ids, null, 1, $sort, $filters);
             }
-            $total_products = $this->productService->countByCategory($expanded_cat_ids, $filters);
-            $products = $this->productService->getByCategory($expanded_cat_ids, $per_page, $current_page, $sort, $filters);
         } elseif ($promo->target_type === \App\Models\Promotion::TARGET_PRODUCT) {
             $filters['product_ids'] = $promo->target_ids;
-            $total_products = $this->productService->countAllActive($filters);
-            $products = $this->productService->getAllActive($per_page, $current_page, $sort, $filters);
+            $all_products = $this->productService->getAllActive(null, 1, $sort, $filters);
         } else {
-            // Target: ORDER (all products)
-            $total_products = $this->productService->countAllActive($filters);
-            $products = $this->productService->getAllActive($per_page, $current_page, $sort, $filters);
+            $all_products = $this->productService->getAllActive(null, 1, $sort, $filters);
+        }
+
+        // Filter all products by qualification
+        $qualifying_products = array_filter($all_products, fn($p) => $this->promotionService->isProductQualifying($p, $promo));
+        $total_products = count($qualifying_products);
+
+        // Paginate the qualifying products in memory (since they are already fetched)
+        if ($per_page === null) {
+            $products = $qualifying_products;
+            $total_pages = 1;
+        } else {
+            $total_pages = (int)ceil($total_products / $per_page);
+            $offset = ($current_page - 1) * $per_page;
+            $products = array_slice($qualifying_products, $offset, $per_page);
         }
 
         $this->productService->attachActivePromotions($products);
-        $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
         $available_filters = $this->productService->getAvailableFilters($cat_ids);
 
@@ -284,7 +304,7 @@ class StorefrontController {
     public function products() {
         $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
         $per_page_raw = $_GET['per_page'] ?? '12';
-        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24]) ? (string)(int)$per_page_raw : '12');
+        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24, 48]) ? (string)(int)$per_page_raw : '12');
         $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
         $current_page = max(1, (int)($_GET['page'] ?? 1));
 

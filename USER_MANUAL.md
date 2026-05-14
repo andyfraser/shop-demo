@@ -65,7 +65,10 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 *   **Smart Related Products:** Discovers items using a weighted relevance algorithm (prioritizing shared attributes like Brand/Color and same-category items).
 *   **Recently Viewed:** Automatically tracks your last 7 viewed items in a dedicated section at the bottom of the page, sorted with the most recent items on the left.
 *   **Inventory Logic:** Out-of-stock products are automatically hidden from the "Featured" homepage list but remain accessible via direct links or category pages.
-*   **Promotions & Discounts:** Real-time visibility of active deals via badges on listings and callouts on product pages (including BOGO offers like "Buy 2 Get 1 Free"). Supports both automatic best-value application and manual promo codes. **Visiting a promotion URL (e.g., `/promotion/CODE`) automatically applies the code to your cart.**
+*   **Promotions & Discounts:** Real-time visibility of active deals via badges on listings and callouts on product pages. Supports both automatic application and manual promo codes. 
+    *   **Promotion Stacking:** Benefit from multiple offers at once (e.g., Free Shipping + 10% OFF coupon).
+    *   **Tiered Rewards:** Dynamic "Spend more, save more" discounts (e.g., 10% off over $50, 20% off over $100).
+    *   **URL Application:** Visiting a promotion URL (e.g., `/promotion/CODE`) automatically applies the code to your cart.
 *   **SEO Friendly URLs:** Account and order detail pages use clean URL structures (e.g., `/account/orders/4`).
 
 ### Shopping Experience
@@ -95,12 +98,19 @@ The dashboard provides an immediate overview of your business:
 ### Inventory & Reviews
 *   **Products:** CRUD operations for items, including image uploads (JPEG, PNG, GIF, WebP up to 5MB), pricing, and "Featured" status.
 *   **Categories:** Create complex parent-child relationships with custom icons.
-*   **Promotions Management:** Design marketing campaigns with percentage, fixed, free shipping, or "Buy X Get Y" (BOGO) discounts. Target specific products, categories, or entire orders with date and usage limits.
+*   **Promotions Management:** Design complex marketing campaigns with ease:
+    *   **Types:** Percentage, fixed amount, free shipping, or "Buy X Get Y" (BOGO) discounts.
+    *   **Advanced Targeting:** Support for specific products, categories, or entire orders with granular **exclusion rules** (e.g., "All Categories except Electronics").
+    *   **Tiered Thresholds:** Create multi-level rewards within a single promotion.
+    *   **Usage Control:** Set global usage limits, **per-user limits**, and target specific user roles (e.g., "VIP Only" or "First-time Customers").
+    *   **Prioritization:** Assign priority scores to control which automatic promotions take precedence.
+    *   **Multi-Code Issuance:** Create multiple unique codes (e.g., for different influencers) that all link to the same underlying promotion logic.
+    *   **Stackability:** Explicitly control whether a promotion can be used in conjunction with other offers.
 *   **Review Moderation:** Review, approve, or reject customer product ratings and comments.
 
 ### Order Fulfillment
 *   **Status Workflow:** Transition orders through `Pending` → `Confirmed` → `Shipped` → `Delivered`.
-*   **Enhanced History:** View a detailed timeline of all order events, including status updates, return requests, and refund processing.
+*   **Enhanced History:** View a detailed timeline of all order events, including status updates, return requests, and refund processing. Includes a full breakdown of every applied promotion and its individual discount amount.
 *   **Action Attribution:** Every status change is logged with the name of the user or administrator who authorized it.
 *   **Abandoned Carts:** Automated transactional emails reach out to users who leave items in their carts without completing checkout.
 *   **Return Management:** Review and approve or reject customer return requests with optional notes.

@@ -55,9 +55,20 @@
         <strong><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount) ?></strong>
       </div>
       <?php if ($order->discount_amount > 0): ?>
-      <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;color:var(--accent);">
-        <span>Discount (<?= h($order->promotion_name) ?>)</span>
-        <strong>-<?= money($order->discount_amount) ?></strong>
+      <div id="applied-promos" style="margin-top:.5rem; border-top:1px solid var(--line); padding-top:.5rem;">
+        <?php if (!empty($order->applied_promotions)): ?>
+          <?php foreach ($order->applied_promotions as $promo): ?>
+            <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;color:var(--accent);">
+              <span>Discount (<?= h($promo['promotion_name'] ?? $promo['name']) ?>)</span>
+              <strong>-<?= money($promo['discount_amount']) ?></strong>
+            </div>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;color:var(--accent);">
+            <span>Discount (<?= h($order->promotion_name ?: $order->applied_promo_name) ?>)</span>
+            <strong>-<?= money($order->discount_amount) ?></strong>
+          </div>
+        <?php endif; ?>
       </div>
       <?php endif; ?>
       <?php if ($order->delivery_method): ?>

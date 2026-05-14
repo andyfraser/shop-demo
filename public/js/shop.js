@@ -153,9 +153,17 @@ if (cartForm) {
 
             if (discountRow) {
                 if (data.has_discount) {
-                    discountRow.style.display = 'flex';
+                    discountRow.style.display = 'block';
+                    const details = document.getElementById('discount-details');
+                    const summary = document.getElementById('discount-summary');
+                    if (details) details.style.display = 'none';
+                    if (summary) summary.style.display = 'flex';
+
                     if (discountEl) discountEl.textContent = '-' + data.discount;
-                    if (discountLabel) discountLabel.textContent = 'Discount (' + data.promo_name + ')';
+                    if (discountLabel) {
+                        const names = data.promo_names || [];
+                        discountLabel.textContent = 'Discount (' + names.join(', ') + ')';
+                    }
                 } else {
                     discountRow.style.display = 'none';
                 }

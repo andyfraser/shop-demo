@@ -48,6 +48,11 @@ class UserService implements UserServiceInterface {
         return (int)$stmt->fetchColumn();
     }
 
+    public function countNonAdmins(): int {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM users WHERE role != 'admin'");
+        return (int)$stmt->fetchColumn();
+    }
+
     public function save(array|User $data, int $id = 0): int {
         if (is_object($data)) {
             $data = [

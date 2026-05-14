@@ -50,12 +50,13 @@ class CheckoutController {
 
         $this->renderer->render('checkout', [
             'page_title' => 'Checkout',
+            'cart'       => $this->cart,
             'items'      => $items,
             'total'      => $this->cart->total(),
             'total_item_vat' => $this->cart->totalVat(),
             'discount'   => $this->cart->discount(),
             'grand_total' => $this->cart->grandTotal(),
-            'applied_promotion' => $this->cart->getAppliedPromotion(),
+            'applied_promotions' => $this->cart->getAppliedPromotions(),
             'errors'     => [],
             'name'       => $user->name ?? '',
             'email'      => $user->email ?? '',
@@ -106,18 +107,27 @@ class CheckoutController {
         if (!$errors) {
             $user  = $this->auth->currentUser();
             $discount = $this->cart->discount();
-            $promo = $this->cart->getAppliedPromotion();
+            $appliedPromos = $this->cart->getAppliedPromotions();
             $total = $this->cart->grandTotal() + $deliveryOption->price;
             
             $defaultVatRate = (float)$this->settings->get('default_vat_rate');
             $deliveryVat = $deliveryOption->price * ($defaultVatRate / (100 + $defaultVatRate));
             
             // Proportional reduction of VAT based on discount
-            // For simplicity, we'll reduce total VAT by the same percentage as the total discount
             $vatReductionFactor = $this->cart->total() > 0 ? (1 - ($discount / $this->cart->total())) : 1;
             $totalVat = ($this->cart->totalVat() * $vatReductionFactor) + $deliveryVat;
             
             $fullAddress = $address . "\n" . $city . "\n" . $postcode . "\n" . $country;
+
+            // Map promotions for OrderService
+            $orderPromos = array_map(fn($p) => [
+                'promotion_id' => $p->id,
+                'name' => $p->name,
+                'discount_amount' => $this->cart->getPromotionDiscount($p),
+                'promo_code' => $p->applied_code ?? $p->code
+            ], $appliedPromos);
+
+            $primaryPromo = !empty($appliedPromos) ? $appliedPromos[0] : null;
 
             $orderData = [
                 'user_id'          => $user->id ?? null,
@@ -129,8 +139,11 @@ class CheckoutController {
                 'notes'            => $notes,
                 'delivery_method'  => $deliveryOption->name,
                 'delivery_cost'    => $deliveryOption->price,
-                'promotion_id'     => $promo?->id,
-                'discount_amount'  => $discount
+                'promotion_id'     => $primaryPromo?->id,
+                'discount_amount'  => $discount,
+                'applied_promo_name' => $primaryPromo?->name,
+                'applied_promo_code' => $primaryPromo?->applied_code ?? $primaryPromo?->code,
+                'applied_promotions' => $orderPromos
             ];
 
             try {
@@ -192,12 +205,13 @@ class CheckoutController {
 
         $this->renderer->render('checkout', [
             'page_title' => 'Checkout',
+            'cart'       => $this->cart,
             'items'      => $items,
             'total'      => $this->cart->total(),
             'total_item_vat' => $this->cart->totalVat(),
             'discount'   => $this->cart->discount(),
             'grand_total' => $this->cart->grandTotal(),
-            'applied_promotion' => $this->cart->getAppliedPromotion(),
+            'applied_promotions' => $this->cart->getAppliedPromotions(),
             'errors'     => $errors,
             'name'       => $name,
             'email'      => $email,

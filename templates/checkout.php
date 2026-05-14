@@ -119,9 +119,13 @@
             <strong><?= money($total) ?></strong>
           </div>
           <?php if ($discount > 0): ?>
-            <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;color:var(--accent);">
-              <span>Discount (<?= h($applied_promotion->name) ?>)</span>
-              <strong>-<?= money($discount) ?></strong>
+            <div id="applied-promos" style="margin-top:.5rem; border-top:1px solid var(--line); padding-top:.5rem;">
+              <?php foreach ($applied_promotions as $promo): ?>
+                <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;color:var(--accent);">
+                  <span>Discount (<?= h($promo->name) ?>)</span>
+                  <strong>-<?= money($cart->getPromotionDiscount($promo)) ?></strong>
+                </div>
+              <?php endforeach; ?>
             </div>
           <?php endif; ?>
           <div id="delivery-row" style="display:none;justify-content:space-between;padding:.4rem 0;font-size:.875rem;">

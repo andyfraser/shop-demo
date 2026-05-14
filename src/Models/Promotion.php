@@ -12,6 +12,8 @@ class Promotion extends Model {
     public const TARGET_PRODUCT = 'product';
     public const TARGET_CATEGORY = 'category';
 
+    public const ROLE_FIRST_TIME = 'first_time';
+
     public int $id;
     public string $name;
     public ?string $description = null;
@@ -25,6 +27,10 @@ class Promotion extends Model {
     public ?string $start_date = null;
     public ?string $end_date = null;
     public ?int $usage_limit = null;
+    public ?int $usage_limit_per_user = null;
+    public int $priority = 0;
+    public int|bool $stackable = 0;
+    public ?string $target_role = null;
     public int $used_count;
     public int|bool $active;
     public string $created_at;
@@ -35,11 +41,36 @@ class Promotion extends Model {
     public array $target_ids = [];
 
     /**
+     * @var int[] IDs of excluded products or categories.
+     */
+    public array $excluded_ids = [];
+
+    /**
+     * @var array List of tiers [{min_amount, value}]
+     */
+    public array $tiers = [];
+
+    /**
+     * @var string[] List of additional promo codes
+     */
+    public array $additional_codes = [];
+
+    /**
      * Check if the promotion is currently active based on dates and usage limit.
      */
-    public function isActive(): bool {
+    public function isActive(?User $user = null, bool $isFirstOrder = false): bool {
         if (!$this->active) {
             return false;
+        }
+
+        if ($this->target_role) {
+            if ($this->target_role === self::ROLE_FIRST_TIME) {
+                if (!$isFirstOrder) {
+                    return false;
+                }
+            } elseif (!$user || $user->role !== $this->target_role) {
+                return false;
+            }
         }
 
         $now = time();

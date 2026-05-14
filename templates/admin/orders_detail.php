@@ -155,11 +155,36 @@ switch($order_status) {
             </tr>
             <?php if ($order->discount_amount > 0): ?>
             <tr>
-              <td colspan="4" class="text-right font-bold" style="padding:.8rem 1rem;color:var(--accent);">Discount (<?= h($order->promotion_name) ?>)</td>
+              <td colspan="4" class="text-right font-bold" style="padding:.8rem 1rem;color:var(--accent);">
+                Discount Total
+              </td>
               <td style="padding:.8rem 1rem;color:var(--accent);">
                 <strong>-<?= money($order->discount_amount) ?></strong>
               </td>
             </tr>
+            <?php if (!empty($order->applied_promotions)): ?>
+              <?php foreach ($order->applied_promotions as $promo): ?>
+                <tr class="bg-sand text-xs" style="color:var(--ink-2);">
+                  <td colspan="4" class="text-right" style="padding:.4rem 1rem;">
+                    <?= h($promo['promotion_name']) ?>
+                    <?php if (!empty($promo['promo_code'])): ?>
+                      <span class="text-muted">(<?= h($promo['promo_code']) ?>)</span>
+                    <?php endif; ?>
+                  </td>
+                  <td style="padding:.4rem 1rem;">
+                    -<?= money($promo['discount_amount']) ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php elseif ($order->applied_promo_name): ?>
+              <tr class="bg-sand text-xs" style="color:var(--ink-2);">
+                <td colspan="4" class="text-right" style="padding:.4rem 1rem;">
+                  Via: <?= h($order->applied_promo_name) ?> 
+                  <?= $order->applied_promo_code ? '(' . h($order->applied_promo_code) . ')' : '' ?>
+                </td>
+                <td style="padding:.4rem 1rem;">-<?= money($order->discount_amount) ?></td>
+              </tr>
+            <?php endif; ?>
             <?php endif; ?>
             <?php if ($order->delivery_method): ?>
             <tr>

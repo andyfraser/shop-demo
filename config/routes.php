@@ -10,6 +10,7 @@ use App\Controllers\AdminProductsController;
 use App\Controllers\AdminOrdersController;
 use App\Controllers\AdminDeliveryController;
 use App\Controllers\AdminUsersController;
+use App\Controllers\AdminUserRolesController;
 use App\Controllers\AdminSettingsController;
 use App\Controllers\AdminAttributesController;
 use App\Controllers\AdminReturnsController;
@@ -132,6 +133,13 @@ return [
     ['method' => 'POST', 'path' => '/admin/users/new', 'handler' => [AdminUsersController::class, 'save'], 'middlewares' => $adminPostMiddleware],
     ['method' => 'POST', 'path' => '/admin/users/edit', 'handler' => [AdminUsersController::class, 'save'], 'middlewares' => $adminPostMiddleware],
     ['method' => 'GET', 'path' => '/admin/users/delete', 'handler' => [AdminUsersController::class, 'delete'], 'middlewares' => $adminMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/user-roles', 'handler' => [AdminUserRolesController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/user-roles/create', 'handler' => [AdminUserRolesController::class, 'create'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/user-roles/edit', 'handler' => [AdminUserRolesController::class, 'edit'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/user-roles/create', 'handler' => [AdminUserRolesController::class, 'save'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'POST', 'path' => '/admin/user-roles/edit', 'handler' => [AdminUserRolesController::class, 'save'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'GET', 'path' => '/admin/user-roles/delete', 'handler' => [AdminUserRolesController::class, 'delete'], 'middlewares' => $adminMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/promotions', 'handler' => [\App\Controllers\AdminPromotionsController::class, 'list'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/promotions/new', 'handler' => [\App\Controllers\AdminPromotionsController::class, 'create'], 'middlewares' => $adminMiddleware],

@@ -8,6 +8,7 @@ class CartService implements CartServiceInterface {
         private AuthServiceInterface $auth,
         private VatServiceInterface $vatService,
         private PromotionServiceInterface $promotionService,
+        private OrderServiceInterface $orderService,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
@@ -150,97 +151,133 @@ class CartService implements CartServiceInterface {
 
     public function applyPromoCode(string $code): bool {
         $promo = $this->promotionService->findByCode($code);
-        if (!$promo || !$promo->isActive()) {
+        $user = $this->auth->currentUser();
+        $isFirstOrder = $user ? !$this->orderService->hasOrders($user->id) : true;
+
+        if (!$promo || !$promo->isActive($user, $isFirstOrder)) {
             return false;
         }
 
         $cartId = $this->ensureCart();
-        $this->db->prepare("UPDATE carts SET applied_promo_code = ? WHERE id = ?")
-            ->execute([$code, $cartId]);
+        $stmt = $this->db->prepare("INSERT OR IGNORE INTO cart_promotions (cart_id, promo_code) VALUES (?, ?)");
+        if (DB_CONFIG['driver'] === 'mysql') {
+            $stmt = $this->db->prepare("INSERT IGNORE INTO cart_promotions (cart_id, promo_code) VALUES (?, ?)");
+        }
+        $stmt->execute([$cartId, $code]);
         
         return true;
     }
 
-    public function removePromoCode(): void {
+    public function removePromoCode(?string $code = null): void {
         $cartId = $this->getCartId();
         if (!$cartId) return;
 
-        $this->db->prepare("UPDATE carts SET applied_promo_code = NULL WHERE id = ?")
-            ->execute([$cartId]);
+        if ($code) {
+            $this->db->prepare("DELETE FROM cart_promotions WHERE cart_id = ? AND promo_code = ?")
+                ->execute([$cartId, $code]);
+        } else {
+            $this->db->prepare("DELETE FROM cart_promotions WHERE cart_id = ?")
+                ->execute([$cartId]);
+        }
     }
 
-    public function getAppliedPromotion(): ?\App\Models\Promotion {
+    public function getAppliedPromotions(): array {
         $cartId = $this->getCartId();
-        if (!$cartId) return null;
+        if (!$cartId) return [];
 
-        $stmt = $this->db->prepare("SELECT applied_promo_code FROM carts WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT promo_code FROM cart_promotions WHERE cart_id = ?");
         $stmt->execute([$cartId]);
-        $code = $stmt->fetchColumn();
+        $codes = $stmt->fetchAll(\PDO::FETCH_COLUMN);
 
-        if ($code) {
+        $applied = [];
+        $hasManualPromo = false;
+        $user = $this->auth->currentUser();
+        $isFirstOrder = $user ? !$this->orderService->hasOrders($user->id) : true;
+
+        foreach ($codes as $code) {
             $promo = $this->promotionService->findByCode($code);
-            if ($promo && $promo->isActive()) {
-                return $promo;
+            if ($promo && $promo->isActive($user, $isFirstOrder)) {
+                $promo->applied_code = $code;
+                $applied[$promo->id] = $promo;
+                $hasManualPromo = true;
             } else {
-                // Code no longer valid, clear it
-                $this->removePromoCode();
+                $this->removePromoCode($code);
             }
         }
 
         // Check for automatic promotions
-        $autoPromos = $this->promotionService->getActiveAutomaticPromotions();
+        $autoPromos = $this->promotionService->getActivePromotions(true);
         foreach ($autoPromos as $promo) {
-            if ($this->total() >= $promo->min_order_amount) {
-                // If it's product/category specific, validate if cart contains targets
-                if ($promo->target_type !== \App\Models\Promotion::TARGET_ORDER) {
-                    $hasTarget = false;
-                    foreach ($this->items() as $item) {
-                        if ($this->itemMatchesTarget($item, $promo)) {
-                            $hasTarget = true;
-                            break;
-                        }
-                    }
-                    if (!$hasTarget) continue;
+            // Priority ordering is already handled by PromotionService::getActivePromotions
+
+            // Rule: Include if it's the highest priority auto promo OR if it's stackable
+            
+            $canApply = false;
+            if ($hasManualPromo) {
+                if ($promo->stackable) {
+                    $canApply = true;
                 }
-                return $promo;
+            } else {
+                if (empty($applied)) {
+                    $canApply = true;
+                } elseif ($promo->stackable) {
+                    $canApply = true;
+                }
+            }
+
+            if ($canApply && $promo->isActive($user, $isFirstOrder)) {
+                if ($this->total() >= $promo->min_order_amount) {
+                    if ($promo->target_type !== \App\Models\Promotion::TARGET_ORDER) {
+                        $hasTarget = false;
+                        foreach ($this->items() as $item) {
+                            if ($this->promotionService->isProductQualifying($item->product, $promo)) {
+                                $hasTarget = true;
+                                break;
+                            }
+                        }
+                        if (!$hasTarget) continue;
+                    }
+                    
+                    if (!isset($applied[$promo->id])) {
+                        $applied[$promo->id] = $promo;
+                    }
+                }
             }
         }
 
-        return null;
+        return array_values($applied);
+    }
+
+    public function getPromotionDiscount(\App\Models\Promotion $promo): float {
+        return $this->promotionService->calculateDiscount($promo, $this->items(), $this->total());
     }
 
     public function discount(): float {
-        $promo = $this->getAppliedPromotion();
-        if (!$promo) return 0.0;
+        $promotions = $this->getAppliedPromotions();
+        if (empty($promotions)) return 0.0;
 
-        return $this->promotionService->calculateDiscount($promo, $this->items(), $this->total());
+        $totalDiscount = 0.0;
+        $items = $this->items();
+        $subtotal = $this->total();
+
+        foreach ($promotions as $promo) {
+            $totalDiscount += $this->promotionService->calculateDiscount($promo, $items, $subtotal);
+        }
+
+        return min($totalDiscount, $subtotal);
     }
 
     public function grandTotal(): float {
         return max(0, $this->total() - $this->discount());
     }
 
-    private function itemMatchesTarget(\App\Models\CartItem $item, \App\Models\Promotion $promotion): bool {
-        if ($promotion->target_type === \App\Models\Promotion::TARGET_PRODUCT) {
-            return in_array($item->product_id, $promotion->target_ids);
-        }
-        
-        if ($promotion->target_type === \App\Models\Promotion::TARGET_CATEGORY) {
-            return in_array($item->product->category_id, $promotion->target_ids);
-        }
-
-        return false;
-    }
-
     public function syncOnLogin(int $userId): void {
         $sessionId = session_id();
         
         // Find session cart
-        $stmt = $this->db->prepare("SELECT id, applied_promo_code FROM carts WHERE session_id = ? AND user_id IS NULL");
+        $stmt = $this->db->prepare("SELECT id FROM carts WHERE session_id = ? AND user_id IS NULL");
         $stmt->execute([$sessionId]);
-        $sessionCart = $stmt->fetch(\PDO::FETCH_ASSOC);
-        $sessionCartId = $sessionCart['id'] ?? null;
-        $sessionPromoCode = $sessionCart['applied_promo_code'] ?? null;
+        $sessionCartId = $stmt->fetchColumn();
 
         // Find user cart
         $stmt = $this->db->prepare("SELECT id FROM carts WHERE user_id = ?");
@@ -253,12 +290,20 @@ class CartService implements CartServiceInterface {
                 $this->db->prepare("UPDATE carts SET user_id = ? WHERE id = ?")->execute([$userId, $sessionCartId]);
             }
         } elseif ($sessionCartId) {
-            // Merge session cart into user cart
-            if ($sessionPromoCode) {
-                $this->db->prepare("UPDATE carts SET applied_promo_code = ? WHERE id = ?")
-                    ->execute([$sessionPromoCode, $userCartId]);
+            // Merge session cart promotions into user cart
+            $stmt = $this->db->prepare("SELECT promo_code FROM cart_promotions WHERE cart_id = ?");
+            $stmt->execute([$sessionCartId]);
+            $sessionPromos = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+            $insertPromo = $this->db->prepare("INSERT OR IGNORE INTO cart_promotions (cart_id, promo_code) VALUES (?, ?)");
+            if (DB_CONFIG['driver'] === 'mysql') {
+                $insertPromo = $this->db->prepare("INSERT IGNORE INTO cart_promotions (cart_id, promo_code) VALUES (?, ?)");
+            }
+            foreach ($sessionPromos as $code) {
+                $insertPromo->execute([$userCartId, $code]);
             }
 
+            // Merge session items into user cart
             $stmt = $this->db->prepare("SELECT * FROM cart_items WHERE cart_id = ?");
             $stmt->execute([$sessionCartId]);
             $sessionItems = $stmt->fetchAll(\PDO::FETCH_ASSOC);

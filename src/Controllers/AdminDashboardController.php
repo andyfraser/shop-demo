@@ -19,7 +19,7 @@ class AdminDashboardController {
     public function index() {
         $stats = [
             'products'  => $this->productService->countAllActive(),
-            'customers' => $this->userService->countByRole('customer'),
+            'customers' => $this->userService->countNonAdmins(),
             'orders'    => $this->orderService->countAll(),
             'revenue'   => $this->orderService->getTotalRevenue(),
         ];

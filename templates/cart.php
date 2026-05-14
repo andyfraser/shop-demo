@@ -78,9 +78,19 @@
             <span>Subtotal</span><strong id="cart-subtotal"><?= money($total) ?></strong>
           </div>
           
-          <div id="discount-row" style="display: <?= $discount > 0 ? 'flex' : 'none' ?>; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--line); margin-bottom:.5rem; color:var(--accent);">
-            <span id="discount-label">Discount <?= $applied_promotion ? '(' . h($applied_promotion->name) . ')' : '' ?></span>
-            <strong id="cart-discount">-<?= money($discount) ?></strong>
+          <div id="discount-row" style="display: <?= $discount > 0 ? 'block' : 'none' ?>; border-bottom:1px solid var(--line); margin-bottom:.5rem; color:var(--accent);">
+            <div id="discount-details">
+              <?php foreach ($applied_promotions as $promo): ?>
+                <div style="display:flex; justify-content:space-between; padding:.25rem 0;">
+                  <span><?= h($promo->name) ?></span>
+                  <strong>-<?= money($cartService->getPromotionDiscount($promo)) ?></strong>
+                </div>
+              <?php endforeach; ?>
+            </div>
+            <div id="discount-summary" style="display:none; justify-content:space-between; padding:.25rem 0; font-weight:bold;">
+              <span id="discount-label">Discount (<?= h(implode(', ', array_map(fn($p) => $p->name, $applied_promotions))) ?>)</span>
+              <strong id="cart-discount">-<?= money($discount) ?></strong>
+            </div>
           </div>
 
           <div
@@ -91,20 +101,37 @@
             Includes <span id="cart-vat"><?= money($total_vat) ?></span> VAT
           </div>
 
-          <form action="/cart/promo" method="POST" style="margin-bottom:1.5rem;">
-            <?= csrf_field() ?>
-            <label style="font-size:0.85rem;margin-bottom:0.5rem;display:block;">Promo Code</label>
-            <div style="display:flex;gap:0.5rem;">
-              <input type="text" name="promo_code" class="form-control" placeholder="Enter code" 
-                value="<?= $applied_promotion && $applied_promotion->code ? h($applied_promotion->code) : '' ?>"
-                <?= $applied_promotion && $applied_promotion->code ? 'readonly' : '' ?>>
-              <?php if ($applied_promotion && $applied_promotion->code): ?>
-                <button type="submit" name="remove_promo" class="btn btn-outline btn-sm">Remove</button>
-              <?php else: ?>
+          <div class="promo-section" style="margin-bottom:1.5rem;">
+            <form action="/cart/promo" method="POST">
+              <?= csrf_field() ?>
+              <label style="font-size:0.85rem;margin-bottom:0.5rem;display:block;">Promo Code</label>
+              <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                <input type="text" name="promo_code" class="form-control" placeholder="Enter code">
                 <button type="submit" class="btn btn-outline btn-sm">Apply</button>
-              <?php endif; ?>
-            </div>
-          </form>
+              </div>
+            </form>
+
+            <?php 
+            $manualPromos = array_filter($applied_promotions, fn($p) => !empty($p->applied_code));
+            if (!empty($manualPromos)): 
+            ?>
+              <div style="font-size:0.85rem; margin-top:0.75rem;">
+                <div style="color:var(--ink-2); margin-bottom:0.4rem;">Applied Codes:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                  <?php foreach ($manualPromos as $promo): ?>
+                    <form action="/cart/promo" method="POST" style="display:inline;">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="promo_code" value="<?= h($promo->applied_code) ?>">
+                      <span class="badge" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.25rem 0.5rem; background:var(--bg-2); border:1px solid var(--line); border-radius:4px;">
+                        <?= h($promo->applied_code) ?>
+                        <button type="submit" name="remove_promo" style="background:none; border:none; padding:0; cursor:pointer; color:var(--accent); font-weight:bold; font-size:1rem; line-height:1;">&times;</button>
+                      </span>
+                    </form>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php endif; ?>
+          </div>
 
           <a href="/checkout" class="btn btn-primary" style="width:100%;justify-content:center;">
             Proceed to Checkout

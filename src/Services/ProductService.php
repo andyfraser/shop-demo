@@ -21,20 +21,7 @@ class ProductService implements ProductServiceInterface {
         foreach ($products as $product) {
             $product->active_promotions = [];
             foreach ($activePromos as $promo) {
-                $matches = false;
-                if ($promo->target_type === \App\Models\Promotion::TARGET_ORDER) {
-                    $matches = true;
-                } elseif ($promo->target_type === \App\Models\Promotion::TARGET_PRODUCT) {
-                    if (in_array($product->id, $promo->target_ids)) {
-                        $matches = true;
-                    }
-                } elseif ($promo->target_type === \App\Models\Promotion::TARGET_CATEGORY) {
-                    if (in_array($product->category_id, $promo->target_ids)) {
-                        $matches = true;
-                    }
-                }
-
-                if ($matches) {
+                if ($this->promotionService->isProductQualifying($product, $promo)) {
                     $product->active_promotions[] = $promo;
                 }
             }

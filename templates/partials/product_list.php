@@ -13,6 +13,7 @@
     <select name="per_page" onchange="this.form.dispatchEvent(new Event('change', {bubbles: true}))" style="padding:.3rem .5rem;border:1px solid var(--border);border-radius:4px;font-size:.85rem;">
       <option value="12"  <?= $per_page_param === '12'  ? 'selected' : '' ?>>12 per page</option>
       <option value="24"  <?= $per_page_param === '24'  ? 'selected' : '' ?>>24 per page</option>
+      <option value="48"  <?= $per_page_param === '48'  ? 'selected' : '' ?>>48 per page</option>
       <option value="all" <?= $per_page_param === 'all' ? 'selected' : '' ?>>All</option>
     </select>
   </div>

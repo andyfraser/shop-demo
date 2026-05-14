@@ -41,8 +41,12 @@
       <div class="form-group">
         <label>Role</label>
         <select name="role" class="form-control">
-          <option value="customer" <?= ($get('role') ?? 'customer') === 'customer' ? 'selected' : '' ?>>Customer</option>
-          <option value="admin"    <?= ($get('role') ?? '') === 'admin'             ? 'selected' : '' ?>>Admin</option>
+          <?php foreach ($roles as $role): ?>
+            <option value="<?= h($role->slug) ?>" <?= ($get('role') ?? 'customer') === $role->slug ? 'selected' : '' ?>>
+              <?= h($role->name) ?>
+            </option>
+          <?php endforeach; ?>
+          <option value="admin" <?= ($get('role') ?? '') === 'admin' ? 'selected' : '' ?>>Admin</option>
         </select>
       </div>
 

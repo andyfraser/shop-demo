@@ -11,13 +11,119 @@ use App\Core\Database;
 
 class PromotionServiceTest extends TestCase {
     private PromotionService $service;
+    private \App\Services\ProductService $productService;
     private \PDO $db;
 
     public function setUp() {
         $this->db = Database::getConnection();
         $this->db->exec("DELETE FROM promotion_targets");
         $this->db->exec("DELETE FROM promotions");
-        $this->service = new PromotionService($this->db, new \Tests\NullLogger());
+        
+        $logger = new \Tests\NullLogger();
+        $vatService = new \App\Services\VatService();
+        $settings = new \App\Services\SettingsService($this->db, $logger);
+        $emailService = new \App\Services\EmailService($settings, $logger);
+        $paymentService = new \App\Services\Payment\PaymentService($logger);
+        $orderService = new \App\Services\OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
+        
+        $categoryService = new \App\Services\CategoryService($this->db, $logger);
+        $this->service = new PromotionService($this->db, $logger, $categoryService, $orderService);
+        
+        $attrService = new \App\Services\AttributeService($this->db, $logger);
+        $this->productService = new \App\Services\ProductService($this->db, $attrService, $this->service, $logger);
+    }
+
+    public function testSubcategoryProductQualifiesForParentCategoryPromotion() {
+        // Seed data: Electronics (1) -> Laptops (4). Product 1 is in 4.
+        $product = $this->productService->findById(1);
+        $product->category_id = 4;
+
+        $promoData = [
+            'name' => 'Electronics Sale',
+            'type' => Promotion::TYPE_PERCENTAGE,
+            'value' => 10,
+            'target_type' => Promotion::TARGET_CATEGORY,
+            'active' => 1,
+            'target_ids' => [1] // Targeted at parent
+        ];
+        $promoId = $this->service->save($promoData);
+        $promotion = $this->service->findById($promoId);
+
+        $this->assertTrue($this->service->isProductQualifying($product, $promotion));
+    }
+
+    public function testSubcategoryProductIsExcludedViaParentCategory() {
+        $product = $this->productService->findById(1);
+        $product->category_id = 4;
+
+        $promoData = [
+            'name' => 'Non-Electronics Sale',
+            'type' => Promotion::TYPE_PERCENTAGE,
+            'value' => 20,
+            'target_type' => Promotion::TARGET_CATEGORY,
+            'active' => 1,
+            'target_ids' => [],
+            'excluded_ids' => [1] // Excluded parent
+        ];
+        $promoId = $this->service->save($promoData);
+        $promotion = $this->service->findById($promoId);
+
+        $this->assertFalse($this->service->isProductQualifying($product, $promotion));
+    }
+
+    public function testPromotionProductVisibilityFiltering() {
+        // Parent Category 1, Subcategory 4
+        // Product 1 is in category 4
+        $product1 = $this->productService->findById(1);
+        $product1->category_id = 4;
+
+        $promoData = [
+            'name' => 'Parent Included Sub Excluded',
+            'type' => Promotion::TYPE_PERCENTAGE,
+            'value' => 10,
+            'target_type' => Promotion::TARGET_CATEGORY,
+            'active' => 1,
+            'target_ids' => [1],
+            'excluded_ids' => [4]
+        ];
+        $promoId = $this->service->save($promoData);
+        $promotion = $this->service->findById($promoId);
+
+        $this->assertFalse($this->service->isProductQualifying($product1, $promotion));
+        
+        // Simulate controller filtering
+        $products = [$product1];
+        $filtered = array_filter($products, fn($p) => $this->service->isProductQualifying($p, $promotion));
+        
+        $this->assertCount(0, $filtered, "Product in excluded subcategory should be filtered out of promotion list");
+    }
+
+    public function testCategoryPromotionWithEmptyTargetsMeansAllExceptExcluded() {
+        // Product 1 is in Category 4 (Laptops)
+        $product1 = $this->productService->findById(1);
+        $product1->category_id = 4;
+
+        // Product 2 is in Category 5 (Phones)
+        $product2 = $this->productService->findById(2);
+        $product2->category_id = 5;
+
+        $promoData = [
+            'name' => 'Everything Except Laptops',
+            'type' => Promotion::TYPE_PERCENTAGE,
+            'value' => 10,
+            'target_type' => Promotion::TARGET_CATEGORY,
+            'active' => 1,
+            'target_ids' => [], // All categories
+            'excluded_ids' => [4] // Except Laptops
+        ];
+        $promoId = $this->service->save($promoData);
+        $promotion = $this->service->findById($promoId);
+
+        // Product 1 (Laptop) should NOT qualify
+        $this->assertFalse($this->service->isProductQualifying($product1, $promotion));
+        
+        // Product 2 (Phone) SHOULD qualify
+        $this->assertTrue($this->service->isProductQualifying($product2, $promotion));
     }
 
     public function testSaveAndFind() {

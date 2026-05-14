@@ -54,6 +54,9 @@
     <a href="/admin/users"      class="<?= $active === 'users'      ? 'active' : '' ?>">
       <span class="ico">👥</span> Users
     </a>
+    <a href="/admin/user-roles" class="<?= $active === 'user-roles' ? 'active' : '' ?>">
+      <span class="ico">🛡</span> User Roles
+    </a>
     <div class="sidebar-section">Config</div>
     <a href="/admin/settings"   class="<?= $active === 'settings'   ? 'active' : '' ?>">
       <span class="ico">⚙️</span> Settings
