@@ -22,13 +22,17 @@ class ImageCleanupService implements ImageCleanupServiceInterface {
     public function cleanup(): array {
         $deletedFiles = [];
 
-        // 1. Get all active images from the database
-        $stmt = $this->db->query("SELECT DISTINCT image FROM products WHERE image IS NOT NULL AND image != ''");
-        $activeImages = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        // 1. Get all active images and icons from the database
+        $stmt = $this->db->query("
+            SELECT image FROM products WHERE image IS NOT NULL AND image != ''
+            UNION
+            SELECT icon FROM categories WHERE icon IS NOT NULL AND icon != ''
+        ");
+        $activeImages = array_map('strtolower', $stmt->fetchAll(PDO::FETCH_COLUMN));
         
         $activeBases = [];
         foreach ($activeImages as $img) {
-            $activeBases[] = pathinfo($img, PATHINFO_FILENAME);
+            $activeBases[] = strtolower(pathinfo($img, PATHINFO_FILENAME));
         }
 
         // 2. Clean up public/uploads
@@ -54,12 +58,14 @@ class ImageCleanupService implements ImageCleanupServiceInterface {
             $fullPath = $dir . $file;
             if (is_dir($fullPath)) continue;
 
+            $fileLower = strtolower($file);
+
             // Protection for static assets in public/images
             if ($onlyProductPatterns) {
-                if (!str_starts_with($file, 'img_')) continue;
+                if (!str_starts_with($fileLower, 'img_')) continue;
             }
 
-            $pathInfo = pathinfo($file);
+            $pathInfo = pathinfo($fileLower);
             $base = $pathInfo['filename'];
             $extension = $pathInfo['extension'] ?? '';
 
@@ -73,15 +79,14 @@ class ImageCleanupService implements ImageCleanupServiceInterface {
             }
 
             $isOrphaned = false;
-            if ($isThumbnail) {
+            if (in_array($fileLower, $activeImages)) {
+                $isOrphaned = false;
+            } elseif ($isThumbnail) {
                 if (!in_array($actualBase, $activeBases)) {
                     $isOrphaned = true;
                 }
             } else {
-                // Main image file
-                if (!in_array($file, $activeImages)) {
-                    $isOrphaned = true;
-                }
+                $isOrphaned = true;
             }
 
             if ($isOrphaned) {

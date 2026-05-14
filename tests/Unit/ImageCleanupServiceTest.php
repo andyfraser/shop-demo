@@ -23,6 +23,7 @@ class ImageCleanupServiceTest extends TestCase {
         $this->db = new PDO('sqlite::memory:');
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->db->exec("CREATE TABLE products (id INTEGER PRIMARY KEY, image TEXT)");
+        $this->db->exec("CREATE TABLE categories (id INTEGER PRIMARY KEY, icon TEXT)");
 
         $this->service = new ImageCleanupService(
             $this->db,
@@ -60,6 +61,10 @@ class ImageCleanupServiceTest extends TestCase {
         touch($this->testUploadDir . 'active_with_thumbs.png'); // Active
         touch($this->testUploadDir . 'active_with_thumbs_thumb.webp'); // Active (thumb)
         touch($this->testUploadDir . 'active_with_thumbs_large.webp'); // Active (large)
+        touch($this->testUploadDir . 'product_large.jpg'); // Active image ending in _large
+        $this->db->exec("INSERT INTO products (image) VALUES ('product_large.jpg')");
+        touch($this->testUploadDir . 'case_mismatch.jpg'); // Filename in lowercase
+        $this->db->exec("INSERT INTO products (image) VALUES ('CASE_MISMATCH.JPG')"); // Filename in uppercase in DB
         touch($this->testUploadDir . 'orphaned.jpg'); // Orphaned
         touch($this->testUploadDir . 'orphaned_thumb.webp'); // Orphaned (thumb)
         touch($this->testUploadDir . '.gitkeep'); // Should be ignored
@@ -80,6 +85,8 @@ class ImageCleanupServiceTest extends TestCase {
         $this->assertTrue(file_exists($this->testUploadDir . 'active_with_thumbs.png'));
         $this->assertTrue(file_exists($this->testUploadDir . 'active_with_thumbs_thumb.webp'));
         $this->assertTrue(file_exists($this->testUploadDir . 'active_with_thumbs_large.webp'));
+        $this->assertTrue(file_exists($this->testUploadDir . 'product_large.jpg'));
+        $this->assertTrue(file_exists($this->testUploadDir . 'case_mismatch.jpg'));
         $this->assertTrue(file_exists($this->testUploadDir . '.gitkeep'));
         
         $this->assertFalse(file_exists($this->testUploadDir . 'orphaned.jpg'));
