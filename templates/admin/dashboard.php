@@ -9,14 +9,10 @@
 
 <div class="content">
   <?php if ($low_stock): ?>
-    <div class="alert alert-warning flex-center gap-2 mb-3">
-      <span style="font-size:1.5rem;">⚠️</span>
-      <div>
-        <h4 style="margin:0;font-size:1rem;">Low Stock Warning</h4>
-        <p class="text-sm text-muted" style="margin:0;">There are <?= count($low_stock) ?> products running low on stock. Please review the inventory below.</p>
-      </div>
-      <a href="/admin/products" class="btn btn-outline btn-sm ms-auto">Manage Products</a>
-    </div>
+    <?= (new \App\View\Components\Alert(
+        'There are ' . count($low_stock) . ' products running low on stock. Please review the inventory below.',
+        'warning'
+    ))->render() ?>
   <?php endif; ?>
 
   <div class="stats-grid">
@@ -58,7 +54,7 @@
                 <td><?= h($o->user_name ?? 'Guest') ?></td>
                 <td><strong>£<?= number_format($o->total, 2) ?></strong></td>
                 <td>
-                  <span class="badge <?= $o->getStatusBadgeClass() ?>"><?= ucfirst($o->status) ?></span>
+                  <?= (new \App\View\Components\StatusBadge(ucfirst($o->status), $o->getStatusBadgeClass()))->render() ?>
                 </td>
                 <td><?= date('d M', strtotime($o->created_at)) ?></td>
               </tr>
@@ -83,7 +79,10 @@
               <div class="text-sm font-bold nowrap" style="flex:1;min-width:0;">
                 <?= h($p->name) ?>
               </div>
-              <span class="badge <?= $p->stock == 0 ? 'badge-danger' : 'badge-warning' ?>"><?= $p->stock ?> left</span>
+              <?= (new \App\View\Components\StatusBadge(
+                  $p->stock . ' left', 
+                  $p->stock == 0 ? 'badge-danger' : 'badge-warning'
+              ))->render() ?>
             </div>
           <?php endforeach; ?>
         <?php else: ?>

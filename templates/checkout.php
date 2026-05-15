@@ -3,9 +3,9 @@
   <h1 class="page-title">Checkout</h1>
 
   <?php if ($errors): ?>
-    <div class="alert alert-error">
-      <?php foreach ($errors as $e): ?><div><?= h($e) ?></div><?php endforeach; ?>
-    </div>
+    <?php foreach ($errors as $e): ?>
+      <?= (new \App\View\Components\Alert($e, 'error'))->render() ?>
+    <?php endforeach; ?>
   <?php endif; ?>
 
   <form method="POST" id="checkout-form"
@@ -77,7 +77,7 @@
         <div class="card" style="margin-top:1.5rem;">
           <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1.2rem;">Delivery Method <span style="color:var(--accent)">*</span></h2>
           <?php if (empty($delivery_options)): ?>
-            <div class="alert alert-error">No delivery options available. Please contact support.</div>
+            <?= (new \App\View\Components\Alert('No delivery options available. Please contact support.', 'error'))->render() ?>
           <?php else: ?>
             <div style="display:flex;flex-direction:column;gap:.75rem;">
               <?php foreach ($delivery_options as $opt): ?>

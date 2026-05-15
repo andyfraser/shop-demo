@@ -13,7 +13,7 @@
   </div>
 
   <?php if ($flash_success): ?>
-    <div class="alert alert-success"><?= h($flash_success) ?></div>
+    <?= (new \App\View\Components\Alert($flash_success))->render() ?>
   <?php endif; ?>
 
   <div class="product-detail">
@@ -84,11 +84,11 @@
 
       <div id="stock-status">
         <?php if ($product->stock > settings()->low_stock_threshold): ?>
-          <span class="badge badge-success">✓ In Stock</span>
+          <?= (new \App\View\Components\StatusBadge('✓ In Stock', 'badge-success'))->render() ?>
         <?php elseif ($product->stock > 0): ?>
-          <span class="badge badge-warning">⚠ Only <?= $product->stock ?> left</span>
+          <?= (new \App\View\Components\StatusBadge('⚠ Only ' . $product->stock . ' left', 'badge-warning'))->render() ?>
         <?php else: ?>
-          <span class="badge badge-danger">✗ Out of Stock</span>
+          <?= (new \App\View\Components\StatusBadge('✗ Out of Stock', 'badge-danger'))->render() ?>
         <?php endif; ?>
       </div>
 
@@ -187,7 +187,7 @@
         <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">Write a Review</h3>
         <?php if ($is_logged_in): ?>
           <?php if (isset($flash_error)): ?>
-            <div class="alert alert-danger" style="margin-bottom: 1rem;"><?= h($flash_error) ?></div>
+            <?= (new \App\View\Components\Alert($flash_error, 'danger'))->render() ?>
           <?php endif; ?>
           <form action="/product/<?= h($product->slug) ?>/review" method="post">
             <?= csrf_field() ?>
@@ -225,23 +225,7 @@
       <h2 class="page-title" style="font-size:1.4rem;">Related Products</h2>
       <div class="product-grid">
         <?php foreach ($related_products as $r): ?>
-          <a href="/product/<?= h($r->slug) ?>" class="product-card">
-            <div class="img-wrap">
-              <?php 
-                if (!promotion_badge($r)):
-                  if ($r->featured): 
-              ?>
-                <span class="product-badge badge-featured">Featured</span>
-              <?php elseif ($r->isNew()): ?>
-                <span class="product-badge badge-new">New</span>
-              <?php endif; endif; ?>
-              <?php product_img($r->image ?? '', $r->name, '', '', 'thumb') ?>
-            </div>
-            <div class="card-body">
-              <div class="card-name"><?= h($r->name) ?></div>
-              <div class="card-price"><?= money($r->price) ?></div>
-            </div>
-          </a>
+          <?= (new \App\View\Components\ProductCard($r))->render() ?>
         <?php endforeach; ?>
       </div>
     </section>
@@ -252,23 +236,13 @@
       <h2 class="page-title" style="font-size:1.2rem; color: var(--ink-2);">Recently Viewed</h2>
       <div class="product-grid" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
         <?php foreach ($recently_viewed as $r): ?>
-          <a href="/product/<?= h($r->slug) ?>" class="product-card" style="font-size: 0.85rem; min-height: auto;">
-            <div class="img-wrap" style="aspect-ratio: 4/3; height: auto; min-height: auto;">
-              <?php 
-                if (!promotion_badge($r)):
-                  if ($r->featured): 
-              ?>
-                <span class="product-badge badge-featured" style="font-size: 0.65rem; padding: 1px 4px;">Featured</span>
-              <?php elseif ($r->isNew()): ?>
-                <span class="product-badge badge-new" style="font-size: 0.65rem; padding: 1px 4px;">New</span>
-              <?php endif; endif; ?>
-              <?php product_img($r->image ?? '', $r->name, '', 'width: 100%; height: 100%; object-fit: cover;') ?>
-            </div>
-            <div class="card-body" style="padding: 0.5rem;">
-              <div class="card-name" style="margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= h($r->name) ?></div>
-              <div class="card-price" style="font-weight: 600; font-size: 0.85rem;"><?= money($r->price) ?></div>
-            </div>
-          </a>
+          <?= (new \App\View\Components\ProductCard(
+              $r, 
+              false, 
+              'font-size: 0.85rem; min-height: auto;', 
+              'aspect-ratio: 4/3; height: auto; min-height: auto;',
+              'width: 100%; height: 100%; object-fit: cover;'
+          ))->render() ?>
         <?php endforeach; ?>
       </div>
     </section>
