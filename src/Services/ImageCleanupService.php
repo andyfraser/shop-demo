@@ -2,15 +2,15 @@
 
 namespace App\Services;
 
+use App\Repositories\ImageRepositoryInterface;
 use Psr\Log\LoggerInterface;
-use PDO;
 
 class ImageCleanupService implements ImageCleanupServiceInterface {
     private string $uploadDir;
     private string $oldImagesDir;
 
     public function __construct(
-        private PDO $db,
+        private ImageRepositoryInterface $repository,
         private LoggerInterface $logger,
         ?string $uploadDir = null,
         ?string $oldImagesDir = null
@@ -23,12 +23,7 @@ class ImageCleanupService implements ImageCleanupServiceInterface {
         $deletedFiles = [];
 
         // 1. Get all active images and icons from the database
-        $stmt = $this->db->query("
-            SELECT image FROM products WHERE image IS NOT NULL AND image != ''
-            UNION
-            SELECT icon FROM categories WHERE icon IS NOT NULL AND icon != ''
-        ");
-        $activeImages = array_map('strtolower', $stmt->fetchAll(PDO::FETCH_COLUMN));
+        $activeImages = $this->repository->getActiveImageNames();
         
         $activeBases = [];
         foreach ($activeImages as $img) {

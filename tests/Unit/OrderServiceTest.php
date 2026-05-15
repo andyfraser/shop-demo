@@ -27,14 +27,18 @@ class OrderServiceTest extends TestCase {
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
         
-        $settingsService = new SettingsService($this->db, $logger);
+        $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
+        $settingsService = new SettingsService($settingsRepository, $logger);
         $emailService = new EmailService($settingsService, $logger);
         $paymentService = new PaymentService($logger);
         $paymentService->registerGateway(new ManualGateway());
 
-        $this->orderService = new OrderService($this->db, $logger, new VatService(), $paymentService, $emailService);
-        $attrService = new AttributeService($this->db, $logger);
-        $promoService = new \App\Services\PromotionService($this->db, $logger);
+        $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
+        $this->orderService = new OrderService($orderRepository, $logger, new VatService(), $paymentService, $emailService);
+        $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
+        $attrService = new AttributeService($attrRepository, $logger);
+        $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $logger);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $this->productService = new ProductService($repository, $attrService, $promoService, $logger);
     }

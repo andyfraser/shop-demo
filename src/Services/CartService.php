@@ -1,24 +1,25 @@
 <?php
 namespace App\Services;
 
+use App\Repositories\CartRepositoryInterface;
+use Psr\Log\LoggerInterface;
+
 class CartService implements CartServiceInterface {
     public function __construct(
-        private \PDO $db,
+        private CartRepositoryInterface $repository,
         private ProductServiceInterface $productService,
         private AuthServiceInterface $auth,
         private VatServiceInterface $vatService,
         private PromotionServiceInterface $promotionService,
         private OrderServiceInterface $orderService,
-        private \Psr\Log\LoggerInterface $logger
+        private LoggerInterface $logger
     ) {}
 
     public function get(): array {
         $cartId = $this->getCartId();
         if (!$cartId) return [];
 
-        $stmt = $this->db->prepare("SELECT product_id, variant_id, qty FROM cart_items WHERE cart_id = ?");
-        $stmt->execute([$cartId]);
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $this->repository->getItems($cartId);
 
         $cart = [];
         foreach ($rows as $row) {
@@ -30,19 +31,8 @@ class CartService implements CartServiceInterface {
 
     public function add(int $productId, int $qty = 1, ?int $variantId = null): void {
         $cartId = $this->ensureCart();
-        
-        $stmt = $this->db->prepare("SELECT id, qty FROM cart_items WHERE cart_id = ? AND product_id = ? AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))");
-        $stmt->execute([$cartId, $productId, $variantId, $variantId]);
-        $item = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if ($item) {
-            $this->db->prepare("UPDATE cart_items SET qty = qty + ? WHERE id = ?")
-                ->execute([$qty, $item['id']]);
-        } else {
-            $this->db->prepare("INSERT INTO cart_items (cart_id, product_id, variant_id, qty) VALUES (?, ?, ?, ?)")
-                ->execute([$cartId, $productId, $variantId, $qty]);
-        }
-        $this->updateLastActivity($cartId);
+        $this->repository->addItem($cartId, $productId, $qty, $variantId);
+        $this->repository->updateLastActivity($cartId);
     }
 
     public function remove(string $key): void {
@@ -53,10 +43,8 @@ class CartService implements CartServiceInterface {
         $pid = (int)$parts[0];
         $vid = isset($parts[1]) ? (int)$parts[1] : null;
 
-        $this->db->prepare("DELETE FROM cart_items WHERE cart_id = ? AND product_id = ? AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))")
-            ->execute([$cartId, $pid, $vid, $vid]);
-        
-        $this->updateLastActivity($cartId);
+        $this->repository->removeItem($cartId, $pid, $vid);
+        $this->repository->updateLastActivity($cartId);
     }
 
     public function update(string $key, int $qty): void {
@@ -69,18 +57,16 @@ class CartService implements CartServiceInterface {
         $pid = (int)$parts[0];
         $vid = isset($parts[1]) ? (int)$parts[1] : null;
 
-        $this->db->prepare("UPDATE cart_items SET qty = ? WHERE cart_id = ? AND product_id = ? AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))")
-            ->execute([$qty, $cartId, $pid, $vid, $vid]);
-        
-        $this->updateLastActivity($cartId);
+        $this->repository->updateItemQty($cartId, $pid, $qty, $vid);
+        $this->repository->updateLastActivity($cartId);
     }
 
     public function clear(): void {
         $cartId = $this->getCartId();
         if (!$cartId) return;
 
-        $this->db->prepare("DELETE FROM cart_items WHERE cart_id = ?")->execute([$cartId]);
-        $this->updateLastActivity($cartId);
+        $this->repository->clearItems($cartId);
+        $this->repository->updateLastActivity($cartId);
     }
 
     public function count(): int {
@@ -159,35 +145,21 @@ class CartService implements CartServiceInterface {
         }
 
         $cartId = $this->ensureCart();
-        $stmt = $this->db->prepare("INSERT OR IGNORE INTO cart_promotions (cart_id, promo_code) VALUES (?, ?)");
-        if (DB_CONFIG['driver'] === 'mysql') {
-            $stmt = $this->db->prepare("INSERT IGNORE INTO cart_promotions (cart_id, promo_code) VALUES (?, ?)");
-        }
-        $stmt->execute([$cartId, $code]);
-        
-        return true;
+        return $this->repository->applyPromoCode($cartId, $code);
     }
 
     public function removePromoCode(?string $code = null): void {
         $cartId = $this->getCartId();
         if (!$cartId) return;
 
-        if ($code) {
-            $this->db->prepare("DELETE FROM cart_promotions WHERE cart_id = ? AND promo_code = ?")
-                ->execute([$cartId, $code]);
-        } else {
-            $this->db->prepare("DELETE FROM cart_promotions WHERE cart_id = ?")
-                ->execute([$cartId]);
-        }
+        $this->repository->removePromoCode($cartId, $code);
     }
 
     public function getAppliedPromotions(): array {
         $cartId = $this->getCartId();
         if (!$cartId) return [];
 
-        $stmt = $this->db->prepare("SELECT promo_code FROM cart_promotions WHERE cart_id = ?");
-        $stmt->execute([$cartId]);
-        $codes = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $codes = $this->repository->getPromoCodes($cartId);
 
         $applied = [];
         $hasManualPromo = false;
@@ -208,10 +180,6 @@ class CartService implements CartServiceInterface {
         // Check for automatic promotions
         $autoPromos = $this->promotionService->getActivePromotions(true, $user);
         foreach ($autoPromos as $promo) {
-            // Priority ordering is already handled by PromotionService::getActivePromotions
-
-            // Rule: Include if it's the highest priority auto promo OR if it's stackable
-            
             $canApply = false;
             if ($hasManualPromo) {
                 if ($promo->stackable) {
@@ -274,56 +242,28 @@ class CartService implements CartServiceInterface {
     public function syncOnLogin(int $userId): void {
         $sessionId = session_id();
         
-        // Find session cart
-        $stmt = $this->db->prepare("SELECT id FROM carts WHERE session_id = ? AND user_id IS NULL");
-        $stmt->execute([$sessionId]);
-        $sessionCartId = $stmt->fetchColumn();
-
-        // Find user cart
-        $stmt = $this->db->prepare("SELECT id FROM carts WHERE user_id = ?");
-        $stmt->execute([$userId]);
-        $userCartId = $stmt->fetchColumn();
+        $sessionCartId = $this->repository->findCartBySessionId($sessionId);
+        $userCartId = $this->repository->findCartByUserId($userId);
 
         if (!$userCartId) {
             if ($sessionCartId) {
-                // Attach session cart to user
-                $this->db->prepare("UPDATE carts SET user_id = ? WHERE id = ?")->execute([$userId, $sessionCartId]);
+                $this->repository->attachCartToUser($sessionCartId, $userId);
             }
         } elseif ($sessionCartId) {
             // Merge session cart promotions into user cart
-            $stmt = $this->db->prepare("SELECT promo_code FROM cart_promotions WHERE cart_id = ?");
-            $stmt->execute([$sessionCartId]);
-            $sessionPromos = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-
-            $insertPromo = $this->db->prepare("INSERT OR IGNORE INTO cart_promotions (cart_id, promo_code) VALUES (?, ?)");
-            if (DB_CONFIG['driver'] === 'mysql') {
-                $insertPromo = $this->db->prepare("INSERT IGNORE INTO cart_promotions (cart_id, promo_code) VALUES (?, ?)");
-            }
+            $sessionPromos = $this->repository->getPromoCodes($sessionCartId);
             foreach ($sessionPromos as $code) {
-                $insertPromo->execute([$userCartId, $code]);
+                $this->repository->applyPromoCode($userCartId, $code);
             }
 
             // Merge session items into user cart
-            $stmt = $this->db->prepare("SELECT * FROM cart_items WHERE cart_id = ?");
-            $stmt->execute([$sessionCartId]);
-            $sessionItems = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
+            $sessionItems = $this->repository->getItems($sessionCartId);
             foreach ($sessionItems as $item) {
-                // Upsert into user cart
-                $check = $this->db->prepare("SELECT id FROM cart_items WHERE cart_id = ? AND product_id = ? AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))");
-                $check->execute([$userCartId, $item['product_id'], $item['variant_id'], $item['variant_id']]);
-                $existingId = $check->fetchColumn();
-
-                if ($existingId) {
-                    $this->db->prepare("UPDATE cart_items SET qty = qty + ? WHERE id = ?")->execute([$item['qty'], $existingId]);
-                } else {
-                    $this->db->prepare("INSERT INTO cart_items (cart_id, product_id, variant_id, qty) VALUES (?, ?, ?, ?)")
-                        ->execute([$userCartId, $item['product_id'], $item['variant_id'], $item['qty']]);
-                }
+                $this->repository->addItem($userCartId, $item['product_id'], $item['qty'], $item['variant_id']);
             }
 
             // Delete session cart
-            $this->db->prepare("DELETE FROM carts WHERE id = ?")->execute([$sessionCartId]);
+            $this->repository->deleteCart($sessionCartId);
         }
     }
 
@@ -333,13 +273,10 @@ class CartService implements CartServiceInterface {
         $sessionId = session_id();
 
         if ($user) {
-            $stmt = $this->db->prepare("SELECT id FROM carts WHERE user_id = ?");
-            $stmt->execute([$user->id]);
+            return $this->repository->findCartByUserId($user->id);
         } else {
-            $stmt = $this->db->prepare("SELECT id FROM carts WHERE session_id = ? AND user_id IS NULL");
-            $stmt->execute([$sessionId]);
+            return $this->repository->findCartBySessionId($sessionId);
         }
-        return $stmt->fetchColumn() ?: null;
     }
 
     private function ensureCart(): int {
@@ -350,16 +287,7 @@ class CartService implements CartServiceInterface {
         $cartId = $this->getCartId();
         if ($cartId) return (int)$cartId;
 
-        if ($user) {
-            $this->db->prepare("INSERT INTO carts (user_id, session_id) VALUES (?, ?)")->execute([$user->id, $sessionId]);
-        } else {
-            $this->db->prepare("INSERT INTO carts (session_id) VALUES (?)")->execute([$sessionId]);
-        }
-        return (int)$this->db->lastInsertId();
-    }
-
-    private function updateLastActivity(int $cartId): void {
-        $this->db->prepare("UPDATE carts SET last_activity = CURRENT_TIMESTAMP WHERE id = ?")->execute([$cartId]);
+        return $this->repository->createCart($user ? $user->id : null, $sessionId);
     }
 
     private function generateKey(int $productId, ?int $variantId = null): string {

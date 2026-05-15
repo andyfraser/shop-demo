@@ -2,13 +2,14 @@
 namespace App\Services;
 
 use App\Models\Settings;
+use App\Repositories\SettingsRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
 class SettingsService implements SettingsServiceInterface {
     private ?Settings $settings = null;
 
     public function __construct(
-        private \PDO $db,
+        private SettingsRepositoryInterface $repository,
         private LoggerInterface $logger
     ) {}
 
@@ -18,7 +19,7 @@ class SettingsService implements SettingsServiceInterface {
     public function getSettings(): Settings {
         if ($this->settings === null) {
             $this->settings = new Settings($this->logger);
-            $this->settings->fill($this->loadFromDb());
+            $this->settings->fill($this->repository->getAll());
         }
         return $this->settings;
     }
@@ -42,22 +43,7 @@ class SettingsService implements SettingsServiceInterface {
      * Persist a setting value.
      */
     public function set(string $key, mixed $value): void {
-        $this->db->prepare("REPLACE INTO settings (`key`, value) VALUES (?, ?)")
-            ->execute([$key, (string)$value]);
+        $this->repository->set($key, $value);
         $this->settings = null; // Clear cache
-    }
-
-    private function loadFromDb(): array {
-        try {
-            $rows = $this->db->query("SELECT `key`, value FROM settings")
-                ->fetchAll();
-            return array_column($rows, 'value', 'key');
-        } catch (\PDOException $e) {
-            // Handle case where table doesn't exist yet (e.g., during fresh install)
-            if ($e->getCode() === 'HY000' || $e->getCode() === '42S02') {
-                return [];
-            }
-            throw $e;
-        }
     }
 }

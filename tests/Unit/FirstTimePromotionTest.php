@@ -22,11 +22,14 @@ class FirstTimePromotionTest extends TestCase {
         
         $logger = new NullLogger();
         $vatService = new \App\Services\VatService();
-        $settings = new \App\Services\SettingsService($this->db, $logger);
+        $settingsRepo = new \App\Repositories\SettingsRepository($this->db, $logger);
+        $settings = new \App\Services\SettingsService($settingsRepo, $logger);
         $emailService = new \App\Services\EmailService($settings, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
-        $this->orderService = new OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
-        $this->promotionService = new PromotionService($this->db, $logger, null, $this->orderService);
+        $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
+        $this->orderService = new OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
+        $this->promotionService = new PromotionService($promotionRepository, $logger, null, $this->orderService);
     }
 
     public function testFirstTimePromotionActiveForNewUser() {

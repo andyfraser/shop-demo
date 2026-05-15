@@ -25,8 +25,9 @@ class ImageCleanupServiceTest extends TestCase {
         $this->db->exec("CREATE TABLE products (id INTEGER PRIMARY KEY, image TEXT)");
         $this->db->exec("CREATE TABLE categories (id INTEGER PRIMARY KEY, icon TEXT)");
 
+        $imageRepository = new \App\Repositories\ImageRepository($this->db);
         $this->service = new ImageCleanupService(
-            $this->db,
+            $imageRepository,
             new NullLogger(),
             $this->testUploadDir,
             $this->testImageDir

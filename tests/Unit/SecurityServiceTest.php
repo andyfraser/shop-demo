@@ -13,8 +13,10 @@ class SecurityServiceTest extends TestCase {
 
     public function setUp() {
         $_SESSION = [];
-        $logger = new \App\Core\FileLogger(__DIR__ . '/../../test_app.log');
-        $this->security = new SecurityService(Database::getConnection(), $logger);
+        $logger = new \Tests\NullLogger();
+        $db = Database::getConnection();
+        $repository = new \App\Repositories\SecurityRepository($db);
+        $this->security = new SecurityService($repository, $logger);
     }
 
     public function testCsrfTokenGeneration() {

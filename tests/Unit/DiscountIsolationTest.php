@@ -22,19 +22,25 @@ class DiscountIsolationTest extends TestCase {
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
         
-        $settingsService = new SettingsService($this->db, $logger);
-        $authService = new AuthService($this->db, $settingsService, $logger);
+        $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
+        $settingsService = new SettingsService($settingsRepository, $logger);
+        $authRepository = new \App\Repositories\AuthRepository($this->db, $logger);
+        $authService = new AuthService($authRepository, $settingsService, $logger);
         $vatService = new VatService();
         $emailService = new \App\Services\EmailService($settingsService, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
-        $orderService = new \App\Services\OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
-        $attrService = new AttributeService($this->db, $logger);
-        $this->promotionService = new PromotionService($this->db, $logger, null, $orderService);
+        $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
+        $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
+        $attrService = new AttributeService($attrRepository, $logger);
+        $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
+        $this->promotionService = new PromotionService($promotionRepository, $logger, null, $orderService);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);
         
+        $cartRepository = new \App\Repositories\CartRepository($this->db);
         $this->cart = new CartService(
-            $this->db,
+            $cartRepository,
             $productService,
             $authService,
             $vatService,
@@ -63,7 +69,9 @@ class DiscountIsolationTest extends TestCase {
         ]);
 
         // 2. Add a product worth 100
-        $attrService = new AttributeService($this->db, new \Tests\NullLogger());
+        $nullLogger = new \Tests\NullLogger();
+        $attrRepository = new \App\Repositories\AttributeRepository($this->db, $nullLogger);
+        $attrService = new AttributeService($attrRepository, $nullLogger);
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);
@@ -102,7 +110,9 @@ class DiscountIsolationTest extends TestCase {
         ]);
 
         // 2. Add a product worth 100
-        $attrService = new AttributeService($this->db, new \Tests\NullLogger());
+        $nullLogger = new \Tests\NullLogger();
+        $attrRepository = new \App\Repositories\AttributeRepository($this->db, $nullLogger);
+        $attrService = new AttributeService($attrRepository, $nullLogger);
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);

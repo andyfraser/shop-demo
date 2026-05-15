@@ -21,17 +21,23 @@ class CartServiceTest extends TestCase {
         $db->exec("DELETE FROM carts");
         $_SESSION = [];
         $logger = new \Tests\NullLogger();
-        $settings = new SettingsService($db, $logger);
-        $auth = new AuthService($db, $settings, $logger);
+        $settingsRepository = new \App\Repositories\SettingsRepository($db);
+        $settings = new SettingsService($settingsRepository, $logger);
+        $authRepository = new \App\Repositories\AuthRepository($db, $logger);
+        $auth = new AuthService($authRepository, $settings, $logger);
         $vatService = new \App\Services\VatService();
         $emailService = new \App\Services\EmailService($settings, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
-        $orderService = new \App\Services\OrderService($db, $logger, $vatService, $paymentService, $emailService);
-        $attrService = new AttributeService($db, $logger);
-        $promoService = new \App\Services\PromotionService($db, $logger, null, $orderService);
+        $orderRepository = new \App\Repositories\OrderRepository($db, $logger);
+        $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        $attrRepository = new \App\Repositories\AttributeRepository($db, $logger);
+        $attrService = new AttributeService($attrRepository, $logger);
+        $promotionRepository = new \App\Repositories\PromotionRepository($db, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $logger, null, $orderService);
         $repository = new \App\Repositories\ProductRepository($db, $logger);
         $productService = new ProductService($repository, $attrService, $promoService, $logger);
-        $this->cart = new CartService($db, $productService, $auth, $vatService, $promoService, $orderService, $logger);
+        $cartRepository = new \App\Repositories\CartRepository($db);
+        $this->cart = new CartService($cartRepository, $productService, $auth, $vatService, $promoService, $orderService, $logger);
     }
 
     public function testAdd() {

@@ -18,7 +18,8 @@ class PromotionEnhancementTest extends TestCase {
     public function setUp(): void {
         $this->db = \App\Core\Database::getConnection();
         $this->logger = new NullLogger();
-        $this->promotionService = new PromotionService($this->db, $this->logger);
+        $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $this->logger);
+        $this->promotionService = new PromotionService($promotionRepository, $this->logger);
 
         // Clear tables
         $this->db->exec("DELETE FROM promotion_tiers");

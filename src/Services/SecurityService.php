@@ -1,12 +1,13 @@
 <?php
 namespace App\Services;
 
-use App\Core\Database;
+use App\Repositories\SecurityRepositoryInterface;
+use Psr\Log\LoggerInterface;
 
 class SecurityService implements SecurityServiceInterface {
     public function __construct(
-        private \PDO $db,
-        private \Psr\Log\LoggerInterface $logger
+        private SecurityRepositoryInterface $repository,
+        private LoggerInterface $logger
     ) {}
 
     public function csrfToken(): string {
@@ -46,12 +47,7 @@ class SecurityService implements SecurityServiceInterface {
 
     public function checkRateLimit(string $action, string $ip, int $limit, int $windowSeconds): void {
         $since = date('Y-m-d H:i:s', time() - $windowSeconds);
-        $stmt = $this->db->prepare(
-            "SELECT COUNT(*) FROM rate_limits 
-             WHERE action = ? AND ip_address = ? AND created_at >= ?"
-        );
-        $stmt->execute([$action, $ip, $since]);
-        $count = (int)$stmt->fetchColumn();
+        $count = $this->repository->countRateLimits($action, $ip, $since);
         
         if ($count >= $limit) {
             $this->logger->warning("Rate limit hit for action '{action}' from IP {ip}", [
@@ -64,12 +60,10 @@ class SecurityService implements SecurityServiceInterface {
     }
 
     public function recordRateLimit(string $action, string $ip): void {
-        $this->db->prepare("INSERT INTO rate_limits (action, ip_address) VALUES (?, ?)")
-            ->execute([$action, $ip]);
+        $this->repository->recordRateLimit($action, $ip);
     }
 
     public function clearRateLimit(string $action, string $ip): void {
-        $this->db->prepare("DELETE FROM rate_limits WHERE action = ? AND ip_address = ?")
-            ->execute([$action, $ip]);
+        $this->repository->clearRateLimit($action, $ip);
     }
 }

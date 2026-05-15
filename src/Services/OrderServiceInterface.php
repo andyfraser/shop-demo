@@ -22,6 +22,7 @@ interface OrderServiceInterface {
     public function updateStatus(int $id, string $status, ?int $userId = null, string $notes = ''): void;
     public function addHistoryEntry(int $orderId, string $status, string $notes = '', ?int $userId = null): void;
     public function updatePaymentInfo(int $id, string $method, string $status, ?string $transactionId = null): void;
+    public function updateRefundInfo(int $id, string $status, float $amount, bool $deliveryRefunded = false): void;
     public function cancelOrder(int $id, string $reason = '', ?int $userId = null): bool;
     public function getStatusHistory(int $orderId): array;
 }

@@ -16,8 +16,10 @@ class ProductServiceTest extends TestCase {
     public function setUp() {
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
-        $attrService = new AttributeService($this->db, $logger);
-        $promoService = new \App\Services\PromotionService($this->db, $logger);
+        $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
+        $attrService = new AttributeService($attrRepository, $logger);
+        $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $logger);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $this->service = new ProductService($repository, $attrService, $promoService, $logger);
     }

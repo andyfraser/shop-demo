@@ -11,6 +11,7 @@ use App\Core\Database;
 
 class PromotionServiceTest extends TestCase {
     private PromotionService $service;
+    private \App\Services\OrderServiceInterface $orderService;
     private \App\Services\ProductService $productService;
     private \PDO $db;
 
@@ -21,17 +22,23 @@ class PromotionServiceTest extends TestCase {
         
         $logger = new \Tests\NullLogger();
         $vatService = new \App\Services\VatService();
-        $settings = new \App\Services\SettingsService($this->db, $logger);
+        $settingsRepo = new \App\Repositories\SettingsRepository($this->db, $logger);
+        $settings = new \App\Services\SettingsService($settingsRepo, $logger);
         $emailService = new \App\Services\EmailService($settings, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
-        $orderService = new \App\Services\OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
+        $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
+        $this->orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+
         
-        $categoryService = new \App\Services\CategoryService($this->db, $logger);
-        $this->service = new PromotionService($this->db, $logger, $categoryService, $orderService);
+        $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
+        $this->service = new PromotionService($promotionRepository, $logger, $categoryService, $this->orderService);
         
-        $attrService = new \App\Services\AttributeService($this->db, $logger);
-        $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $this->productService = new \App\Services\ProductService($repository, $attrService, $this->service, $logger);
+        $attrRepo = new \App\Repositories\AttributeRepository($this->db, $logger);
+        $attrService = new \App\Services\AttributeService($attrRepo, $logger);
+        $productRepo = new \App\Repositories\ProductRepository($this->db, $logger);
+        $this->productService = new \App\Services\ProductService($productRepo, $attrService, $this->service, $logger);
     }
 
     public function testSubcategoryProductQualifiesForParentCategoryPromotion() {

@@ -14,7 +14,9 @@ class CategoryServiceTest extends TestCase {
 
     public function setUp() {
         $this->db = Database::getConnection();
-        $this->service = new CategoryService($this->db, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $repository = new \App\Repositories\CategoryRepository($this->db, $logger);
+        $this->service = new CategoryService($repository, $logger);
     }
 
     public function testGetTree() {

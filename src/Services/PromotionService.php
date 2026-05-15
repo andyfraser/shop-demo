@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Models\Promotion;
+use App\Repositories\PromotionRepositoryInterface;
 use Psr\Log\LoggerInterface;
-use PDO;
 
 class PromotionService implements PromotionServiceInterface {
     public function __construct(
-        private PDO $db,
+        private PromotionRepositoryInterface $repository,
         private LoggerInterface $logger,
         private ?CategoryServiceInterface $categoryService = null,
         private ?OrderServiceInterface $orderService = null
@@ -21,39 +21,30 @@ class PromotionService implements PromotionServiceInterface {
     }
 
     public function getAllForAdmin(): array {
-        $stmt = $this->db->query("SELECT * FROM promotions ORDER BY created_at DESC");
-        return $stmt->fetchAll(PDO::FETCH_CLASS, Promotion::class, [$this->logger]);
+        return $this->repository->getAllForAdmin();
     }
 
     public function findById(int $id): ?Promotion {
-        $stmt = $this->db->prepare("SELECT * FROM promotions WHERE id = ?");
-        $stmt->setFetchMode(PDO::FETCH_CLASS, Promotion::class, [$this->logger]);
-        $stmt->execute([$id]);
-        $promotion = $stmt->fetch() ?: null;
+        $promotion = $this->repository->findById($id);
 
         if ($promotion) {
-            $promotion->target_ids = $this->getTargetIds($id);
-            $promotion->excluded_ids = $this->getTargetIds($id, true);
-            $promotion->tiers = $this->getTiers($id);
-            $promotion->additional_codes = $this->getAdditionalCodes($id);
+            $promotion->target_ids = $this->repository->getTargetIds($id);
+            $promotion->excluded_ids = $this->repository->getTargetIds($id, true);
+            $promotion->tiers = $this->repository->getTiers($id);
+            $promotion->additional_codes = $this->repository->getAdditionalCodes($id);
         }
 
         return $promotion;
     }
 
     public function findByCode(string $code): ?Promotion {
-        $stmt = $this->db->prepare("SELECT p.* FROM promotions p 
-                                    LEFT JOIN promotion_codes pc ON p.id = pc.promotion_id 
-                                    WHERE p.code = ? OR pc.code = ?");
-        $stmt->setFetchMode(PDO::FETCH_CLASS, Promotion::class, [$this->logger]);
-        $stmt->execute([$code, $code]);
-        $promotion = $stmt->fetch() ?: null;
+        $promotion = $this->repository->findByCode($code);
 
         if ($promotion) {
-            $promotion->target_ids = $this->getTargetIds($promotion->id);
-            $promotion->excluded_ids = $this->getTargetIds($promotion->id, true);
-            $promotion->tiers = $this->getTiers($promotion->id);
-            $promotion->additional_codes = $this->getAdditionalCodes($promotion->id);
+            $promotion->target_ids = $this->repository->getTargetIds($promotion->id);
+            $promotion->excluded_ids = $this->repository->getTargetIds($promotion->id, true);
+            $promotion->tiers = $this->repository->getTiers($promotion->id);
+            $promotion->additional_codes = $this->repository->getAdditionalCodes($promotion->id);
         }
 
         return $promotion;
@@ -102,24 +93,9 @@ class PromotionService implements PromotionServiceInterface {
         ];
 
         try {
-            $this->db->beginTransaction();
+            $this->repository->beginTransaction();
 
-            if ($id > 0) {
-                $sql = "UPDATE promotions SET name = :name, description = :description, code = :code, type = :type, 
-                        value = :value, buy_qty = :buy_qty, get_qty = :get_qty, target_type = :target_type, 
-                        min_order_amount = :min_order_amount, start_date = :start_date, end_date = :end_date, 
-                        usage_limit = :usage_limit, usage_limit_per_user = :usage_limit_per_user, 
-                        priority = :priority, stackable = :stackable, target_role = :target_role, active = :active 
-                        WHERE id = :id";
-                $params['id'] = $id;
-                $this->db->prepare($sql)->execute($params);
-                $promotionId = $id;
-            } else {
-                $sql = "INSERT INTO promotions (name, description, code, type, value, buy_qty, get_qty, target_type, min_order_amount, start_date, end_date, usage_limit, usage_limit_per_user, priority, stackable, target_role, active) 
-                        VALUES (:name, :description, :code, :type, :value, :buy_qty, :get_qty, :target_type, :min_order_amount, :start_date, :end_date, :usage_limit, :usage_limit_per_user, :priority, :stackable, :target_role, :active)";
-                $this->db->prepare($sql)->execute($params);
-                $promotionId = (int)$this->db->lastInsertId();
-            }
+            $promotionId = $this->repository->save($params, $id);
 
             // Sync targets
             $targetIds = $isObject ? $data->target_ids : ($data['target_ids'] ?? []);
@@ -128,27 +104,27 @@ class PromotionService implements PromotionServiceInterface {
                 $targetIds = [];
                 $excludedIds = [];
             }
-            $this->syncTargets($promotionId, $targetIds, false);
-            $this->syncTargets($promotionId, $excludedIds, true);
+            $this->repository->syncTargets($promotionId, $targetIds, false);
+            $this->repository->syncTargets($promotionId, $excludedIds, true);
 
             // Sync tiers
             $tiers = $isObject ? $data->tiers : ($data['tiers'] ?? []);
-            $this->syncTiers($promotionId, $tiers);
+            $this->repository->syncTiers($promotionId, $tiers);
 
             // Sync additional codes
             $additionalCodes = $isObject ? $data->additional_codes : ($data['additional_codes'] ?? []);
-            $this->syncAdditionalCodes($promotionId, $additionalCodes);
+            $this->repository->syncAdditionalCodes($promotionId, $additionalCodes);
 
-            $this->db->commit();
+            $this->repository->commit();
             return $promotionId;
         } catch (\Exception $e) {
-            $this->db->rollBack();
+            $this->repository->rollBack();
             throw $e;
         }
     }
 
     public function delete(int $id): void {
-        $this->db->prepare("DELETE FROM promotions WHERE id = ?")->execute([$id]);
+        $this->repository->delete($id);
     }
 
     public function getActiveAutomaticPromotions(?\App\Models\User $user = null): array {
@@ -157,31 +133,16 @@ class PromotionService implements PromotionServiceInterface {
 
     public function getActivePromotions(bool $onlyAutomatic = false, ?\App\Models\User $user = null): array {
         $now = date('Y-m-d H:i:s');
-        $sql = "SELECT * FROM promotions 
-                WHERE active = 1 
-                AND (start_date IS NULL OR start_date <= ?) 
-                AND (end_date IS NULL OR end_date >= ?) 
-                AND (usage_limit IS NULL OR used_count < usage_limit)";
-        
-        if ($onlyAutomatic) {
-            $sql .= " AND (code IS NULL OR code = '')";
-        }
-
-        $sql .= " ORDER BY priority DESC, value DESC";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->setFetchMode(PDO::FETCH_CLASS, Promotion::class, [$this->logger]);
-        $stmt->execute([$now, $now]);
-        $promotions = $stmt->fetchAll();
+        $promotions = $this->repository->getActivePromotions($now, $onlyAutomatic);
 
         foreach ($promotions as $promo) {
-            $promo->target_ids = $this->getTargetIds($promo->id);
-            $promo->excluded_ids = $this->getTargetIds($promo->id, true);
-            $promo->tiers = $this->getTiers($promo->id);
-            $promo->additional_codes = $this->getAdditionalCodes($promo->id);
+            $promo->target_ids = $this->repository->getTargetIds($promo->id);
+            $promo->excluded_ids = $this->repository->getTargetIds($promo->id, true);
+            $promo->tiers = $this->repository->getTiers($promo->id);
+            $promo->additional_codes = $this->repository->getAdditionalCodes($promo->id);
             
             if ($user && isset($user->id)) {
-                $promo->user_usage_count = $this->getUserUsageCount($promo->id, $user->id);
+                $promo->user_usage_count = $this->repository->getUserUsageCount($promo->id, $user->id);
             }
         }
 
@@ -193,7 +154,7 @@ class PromotionService implements PromotionServiceInterface {
         $promo = $this->findByCode($code);
         
         if ($promo && $user && isset($user->id)) {
-            $promo->user_usage_count = $this->getUserUsageCount($promo->id, $user->id);
+            $promo->user_usage_count = $this->repository->getUserUsageCount($promo->id, $user->id);
         }
 
         if (!$promo || !$promo->isActive($user, $this->isFirstOrder($user))) {
@@ -307,71 +268,6 @@ class PromotionService implements PromotionServiceInterface {
         }
 
         return $discount;
-    }
-
-    private function getTargetIds(int $promotionId, bool $isExclusion = false): array {
-        $stmt = $this->db->prepare("SELECT target_id FROM promotion_targets WHERE promotion_id = ? AND is_exclusion = ?");
-        $stmt->execute([$promotionId, (int)$isExclusion]);
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
-
-    private function syncTargets(int $promotionId, array $targetIds, bool $isExclusion = false): void {
-        $this->db->prepare("DELETE FROM promotion_targets WHERE promotion_id = ? AND is_exclusion = ?")
-            ->execute([$promotionId, (int)$isExclusion]);
-        
-        $targetIds = array_unique(array_filter(array_map('intval', $targetIds)));
-
-        if (empty($targetIds)) {
-            return;
-        }
-
-        $stmt = $this->db->prepare("INSERT INTO promotion_targets (promotion_id, target_id, is_exclusion) VALUES (?, ?, ?)");
-        foreach ($targetIds as $targetId) {
-            $stmt->execute([$promotionId, $targetId, (int)$isExclusion]);
-        }
-    }
-
-    private function getTiers(int $promotionId): array {
-        $stmt = $this->db->prepare("SELECT min_amount, value FROM promotion_tiers WHERE promotion_id = ? ORDER BY min_amount ASC");
-        $stmt->execute([$promotionId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    private function syncTiers(int $promotionId, array $tiers): void {
-        $this->db->prepare("DELETE FROM promotion_tiers WHERE promotion_id = ?")->execute([$promotionId]);
-        
-        $stmt = $this->db->prepare("INSERT INTO promotion_tiers (promotion_id, min_amount, value) VALUES (?, ?, ?)");
-        foreach ($tiers as $tier) {
-            if (isset($tier['min_amount']) && isset($tier['value'])) {
-                $stmt->execute([$promotionId, (float)$tier['min_amount'], (float)$tier['value']]);
-            }
-        }
-    }
-
-    private function getAdditionalCodes(int $promotionId): array {
-        $stmt = $this->db->prepare("SELECT code FROM promotion_codes WHERE promotion_id = ?");
-        $stmt->execute([$promotionId]);
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
-
-    private function syncAdditionalCodes(int $promotionId, array $codes): void {
-        $this->db->prepare("DELETE FROM promotion_codes WHERE promotion_id = ?")->execute([$promotionId]);
-        
-        $codes = array_unique(array_filter(array_map('trim', $codes)));
-        if (empty($codes)) return;
-
-        $stmt = $this->db->prepare("INSERT INTO promotion_codes (promotion_id, code) VALUES (?, ?)");
-        foreach ($codes as $code) {
-            $stmt->execute([$promotionId, $code]);
-        }
-    }
-
-    private function getUserUsageCount(int $promotionId, int $userId): int {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM order_promotions op 
-                                    JOIN orders o ON op.order_id = o.id 
-                                    WHERE op.promotion_id = ? AND o.user_id = ? AND o.status != 'cancelled'");
-        $stmt->execute([$promotionId, $userId]);
-        return (int)$stmt->fetchColumn();
     }
 
     public function isProductQualifying(\App\Models\Product $product, Promotion $promotion): bool {

@@ -31,7 +31,8 @@ class ReturnServiceTest extends TestCase {
         $container->set(\PDO::class, fn() => $this->db);
         $container->set(\Psr\Log\LoggerInterface::class, fn() => $logger);
         
-        $settingsService = new SettingsService($this->db, $logger);
+        $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
+        $settingsService = new SettingsService($settingsRepository, $logger);
         $container->set(\App\Services\SettingsService::class, fn() => $settingsService);
         $container->set(\App\Services\SettingsServiceInterface::class, fn() => $settingsService);
         
@@ -40,14 +41,18 @@ class ReturnServiceTest extends TestCase {
         $paymentService->registerGateway(new ManualGateway());
         
         $vatService = new VatService();
-        $this->orderService = new OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
-        $attrService = new AttributeService($this->db, $logger);
-        $promoService = new \App\Services\PromotionService($this->db, $logger);
+        $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
+        $this->orderService = new OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
+        $attrService = new AttributeService($attrRepository, $logger);
+        $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $logger);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $this->productService = new ProductService($repository, $attrService, $promoService, $logger);
         
+        $returnRepository = new \App\Repositories\ReturnRepository($this->db, $logger);
         $this->returnService = new ReturnService(
-            $this->db,
+            $returnRepository,
             $logger,
             $this->orderService,
             $paymentService,

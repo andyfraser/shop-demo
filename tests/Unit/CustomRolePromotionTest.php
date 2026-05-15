@@ -18,7 +18,8 @@ class CustomRolePromotionTest extends TestCase {
     public function setUp(): void {
         $this->db = \App\Core\Database::getConnection();
         $this->logger = new NullLogger();
-        $this->promoService = new PromotionService($this->db, $this->logger);
+        $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $this->logger);
+        $this->promoService = new PromotionService($promotionRepository, $this->logger);
     }
 
     public function testPromotionAppliesToCustomRole() {

@@ -12,7 +12,9 @@ class AddressServiceTest extends TestCase {
 
     public function setUp() {
         $this->db = Database::getConnection();
-        $this->service = new AddressService($this->db, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $repository = new \App\Repositories\AddressRepository($this->db, $logger);
+        $this->service = new AddressService($repository, $logger);
         
         // Clean up user_addresses for test user (assume ID 1 is admin/test user)
         $this->db->prepare("DELETE FROM user_addresses WHERE user_id = 1")->execute();

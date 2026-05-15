@@ -27,7 +27,9 @@ class DeliveryServiceTest extends TestCase {
         $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total) VALUES ('Free', 0.0, 1, 100)");
         $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total) VALUES ('Disabled', 20.0, 0, 0)");
 
-        $this->service = new DeliveryService($this->db, new NullLogger());
+        $logger = new NullLogger();
+        $repository = new \App\Repositories\DeliveryRepository($this->db, $logger);
+        $this->service = new DeliveryService($repository, $logger);
     }
 
     public function testAllReturnsAllOptions() {

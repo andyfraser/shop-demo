@@ -16,8 +16,10 @@ class AuthServiceTest extends TestCase {
         $_SESSION = [];
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
-        $settings = new SettingsService($this->db, $logger);
-        $this->auth = new AuthService($this->db, $settings, $logger);
+        $settingsRepo = new \App\Repositories\SettingsRepository($this->db, $logger);
+        $settings = new SettingsService($settingsRepo, $logger);
+        $authRepo = new \App\Repositories\AuthRepository($this->db, $logger);
+        $this->auth = new AuthService($authRepo, $settings, $logger);
     }
 
     public function testLoginSetsSession() {

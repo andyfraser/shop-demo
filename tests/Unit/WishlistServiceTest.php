@@ -16,11 +16,14 @@ class WishlistServiceTest extends TestCase {
     public function setUp() {
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
-        $attrService = new AttributeService($this->db, $logger);
-        $promoService = new \App\Services\PromotionService($this->db, $logger);
+        $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
+        $attrService = new AttributeService($attrRepository, $logger);
+        $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $logger);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $productService = new ProductService($repository, $attrService, $promoService, $logger);
-        $this->service = new WishlistService($this->db, $productService, $logger);
+        $wishlistRepo = new \App\Repositories\WishlistRepository($this->db, $logger);
+        $this->service = new WishlistService($wishlistRepo, $productService, $logger);
 
         // Clean up wishlist for test
         $this->db->exec("DELETE FROM wishlists");

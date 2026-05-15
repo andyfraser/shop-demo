@@ -1,8 +1,8 @@
 <?php
 namespace App\Services;
 
-use App\Core\Database;
 use App\Models\User;
+use App\Repositories\AuthRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
 class AuthService implements AuthServiceInterface {
@@ -10,7 +10,7 @@ class AuthService implements AuthServiceInterface {
     private ?User $cachedUser = null;
 
     public function __construct(
-        private \PDO $db,
+        private AuthRepositoryInterface $repository,
         private SettingsServiceInterface $settings,
         private LoggerInterface $logger
     ) {}
@@ -35,10 +35,7 @@ class AuthService implements AuthServiceInterface {
             
             if ($userId) {
                 // Reload from DB to ensure role and other data are fresh
-                $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
-                $stmt->setFetchMode(\PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE, User::class, [$this->logger]);
-                $stmt->execute([$userId]);
-                $user = $stmt->fetch() ?: null;
+                $user = $this->repository->findUserById($userId);
                 
                 if ($user) {
                     $_SESSION['user'] = $user;
@@ -52,15 +49,7 @@ class AuthService implements AuthServiceInterface {
             // Try to restore session from a remember-me cookie
             $token = $_COOKIE[self::COOKIE_NAME] ?? null;
             if ($token) {
-                $stmt = $this->db->prepare(
-                    "SELECT u.*
-                     FROM remember_tokens rt
-                     JOIN users u ON u.id = rt.user_id
-                     WHERE rt.token = ? AND rt.expires_at > ?"
-                );
-                $stmt->setFetchMode(\PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE, User::class, [$this->logger]);
-                $stmt->execute([$token, time()]);
-                $user = $stmt->fetch();
+                $user = $this->repository->findUserByRememberToken($token);
                 
                 if ($user) {
                     @session_regenerate_id(true);
@@ -121,13 +110,7 @@ class AuthService implements AuthServiceInterface {
         $token   = bin2hex(random_bytes(32));
         $expires = time() + ($days * 86400);
 
-        if ($oldToken) {
-            $this->db->prepare("UPDATE remember_tokens SET token = ?, expires_at = ? WHERE token = ?")
-                ->execute([$token, $expires, $oldToken]);
-        } else {
-            $this->db->prepare("INSERT INTO remember_tokens (user_id, token, expires_at) VALUES (?, ?, ?)")
-                ->execute([$userId, $token, $expires]);
-        }
+        $this->repository->setRememberToken($userId, $token, $expires, $oldToken);
 
         setcookie(
             self::COOKIE_NAME, $token, [
@@ -142,8 +125,7 @@ class AuthService implements AuthServiceInterface {
     /** Delete the DB row and expire the browser cookie. */
     private function clearRememberCookie(?string $token): void {
         if ($token) {
-            $this->db->prepare("DELETE FROM remember_tokens WHERE token = ?")
-                ->execute([$token]);
+            $this->repository->clearRememberToken($token);
         }
         setcookie(
             self::COOKIE_NAME, '', [

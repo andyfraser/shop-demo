@@ -16,7 +16,9 @@ class SettingsServiceTest extends TestCase {
         $this->db = Database::getConnection();
         // Clear settings table for isolation
         $this->db->exec("DELETE FROM settings");
-        $this->service = new SettingsService($this->db, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $repository = new \App\Repositories\SettingsRepository($this->db, $logger);
+        $this->service = new SettingsService($repository, $logger);
     }
 
     public function testGetSettingsModel() {
@@ -38,7 +40,9 @@ class SettingsServiceTest extends TestCase {
         $this->service->set('site_name', 'My Store');
         
         // New service instance should load from DB
-        $newService = new SettingsService($this->db, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $repository = new \App\Repositories\SettingsRepository($this->db, $logger);
+        $newService = new SettingsService($repository, $logger);
         $this->assertEquals('My Store', $newService->getSettings()->site_name);
     }
 
@@ -54,7 +58,9 @@ class SettingsServiceTest extends TestCase {
     public function testHandlesMissingTableGracefully() {
         $emptyDb = new \PDO('sqlite::memory:');
         $emptyDb->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $service = new SettingsService($emptyDb, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $repository = new \App\Repositories\SettingsRepository($emptyDb, $logger);
+        $service = new SettingsService($repository, $logger);
         
         $settings = $service->getSettings();
         $this->assertInstanceOf(Settings::class, $settings);
