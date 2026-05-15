@@ -24,8 +24,15 @@ class AttributeRepository implements AttributeRepositoryInterface {
 
     public function save(array $data, int $id = 0): int {
         if ($id) {
-            $this->db->prepare("UPDATE attributes SET name = ? WHERE id = ?")
-                ->execute([$data['name'], $id]);
+            $stmt = $this->db->prepare("SELECT id FROM attributes WHERE id = ?");
+            $stmt->execute([$id]);
+            if ($stmt->fetch()) {
+                $this->db->prepare("UPDATE attributes SET name = ? WHERE id = ?")
+                    ->execute([$data['name'], $id]);
+            } else {
+                $this->db->prepare("INSERT INTO attributes (id, name) VALUES (?, ?)")
+                    ->execute([$id, $data['name']]);
+            }
             return $id;
         } else {
             $this->db->prepare("INSERT INTO attributes (name) VALUES (?)")
@@ -46,9 +53,17 @@ class AttributeRepository implements AttributeRepositoryInterface {
 
     public function saveValue(array $data, int $id = 0): int {
         if ($id) {
-            $this->db->prepare("UPDATE attribute_values SET value = ?, sort_order = ? WHERE id = ?")
-                ->execute([$data['value'], $data['sort_order'] ?? 0, $id]);
-            return $id;
+            $stmt = $this->db->prepare("SELECT id FROM attribute_values WHERE id = ?");
+            $stmt->execute([$id]);
+            if ($stmt->fetch()) {
+                $this->db->prepare("UPDATE attribute_values SET value = ?, sort_order = ? WHERE id = ?")
+                    ->execute([$data['value'], $data['sort_order'] ?? 0, $id]);
+                return $id;
+            } else {
+                $this->db->prepare("INSERT INTO attribute_values (id, attribute_id, value, sort_order) VALUES (?, ?, ?, ?)")
+                    ->execute([$id, $data['attribute_id'], $data['value'], $data['sort_order'] ?? 0]);
+                return $id;
+            }
         } else {
             $this->db->prepare("INSERT INTO attribute_values (attribute_id, value, sort_order) VALUES (?, ?, ?)")
                 ->execute([$data['attribute_id'], $data['value'], $data['sort_order'] ?? 0]);

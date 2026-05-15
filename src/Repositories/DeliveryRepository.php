@@ -32,8 +32,15 @@ class DeliveryRepository implements DeliveryRepositoryInterface {
 
     public function save(array $data, int $id = 0): bool {
         if ($id) {
-            $stmt = $this->db->prepare("UPDATE delivery_options SET name = ?, price = ?, active = ?, min_order_total = ? WHERE id = ?");
-            return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0, $id]);
+            $stmt = $this->db->prepare("SELECT id FROM delivery_options WHERE id = ?");
+            $stmt->execute([$id]);
+            if ($stmt->fetch()) {
+                $stmt = $this->db->prepare("UPDATE delivery_options SET name = ?, price = ?, active = ?, min_order_total = ? WHERE id = ?");
+                return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0, $id]);
+            } else {
+                $stmt = $this->db->prepare("INSERT INTO delivery_options (name, price, active, min_order_total, id) VALUES (?, ?, ?, ?, ?)");
+                return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0, $id]);
+            }
         } else {
             $stmt = $this->db->prepare("INSERT INTO delivery_options (name, price, active, min_order_total) VALUES (?, ?, ?, ?)");
             return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0]);

@@ -66,12 +66,24 @@ class UserRepository implements UserRepositoryInterface {
         }
 
         if ($id) {
-            $this->db->prepare(
-                "UPDATE users SET name=?, email=?, password_hash=?, role=?, is_verified=?, verification_token=?, address=? WHERE id=?"
-            )->execute([
-                $data['name'], $data['email'], $data['password_hash'], $data['role'],
-                (int)$data['is_verified'], $data['verification_token'], $data['address'], $id
-            ]);
+            $stmt = $this->db->prepare("SELECT id FROM users WHERE id = ?");
+            $stmt->execute([$id]);
+            if ($stmt->fetch()) {
+                $this->db->prepare(
+                    "UPDATE users SET name=?, email=?, password_hash=?, role=?, is_verified=?, verification_token=?, address=? WHERE id=?"
+                )->execute([
+                    $data['name'], $data['email'], $data['password_hash'], $data['role'],
+                    (int)$data['is_verified'], $data['verification_token'], $data['address'], $id
+                ]);
+            } else {
+                $this->db->prepare(
+                    "INSERT INTO users (name, email, password_hash, role, is_verified, verification_token, address, id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                )->execute([
+                    $data['name'], $data['email'], $data['password_hash'], $data['role'],
+                    (int)$data['is_verified'], $data['verification_token'], $data['address'], $id
+                ]);
+            }
             return $id;
         } else {
             $this->db->prepare(

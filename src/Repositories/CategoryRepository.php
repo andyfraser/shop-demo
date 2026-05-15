@@ -66,14 +66,24 @@ class CategoryRepository implements CategoryRepositoryInterface {
         ];
 
         if ($id) {
+            $stmt = $this->db->prepare("SELECT id FROM categories WHERE id = ?");
+            $stmt->execute([$id]);
+            $exists = $stmt->fetch();
+
             $check = $this->db->prepare("SELECT id FROM categories WHERE slug = ? AND id != ?");
             $check->execute([$slug, $id]);
             if ($check->fetch()) $slug .= '-' . $id;
             $params[1] = $slug;
 
-            $this->db->prepare(
-                "UPDATE categories SET name=?, slug=?, parent_id=?, description=?, icon=? WHERE id=?"
-            )->execute([...$params, $id]);
+            if ($exists) {
+                $this->db->prepare(
+                    "UPDATE categories SET name=?, slug=?, parent_id=?, description=?, icon=? WHERE id=?"
+                )->execute([...$params, $id]);
+            } else {
+                $this->db->prepare(
+                    "INSERT INTO categories (name, slug, parent_id, description, icon, id) VALUES (?, ?, ?, ?, ?, ?)"
+                )->execute([...$params, $id]);
+            }
             return $id;
         } else {
             $check = $this->db->prepare("SELECT id FROM categories WHERE slug = ?");

@@ -30,8 +30,9 @@ class BackupServiceTest extends TestCase {
         $this->db = new \PDO('sqlite:' . $this->dbFile);
         $this->db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         
+        $repository = new \App\Repositories\MigrationRepository($this->db);
         $this->migrationService = new MockMigrationService($this->db);
-        $this->service = new BackupService($this->db, $this->migrationService);
+        $this->service = new BackupService($repository, $this->migrationService);
 
         $this->db->exec("CREATE TABLE test_table (id INTEGER PRIMARY KEY, val TEXT)");
         $this->db->exec("INSERT INTO test_table (val) VALUES ('hello')");

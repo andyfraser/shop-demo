@@ -45,6 +45,8 @@ use App\Repositories\SecurityRepositoryInterface;
 use App\Repositories\SecurityRepository;
 use App\Repositories\ImageRepositoryInterface;
 use App\Repositories\ImageRepository;
+use App\Repositories\MigrationRepositoryInterface;
+use App\Repositories\MigrationRepository;
 use App\Services\AuthServiceInterface;
 use App\Services\AuthService;
 use App\Services\CartServiceInterface;
@@ -186,6 +188,9 @@ return function(array $config) {
         ImageRepositoryInterface::class => function($c) {
             return new ImageRepository($c->get(\PDO::class));
         },
+        MigrationRepositoryInterface::class => function($c) {
+            return new MigrationRepository($c->get(\PDO::class));
+        },
 
         // Services
         SettingsServiceInterface::class => function($c) {
@@ -239,10 +244,10 @@ return function(array $config) {
             return new SecurityService($c->get(SecurityRepositoryInterface::class), $c->get(LoggerInterface::class));
         },
         MigrationServiceInterface::class => function($c) {
-            return new MigrationService($c->get(\PDO::class));
+            return new MigrationService($c->get(MigrationRepositoryInterface::class));
         },
         BackupServiceInterface::class => function($c) {
-            return new BackupService($c->get(\PDO::class), $c->get(MigrationServiceInterface::class));
+            return new BackupService($c->get(MigrationRepositoryInterface::class), $c->get(MigrationServiceInterface::class));
         },
         DeliveryServiceInterface::class => function($c) {
             return new DeliveryService($c->get(DeliveryRepositoryInterface::class), $c->get(LoggerInterface::class));
@@ -292,7 +297,13 @@ return function(array $config) {
             );
         },
         DatabaseSeedServiceInterface::class => function($c) {
-            return new DatabaseSeedService($c->get(\PDO::class));
+            return new DatabaseSeedService(
+                $c->get(CategoryRepositoryInterface::class),
+                $c->get(ProductRepositoryInterface::class),
+                $c->get(DeliveryRepositoryInterface::class),
+                $c->get(UserRepositoryInterface::class),
+                $c->get(AttributeRepositoryInterface::class)
+            );
         },
         UserRoleServiceInterface::class => function($c) {
             return new UserRoleService($c->get(UserRoleRepositoryInterface::class), $c->get(LoggerInterface::class));

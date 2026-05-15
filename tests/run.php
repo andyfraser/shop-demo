@@ -101,7 +101,20 @@ foreach ($migrationFiles as $file) {
 
 // Seed the database
 echo "Seeding test database... ";
-$seedService = new \App\Services\DatabaseSeedService($pdo);
+$logger = new \Tests\NullLogger();
+$categoryRepo = new \App\Repositories\CategoryRepository($pdo, $logger);
+$productRepo = new \App\Repositories\ProductRepository($pdo, $logger);
+$deliveryRepo = new \App\Repositories\DeliveryRepository($pdo, $logger);
+$userRepo = new \App\Repositories\UserRepository($pdo, $logger);
+$attributeRepo = new \App\Repositories\AttributeRepository($pdo, $logger);
+
+$seedService = new \App\Services\DatabaseSeedService(
+    $categoryRepo,
+    $productRepo,
+    $deliveryRepo,
+    $userRepo,
+    $attributeRepo
+);
 $seedService->seed();
 echo "Done.\n";
 

@@ -66,16 +66,27 @@ class ProductRepository implements ProductRepositoryInterface {
         ];
 
         if ($id) {
+            $stmt = $this->db->prepare("SELECT id FROM products WHERE id = ?");
+            $stmt->execute([$id]);
+            $exists = $stmt->fetch();
+
             $check = $this->db->prepare("SELECT id FROM products WHERE slug = ? AND id != ?");
             $check->execute([$slug, $id]);
             if ($check->fetch()) $slug .= '-' . $id;
             $params[1] = $slug;
 
-            $this->db->prepare(
-                "UPDATE products
-                 SET name=?, slug=?, sku=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?, force_variant=?
-                 WHERE id=?"
-            )->execute([...$params, $id]);
+            if ($exists) {
+                $this->db->prepare(
+                    "UPDATE products
+                     SET name=?, slug=?, sku=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?, force_variant=?
+                     WHERE id=?"
+                )->execute([...$params, $id]);
+            } else {
+                $this->db->prepare(
+                    "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant, id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                )->execute([...$params, $id]);
+            }
             return $id;
         } else {
             $check = $this->db->prepare("SELECT id FROM products WHERE slug = ?");
