@@ -29,8 +29,8 @@ class ProductService implements ProductServiceInterface {
         }
     }
 
-    public function getAllForAdmin(string $search = ''): array {
-        return $this->repository->getAllForAdmin($search);
+    public function getAllForAdmin(\App\Core\QueryCriteria $criteria): array {
+        return $this->repository->getAllForAdmin($criteria);
     }
 
     public function findById(int $id): ?Product {
@@ -63,28 +63,28 @@ class ProductService implements ProductServiceInterface {
         return $this->repository->findByIds($ids);
     }
 
-    public function search(string $query, ?int $perPage, int $currentPage, string $sort, array $filters = []): array {
-        return $this->repository->search($query, $perPage, $currentPage, $sort, $filters);
+    public function search(\App\Core\QueryCriteria $criteria): array {
+        return $this->repository->search($criteria);
     }
 
-    public function countSearch(string $query, array $filters = []): int {
-        return $this->repository->countSearch($query, $filters);
+    public function countSearch(\App\Core\QueryCriteria $criteria): int {
+        return $this->repository->countSearch($criteria);
     }
 
-    public function getByCategory(array $categoryIds, ?int $perPage, int $currentPage, string $sort, array $filters = []): array {
-        return $this->repository->getByCategory($categoryIds, $perPage, $currentPage, $sort, $filters);
+    public function getByCategory(array $categoryIds, \App\Core\QueryCriteria $criteria): array {
+        return $this->repository->getByCategory($categoryIds, $criteria);
     }
 
-    public function countByCategory(array $categoryIds, array $filters = []): int {
-        return $this->repository->countByCategory($categoryIds, $filters);
+    public function countByCategory(array $categoryIds, \App\Core\QueryCriteria $criteria): int {
+        return $this->repository->countByCategory($categoryIds, $criteria);
     }
 
-    public function getAllActive(?int $perPage, int $currentPage, string $sort, array $filters = []): array {
-        return $this->repository->getAllActive($perPage, $currentPage, $sort, $filters);
+    public function getAllActive(\App\Core\QueryCriteria $criteria): array {
+        return $this->repository->getAllActive($criteria);
     }
 
-    public function countAllActive(array $filters = []): int {
-        return $this->repository->countAllActive($filters);
+    public function countAllActive(\App\Core\QueryCriteria $criteria): int {
+        return $this->repository->countAllActive($criteria);
     }
 
     public function getAvailableFilters(array $categoryIds = [], string $query = ''): array {

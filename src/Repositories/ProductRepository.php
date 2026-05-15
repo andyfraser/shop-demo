@@ -11,7 +11,8 @@ class ProductRepository implements ProductRepositoryInterface {
         private LoggerInterface $logger
     ) {}
 
-    public function getAllForAdmin(string $search = ''): array {
+    public function getAllForAdmin(\App\Core\QueryCriteria $criteria): array {
+        $search = $criteria->getSearchTerm();
         if ($search !== '') {
             $stmt = $this->db->prepare(
                 "SELECT p.*, c.name as cat_name
@@ -115,10 +116,11 @@ class ProductRepository implements ProductRepositoryInterface {
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
-    public function search(string $query, ?int $perPage, int $currentPage, string $sort, array $filters = []): array {
+    public function search(\App\Core\QueryCriteria $criteria): array {
+        $query = $criteria->getSearchTerm();
         $normalized = $this->normalizeQuery($query);
         $params = ['%' . $normalized . '%', '%' . $normalized . '%'];
-        $order_by = $this->getSortSql($sort);
+        $order_by = $this->getSortSql($criteria->getSort());
         
         $searchField = $this->getSearchableFieldSql('p.name');
         $descField   = $this->getSearchableFieldSql('p.description');
@@ -128,13 +130,12 @@ class ProductRepository implements ProductRepositoryInterface {
                 LEFT JOIN categories c ON p.category_id = c.id
                 WHERE p.active = 1 AND ($searchField LIKE ? OR $descField LIKE ?)";
         
-        $this->applyFilters($sql, $params, $filters);
+        $this->applyFilters($sql, $params, $criteria->getFilters());
         
         $sql .= " ORDER BY $order_by";
         
-        if ($perPage !== null) {
-            $offset = ($currentPage - 1) * $perPage;
-            $sql .= " LIMIT " . (int)$perPage . " OFFSET " . (int)$offset;
+        if ($criteria->getLimit() !== null) {
+            $sql .= " LIMIT " . (int)$criteria->getLimit() . " OFFSET " . (int)$criteria->getOffset();
         }
 
         $stmt = $this->db->prepare($sql);
@@ -142,7 +143,8 @@ class ProductRepository implements ProductRepositoryInterface {
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
-    public function countSearch(string $query, array $filters = []): int {
+    public function countSearch(\App\Core\QueryCriteria $criteria): int {
+        $query = $criteria->getSearchTerm();
         $normalized = $this->normalizeQuery($query);
         $params = ['%' . $normalized . '%', '%' . $normalized . '%'];
         
@@ -151,31 +153,30 @@ class ProductRepository implements ProductRepositoryInterface {
         
         $sql = "SELECT COUNT(*) FROM products p WHERE p.active = 1 AND ($searchField LIKE ? OR $descField LIKE ?)";
         
-        $this->applyFilters($sql, $params, $filters);
+        $this->applyFilters($sql, $params, $criteria->getFilters());
         
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
     }
 
-    public function getByCategory(array $categoryIds, ?int $perPage, int $currentPage, string $sort, array $filters = []): array {
+    public function getByCategory(array $categoryIds, \App\Core\QueryCriteria $criteria): array {
         if (empty($categoryIds)) return [];
         $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
         $params = $categoryIds;
-        $order_by = $this->getSortSql($sort);
+        $order_by = $this->getSortSql($criteria->getSort());
 
         $sql = "SELECT p.*, c.name as cat_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 WHERE p.category_id IN ($placeholders) AND p.active = 1";
 
-        $this->applyFilters($sql, $params, $filters);
+        $this->applyFilters($sql, $params, $criteria->getFilters());
 
         $sql .= " ORDER BY $order_by";
 
-        if ($perPage !== null) {
-            $offset = ($currentPage - 1) * $perPage;
-            $sql .= " LIMIT " . (int)$perPage . " OFFSET " . (int)$offset;
+        if ($criteria->getLimit() !== null) {
+            $sql .= " LIMIT " . (int)$criteria->getLimit() . " OFFSET " . (int)$criteria->getOffset();
         }
 
         $stmt = $this->db->prepare($sql);
@@ -183,34 +184,33 @@ class ProductRepository implements ProductRepositoryInterface {
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
-    public function countByCategory(array $categoryIds, array $filters = []): int {
+    public function countByCategory(array $categoryIds, \App\Core\QueryCriteria $criteria): int {
         if (empty($categoryIds)) return 0;
         $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
         $params = $categoryIds;
         $sql = "SELECT COUNT(*) FROM products p WHERE p.category_id IN ($placeholders) AND p.active = 1";
         
-        $this->applyFilters($sql, $params, $filters);
+        $this->applyFilters($sql, $params, $criteria->getFilters());
         
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
     }
 
-    public function getAllActive(?int $perPage, int $currentPage, string $sort, array $filters = []): array {
+    public function getAllActive(\App\Core\QueryCriteria $criteria): array {
         $params = [];
-        $order_by = $this->getSortSql($sort);
+        $order_by = $this->getSortSql($criteria->getSort());
         $sql = "SELECT p.*, c.name as cat_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 WHERE p.active = 1";
 
-        $this->applyFilters($sql, $params, $filters);
+        $this->applyFilters($sql, $params, $criteria->getFilters());
 
         $sql .= " ORDER BY $order_by";
 
-        if ($perPage !== null) {
-            $offset = ($currentPage - 1) * $perPage;
-            $sql .= " LIMIT " . (int)$perPage . " OFFSET " . (int)$offset;
+        if ($criteria->getLimit() !== null) {
+            $sql .= " LIMIT " . (int)$criteria->getLimit() . " OFFSET " . (int)$criteria->getOffset();
         }
 
         $stmt = $this->db->prepare($sql);
@@ -218,10 +218,10 @@ class ProductRepository implements ProductRepositoryInterface {
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
-    public function countAllActive(array $filters = []): int {
+    public function countAllActive(\App\Core\QueryCriteria $criteria): int {
         $params = [];
         $sql = "SELECT COUNT(*) FROM products p WHERE p.active = 1";
-        $this->applyFilters($sql, $params, $filters);
+        $this->applyFilters($sql, $params, $criteria->getFilters());
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();

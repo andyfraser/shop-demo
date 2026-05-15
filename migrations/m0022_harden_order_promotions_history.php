@@ -6,7 +6,7 @@ return new class {
             return "
                 -- Drop existing foreign keys
                 ALTER TABLE order_promotions DROP FOREIGN KEY order_promotions_ibfk_1;
-                ALTER TABLE order_promotions DROP FOREIGN KEY fk_order_promotions_promotion_id;
+                ALTER TABLE order_promotions DROP FOREIGN KEY order_promotions_ibfk_2;
                 
                 -- Drop primary key and add auto-increment ID
                 ALTER TABLE order_promotions DROP PRIMARY KEY;
@@ -52,11 +52,14 @@ return new class {
         if ($driver === 'mysql') {
             return "
                 ALTER TABLE order_promotions DROP FOREIGN KEY fk_order_promotions_promotion_id;
+                ALTER TABLE order_promotions DROP FOREIGN KEY fk_order_promotions_order_id;
                 ALTER TABLE order_promotions MODIFY promotion_id INT NOT NULL;
                 ALTER TABLE order_promotions MODIFY id INT NOT NULL;
                 ALTER TABLE order_promotions DROP PRIMARY KEY;
                 ALTER TABLE order_promotions DROP COLUMN id;
                 ALTER TABLE order_promotions ADD PRIMARY KEY (order_id, promotion_id);
+                ALTER TABLE order_promotions ADD CONSTRAINT order_promotions_ibfk_1 
+                    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE;
                 ALTER TABLE order_promotions ADD CONSTRAINT order_promotions_ibfk_2 
                     FOREIGN KEY (promotion_id) REFERENCES promotions(id) ON DELETE CASCADE;
             ";

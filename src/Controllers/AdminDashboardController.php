@@ -18,7 +18,7 @@ class AdminDashboardController {
 
     public function index() {
         $stats = [
-            'products'  => $this->productService->countAllActive(),
+            'products'  => $this->productService->countAllActive(new \App\Core\QueryCriteria()),
             'customers' => $this->userService->countNonAdmins(),
             'orders'    => $this->orderService->countAll(),
             'revenue'   => $this->orderService->getTotalRevenue(),

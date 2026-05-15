@@ -20,14 +20,14 @@ class AdminOrdersController {
     ) {}
 
     public function list() {
-        $filter = $_GET['status'] ?? '';
-        $orders = $this->orderService->getAllForAdmin($filter);
+        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
+        $orders = $this->orderService->find($criteria);
 
         $this->renderer->adminRender('orders_list', [
             'page_title' => 'Orders',
             'active'     => 'orders',
             'orders'     => $orders,
-            'filter'     => $filter,
+            'filter'     => $criteria->getFilter('status', ''),
         ]);
     }
 

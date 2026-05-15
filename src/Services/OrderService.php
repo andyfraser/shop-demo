@@ -73,6 +73,14 @@ class OrderService implements OrderServiceInterface {
         return $this->repository->getAllForAdmin($status);
     }
 
+    public function find(\App\Core\QueryCriteria $criteria): array {
+        return $this->repository->find($criteria);
+    }
+
+    public function count(\App\Core\QueryCriteria $criteria): int {
+        return $this->repository->count($criteria);
+    }
+
     /**
      * Get orders for a specific user.
      */

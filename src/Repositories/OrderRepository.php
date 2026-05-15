@@ -134,6 +134,14 @@ class OrderRepository implements OrderRepositoryInterface {
     }
 
     public function getAllForAdmin(string $status = ''): array {
+        $criteria = new \App\Core\QueryCriteria();
+        if ($status) {
+            $criteria->addFilter('status', $status);
+        }
+        return $this->find($criteria);
+    }
+
+    public function find(\App\Core\QueryCriteria $criteria): array {
         $sql = "SELECT o.*, 
                        COALESCE(u.name, o.customer_name) as user_name,
                        COALESCE(u.email, o.customer_email) as user_email
@@ -141,16 +149,76 @@ class OrderRepository implements OrderRepositoryInterface {
                 LEFT JOIN users u ON o.user_id = u.id";
         
         $params = [];
-        if ($status) {
-            $sql .= " WHERE o.status = ?";
-            $params[] = $status;
+        $where = [];
+
+        if ($criteria->hasFilter('status')) {
+            $where[] = "o.status = ?";
+            $params[] = $criteria->getFilter('status');
         }
-        
-        $sql .= " ORDER BY o.created_at DESC";
+        if ($criteria->hasFilter('user_id')) {
+            $where[] = "o.user_id = ?";
+            $params[] = $criteria->getFilter('user_id');
+        }
+        if ($criteria->hasFilter('date_from')) {
+            $where[] = "o.created_at >= ?";
+            $params[] = $criteria->getFilter('date_from');
+        }
+        if ($criteria->hasFilter('date_to')) {
+            $where[] = "o.created_at <= ?";
+            $params[] = $criteria->getFilter('date_to');
+        }
+
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(" AND ", $where);
+        }
+
+        $sort = $criteria->getSort();
+        $order_by = match($sort) {
+            'total_asc'  => 'o.total ASC',
+            'total_desc' => 'o.total DESC',
+            'oldest'     => 'o.created_at ASC',
+            default      => 'o.created_at DESC',
+        };
+        $sql .= " ORDER BY $order_by";
+
+        if ($criteria->getLimit() !== null) {
+            $sql .= " LIMIT " . (int)$criteria->getLimit() . " OFFSET " . (int)$criteria->getOffset();
+        }
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Order::class, [$this->logger]);
+    }
+
+    public function count(\App\Core\QueryCriteria $criteria): int {
+        $sql = "SELECT COUNT(*) FROM orders o";
+        $params = [];
+        $where = [];
+
+        if ($criteria->hasFilter('status')) {
+            $where[] = "o.status = ?";
+            $params[] = $criteria->getFilter('status');
+        }
+        if ($criteria->hasFilter('user_id')) {
+            $where[] = "o.user_id = ?";
+            $params[] = $criteria->getFilter('user_id');
+        }
+        if ($criteria->hasFilter('date_from')) {
+            $where[] = "o.created_at >= ?";
+            $params[] = $criteria->getFilter('date_from');
+        }
+        if ($criteria->hasFilter('date_to')) {
+            $where[] = "o.created_at <= ?";
+            $params[] = $criteria->getFilter('date_to');
+        }
+
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(" AND ", $where);
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
     }
 
     public function getForUser(int $userId): array {

@@ -60,26 +60,20 @@ class StorefrontController {
     }
 
     public function search() {
-        $query    = trim($_GET['q'] ?? '');
+        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
+        $query = $criteria->getSearchTerm();
+
         $products = [];
         $total_products = 0;
         $total_pages    = 1;
-        $current_page   = max(1, (int)($_GET['page'] ?? 1));
-
-        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
-        $per_page_raw = $_GET['per_page'] ?? '12';
-        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24, 48]) ? (string)(int)$per_page_raw : '12');
-        $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
-
-        $filters = $this->getFiltersFromRequest();
 
         if ($query) {
-            $total_products = $this->productService->countSearch($query, $filters);
-            $products = $this->productService->search($query, $per_page, $current_page, $sort, $filters);
+            $total_products = $this->productService->countSearch($criteria);
+            $products = $this->productService->search($criteria);
             $this->productService->attachActivePromotions($products, $this->authService->currentUser());
             
-            if ($per_page !== null) {
-                $total_pages = (int)ceil($total_products / $per_page);
+            if ($criteria->getLimit() !== null) {
+                $total_pages = (int)ceil($total_products / $criteria->getLimit());
             }
         }
 
@@ -92,11 +86,11 @@ class StorefrontController {
             'products'          => $products,
             'total_products'    => $total_products,
             'total_pages'       => $total_pages,
-            'current_page'      => $current_page,
-            'sort'              => $sort,
-            'per_page_param'    => $per_page_param,
+            'current_page'      => $criteria->getPage(),
+            'sort'              => $criteria->getSort() ?: 'name',
+            'per_page_param'    => $_GET['per_page'] ?? '12',
             'available_filters' => $available_filters,
-            'active_filters'    => $filters,
+            'active_filters'    => $criteria->getFilters(),
         ];
 
         if ($this->isAjax()) {
@@ -126,19 +120,13 @@ class StorefrontController {
             foreach ($subs as $row) $queue[] = $row->id;
         }
 
-        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
-        $per_page_raw = $_GET['per_page'] ?? '12';
-        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24, 48]) ? (string)(int)$per_page_raw : '12');
-        $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
-        $current_page = max(1, (int)($_GET['page'] ?? 1));
+        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
 
-        $filters = $this->getFiltersFromRequest();
-
-        $total_products = $this->productService->countByCategory($cat_ids, $filters);
-        $products = $this->productService->getByCategory($cat_ids, $per_page, $current_page, $sort, $filters);
+        $total_products = $this->productService->countByCategory($cat_ids, $criteria);
+        $products = $this->productService->getByCategory($cat_ids, $criteria);
         $this->productService->attachActivePromotions($products, $this->authService->currentUser());
         
-        $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
+        $total_pages = $criteria->getLimit() !== null ? (int)ceil($total_products / $criteria->getLimit()) : 1;
 
         $available_filters = $this->productService->getAvailableFilters($cat_ids);
         $breadcrumb = $this->categoryService->getBreadcrumb($category->id);
@@ -151,11 +139,11 @@ class StorefrontController {
             'breadcrumb'        => $breadcrumb,
             'total_products'    => $total_products,
             'total_pages'       => $total_pages,
-            'current_page'      => $current_page,
-            'sort'              => $sort,
-            'per_page_param'    => $per_page_param,
+            'current_page'      => $criteria->getPage(),
+            'sort'              => $criteria->getSort() ?: 'name',
+            'per_page_param'    => $_GET['per_page'] ?? '12',
             'available_filters' => $available_filters,
-            'active_filters'    => $filters,
+            'active_filters'    => $criteria->getFilters(),
         ];
 
         if ($this->isAjax()) {
@@ -223,21 +211,20 @@ class StorefrontController {
     }
 
     private function promotionProducts(\App\Models\Promotion $promo) {
-        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
-        $per_page_raw = $_GET['per_page'] ?? '12';
-        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24, 48]) ? (string)(int)$per_page_raw : '12');
-        $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
-        $current_page = max(1, (int)($_GET['page'] ?? 1));
-
-        $filters = $this->getFiltersFromRequest();
+        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
         $cat_ids = [];
 
         // We need to fetch all potentially qualifying products to count them correctly
         // because isProductQualifying can have complex logic (exclusions, etc.)
         $all_products = [];
+        
+        // Temporarily remove limit to get all for in-memory qualification check
+        $fullCriteria = clone $criteria;
+        $fullCriteria->withLimit(null)->withPage(1);
+
         if ($promo->target_type === \App\Models\Promotion::TARGET_CATEGORY) {
             if (empty($promo->target_ids)) {
-                $all_products = $this->productService->getAllActive(null, 1, $sort, $filters);
+                $all_products = $this->productService->getAllActive($fullCriteria);
             } else {
                 $cat_ids = $promo->target_ids;
                 $expanded_cat_ids = $cat_ids;
@@ -252,13 +239,13 @@ class StorefrontController {
                         }
                     }
                 }
-                $all_products = $this->productService->getByCategory($expanded_cat_ids, null, 1, $sort, $filters);
+                $all_products = $this->productService->getByCategory($expanded_cat_ids, $fullCriteria);
             }
         } elseif ($promo->target_type === \App\Models\Promotion::TARGET_PRODUCT) {
-            $filters['product_ids'] = $promo->target_ids;
-            $all_products = $this->productService->getAllActive(null, 1, $sort, $filters);
+            $fullCriteria->addFilter('product_ids', $promo->target_ids);
+            $all_products = $this->productService->getAllActive($fullCriteria);
         } else {
-            $all_products = $this->productService->getAllActive(null, 1, $sort, $filters);
+            $all_products = $this->productService->getAllActive($fullCriteria);
         }
 
         // Filter all products by qualification
@@ -266,13 +253,13 @@ class StorefrontController {
         $total_products = count($qualifying_products);
 
         // Paginate the qualifying products in memory (since they are already fetched)
-        if ($per_page === null) {
+        if ($criteria->getLimit() === null) {
             $products = $qualifying_products;
             $total_pages = 1;
         } else {
-            $total_pages = (int)ceil($total_products / $per_page);
-            $offset = ($current_page - 1) * $per_page;
-            $products = array_slice($qualifying_products, $offset, $per_page);
+            $total_pages = (int)ceil($total_products / $criteria->getLimit());
+            $offset = $criteria->getOffset();
+            $products = array_slice($qualifying_products, $offset, $criteria->getLimit());
         }
 
         $this->productService->attachActivePromotions($products, $this->authService->currentUser());
@@ -285,11 +272,11 @@ class StorefrontController {
             'products'          => $products,
             'total_products'    => $total_products,
             'total_pages'       => $total_pages,
-            'current_page'      => $current_page,
-            'sort'              => $sort,
-            'per_page_param'    => $per_page_param,
+            'current_page'      => $criteria->getPage(),
+            'sort'              => $criteria->getSort() ?: 'name',
+            'per_page_param'    => $_GET['per_page'] ?? '12',
             'available_filters' => $available_filters,
-            'active_filters'    => $filters,
+            'active_filters'    => $criteria->getFilters(),
         ];
 
         if ($this->isAjax()) {
@@ -302,18 +289,12 @@ class StorefrontController {
     }
 
     public function products() {
-        $sort = in_array($_GET['sort'] ?? '', ['name', 'price_asc', 'price_desc', 'featured']) ? $_GET['sort'] : 'name';
-        $per_page_raw = $_GET['per_page'] ?? '12';
-        $per_page_param = $per_page_raw === 'all' ? 'all' : (in_array((int)$per_page_raw, [12, 24, 48]) ? (string)(int)$per_page_raw : '12');
-        $per_page = $per_page_param === 'all' ? null : (int)$per_page_param;
-        $current_page = max(1, (int)($_GET['page'] ?? 1));
+        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
 
-        $filters = $this->getFiltersFromRequest();
-
-        $total_products = $this->productService->countAllActive($filters);
-        $products = $this->productService->getAllActive($per_page, $current_page, $sort, $filters);
+        $total_products = $this->productService->countAllActive($criteria);
+        $products = $this->productService->getAllActive($criteria);
         $this->productService->attachActivePromotions($products, $this->authService->currentUser());
-        $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
+        $total_pages = $criteria->getLimit() !== null ? (int)ceil($total_products / $criteria->getLimit()) : 1;
 
         $available_filters = $this->productService->getAvailableFilters();
 
@@ -322,11 +303,11 @@ class StorefrontController {
             'products'          => $products,
             'total_products'    => $total_products,
             'total_pages'       => $total_pages,
-            'current_page'      => $current_page,
-            'sort'              => $sort,
-            'per_page_param'    => $per_page_param,
+            'current_page'      => $criteria->getPage(),
+            'sort'              => $criteria->getSort() ?: 'name',
+            'per_page_param'    => $_GET['per_page'] ?? '12',
             'available_filters' => $available_filters,
-            'active_filters'    => $filters,
+            'active_filters'    => $criteria->getFilters(),
         ];
 
         if ($this->isAjax()) {
@@ -334,14 +315,6 @@ class StorefrontController {
         } else {
             $this->renderer->render('products', $data);
         }
-    }
-
-    private function getFiltersFromRequest(): array {
-        return [
-            'price_min'  => $_GET['price_min'] ?? null,
-            'price_max'  => $_GET['price_max'] ?? null,
-            'attributes' => isset($_GET['attr']) && is_array($_GET['attr']) ? array_map('intval', $_GET['attr']) : []
-        ];
     }
 
     private function isAjax(): bool {

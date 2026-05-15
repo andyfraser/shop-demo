@@ -10,6 +10,8 @@ interface OrderRepositoryInterface {
     public function getAppliedPromotions(int $orderId): array;
     public function getItems(int $orderId): array;
     public function getAllForAdmin(string $status = ''): array;
+    public function find(\App\Core\QueryCriteria $criteria): array;
+    public function count(\App\Core\QueryCriteria $criteria): int;
     public function getForUser(int $userId): array;
     public function hasOrders(int $userId): bool;
     public function countAll(): int;

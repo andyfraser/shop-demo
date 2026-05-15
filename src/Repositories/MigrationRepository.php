@@ -120,7 +120,7 @@ class MigrationRepository implements MigrationRepositoryInterface {
     private function isIgnorableError(PDOException $e, string $driver): bool {
         if ($driver === 'mysql') {
             $mysqlErrorCode = $e->errorInfo[1] ?? 0;
-            return in_array($mysqlErrorCode, [1050, 1060, 1061]);
+            return in_array($mysqlErrorCode, [1050, 1060, 1061, 1091]);
         }
         if ($driver === 'sqlite') {
             $msg = strtolower($e->getMessage());

@@ -25,14 +25,17 @@ class AdminProductsController {
     ) {}
     
     public function list() {
-        $search = trim($_GET['search'] ?? '');
-        $products = $this->productService->getAllForAdmin($search);
+        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
+        if (isset($_GET['search'])) {
+            $criteria = new \App\Core\QueryCriteria(['search' => $_GET['search']]);
+        }
+        $products = $this->productService->getAllForAdmin($criteria);
 
         $this->renderer->adminRender('products_list', [
             'page_title' => 'Products',
             'active'     => 'products',
             'products'   => $products,
-            'search'     => $search,
+            'search'     => $criteria->getSearchTerm(),
             'flash_msg'  => flash('msg'),
         ]);
     }

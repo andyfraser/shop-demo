@@ -68,7 +68,8 @@ class ProductServiceTest extends TestCase {
 
     public function testSearch() {
         // 'ProBook' should be in seed data
-        $results = $this->service->search('ProBook', 10, 1, 'name');
+        $criteria = new \App\Core\QueryCriteria(['search' => 'ProBook', 'limit' => 10, 'sort' => 'name']);
+        $results = $this->service->search($criteria);
         $this->assertNotEmpty($results);
         $this->assertInstanceOf(Product::class, $results[0]);
         $this->assertStringContainsString('ProBook', $results[0]->name);
@@ -117,7 +118,12 @@ class ProductServiceTest extends TestCase {
 
     public function testFilteringByPrice() {
         // Find products between 800 and 1500
-        $results = $this->service->getAllActive(10, 1, 'name', ['price_min' => 800, 'price_max' => 1500]);
+        $criteria = new \App\Core\QueryCriteria([
+            'limit' => 10, 
+            'sort' => 'name', 
+            'filters' => ['price_min' => 800, 'price_max' => 1500]
+        ]);
+        $results = $this->service->getAllActive($criteria);
         $this->assertNotEmpty($results);
         foreach ($results as $p) {
             $this->assertTrue($p->price >= 800, "Expected price {$p->price} >= 800");
@@ -128,7 +134,12 @@ class ProductServiceTest extends TestCase {
     public function testFilteringByAttributes() {
         // Seed data has attribute values: 1 is Brand: ProBook, 10 is Color: Silver
         // Product 1 has both 1 and 10.
-        $results = $this->service->getAllActive(10, 1, 'name', ['attributes' => [1, 10]]);
+        $criteria = new \App\Core\QueryCriteria([
+            'limit' => 10, 
+            'sort' => 'name', 
+            'filters' => ['attributes' => [1, 10]]
+        ]);
+        $results = $this->service->getAllActive($criteria);
         $this->assertNotEmpty($results, "Filtering by attributes 1 and 10 returned no results");
         
         $foundProduct1 = false;
@@ -138,7 +149,12 @@ class ProductServiceTest extends TestCase {
         $this->assertTrue($foundProduct1, "Product 1 not found in filtered results");
 
         // Selection 1 and 2 (two different brands) should return products that have EITHER 1 OR 2 
-        $results = $this->service->getAllActive(10, 1, 'name', ['attributes' => [1, 2]]);
+        $criteria = new \App\Core\QueryCriteria([
+            'limit' => 10, 
+            'sort' => 'name', 
+            'filters' => ['attributes' => [1, 2]]
+        ]);
+        $results = $this->service->getAllActive($criteria);
         $this->assertTrue(count($results) >= 2, "Expected at least 2 products for attributes 1 or 2"); 
     }
 
@@ -228,17 +244,17 @@ class ProductServiceTest extends TestCase {
         ]);
 
         // Search with punctuation - should match
-        $results = $this->service->search("Men's T-Shirt", 10, 1, 'name');
+        $results = $this->service->search(new \App\Core\QueryCriteria(['search' => "Men's T-Shirt", 'limit' => 10, 'sort' => 'name']));
         $this->assertNotEmpty($results);
         $this->assertEquals("Men's T-Shirt", $results[0]->name);
 
         // Search without punctuation - should match
-        $results = $this->service->search("Mens TShirt", 10, 1, 'name');
+        $results = $this->service->search(new \App\Core\QueryCriteria(['search' => "Mens TShirt", 'limit' => 10, 'sort' => 'name']));
         $this->assertNotEmpty($results);
         $this->assertEquals("Men's T-Shirt", $results[0]->name);
         
         // Search mixed
-        $results = $this->service->search("men's tshirt", 10, 1, 'name');
+        $results = $this->service->search(new \App\Core\QueryCriteria(['search' => "men's tshirt", 'limit' => 10, 'sort' => 'name']));
         $this->assertNotEmpty($results);
     }
 

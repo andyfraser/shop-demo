@@ -4,18 +4,18 @@ namespace App\Services;
 use App\Models\Product;
 
 interface ProductServiceInterface {
-    public function getAllForAdmin(string $search = ''): array;
+    public function getAllForAdmin(\App\Core\QueryCriteria $criteria): array;
     public function findById(int $id): ?Product;
     public function findBySlug(string $slug): ?Product;
     public function save(array|Product $data, int $id = 0): int;
     public function deactivate(int $id): void;
     public function findByIds(array $ids): array;
-    public function search(string $query, ?int $perPage, int $currentPage, string $sort, array $filters = []): array;
-    public function countSearch(string $query, array $filters = []): int;
-    public function getByCategory(array $categoryIds, ?int $perPage, int $currentPage, string $sort, array $filters = []): array;
-    public function countByCategory(array $categoryIds, array $filters = []): int;
-    public function getAllActive(?int $perPage, int $currentPage, string $sort, array $filters = []): array;
-    public function countAllActive(array $filters = []): int;
+    public function search(\App\Core\QueryCriteria $criteria): array;
+    public function countSearch(\App\Core\QueryCriteria $criteria): int;
+    public function getByCategory(array $categoryIds, \App\Core\QueryCriteria $criteria): array;
+    public function countByCategory(array $categoryIds, \App\Core\QueryCriteria $criteria): int;
+    public function getAllActive(\App\Core\QueryCriteria $criteria): array;
+    public function countAllActive(\App\Core\QueryCriteria $criteria): int;
     public function getAvailableFilters(array $categoryIds = [], string $query = ''): array;
     public function getLowStock(int $threshold, int $limit = 10): array;
     public function getFeatured(int $limit = 8): array;
