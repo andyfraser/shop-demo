@@ -30,7 +30,8 @@ class DiscountIsolationTest extends TestCase {
         $orderService = new \App\Services\OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
         $attrService = new AttributeService($this->db, $logger);
         $this->promotionService = new PromotionService($this->db, $logger, null, $orderService);
-        $productService = new ProductService($this->db, $attrService, $this->promotionService, $logger);
+        $repository = new \App\Repositories\ProductRepository($this->db, $logger);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);
         
         $this->cart = new CartService(
             $this->db,
@@ -63,7 +64,9 @@ class DiscountIsolationTest extends TestCase {
 
         // 2. Add a product worth 100
         $attrService = new AttributeService($this->db, new \Tests\NullLogger());
-        $productService = new ProductService($this->db, $attrService, $this->promotionService, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $repository = new \App\Repositories\ProductRepository($this->db, $logger);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);
         $productId = $productService->save([
             'name' => 'Product 100',
             'price' => 100,
@@ -100,7 +103,9 @@ class DiscountIsolationTest extends TestCase {
 
         // 2. Add a product worth 100
         $attrService = new AttributeService($this->db, new \Tests\NullLogger());
-        $productService = new ProductService($this->db, $attrService, $this->promotionService, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $repository = new \App\Repositories\ProductRepository($this->db, $logger);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);
         $productId = $productService->save([
             'name' => 'Product 100',
             'price' => 100,

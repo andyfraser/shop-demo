@@ -29,7 +29,8 @@ class CartServiceTest extends TestCase {
         $orderService = new \App\Services\OrderService($db, $logger, $vatService, $paymentService, $emailService);
         $attrService = new AttributeService($db, $logger);
         $promoService = new \App\Services\PromotionService($db, $logger, null, $orderService);
-        $productService = new ProductService($db, $attrService, $promoService, $logger);
+        $repository = new \App\Repositories\ProductRepository($db, $logger);
+        $productService = new ProductService($repository, $attrService, $promoService, $logger);
         $this->cart = new CartService($db, $productService, $auth, $vatService, $promoService, $orderService, $logger);
     }
 

@@ -11,6 +11,8 @@
 use Psr\Log\LoggerInterface;
 use App\Core\FileLogger;
 use App\Core\Database;
+use App\Repositories\ProductRepositoryInterface;
+use App\Repositories\ProductRepository;
 use App\Services\AuthServiceInterface;
 use App\Services\AuthService;
 use App\Services\CartServiceInterface;
@@ -100,6 +102,11 @@ return function(array $config) {
             return Database::getConnection();
         },
 
+        // Repositories
+        ProductRepositoryInterface::class => function($c) {
+            return new ProductRepository($c->get(\PDO::class), $c->get(LoggerInterface::class));
+        },
+
         // Services
         SettingsServiceInterface::class => function($c) {
             return new SettingsService($c->get(\PDO::class), $c->get(LoggerInterface::class));
@@ -112,7 +119,7 @@ return function(array $config) {
         },
         ProductServiceInterface::class => function($c) {
             return new ProductService(
-                $c->get(\PDO::class), 
+                $c->get(ProductRepositoryInterface::class), 
                 $c->get(AttributeServiceInterface::class), 
                 $c->get(PromotionServiceInterface::class),
                 $c->get(LoggerInterface::class)

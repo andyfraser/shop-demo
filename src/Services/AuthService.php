@@ -86,6 +86,7 @@ class AuthService implements AuthServiceInterface {
     public function login(array|User $user, bool $remember = false): void {
         $this->sessionStart();
         @session_regenerate_id(true);
+        $this->cachedUser = null;
 
         if (is_array($user)) {
             $user = (new User($this->logger))->fill($user);
@@ -99,6 +100,7 @@ class AuthService implements AuthServiceInterface {
 
     public function logout(): void {
         $this->sessionStart();
+        $this->cachedUser = null;
         $token = $_COOKIE[self::COOKIE_NAME] ?? null;
         if ($token) {
             $this->clearRememberCookie($token);

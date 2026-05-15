@@ -21,7 +21,13 @@ class AuthServiceTest extends TestCase {
     }
 
     public function testLoginSetsSession() {
-        $user = ['id' => 1, 'name' => 'Test User', 'role' => 'customer'];
+        // Use a unique ID and Email to avoid conflicts
+        $id = 1000 + rand(1, 1000);
+        $email = "test{$id}@example.com";
+        $this->db->prepare("INSERT INTO users (id, name, email, password_hash, role) VALUES (?, 'Test User', ?, 'password', 'customer')")
+                 ->execute([$id, $email]);
+
+        $user = ['id' => $id, 'name' => 'Test User', 'role' => 'customer'];
         $this->auth->login($user);
         
         $this->assertInstanceOf(\App\Models\User::class, $_SESSION['user']);
@@ -37,11 +43,18 @@ class AuthServiceTest extends TestCase {
     }
 
     public function testIsAdmin() {
-        $admin = ['id' => 1, 'role' => 'admin'];
+        $id1 = 2000 + rand(1, 1000);
+        $id2 = 3000 + rand(1, 1000);
+        $this->db->prepare("INSERT INTO users (id, name, email, password_hash, role) VALUES (?, 'Admin', ?, 'password', 'admin')")
+                 ->execute([$id1, "admin{$id1}@example.com"]);
+        $this->db->prepare("INSERT INTO users (id, name, email, password_hash, role) VALUES (?, 'Customer', ?, 'password', 'customer')")
+                 ->execute([$id2, "cust{$id2}@example.com"]);
+
+        $admin = ['id' => $id1, 'role' => 'admin'];
         $this->auth->login($admin);
         $this->assertTrue($this->auth->isAdmin());
 
-        $customer = ['id' => 2, 'role' => 'customer'];
+        $customer = ['id' => $id2, 'role' => 'customer'];
         $this->auth->login($customer);
         $this->assertFalse($this->auth->isAdmin());
     }

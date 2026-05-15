@@ -30,7 +30,8 @@ class PromotionServiceTest extends TestCase {
         $this->service = new PromotionService($this->db, $logger, $categoryService, $orderService);
         
         $attrService = new \App\Services\AttributeService($this->db, $logger);
-        $this->productService = new \App\Services\ProductService($this->db, $attrService, $this->service, $logger);
+        $repository = new \App\Repositories\ProductRepository($this->db, $logger);
+        $this->productService = new \App\Services\ProductService($repository, $attrService, $this->service, $logger);
     }
 
     public function testSubcategoryProductQualifiesForParentCategoryPromotion() {

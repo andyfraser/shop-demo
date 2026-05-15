@@ -32,7 +32,8 @@ class PromotionAutoApplyTest extends TestCase {
         $orderService = new \App\Services\OrderService($this->db, $logger, $vatService, $paymentService, $emailService);
         $attrService = new AttributeService($this->db, $logger);
         $this->promotionService = new PromotionService($this->db, $logger, null, $orderService);
-        $productService = new ProductService($this->db, $attrService, $this->promotionService, $logger);
+        $repository = new \App\Repositories\ProductRepository($this->db, $logger);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);
         
         $this->cartService = new CartService(
             $this->db,
@@ -79,7 +80,9 @@ class PromotionAutoApplyTest extends TestCase {
         // Add item to meet threshold (assume product 1 price is 899.99 in seed but we cleared db? wait, seed might not be there if I exec DELETE)
         // I'll use save to ensure product exists
         $attrService = new AttributeService($this->db, new \Tests\NullLogger());
-        $productService = new ProductService($this->db, $attrService, $this->promotionService, new \Tests\NullLogger());
+        $logger = new \Tests\NullLogger();
+        $repository = new \App\Repositories\ProductRepository($this->db, $logger);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);
         $productId = $productService->save([
             'name' => 'Test Product',
             'price' => 200,
