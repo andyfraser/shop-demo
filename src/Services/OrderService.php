@@ -52,13 +52,14 @@ class OrderService implements OrderServiceInterface {
             // Update promotion usage if applicable
             if (!empty($orderData['applied_promotions'])) {
                 $promoUpdateStmt = $this->db->prepare("UPDATE promotions SET used_count = used_count + 1 WHERE id = ?");
-                $orderPromoStmt = $this->db->prepare("INSERT INTO order_promotions (order_id, promotion_id, discount_amount, promo_code) VALUES (?, ?, ?, ?)");
+                $orderPromoStmt = $this->db->prepare("INSERT INTO order_promotions (order_id, promotion_id, promotion_name, discount_amount, promo_code) VALUES (?, ?, ?, ?, ?)");
                 
                 foreach ($orderData['applied_promotions'] as $promo) {
                     $promoUpdateStmt->execute([$promo['promotion_id']]);
                     $orderPromoStmt->execute([
                         $orderId,
                         $promo['promotion_id'],
+                        $promo['name'] ?? null,
                         $promo['discount_amount'],
                         $promo['promo_code'] ?? null
                     ]);
@@ -124,7 +125,7 @@ class OrderService implements OrderServiceInterface {
             "SELECT o.*, 
                     COALESCE(u.name, o.customer_name) as user_name,
                     COALESCE(u.email, o.customer_email) as user_email,
-                    p.name as promotion_name
+                    COALESCE(p.name, o.applied_promo_name) as promotion_name
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
              LEFT JOIN promotions p ON o.promotion_id = p.id
@@ -147,9 +148,9 @@ class OrderService implements OrderServiceInterface {
      */
     public function getAppliedPromotions(int $orderId): array {
         $stmt = $this->db->prepare(
-            "SELECT op.*, p.name as promotion_name
+            "SELECT op.*, COALESCE(op.promotion_name, p.name) as promotion_name
              FROM order_promotions op
-             JOIN promotions p ON op.promotion_id = p.id
+             LEFT JOIN promotions p ON op.promotion_id = p.id
              WHERE op.order_id = ?"
         );
         $stmt->execute([$orderId]);

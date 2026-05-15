@@ -206,7 +206,7 @@ class CartService implements CartServiceInterface {
         }
 
         // Check for automatic promotions
-        $autoPromos = $this->promotionService->getActivePromotions(true);
+        $autoPromos = $this->promotionService->getActivePromotions(true, $user);
         foreach ($autoPromos as $promo) {
             // Priority ordering is already handled by PromotionService::getActivePromotions
 

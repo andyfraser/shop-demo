@@ -151,15 +151,16 @@ class PromotionService implements PromotionServiceInterface {
         $this->db->prepare("DELETE FROM promotions WHERE id = ?")->execute([$id]);
     }
 
-    public function getActiveAutomaticPromotions(): array {
-        return $this->getActivePromotions(true);
+    public function getActiveAutomaticPromotions(?\App\Models\User $user = null): array {
+        return $this->getActivePromotions(true, $user);
     }
 
-    public function getActivePromotions(bool $onlyAutomatic = false): array {
+    public function getActivePromotions(bool $onlyAutomatic = false, ?\App\Models\User $user = null): array {
+        $now = date('Y-m-d H:i:s');
         $sql = "SELECT * FROM promotions 
                 WHERE active = 1 
-                AND (start_date IS NULL OR start_date <= CURRENT_TIMESTAMP) 
-                AND (end_date IS NULL OR end_date >= CURRENT_TIMESTAMP) 
+                AND (start_date IS NULL OR start_date <= ?) 
+                AND (end_date IS NULL OR end_date >= ?) 
                 AND (usage_limit IS NULL OR used_count < usage_limit)";
         
         if ($onlyAutomatic) {
@@ -170,7 +171,7 @@ class PromotionService implements PromotionServiceInterface {
         
         $stmt = $this->db->prepare($sql);
         $stmt->setFetchMode(PDO::FETCH_CLASS, Promotion::class, [$this->logger]);
-        $stmt->execute();
+        $stmt->execute([$now, $now]);
         $promotions = $stmt->fetchAll();
 
         foreach ($promotions as $promo) {
@@ -178,27 +179,29 @@ class PromotionService implements PromotionServiceInterface {
             $promo->excluded_ids = $this->getTargetIds($promo->id, true);
             $promo->tiers = $this->getTiers($promo->id);
             $promo->additional_codes = $this->getAdditionalCodes($promo->id);
+            
+            if ($user && isset($user->id)) {
+                $promo->user_usage_count = $this->getUserUsageCount($promo->id, $user->id);
+            }
         }
 
-        return $promotions;
+        $isFirstOrder = $this->isFirstOrder($user);
+        return array_values(array_filter($promotions, fn($p) => $p->isActive($user, $isFirstOrder)));
     }
 
     public function validateCode(string $code, array $cartItems, float $subtotal, ?\App\Models\User $user = null): ?Promotion {
         $promo = $this->findByCode($code);
         
+        if ($promo && $user && isset($user->id)) {
+            $promo->user_usage_count = $this->getUserUsageCount($promo->id, $user->id);
+        }
+
         if (!$promo || !$promo->isActive($user, $this->isFirstOrder($user))) {
             return null;
         }
 
         if ($subtotal < $promo->min_order_amount) {
             return null;
-        }
-
-        if ($user && $promo->usage_limit_per_user !== null) {
-            $count = $this->getUserUsageCount($promo->id, $user->id);
-            if ($count >= $promo->usage_limit_per_user) {
-                return null;
-            }
         }
 
         // Check if any items match targets if target_type is not 'order'

@@ -25,7 +25,7 @@ class StorefrontController {
 
     public function index() {
         $featured_products = $this->productService->getFeatured(8);
-        $this->productService->attachActivePromotions($featured_products);
+        $this->productService->attachActivePromotions($featured_products, $this->authService->currentUser());
 
         $this->renderer->render('home', [
             'page_title'       => 'Welcome',
@@ -76,7 +76,7 @@ class StorefrontController {
         if ($query) {
             $total_products = $this->productService->countSearch($query, $filters);
             $products = $this->productService->search($query, $per_page, $current_page, $sort, $filters);
-            $this->productService->attachActivePromotions($products);
+            $this->productService->attachActivePromotions($products, $this->authService->currentUser());
             
             if ($per_page !== null) {
                 $total_pages = (int)ceil($total_products / $per_page);
@@ -136,7 +136,7 @@ class StorefrontController {
 
         $total_products = $this->productService->countByCategory($cat_ids, $filters);
         $products = $this->productService->getByCategory($cat_ids, $per_page, $current_page, $sort, $filters);
-        $this->productService->attachActivePromotions($products);
+        $this->productService->attachActivePromotions($products, $this->authService->currentUser());
         
         $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
@@ -275,7 +275,7 @@ class StorefrontController {
             $products = array_slice($qualifying_products, $offset, $per_page);
         }
 
-        $this->productService->attachActivePromotions($products);
+        $this->productService->attachActivePromotions($products, $this->authService->currentUser());
 
         $available_filters = $this->productService->getAvailableFilters($cat_ids);
 
@@ -312,7 +312,7 @@ class StorefrontController {
 
         $total_products = $this->productService->countAllActive($filters);
         $products = $this->productService->getAllActive($per_page, $current_page, $sort, $filters);
-        $this->productService->attachActivePromotions($products);
+        $this->productService->attachActivePromotions($products, $this->authService->currentUser());
         $total_pages = $per_page !== null ? (int)ceil($total_products / $per_page) : 1;
 
         $available_filters = $this->productService->getAvailableFilters();
@@ -356,7 +356,7 @@ class StorefrontController {
             exit('Product not found.');
         }
 
-        $this->productService->attachActivePromotions([$product]);
+        $this->productService->attachActivePromotions([$product], $this->authService->currentUser());
 
         $breadcrumb = $product->category_id ? $this->categoryService->getBreadcrumb($product->category_id) : [];
 
@@ -382,8 +382,8 @@ class StorefrontController {
 
         // Related products logic (Smart Weighted)
         $related_products = $this->productService->getRelatedProducts($product->id, 4);
-        $this->productService->attachActivePromotions($related_products);
-        $this->productService->attachActivePromotions($recently_viewed);
+        $this->productService->attachActivePromotions($related_products, $this->authService->currentUser());
+        $this->productService->attachActivePromotions($recently_viewed, $this->authService->currentUser());
 
         $is_in_wishlist = false;
         $user = $this->authService->currentUser();

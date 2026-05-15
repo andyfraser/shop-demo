@@ -54,12 +54,42 @@ class PromotionEnhancementTest extends TestCase {
         // Simulate order creation
         $this->db->prepare("INSERT INTO orders (user_id, total, status) VALUES (1, 90.0, 'pending')")->execute();
         $orderId = $this->db->lastInsertId();
-        $this->db->prepare("INSERT INTO order_promotions (order_id, promotion_id, discount_amount, promo_code) VALUES (?, ?, 10.0, 'ONCE')")
+        $this->db->prepare("INSERT INTO order_promotions (order_id, promotion_id, promotion_name, discount_amount, promo_code) VALUES (?, ?, 'Once Only', 10.0, 'ONCE')")
             ->execute([$orderId, $promoId]);
 
         // Invalid second time
         $promo = $this->promotionService->validateCode('ONCE', $items, $subtotal, $user);
         $this->assertNull($promo);
+    }
+
+    public function testAutomaticPromotionUserLimit() {
+        $promoId = $this->promotionService->save([
+            'name' => 'Automatic Once Only',
+            'type' => Promotion::TYPE_PERCENTAGE,
+            'value' => 10.0,
+            'target_type' => Promotion::TARGET_ORDER,
+            'usage_limit_per_user' => 1,
+            'active' => 1
+        ]);
+
+        $user = new User($this->logger);
+        $user->id = 1;
+        $user->role = 'customer';
+
+        // Initially active
+        $promos = $this->promotionService->getActivePromotions(true, $user);
+        $this->assertNotEmpty($promos);
+        $this->assertTrue($promos[0]->isActive($user));
+
+        // Place an order with this promotion
+        $this->db->prepare("INSERT INTO orders (user_id, total, status) VALUES (1, 90.0, 'pending')")->execute();
+        $orderId = $this->db->lastInsertId();
+        $this->db->prepare("INSERT INTO order_promotions (order_id, promotion_id, promotion_name, discount_amount) VALUES (?, ?, 'Automatic Once Only', 10.0)")
+            ->execute([$orderId, $promoId]);
+
+        // Now it should be filtered out for this user
+        $promos = $this->promotionService->getActivePromotions(true, $user);
+        $this->assertCount(0, $promos, "Promotion should be filtered out for user who already used it");
     }
 
     public function testPriority() {

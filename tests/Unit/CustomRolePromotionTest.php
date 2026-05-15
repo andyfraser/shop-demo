@@ -45,6 +45,7 @@ class CustomRolePromotionTest extends TestCase {
         $regularUser->role = 'customer';
 
         // 3. Test activity
+        $this->assertTrue($promo->isLive(), "Promotion should be live (generally active)");
         $this->assertTrue($promo->isActive($vipUser), "Promotion should be active for VIP user");
         $this->assertFalse($promo->isActive($regularUser), "Promotion should NOT be active for regular user");
         $this->assertFalse($promo->isActive(null), "Promotion should NOT be active for guest");

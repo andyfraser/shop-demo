@@ -53,7 +53,7 @@
           </td>
           <td class="text-sm"><?= ucfirst($promo->target_type) ?></td>
           <td>
-            <?php if ($promo->isActive()): ?>
+            <?php if ($promo->isLive()): ?>
               <span class="badge badge-success">Active</span>
             <?php else: ?>
               <span class="badge badge-neutral">Inactive</span>

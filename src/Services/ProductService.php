@@ -14,8 +14,8 @@ class ProductService implements ProductServiceInterface {
         private LoggerInterface $logger
     ) {}
 
-    public function attachActivePromotions(array $products): void {
-        $activePromos = $this->promotionService->getActivePromotions();
+    public function attachActivePromotions(array $products, ?\App\Models\User $user = null): void {
+        $activePromos = $this->promotionService->getActivePromotions(false, $user);
         if (empty($activePromos)) return;
 
         foreach ($products as $product) {

@@ -15,14 +15,15 @@ interface PromotionServiceInterface {
      * Get all automatic promotions that are currently active.
      * @return Promotion[]
      */
-    public function getActiveAutomaticPromotions(): array;
+    public function getActiveAutomaticPromotions(?\App\Models\User $user = null): array;
 
     /**
      * Get all promotions that are currently active.
      * @param bool $onlyAutomatic
+     * @param \App\Models\User|null $user
      * @return Promotion[]
      */
-    public function getActivePromotions(bool $onlyAutomatic = false): array;
+    public function getActivePromotions(bool $onlyAutomatic = false, ?\App\Models\User $user = null): array;
 
     /**
      * Validate a promo code against a cart and return the Promotion if valid.
