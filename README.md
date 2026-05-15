@@ -21,30 +21,28 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - **Persistent Shopping Cart:** Database-backed cart that persists across sessions and devices, with automatic merging upon login.
 - **Wishlist:** Authenticated users can save products to a personal wishlist for later viewing.
 - **Advanced Promotions:** Automatic and code-based discounts (percentage, fixed, free shipping, and BOGO) with real-time AJAX cart updates.
-- Checkout with saved shipping address pre-fill and dynamic delivery options
+- Checkout with saved shipping address pre-fill and dynamic delivery options.
+- **Secure Payment Integration:** Pluggable payment gateway system with a demo manual payment gateway for checkout processing.
 - **Enhanced Address Book:** Customer management of multiple shipping addresses with labels and default selection.
-- Customer accounts with order history and **order cancellation for pending orders**
-- User registration with email verification, **resend verification functionality**, and login
-- **PSR-3 compliant logging** with file-based output and conditional debug mode
-- Privacy-compliant cookie consent banner with persistence logic
-- **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery, log rotation, image cleanup) with a single crontab entry and database-backed state tracking. Supports various frequencies:
-    - High-frequency: `everyMinute`, `everyFiveMinutes`, `everyFifteenMinutes`, `everyThirtyMinutes`
-    - Standard: `hourly`, `twiceDaily`, `daily`, `weekdays`
-    - Long-term: `weekly` (e.g., image cleanup), `monthly`, `yearly`
+- Customer accounts with order history and **order cancellation for pending orders**.
+- User registration with email verification, **resend verification functionality**, and login.
+- **PSR-3 compliant logging** with file-based output and conditional debug mode.
+- Privacy-compliant cookie consent banner with persistence logic.
+- **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery, log rotation, image cleanup) with a single crontab entry and database-backed state tracking.
 
 **Admin panel** (`/admin/`)
-- Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts
-- Full CRUD for products (including image upload and featured status), categories, users, delivery options (with minimum order thresholds), and orders
+- Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts.
+- Full CRUD for products (including image upload and featured status), categories, users, delivery options, and orders.
+- **Attributes Management:** Define custom product attributes (e.g., Brand, Color, Material) and manage their values.
 - **Database Backup & Restore:** Export the entire database (SQLite or MySQL) and restore from a backup file directly through the interface.
 - **Promotions Management:** Create complex discount rules targeting specific products, categories, or entire orders (percentage, fixed, or Buy X Get Y) with date and usage limits.
 - **Review Moderation:** Approve or reject customer product reviews.
-- Order management with status workflow (pending → confirmed → shipped → delivered / cancelled)
+- Order management with status workflow (pending → confirmed → shipped → delivered / cancelled).
 - **Detailed Order History:** Comprehensive tracking of all status changes, return requests, and refunds, with clear attribution to the customer or admin who performed the action.
 - **Return & Refund Tracking:** Admin visibility into return requests, item-level return details, and automated refund status updates.
 - **Abandoned Cart Emails:** Automated transactional emails for users with items left in their carts.
-- Hierarchical category management with parent/child relationships
-- Role-based access control (admin / customer)
-- Configurable site settings: name, currency symbol, password policy, rate-limit thresholds, and low-stock threshold for inventory badges and alerts
+- **Role-Based Access Control:** Manage user roles and permissions (admin / customer).
+- Configurable site settings: name, currency symbol, password policy, rate-limit thresholds, and low-stock threshold for inventory badges and alerts.
 
 ---
 
@@ -63,23 +61,12 @@ The application uses a `config.php` file for database and site settings.
 1. Copy `config/config.example.php` to `config/config.php`.
 2. Update the `config/config.php` settings with your preferred driver (`sqlite` or `mysql`) and credentials.
 
-### SQLite Setup
-By default, the application is configured to use SQLite with a database file named `shop.db`. 
-
-1. Run the migrations to create the schema and then seed initial data:
-   ```bash
-   php cli/console.php migrate
-   php cli/console.php db:seed
-   ```
-
-### MySQL / MariaDB Setup
-1. Ensure your MySQL server is running.
-2. Provide your server host, user, and password in `config/config.php`.
-3. The application will automatically create the database if it doesn't exist, but you must run the migrations and seed data:
-   ```bash
-   php cli/console.php migrate
-   php cli/console.php db:seed
-   ```
+### Database Setup
+Run the migrations to create the schema and then seed initial data:
+```bash
+php cli/console.php migrate
+php cli/console.php db:seed
+```
 
 ---
 
@@ -106,7 +93,7 @@ The project includes a custom vanilla PHP unit testing framework (no external de
 php tests/run.php
 ```
 
-This will run all tests in the `tests/Unit/` directory and report on pass/fail status and assertion counts. The test suite includes specific tests for verifying the Dependency Injection container's ability to map interfaces to concrete implementations.
+The test suite covers Core components, Repositories, Services, and Models, including specific tests for verifying the Dependency Injection container's ability to map interfaces to concrete implementations.
 
 ---
 
@@ -117,14 +104,6 @@ This will run all tests in the `tests/Unit/` directory and report on pass/fail s
 | Admin    | `admin@shop.local`  | `password` |
 | Customer | `jane@example.com`  | `password` |
 
-To access the admin panel, log in as admin and visit `/admin/` — or navigate there directly and you'll be redirected to login first.
-
----
-
-## Product Images
-
-Product images are stored in `public/images/`. When adding or editing a product in the admin panel you can upload a JPEG, PNG, GIF, or WebP image (max 5 MB). A placeholder is shown automatically when no image is set.
-
 ---
 
 ## Project Structure
@@ -132,161 +111,71 @@ Product images are stored in `public/images/`. When adding or editing a product 
 ```
 shop-demo/
 │
-├── index.php               # Front controller — bootstraps app and registers all routes
-├── migrate.php             # Deprecated migration runner (wraps cli/console.php)
-├── migrations/             # Database migration files
-├── shop.db                 # SQLite database (auto-created if using SQLite)
-├── logs/                   # Application log files (ignored by Git)
-│   └── app.log             # Main application log
-│
 ├── cli/                    # Command-line scripts
 │   └── console.php         # Central CLI entry point and task scheduler runner
 │
 ├── config/                 # Application configuration files
 │   ├── config.php          # Local configuration (ignored by Git)
-│   ├── config.example.php  # Configuration template
 │   ├── routes.php          # Route definitions
 │   └── services.php        # DI service registrations (Interface to Implementation)
 │
-├── tests/                  # Custom unit testing framework
-│   ├── run.php             # CLI test runner
-│   ├── TestCase.php        # Base test class with assertions
-│   └── Unit/               # Unit test suites
-│
 ├── src/
 │   ├── Core/
-│   │   ├── Autoloader.php  # PSR-4 style class autoloader (supports App\ and Psr\)
+│   │   ├── Autoloader.php  # PSR-4 style class autoloader
 │   │   ├── Container.php   # DI container with autowiring and interface mapping
-│   │   ├── Database.php    # Multi-driver PDO connection factory + migrations
-│   │   ├── FileLogger.php  # PSR-3 compliant file-based logger
-│   │   ├── Renderer.php    # Template renderer (injects shared vars, wraps layout)
+│   │   ├── Database.php    # Multi-driver PDO connection factory
+│   │   ├── Request.php     # HTTP request abstraction
+│   │   ├── Response.php    # HTTP response abstraction (HTML, JSON, Redirect)
 │   │   ├── Router.php      # HTTP router with middleware and DI support
-│   │   ├── Scheduler.php   # Centralized task scheduling logic
-│   │   ├── Validator.php   # Field validation logic
-│   │   └── ViewComposer.php # Shared view data logic
+│   │   └── Scheduler.php   # Centralized task scheduling logic
 │   │
-│   ├── Psr/
-│   │   └── Log/            # Standard PSR-3 logging interfaces
+│   ├── Commands/           # CLI Command implementations (migrate, seed, cleanup, etc.)
 │   │
-│   ├── Models/             # Data models (User, Product, Order, Category, Promotion, etc.)
+│   ├── Controllers/        # Request handlers (Account, Admin*, Auth, Cart, Checkout, etc.)
 │   │
-│   ├── Commands/           # CLI Command implementations
-│   │   ├── CommandInterface.php
-│   │   ├── MigrateCommand.php
-│   │   ├── MigrateRollbackCommand.php
-│   │   ├── RecoverCartsCommand.php
-│   │   └── RotateLogsCommand.php
+│   ├── Models/             # Data models (Product, Order, Category, Review, Attribute, etc.)
 │   │
-│   ├── Controllers/
-│   │   ├── AccountController.php      # Customer account, order history, address
-│   │   ├── AdminBackupController.php
-│   │   ├── AdminCategoriesController.php
-│   │   ├── AdminDashboardController.php
-│   │   ├── AdminDeliveryController.php
-│   │   ├── AdminOrdersController.php
-│   │   ├── AdminProductsController.php
-│   │   ├── AdminPromotionsController.php
-│   │   ├── AdminSettingsController.php
-│   │   ├── AdminUsersController.php
-│   │   ├── AuthController.php         # Login, register, logout, email verification
-│   │   ├── CartController.php         # Cart view, add, update (AJAX + form)
-│   │   ├── CheckoutController.php     # Checkout form and order processing
-│   │   └── StorefrontController.php   # Home, search, category, product pages
+│   ├── Repositories/       # Data access layer (Interfaces and PDO-based implementations)
 │   │
-│   ├── Middleware/
-│   │   ├── AuthMiddleware.php          # Requires authenticated session
-│   │   └── AdminMiddleware.php         # Requires admin role
+│   ├── Services/           # Business logic layer (Auth, Cart, Order, Promotion, Payment, etc.)
 │   │
-│   ├── Services/
-│   │   ├── *ServiceInterface.php       # Contract definitions for all services
-│   │   ├── AuthService.php             # Session login / logout / current user
-│   │   ├── BackupService.php           # DB backup and restore logic
-│   │   ├── CartService.php             # Session-based cart operations
-│   │   ├── CategoryService.php         # Category hierarchy and CRUD
-│   │   ├── DeliveryService.php         # DB-backed delivery options management
-│   │   ├── EmailService.php            # Transactional emails (verification, orders)
-│   │   ├── OrderService.php            # Order creation and management
-│   │   ├── ProductService.php          # Product catalog and search
-│   │   ├── PromotionService.php        # Discount rules and validation engine
-│   │   ├── SecurityService.php         # CSRF tokens and rate limiting
-│   │   ├── SettingsService.php         # DB-backed key/value settings with defaults
-│   │   └── UserService.php             # User management and profile updates
+│   ├── Middleware/         # Request filters (Auth, Admin, Csrf, Guest, Verified)
 │   │
-│   └── Helpers.php         # Global helpers
+│   └── Psr/                # PSR-3 standard logging interfaces
 │
-├── templates/              # HTML-only templates — no queries or redirects
-│   ├── header.php / footer.php
-│   ├── home.php / category.php / product.php / products.php / search.php
-│   ├── cart.php / checkout.php / order_confirm.php / account.php
-│   ├── login.php / register.php / 404.php / 500.php
-│   ├── admin/
-│   │   ├── header.php / footer.php / dashboard.php
-│   │   ├── categories_list.php / categories_form.php
-│   │   ├── products_list.php / products_form.php
-│   │   ├── promotions_list.php / promotions_form.php
-│   │   ├── delivery_list.php / delivery_form.php
-│   │   ├── orders_list.php / orders_detail.php
-│   │   ├── users_list.php / users_form.php
-│   │   ├── settings.php / backup.php
-│   └── emails/
-│       ├── layout.php / verification.php / order_confirmation.php / order_status.php
+├── templates/              # HTML templates (Storefront, Admin, Emails, Partials)
 │
-└── public/
-    ├── css/                # Storefront and Admin styles
-    ├── js/                 # AJAX cart and UI logic
-    └── images/             # Uploaded and demo product images
+└── public/                 # Static assets (CSS, JS, Images)
 ```
 
 ---
 
 ## Architecture
 
-**Dependency Injection & Interfaces:** The application follows the **Dependency Inversion Principle**. Every service (e.g., `ProductService`) has a corresponding interface (e.g., `ProductServiceInterface`). 
-- **Centralized Mapping:** Service registrations are managed in `config/services.php`, mapping interfaces to their concrete implementations.
-- **Constructor Injection:** Controllers, middlewares, and services receive their dependencies via interfaces in their constructors. 
-- **Decoupling:** This design decouples business logic from specific implementations, allowing for easier testing and future extensibility (e.g., swapping a local `FileLogger` for a different PSR-3 implementation).
+**Dependency Injection & Interfaces:** The application follows the **Dependency Inversion Principle**. 
+- **Centralized Mapping:** Service and Repository registrations are managed in `config/services.php`.
+- **Constructor Injection:** Controllers, middlewares, and services receive their dependencies via interfaces.
+- **Autowiring:** The custom DI Container automatically resolves and injects dependencies based on constructor type-hints.
+
+**Repository Pattern:** A dedicated data access layer decouples business logic from SQL queries. 
+- Every entity has a Repository (e.g., `ProductRepository`) that implements a corresponding interface.
+- Repositories handle all PDO-based database operations, ensuring that Services remain focused on business rules.
+
+**Service Layer:** Business logic is encapsulated in Service classes. 
+- Services coordinate between Repositories, other Services (e.g., `EmailService`, `PaymentService`), and external interfaces.
 
 **Middleware System:** Decouples security and cross-cutting concerns from business logic.
-- **`AuthMiddleware`**: Protects routes requiring authentication.
-- **`AdminMiddleware`**: Protects routes requiring administrator privileges.
 - **`CsrfMiddleware`**: Automatically validates CSRF tokens for all protected POST routes.
-- **`GuestMiddleware` & `VerifiedMiddleware`**: Manage access for non-authenticated and unverified users respectively.
+- **`AuthMiddleware` / `AdminMiddleware`**: Enforce authentication and role-based access.
+- **`VerifiedMiddleware`**: Enforces email verification for sensitive actions.
 
-**Front Controller:** All requests enter through `index.php`, which bootstraps the **Dependency Injection (DI) Container**, registers the autoloader, defines constants, and dispatches to `src/Core/Router`. 
-
-**Error Handling:** The application includes a global error and exception handler. In production, errors are logged to `logs/app.log` and a user-friendly `500.php` template is rendered.
-
-**Models:** Data is represented by Model classes in `src/Models/`. These classes encapsulate data structure and provide helper methods (e.g., `Order::getStatusBadgeClass()`).
-
-**Rendering:** Controllers fetch data and call `$this->renderer->render()`. The renderer auto-injects shared vars (`$current_user`, `$cart_count`, `$nav_tree`).
-
-**Database:** Support for SQLite and MySQL via PDO. The appropriate schema runs automatically on first connection. 
-
-**Security:** Every POST form includes a CSRF token (`csrf_field()`). Validation is enforced via `CsrfMiddleware`. Login and registration are rate-limited via `SecurityService`. Admin routes are protected by `AdminMiddleware`.
-
----
-
-## Adding a New Service
-
-1. Create a new interface in `src/Services/` (e.g., `ReportingServiceInterface.php`).
-2. Create a concrete class that implements this interface (e.g., `ReportingService.php`).
-3. Register the mapping in `config/services.php`.
-4. Type-hint the interface in the constructor of any controller or service that needs it.
-
----
-
-## Adding a New Route
-
-1. Register the route in `config/routes.php`.
-2. Assign the appropriate middleware stack using the pre-defined variables at the top of the file (e.g., `$adminPostMiddleware` for an admin-only POST route).
-3. Add the action method to the appropriate controller in `src/Controllers/`. Ensure the controller defines its dependencies (via interfaces) in the constructor for autowiring.
-4. Create a template in `templates/` and call `$this->renderer->render()` from the controller.
+**Front Controller:** All requests enter through `index.php`, which bootstraps the application and dispatches to the router. The application uses a custom `Request` and `Response` system to handle HTTP communication cleanly.
 
 ---
 
 ## Browser Compatibility
 
-This application uses modern CSS (Grid, Flexbox gap, CSS variables, `aspect-ratio`) and JavaScript (Optional chaining `?.`).
+This application uses modern CSS (Grid, Flexbox gap, CSS variables) and JavaScript (Optional chaining).
 
 | Browser | Minimum Version | Release Date |
 | :--- | :--- | :--- |
@@ -294,12 +183,9 @@ This application uses modern CSS (Grid, Flexbox gap, CSS variables, `aspect-rati
 | **Edge** | 88+ | Jan 2021 |
 | **Firefox** | 84+ | Dec 2020 |
 | **Safari** | 14.1+ | Apr 2021 |
-| **Opera** | 74+ | Feb 2021 |
-
-**Internet Explorer is not supported.**
 
 ---
 
 ## No External Dependencies
 
-Do not add Composer packages or any external libraries. Use only PHP 8 built-ins.
+This project is strictly **no-dependency**. Do not add Composer packages or any external libraries. Use only PHP 8 built-ins.

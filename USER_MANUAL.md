@@ -76,6 +76,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 *   **Persistent Cart:** Your items stay in your cart even if you close your browser or switch devices. Cart contents are automatically merged when you log in.
 *   **Wishlist:** Save products you're interested in for later. Authenticated users can manage their wishlist from a dedicated page or directly from product listings.
 *   **Seamless Checkout:** Logged-in users can choose from their saved address book. Choose from multiple delivery tiers based on order total.
+*   **Secure Payment Integration:** Pluggable payment gateway system with a demo manual payment gateway for checkout processing.
 *   **Order Tracking:** Registered customers can view their complete order history and track status (Pending, Confirmed, Shipped, Delivered).
 *   **Self-Service Cancellation:** Customers can cancel orders directly while they are in the `pending` status.
 
@@ -97,6 +98,7 @@ The dashboard provides an immediate overview of your business:
 
 ### Inventory & Reviews
 *   **Products:** CRUD operations for items, including image uploads (JPEG, PNG, GIF, WebP up to 5MB), pricing, and "Featured" status.
+*   **Attributes Management:** Define custom product attributes (e.g., Brand, Color, Material) and manage their values. These are used for smart recommendations and product details.
 *   **Categories:** Create complex parent-child relationships with custom icons.
 *   **Promotions Management:** Design complex marketing campaigns with ease:
     *   **Types:** Percentage, fixed amount, free shipping, or "Buy X Get Y" (BOGO) discounts.
@@ -176,15 +178,17 @@ The logging system follows the PHP Standard Recommendation for logging (PSR-3). 
 
 ### Design Philosophy
 *   **Vanilla PHP 8:** Zero external dependencies (No Laravel, Symfony, or Composer).
-*   **Dependency Inversion:** Use of Interfaces for all service logic to ensure decoupling and follow the SOLID principles.
+*   **Dependency Inversion:** Use of Interfaces for all service and repository logic to ensure decoupling and follow the SOLID principles.
+*   **Repository Pattern:** A dedicated data access layer that decouples business logic from SQL queries. Every entity has a Repository that implements a corresponding interface.
 *   **DI Container:** Custom container (`App\Core\Container`) with autowiring and interface mapping support. Service registrations are centralized in `config/services.php`.
-*   **MVC Pattern:** Strict separation of Controllers, Services, Models, and Views.
+*   **MVC Pattern:** Strict separation of Controllers, Services, Repositories, Models, and Views.
 *   **Front Controller:** All traffic routes through `index.php`, which initializes the DI system and sets up global error handling.
 
 ### Directory Structure Highlights
-*   `src/Core/`: Foundation classes including the `Container`, `Router`, `Database`, and `Renderer`.
+*   `src/Core/`: Foundation classes including the `Container`, `Router`, `Database`, `Request`, `Response`, and `Renderer`.
 *   `src/Models/`: Data objects (User, Product, Order, etc.) that represent core business entities.
-*   `src/Services/`: Interface-driven business logic (Auth, Cart, Category, Email, Order, Product, Security, Settings, User).
+*   `src/Repositories/`: Data access layer with interface-driven PDO implementations.
+*   `src/Services/`: Interface-driven business logic layer.
 *   `config/`: Route and Service (Interface to Implementation) definitions.
 *   `templates/`: Pure PHP/HTML view files, utilizing Model objects for data representation.
 
