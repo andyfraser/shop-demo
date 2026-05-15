@@ -1,6 +1,9 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
 use App\Core\Renderer;
 use App\Services\SettingsServiceInterface;
 use App\Services\ProductServiceInterface;
@@ -16,7 +19,7 @@ class AdminDashboardController {
         private UserServiceInterface $userService
     ) {}
 
-    public function index() {
+    public function index(Request $request): Response {
         $stats = [
             'products'  => $this->productService->countAllActive(new \App\Core\QueryCriteria()),
             'customers' => $this->userService->countNonAdmins(),
@@ -29,12 +32,12 @@ class AdminDashboardController {
         $threshold = (int)$this->settingsService->get('low_stock_threshold');
         $low_stock = $this->productService->getLowStock($threshold);
 
-        $this->renderer->adminRender('dashboard', [
+        return new HtmlResponse($this->renderer->adminRender('dashboard', [
             'page_title'    => 'Dashboard',
             'active'        => 'dashboard',
             'stats'         => $stats,
             'recent_orders' => $recent_orders,
             'low_stock'     => $low_stock,
-        ]);
+        ]));
     }
 }

@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Services\AuthServiceInterface;
 use App\Services\SecurityServiceInterface;
@@ -23,96 +27,96 @@ class AccountController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function show() {
+    public function show(Request $request): Response {
         $user = $this->auth->currentUser();
         $orders = $this->orderService->getForUser($user->id);
         $addresses = $this->addressService->getByUserId($user->id);
 
-        $this->renderer->render('account', [
+        return new HtmlResponse($this->renderer->render('account', [
             'page_title'      => 'My Account',
             'orders'          => $orders,
             'addresses'       => $addresses,
             'address_saved'   => flash('address_saved'),
             'msg'             => flash('msg'),
             'msg_error'       => flash('msg_error'),
-        ]);
+        ]));
     }
 
-    public function newAddress() {
+    public function newAddress(Request $request): Response {
         $user = $this->auth->currentUser();
         $addresses = $this->addressService->getByUserId($user->id);
 
-        $this->renderer->render('account_address_form', [
+        return new HtmlResponse($this->renderer->render('account_address_form', [
             'page_title' => 'Add New Address',
             'address' => null,
             'is_new' => true,
             'is_first' => empty($addresses),
-        ]);
+        ]));
     }
 
-    public function editAddress() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function editAddress(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         $user = $this->auth->currentUser();
         $address = $this->addressService->findById($id);
 
         if (!$address || $address->user_id !== $user->id) {
-            redirect('/account');
+            return new RedirectResponse('/account');
         }
 
-        $this->renderer->render('account_address_form', [
+        return new HtmlResponse($this->renderer->render('account_address_form', [
             'page_title' => 'Edit Address',
             'address' => $address,
             'is_new' => false,
-        ]);
+        ]));
     }
 
-    public function saveAddress() {
+    public function saveAddress(Request $request): Response {
         $user = $this->auth->currentUser();
-        $id = (int)($_POST['id'] ?? 0);
+        $id = (int)$request->getPost('id', 0);
 
         $data = [
-            'label'    => trim($_POST['label'] ?? ''),
-            'name'     => trim($_POST['name'] ?? ''),
-            'address'  => trim($_POST['address'] ?? ''),
-            'city'     => trim($_POST['city'] ?? ''),
-            'postcode' => trim($_POST['postcode'] ?? ''),
-            'country'  => trim($_POST['country'] ?? ''),
-            'is_default' => isset($_POST['is_default']) ? 1 : 0,
+            'label'    => trim($request->getPost('label', '')),
+            'name'     => trim($request->getPost('name', '')),
+            'address'  => trim($request->getPost('address', '')),
+            'city'     => trim($request->getPost('city', '')),
+            'postcode' => trim($request->getPost('postcode', '')),
+            'country'  => trim($request->getPost('country', '')),
+            'is_default' => $request->getPost('is_default') ? 1 : 0,
         ];
 
         if (empty($data['label']) || empty($data['name']) || empty($data['address'])) {
             flash('msg_error', 'Label, Name and Address are required.');
-            redirect($id ? '/account/addresses/edit?id='.$id : '/account/addresses/new');
+            return new RedirectResponse($id ? '/account/addresses/edit?id='.$id : '/account/addresses/new');
         }
 
         $this->addressService->save($user->id, $data, $id);
         flash('msg', 'Address saved.');
-        redirect('/account');
+        return new RedirectResponse('/account');
     }
 
-    public function deleteAddress() {
+    public function deleteAddress(Request $request): Response {
         $user = $this->auth->currentUser();
-        $id = (int)($_POST['id'] ?? 0);
+        $id = (int)$request->getPost('id', 0);
 
         if ($this->addressService->delete($id, $user->id)) {
             flash('msg', 'Address deleted.');
         }
-        redirect('/account');
+        return new RedirectResponse('/account');
     }
 
-    public function setDefaultAddress() {
+    public function setDefaultAddress(Request $request): Response {
         $user = $this->auth->currentUser();
-        $id = (int)($_POST['id'] ?? 0);
+        $id = (int)$request->getPost('id', 0);
 
         if ($this->addressService->setDefault($id, $user->id)) {
             flash('msg', 'Default address updated.');
         }
-        redirect('/account');
+        return new RedirectResponse('/account');
     }
 
-    public function cancelOrder() {
+    public function cancelOrder(Request $request): Response {
         $user = $this->auth->currentUser();
-        $order_id = (int)($_POST['id'] ?? 0);
+        $order_id = (int)$request->getPost('id', 0);
 
         if ($order_id) {
             $order = $this->orderService->findById($order_id);
@@ -128,19 +132,19 @@ class AccountController {
                 }
             }
         }
-        redirect('/account');
+        return new RedirectResponse('/account');
     }
 
-    public function requestReturn() {
+    public function requestReturn(Request $request): Response {
         $user = $this->auth->currentUser();
-        $order_id = (int)($_POST['order_id'] ?? 0);
-        $reason = trim($_POST['reason'] ?? '');
-        $items = $_POST['items'] ?? []; // Array of order_item_id => quantity
+        $order_id = (int)$request->getPost('order_id', 0);
+        $reason = trim($request->getPost('reason', ''));
+        $items = $request->getPost('items', []); // Array of order_item_id => quantity
 
         if ($order_id) {
             if (empty($items)) {
                 flash('msg_error', 'Please select at least one item to return.');
-                redirect('/account/orders/' . $order_id);
+                return new RedirectResponse('/account/orders/' . $order_id);
             }
 
             try {
@@ -153,27 +157,27 @@ class AccountController {
             flash('msg_error', 'Invalid return request.');
         }
 
-        redirect('/account/orders/' . $order_id);
+        return new RedirectResponse('/account/orders/' . $order_id);
     }
 
-    public function orderDetail($id) {
+    public function orderDetail(Request $request, $id): Response {
         $order_id = (int)$id;
         $user = $this->auth->currentUser();
         $order = $this->orderService->findById($order_id);
 
         if (!$order || $order->user_id !== $user->id) {
-            redirect('/account');
+            return new RedirectResponse('/account');
         }
 
         $returns = $this->returnService->getForOrder($order_id);
 
-        $this->renderer->render('order_confirm', [
+        return new HtmlResponse($this->renderer->render('order_confirm', [
             'page_title'  => 'Order Details',
             'order'       => $order,
             'order_items' => $order->items,
             'returns'     => $returns,
             'flash_msg'   => flash('msg'),
             'flash_error' => flash('msg_error'),
-        ]);
+        ]));
     }
 }

@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\CategoryServiceInterface;
@@ -15,19 +19,19 @@ class AdminCategoriesController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function list() {
+    public function list(Request $request): Response {
         $categories = $this->categoryService->getAllForAdmin();
 
-        $this->renderer->adminRender('categories_list', [
+        return new HtmlResponse($this->renderer->adminRender('categories_list', [
             'page_title' => 'Categories',
             'active'     => 'categories',
             'categories' => $categories,
             'flash_msg'  => flash('msg'),
-        ]);
+        ]));
     }
 
-    public function create() {
-        $this->renderer->adminRender('categories_form', [
+    public function create(Request $request): Response {
+        return new HtmlResponse($this->renderer->adminRender('categories_form', [
             'page_title'     => 'Add Category',
             'active'         => 'categories',
             'is_new'         => true,
@@ -35,18 +39,18 @@ class AdminCategoriesController {
             'category_id'    => 0,
             'all_categories' => $this->categoryService->getFlat(),
             'errors'         => [],
-        ]);
+        ]));
     }
 
-    public function edit() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function edit(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         $category = $this->categoryService->findById($id);
 
         if (!$category) {
-            redirect('/admin/categories');
+            return new RedirectResponse('/admin/categories');
         }
 
-        $this->renderer->adminRender('categories_form', [
+        return new HtmlResponse($this->renderer->adminRender('categories_form', [
             'page_title'     => 'Edit Category',
             'active'         => 'categories',
             'is_new'         => false,
@@ -54,20 +58,21 @@ class AdminCategoriesController {
             'category_id'    => $id,
             'all_categories' => $this->categoryService->getFlat(),
             'errors'         => [],
-        ]);
+        ]));
     }
 
-    public function save() {
-        $category_id = (int)($_POST['id'] ?? 0);
+    public function save(Request $request): Response {
+        $post = $request->getPost();
+        $category_id = (int)($post['id'] ?? 0);
         
         $data = [
-            'name'        => trim($_POST['name'] ?? ''),
-            'parent_id'   => !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null,
-            'description' => trim($_POST['description'] ?? ''),
-            'icon'        => trim($_POST['icon'] ?? ''),
+            'name'        => trim($post['name'] ?? ''),
+            'parent_id'   => !empty($post['parent_id']) ? (int)$post['parent_id'] : null,
+            'description' => trim($post['description'] ?? ''),
+            'icon'        => trim($post['icon'] ?? ''),
         ];
 
-        $errors = $this->validator->check($_POST, [
+        $errors = $this->validator->check($post, [
             'name' => 'required',
         ]);
         if ($data['parent_id'] && $data['parent_id'] === $category_id) {
@@ -84,10 +89,10 @@ class AdminCategoriesController {
                 $this->logger->info("Admin created category: {name} (ID: {id})", ['name' => $data['name'], 'id' => $saved_id]);
                 flash('msg', 'Category created.');
             }
-            redirect('/admin/categories');
+            return new RedirectResponse('/admin/categories');
         }
 
-        $this->renderer->adminRender('categories_form', [
+        return new HtmlResponse($this->renderer->adminRender('categories_form', [
             'page_title'     => ($category_id ? 'Edit' : 'Add') . ' Category',
             'active'         => 'categories',
             'is_new'         => !$category_id,
@@ -95,16 +100,16 @@ class AdminCategoriesController {
             'category_id'    => $category_id,
             'all_categories' => $this->categoryService->getFlat(),
             'errors'         => $errors,
-        ]);
+        ]));
     }
 
-    public function delete() {
-        $category_id = (int)($_GET['id'] ?? 0);
+    public function delete(Request $request): Response {
+        $category_id = (int)$request->getQuery('id', 0);
         if ($category_id) {
             $this->categoryService->delete($category_id);
             $this->logger->info("Admin deleted category ID: {id}", ['id' => $category_id]);
             flash('msg', 'Category deleted.');
         }
-        redirect('/admin/categories');
+        return new RedirectResponse('/admin/categories');
     }
 }

@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\AuthServiceInterface;
@@ -24,67 +28,76 @@ class AuthController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function showLogin() {
-        $this->renderer->render('login', [
+    public function showLogin(Request $request): Response {
+        return new HtmlResponse($this->renderer->render('login', [
             'page_title' => 'Sign In',
             'errors'     => [],
             'email'      => '',
-        ]);
+        ]));
     }
 
-    public function login() {
-        $this->securityService->checkRateLimit('login', $_SERVER['REMOTE_ADDR'],
+    public function login(Request $request): Response {
+        $ip = $request->getServer('REMOTE_ADDR');
+        if ($this->securityService->isRateLimited('login', $ip,
             (int)$this->settingsService->get('login_max_attempts'),
             (int)$this->settingsService->get('login_window_minutes') * 60
-        );
+        )) {
+            return new HtmlResponse('Too many attempts. Please try again later.', 429);
+        }
 
-        $email = trim($_POST['email'] ?? '');
-        $pass  = $_POST['password'] ?? '';
+        $email = trim($request->getPost('email', ''));
+        $pass  = $request->getPost('password', '');
         $errors = [];
 
         $user = $this->userService->findByEmail($email);
 
         if (!$user || !password_verify($pass, $user->password_hash)) {
             $this->logger->warning("Failed login attempt for {email}", ['email' => $email]);
-            $this->securityService->recordRateLimit('login', $_SERVER['REMOTE_ADDR']);
+            $this->securityService->recordRateLimit('login', $ip);
             $errors[] = 'Invalid email or password.';
             
-            $this->renderer->render('login', [
+            return new HtmlResponse($this->renderer->render('login', [
                 'page_title' => 'Sign In',
                 'errors'     => $errors,
                 'email'      => $email,
-            ]);
+            ]));
         } else {
             $this->logger->info("User logged in: {email}", ['email' => $email]);
-            $this->securityService->clearRateLimit('login', $_SERVER['REMOTE_ADDR']);
-            $remember = !empty($_POST['remember_me']);
+            $this->securityService->clearRateLimit('login', $ip);
+            $remember = !empty($request->getPost('remember_me'));
             $this->authService->login($user, $remember);
             $this->cartService->syncOnLogin($user->id);
-            redirect($_SESSION['redirect_after_login'] ?? '/');
+            $redirect = $_SESSION['redirect_after_login'] ?? '/';
+            unset($_SESSION['redirect_after_login']);
+            return new RedirectResponse($redirect);
         }
     }
 
-    public function showRegister() {
-        $this->renderer->render('register', [
+    public function showRegister(Request $request): Response {
+        return new HtmlResponse($this->renderer->render('register', [
             'page_title' => 'Create Account',
             'errors'     => [],
             'name'       => '',
             'email'      => '',
-        ]);
+        ]));
     }
 
-    public function register() {
-        $this->securityService->checkRateLimit('register', $_SERVER['REMOTE_ADDR'],
+    public function register(Request $request): Response {
+        $ip = $request->getServer('REMOTE_ADDR');
+        if ($this->securityService->isRateLimited('register', $ip,
             (int)$this->settingsService->get('register_max_attempts'),
             (int)$this->settingsService->get('register_window_minutes') * 60
-        );
+        )) {
+            return new HtmlResponse('Too many attempts. Please try again later.', 429);
+        }
 
-        $name  = trim($_POST['name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $pass  = $_POST['password'] ?? '';
-        $pass2 = $_POST['password2'] ?? '';
+        $post = $request->getPost();
+        $name  = trim($post['name'] ?? '');
+        $email = trim($post['email'] ?? '');
+        $pass  = $post['password'] ?? '';
+        $pass2 = $post['password2'] ?? '';
 
-        $errors = $this->validator->check($_POST, [
+        $errors = $this->validator->check($post, [
             'name'     => 'required',
             'email'    => 'required|email',
             'password' => 'required|min_length:' . $this->settingsService->get('password_min_length'),
@@ -118,25 +131,27 @@ class AuthController {
                 $user = $this->userService->findByEmail($email);
                 $this->authService->login($user);
                 $this->cartService->syncOnLogin($user->id);
-                redirect('/?msg=verify_sent');
+                return new RedirectResponse('/?msg=verify_sent');
             }
         }
         
         if ($errors) {
-            $this->securityService->recordRateLimit('register', $_SERVER['REMOTE_ADDR']);
-            $this->renderer->render('register', [
+            $this->securityService->recordRateLimit('register', $ip);
+            return new HtmlResponse($this->renderer->render('register', [
                 'page_title' => 'Create Account',
                 'errors'     => $errors,
                 'name'       => $name,
                 'email'      => $email,
-            ]);
+            ]));
         }
+        
+        return new RedirectResponse('/');
     }
 
-    public function verifyEmail() {
-        $token = $_GET['token'] ?? '';
+    public function verifyEmail(Request $request): Response {
+        $token = $request->getQuery('token', '');
         if (!$token) {
-            redirect('/');
+            return new RedirectResponse('/');
         }
 
         $user = $this->userService->findByVerificationToken($token);
@@ -154,16 +169,16 @@ class AuthController {
                 $this->authService->login($user);
             }
             
-            redirect('/?msg=verified');
+            return new RedirectResponse('/?msg=verified');
         } else {
-            redirect('/?msg=verify_invalid');
+            return new RedirectResponse('/?msg=verify_invalid');
         }
     }
 
-    public function resendVerification() {
+    public function resendVerification(Request $request): Response {
         $user = $this->authService->currentUser();
         if (!$user || $user->isVerified()) {
-            redirect('/');
+            return new RedirectResponse('/');
         }
 
         $user->verification_token = bin2hex(random_bytes(32));
@@ -171,15 +186,15 @@ class AuthController {
 
         $this->emailService->sendVerificationEmail($user->email, $user->name, $user->verification_token);
 
-        redirect('/?msg=verify_sent');
+        return new RedirectResponse('/?msg=verify_sent');
     }
 
-    public function logout() {
+    public function logout(Request $request): Response {
         $user = $this->authService->currentUser();
         if ($user) {
             $this->logger->notice("User logged out: {email}", ['email' => $user->email]);
         }
         $this->authService->logout();
-        redirect('/');
+        return new RedirectResponse('/');
     }
 }

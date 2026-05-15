@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\DeliveryServiceInterface;
@@ -15,44 +19,45 @@ class AdminDeliveryController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function list() {
-        $this->renderer->adminRender('delivery_list', [
+    public function list(Request $request): Response {
+        return new HtmlResponse($this->renderer->adminRender('delivery_list', [
             'page_title' => 'Delivery Options',
             'active'     => 'delivery',
             'options'    => $this->delivery->all(),
-        ]);
+        ]));
     }
 
-    public function create() {
-        $this->renderer->adminRender('delivery_form', [
+    public function create(Request $request): Response {
+        return new HtmlResponse($this->renderer->adminRender('delivery_form', [
             'page_title' => 'New Delivery Option',
             'active'     => 'delivery',
             'option'     => ['name' => '', 'price' => '', 'active' => 1, 'min_order_total' => 0],
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function edit() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function edit(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         $option = $this->delivery->get($id);
-        if (!$option) redirect('/admin/delivery');
+        if (!$option) return new RedirectResponse('/admin/delivery');
 
-        $this->renderer->adminRender('delivery_form', [
+        return new HtmlResponse($this->renderer->adminRender('delivery_form', [
             'page_title' => 'Edit Delivery Option',
             'active'     => 'delivery',
             'option'     => $option,
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function save() {
-        $id = (int)($_POST['id'] ?? 0);
+    public function save(Request $request): Response {
+        $post = $request->getPost();
+        $id = (int)($post['id'] ?? 0);
         $data = [
             'id'              => $id,
-            'name'            => trim($_POST['name'] ?? ''),
-            'price'           => (float)($_POST['price'] ?? 0),
-            'active'          => isset($_POST['active']) ? 1 : 0,
-            'min_order_total' => (float)($_POST['min_order_total'] ?? 0),
+            'name'            => trim($post['name'] ?? ''),
+            'price'           => (float)($post['price'] ?? 0),
+            'active'          => isset($post['active']) ? 1 : 0,
+            'min_order_total' => (float)($post['min_order_total'] ?? 0),
         ];
 
         $errors = $this->validator->check($data, [
@@ -69,22 +74,22 @@ class AdminDeliveryController {
                 'id' => $id ?: 'new'
             ]);
             flash('success', 'Delivery option saved.');
-            redirect('/admin/delivery');
+            return new RedirectResponse('/admin/delivery');
         }
 
-        $this->renderer->adminRender('delivery_form', [
+        return new HtmlResponse($this->renderer->adminRender('delivery_form', [
             'page_title' => $id ? 'Edit Delivery Option' : 'New Delivery Option',
             'active'     => 'delivery',
             'option'     => $data,
             'errors'     => $errors,
-        ]);
+        ]));
     }
 
-    public function delete() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function delete(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         $this->delivery->delete($id);
         $this->logger->info("Admin deleted delivery option ID: {id}", ['id' => $id]);
         flash('success', 'Delivery option deleted.');
-        redirect('/admin/delivery');
+        return new RedirectResponse('/admin/delivery');
     }
 }

@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Services\SecurityServiceInterface;
 use App\Services\EmailServiceInterface;
@@ -19,36 +23,35 @@ class AdminOrdersController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function list() {
-        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
+    public function list(Request $request): Response {
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
         $orders = $this->orderService->find($criteria);
 
-        $this->renderer->adminRender('orders_list', [
+        return new HtmlResponse($this->renderer->adminRender('orders_list', [
             'page_title' => 'Orders',
             'active'     => 'orders',
             'orders'     => $orders,
             'filter'     => $criteria->getFilter('status', ''),
-        ]);
+        ]));
     }
 
-    public function detail() {
-        $order_id = (int)($_GET['id'] ?? 0);
+    public function detail(Request $request): Response {
+        $order_id = (int)$request->getQuery('id', 0);
 
         if (!$order_id) {
-            redirect('/admin/orders');
+            return new RedirectResponse('/admin/orders');
         }
 
         $order = $this->orderService->findById($order_id);
 
         if (!$order) {
-            http_response_code(404);
-            exit('Order not found.');
+            return new HtmlResponse('Order not found.', 404);
         }
 
         $history = $this->orderService->getStatusHistory($order_id);
         $returns = $this->returnService->getForOrder($order_id);
 
-        $this->renderer->adminRender('orders_detail', [
+        return new HtmlResponse($this->renderer->adminRender('orders_detail', [
             'page_title'  => 'Order ' . $order->getFormattedId(),
             'active'      => 'orders',
             'order'       => $order,
@@ -57,13 +60,14 @@ class AdminOrdersController {
             'returns'     => $returns,
             'flash_msg'   => flash('msg'),
             'flash_error' => flash('msg_error'),
-        ]);
+        ]));
     }
 
-    public function updateStatus() {
-        $order_id = (int)($_POST['id'] ?? 0);
-        $status   = $_POST['status'] ?? '';
-        $notes    = trim($_POST['notes'] ?? '');
+    public function updateStatus(Request $request): Response {
+        $post = $request->getPost();
+        $order_id = (int)($post['id'] ?? 0);
+        $status   = $post['status'] ?? '';
+        $notes    = trim($post['notes'] ?? '');
         $user     = $this->auth->currentUser();
 
         $allowed = [
@@ -105,6 +109,6 @@ class AdminOrdersController {
             }
         }
 
-        redirect('/admin/orders/detail?id=' . $order_id);
+        return new RedirectResponse('/admin/orders/detail?id=' . $order_id);
     }
 }

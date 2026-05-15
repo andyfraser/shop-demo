@@ -38,4 +38,32 @@ class SecurityServiceTest extends TestCase {
         $this->assertTrue(strpos($field, 'name="csrf_token"') !== false);
         $this->assertTrue(strpos($field, 'value="' . $token . '"') !== false);
     }
+
+    public function testValidateCsrf() {
+        $token = $this->security->csrfToken();
+        $this->assertTrue($this->security->validateCsrf($token));
+        $this->assertFalse($this->security->validateCsrf('wrong-token'));
+        $this->assertFalse($this->security->validateCsrf(''));
+        $this->assertFalse($this->security->validateCsrf(null));
+    }
+
+    public function testIsRateLimited() {
+        $ip = '127.0.0.1';
+        $action = 'test-action';
+        
+        // Not limited initially
+        $this->assertFalse($this->security->isRateLimited($action, $ip, 3, 60));
+        
+        // Record 3 attempts
+        $this->security->recordRateLimit($action, $ip);
+        $this->security->recordRateLimit($action, $ip);
+        $this->security->recordRateLimit($action, $ip);
+        
+        // Now should be limited
+        $this->assertTrue($this->security->isRateLimited($action, $ip, 3, 60));
+        
+        // Clear and should not be limited
+        $this->security->clearRateLimit($action, $ip);
+        $this->assertFalse($this->security->isRateLimited($action, $ip, 3, 60));
+    }
 }

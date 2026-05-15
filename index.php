@@ -148,12 +148,11 @@ foreach ($routes as $route) {
 }
 
 // Handle request
-$uri = $_SERVER['REQUEST_URI'] ?? '/';
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$request = \App\Core\Request::createFromGlobals();
 
 // Serve static files via built-in server correctly
 if (php_sapi_name() === 'cli-server') {
-    $path = parse_url($uri, PHP_URL_PATH);
+    $path = parse_url($request->getUri(), PHP_URL_PATH);
     if ($path !== '/') {
         $publicPath = __DIR__ . '/public' . $path;
         // If the path already starts with /public, don't prepend it again
@@ -171,4 +170,5 @@ if (php_sapi_name() === 'cli-server') {
     }
 }
 
-$router->dispatch($uri, $method);
+$response = $router->dispatch($request);
+$response->send();

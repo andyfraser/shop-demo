@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\AttributeServiceInterface;
@@ -15,18 +19,18 @@ class AdminAttributesController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function list() {
+    public function list(Request $request): Response {
         $attributes = $this->attributeService->getAll();
-        $this->renderer->adminRender('attributes_list', [
+        return new HtmlResponse($this->renderer->adminRender('attributes_list', [
             'page_title' => 'Attributes',
             'active'     => 'attributes',
             'attributes' => $attributes,
             'flash_msg'  => flash('msg'),
-        ]);
+        ]));
     }
 
-    public function create() {
-        $this->renderer->adminRender('attributes_form', [
+    public function create(Request $request): Response {
+        return new HtmlResponse($this->renderer->adminRender('attributes_form', [
             'page_title' => 'Add Attribute',
             'active'     => 'attributes',
             'is_new'     => true,
@@ -34,17 +38,17 @@ class AdminAttributesController {
             'attribute_id' => 0,
             'values'     => [],
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function edit() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function edit(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         $attribute = $this->attributeService->findById($id);
-        if (!$attribute) redirect('/admin/attributes');
+        if (!$attribute) return new RedirectResponse('/admin/attributes');
 
         $values = $this->attributeService->getValues($id);
 
-        $this->renderer->adminRender('attributes_form', [
+        return new HtmlResponse($this->renderer->adminRender('attributes_form', [
             'page_title' => 'Edit Attribute',
             'active'     => 'attributes',
             'is_new'     => false,
@@ -52,23 +56,24 @@ class AdminAttributesController {
             'attribute_id' => $id,
             'values'     => $values,
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function save() {
-        $id = (int)($_POST['id'] ?? 0);
-        $data = ['name' => trim($_POST['name'] ?? '')];
+    public function save(Request $request): Response {
+        $post = $request->getPost();
+        $id = (int)($post['id'] ?? 0);
+        $data = ['name' => trim($post['name'] ?? '')];
 
-        $errors = $this->validator->check($_POST, ['name' => 'required']);
+        $errors = $this->validator->check($post, ['name' => 'required']);
 
         if (!$errors) {
             $attributeId = $this->attributeService->save($data, $id);
             $finalId = $id ?: $attributeId;
 
             // Handle values
-            if (isset($_POST['values']) && is_array($_POST['values'])) {
+            if (isset($post['values']) && is_array($post['values'])) {
                 $i = 0;
-                foreach ($_POST['values'] as $v) {
+                foreach ($post['values'] as $v) {
                     if (!empty($v['delete']) && !empty($v['id'])) {
                         $this->attributeService->deleteValue((int)$v['id']);
                         continue;
@@ -86,10 +91,10 @@ class AdminAttributesController {
             }
 
             flash('msg', 'Attribute saved.');
-            redirect('/admin/attributes');
+            return new RedirectResponse('/admin/attributes');
         }
 
-        $this->renderer->adminRender('attributes_form', [
+        return new HtmlResponse($this->renderer->adminRender('attributes_form', [
             'page_title' => ($id ? 'Edit' : 'Add') . ' Attribute',
             'active'     => 'attributes',
             'is_new'     => !$id,
@@ -97,15 +102,15 @@ class AdminAttributesController {
             'attribute_id' => $id,
             'values'     => $id ? $this->attributeService->getValues($id) : [],
             'errors'     => $errors,
-        ]);
+        ]));
     }
 
-    public function delete() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function delete(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         if ($id) {
             $this->attributeService->delete($id);
             flash('msg', 'Attribute deleted.');
         }
-        redirect('/admin/attributes');
+        return new RedirectResponse('/admin/attributes');
     }
 }

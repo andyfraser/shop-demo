@@ -1,6 +1,11 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\JsonResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Services\WishlistServiceInterface;
 use App\Services\AuthServiceInterface;
@@ -14,42 +19,38 @@ class WishlistController {
         private SecurityServiceInterface $securityService
     ) {}
 
-    public function index() {
+    public function index(Request $request): Response {
         $user = $this->authService->currentUser();
         $wishlist = $this->wishlistService->getUserWishlist($user->id);
 
-        $this->renderer->render('wishlist', [
+        return new HtmlResponse($this->renderer->render('wishlist', [
             'page_title' => 'My Wishlist',
             'wishlist' => $wishlist,
-        ]);
+        ]));
     }
 
-    public function add($productId) {
+    public function add(Request $request, $productId): Response {
         $user = $this->authService->currentUser();
         $this->wishlistService->addToWishlist($user->id, (int)$productId);
 
-        if (is_ajax()) {
-            header('Content-Type: application/json');
-            echo json_encode(['ok' => true, 'message' => 'Added to wishlist.']);
-            exit;
+        if ($request->isAjax()) {
+            return new JsonResponse(['ok' => true, 'message' => 'Added to wishlist.']);
         }
 
         flash('success', 'Product added to your wishlist.');
-        $redirect = $_SERVER['HTTP_REFERER'] ?? '/wishlist';
-        redirect($redirect);
+        $redirect = $request->getServer('HTTP_REFERER', '/wishlist');
+        return new RedirectResponse($redirect);
     }
 
-    public function remove($productId) {
+    public function remove(Request $request, $productId): Response {
         $user = $this->authService->currentUser();
         $this->wishlistService->removeFromWishlist($user->id, (int)$productId);
 
-        if (is_ajax()) {
-            header('Content-Type: application/json');
-            echo json_encode(['ok' => true, 'message' => 'Removed from wishlist.']);
-            exit;
+        if ($request->isAjax()) {
+            return new JsonResponse(['ok' => true, 'message' => 'Removed from wishlist.']);
         }
 
         flash('success', 'Product removed from your wishlist.');
-        redirect('/wishlist');
+        return new RedirectResponse('/wishlist');
     }
 }

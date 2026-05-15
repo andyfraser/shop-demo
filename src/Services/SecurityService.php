@@ -22,30 +22,13 @@ class SecurityService implements SecurityServiceInterface {
         return '<input type="hidden" name="csrf_token" value="' . h($this->csrfToken()) . '">';
     }
 
-    public function verifyCsrf(): void {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (session_status() === PHP_SESSION_NONE) @session_start();
-            $passed = $_POST['csrf_token'] ?? '';
-            $stored = $_SESSION['csrf_token'] ?? '';
-            if (empty($passed) || !hash_equals($stored, $passed)) {
-                $this->logger->error("CSRF token verification failed for {method} {uri}", [
-                    'method' => $_SERVER['REQUEST_METHOD'],
-                    'uri' => $_SERVER['REQUEST_URI']
-                ]);
-                
-                http_response_code(403);
-                if (is_ajax()) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['ok' => false, 'message' => 'Invalid CSRF token.']);
-                } else {
-                    echo 'Invalid CSRF token. Please go back and try again.';
-                }
-                exit;
-            }
-        }
+    public function validateCsrf(?string $passed): bool {
+        if (session_status() === PHP_SESSION_NONE) @session_start();
+        $stored = $_SESSION['csrf_token'] ?? '';
+        return !empty($passed) && hash_equals($stored, $passed);
     }
 
-    public function checkRateLimit(string $action, string $ip, int $limit, int $windowSeconds): void {
+    public function isRateLimited(string $action, string $ip, int $limit, int $windowSeconds): bool {
         $since = date('Y-m-d H:i:s', time() - $windowSeconds);
         $count = $this->repository->countRateLimits($action, $ip, $since);
         
@@ -54,9 +37,9 @@ class SecurityService implements SecurityServiceInterface {
                 'action' => $action,
                 'ip' => $ip
             ]);
-            http_response_code(429);
-            die('Too many attempts. Please try again later.');
+            return true;
         }
+        return false;
     }
 
     public function recordRateLimit(string $action, string $ip): void {

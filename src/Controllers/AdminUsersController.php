@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\SecurityServiceInterface;
@@ -19,20 +23,20 @@ class AdminUsersController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function list() {
+    public function list(Request $request): Response {
         $users = $this->userService->getAll();
 
-        $this->renderer->adminRender('users_list', [
+        return new HtmlResponse($this->renderer->adminRender('users_list', [
             'page_title' => 'Users',
             'active'     => 'users',
             'users'      => $users,
             'flash_msg'  => flash('msg'),
             'flash_err'  => flash('err'),
-        ]);
+        ]));
     }
 
-    public function create() {
-        $this->renderer->adminRender('users_form', [
+    public function create(Request $request): Response {
+        return new HtmlResponse($this->renderer->adminRender('users_form', [
             'page_title'       => 'Add User',
             'active'           => 'users',
             'is_new'           => true,
@@ -41,18 +45,18 @@ class AdminUsersController {
             'errors'           => [],
             'roles'            => $this->roleService->getAll(),
             'password_min_len' => (int)$this->settings->get('password_min_length'),
-        ]);
+        ]));
     }
 
-    public function edit() {
-        $user_id = (int)($_GET['id'] ?? 0);
+    public function edit(Request $request): Response {
+        $user_id = (int)$request->getQuery('id', 0);
         $user = $this->userService->findById($user_id);
 
         if (!$user) {
-            redirect('/admin/users');
+            return new RedirectResponse('/admin/users');
         }
 
-        $this->renderer->adminRender('users_form', [
+        return new HtmlResponse($this->renderer->adminRender('users_form', [
             'page_title'       => 'Edit User',
             'active'           => 'users',
             'is_new'           => false,
@@ -61,26 +65,27 @@ class AdminUsersController {
             'errors'           => [],
             'roles'            => $this->roleService->getAll(),
             'password_min_len' => (int)$this->settings->get('password_min_length'),
-        ]);
+        ]));
     }
 
-    public function save() {
-        $user_id = (int)($_POST['id'] ?? 0);
+    public function save(Request $request): Response {
+        $post = $request->getPost();
+        $user_id = (int)($post['id'] ?? 0);
         
         $roleSlugs = array_map(fn($r) => $r->slug, $this->roleService->getAll());
         $roleSlugs[] = 'admin';
         
         $data = [
-            'name'        => trim($_POST['name'] ?? ''),
-            'email'       => trim($_POST['email'] ?? ''),
-            'role'        => in_array($_POST['role'] ?? '', $roleSlugs) ? $_POST['role'] : 'customer',
-            'address'     => trim($_POST['address'] ?? ''),
-            'is_verified' => isset($_POST['is_verified']) ? 1 : 0,
+            'name'        => trim($post['name'] ?? ''),
+            'email'       => trim($post['email'] ?? ''),
+            'role'        => in_array($post['role'] ?? '', $roleSlugs) ? $post['role'] : 'customer',
+            'address'     => trim($post['address'] ?? ''),
+            'is_verified' => isset($post['is_verified']) ? 1 : 0,
         ];
-        $pass = $_POST['password'] ?? '';
+        $pass = $post['password'] ?? '';
 
         $minLen = $this->settings->get('password_min_length');
-        $errors = $this->validator->check($_POST, [
+        $errors = $this->validator->check($post, [
             'name'     => 'required',
             'email'    => 'required|email',
             'password' => $user_id ? "min_length:$minLen" : "required|min_length:$minLen",
@@ -115,10 +120,10 @@ class AdminUsersController {
                 $this->logger->info("Admin created user: {email} (ID: {id})", ['email' => $data['email'], 'id' => $saved_id]);
                 flash('msg', 'User created.');
             }
-            redirect('/admin/users');
+            return new RedirectResponse('/admin/users');
         }
 
-        $this->renderer->adminRender('users_form', [
+        return new HtmlResponse($this->renderer->adminRender('users_form', [
             'page_title'       => ($user_id ? 'Edit' : 'Add') . ' User',
             'active'           => 'users',
             'is_new'           => !$user_id,
@@ -127,11 +132,11 @@ class AdminUsersController {
             'errors'           => $errors,
             'roles'            => $this->roleService->getAll(),
             'password_min_len' => (int)$this->settings->get('password_min_length'),
-        ]);
+        ]));
     }
 
-    public function delete() {
-        $user_id = (int)($_GET['id'] ?? 0);
+    public function delete(Request $request): Response {
+        $user_id = (int)$request->getQuery('id', 0);
         $current = $this->userService->findById((int)current_user()->id);
         
         if ($user_id === $current->id) {
@@ -141,6 +146,6 @@ class AdminUsersController {
             $this->logger->info("Admin deleted user ID: {id}", ['id' => $user_id]);
             flash('msg', 'User deleted.');
         }
-        redirect('/admin/users');
+        return new RedirectResponse('/admin/users');
     }
 }

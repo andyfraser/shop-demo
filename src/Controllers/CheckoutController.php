@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\CartServiceInterface;
@@ -29,10 +33,10 @@ class CheckoutController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function show() {
+    public function show(Request $request): Response {
         $items = $this->cart->items();
         if (empty($items)) {
-            redirect('/cart');
+            return new RedirectResponse('/cart');
         }
 
         $user = $this->auth->currentUser();
@@ -48,7 +52,7 @@ class CheckoutController {
             }
         }
 
-        $this->renderer->render('checkout', [
+        return new HtmlResponse($this->renderer->render('checkout', [
             'page_title' => 'Checkout',
             'cart'       => $this->cart,
             'items'      => $items,
@@ -69,23 +73,24 @@ class CheckoutController {
             'delivery_options' => $this->delivery->active($this->cart->total()),
             'delivery_id' => null,
             'is_guest'   => $user === null,
-        ]);
+        ]));
     }
 
-    public function process() {
+    public function process(Request $request): Response {
         $items = $this->cart->items();
         if (empty($items)) {
-            redirect('/cart');
+            return new RedirectResponse('/cart');
         }
 
-        $name       = trim($_POST['name'] ?? '');
-        $email      = trim($_POST['email'] ?? '');
-        $address    = trim($_POST['address'] ?? '');
-        $city       = trim($_POST['city'] ?? '');
-        $postcode   = trim($_POST['postcode'] ?? '');
-        $country    = trim($_POST['country'] ?? '');
-        $notes      = trim($_POST['notes'] ?? '');
-        $deliveryId = (int)($_POST['delivery_option_id'] ?? 0);
+        $post = $request->getPost();
+        $name       = trim($post['name'] ?? '');
+        $email      = trim($post['email'] ?? '');
+        $address    = trim($post['address'] ?? '');
+        $city       = trim($post['city'] ?? '');
+        $postcode   = trim($post['postcode'] ?? '');
+        $country    = trim($post['country'] ?? '');
+        $notes      = trim($post['notes'] ?? '');
+        $deliveryId = (int)($post['delivery_option_id'] ?? 0);
 
         $rules = [
             'name'               => 'required',
@@ -97,7 +102,7 @@ class CheckoutController {
             'delivery_option_id' => 'required',
         ];
 
-        $errors = $this->validator->check($_POST, $rules);
+        $errors = $this->validator->check($post, $rules);
 
         $deliveryOption = $this->delivery->get($deliveryId);
         if (!$deliveryOption || !$deliveryOption->active) {
@@ -174,8 +179,6 @@ class CheckoutController {
                         'id' => $order_id,
                         'reason' => $paymentResult->message
                     ]);
-                    // You might want to handle failed payment differently, 
-                    // e.g., redirecting to a payment retry page.
                 }
 
                 $order = $this->orderService->findById($order_id);
@@ -196,14 +199,14 @@ class CheckoutController {
                 $this->auth->sessionStart();
                 $_SESSION['last_order_id'] = (int)$order_id;
                 
-                redirect('/order/confirm?id=' . $order_id);
+                return new RedirectResponse('/order/confirm?id=' . $order_id);
             } catch (\Exception $e) {
                 $errors[] = "An error occurred while processing your order. Please try again.";
                 $this->logger->error("Order creation failed: " . $e->getMessage());
             }
         }
 
-        $this->renderer->render('checkout', [
+        return new HtmlResponse($this->renderer->render('checkout', [
             'page_title' => 'Checkout',
             'cart'       => $this->cart,
             'items'      => $items,
@@ -220,11 +223,11 @@ class CheckoutController {
             'delivery_options' => $this->delivery->active($this->cart->total()),
             'delivery_id' => $deliveryId,
             'is_guest'   => $this->auth->currentUser() === null,
-        ]);
+        ]));
     }
 
-    public function confirm() {
-        $order_id = (int)($_GET['id'] ?? 0);
+    public function confirm(Request $request): Response {
+        $order_id = (int)$request->getQuery('id', 0);
         $order = $this->orderService->findById($order_id);
 
         $user = $this->auth->currentUser();
@@ -233,13 +236,13 @@ class CheckoutController {
                     (isset($_SESSION['last_order_id']) && $_SESSION['last_order_id'] === $order_id);
 
         if (!$order || !$is_owner) {
-            redirect('/');
+            return new RedirectResponse('/');
         }
 
-        $this->renderer->render('order_confirm', [
+        return new HtmlResponse($this->renderer->render('order_confirm', [
             'page_title'  => 'Order Confirmed',
             'order'       => $order,
             'order_items' => $order->items,
-        ]);
+        ]));
     }
 }

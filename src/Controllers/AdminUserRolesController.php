@@ -2,6 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\UserRoleServiceInterface;
@@ -16,55 +20,56 @@ class AdminUserRolesController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function list() {
+    public function list(Request $request): Response {
         $roles = $this->roleService->getAll();
 
-        $this->renderer->adminRender('user_roles_list', [
+        return new HtmlResponse($this->renderer->adminRender('user_roles_list', [
             'page_title' => 'User Roles',
             'active'     => 'user-roles',
             'roles'      => $roles,
             'flash_msg'  => flash('msg'),
-        ]);
+        ]));
     }
 
-    public function create() {
-        $this->renderer->adminRender('user_roles_form', [
+    public function create(Request $request): Response {
+        return new HtmlResponse($this->renderer->adminRender('user_roles_form', [
             'page_title' => 'Add User Role',
             'active'     => 'user-roles',
             'is_new'     => true,
             'role'       => [],
             'role_id'    => 0,
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function edit() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function edit(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         $role = $this->roleService->findById($id);
 
         if (!$role) {
-            redirect('/admin/user-roles');
+            return new RedirectResponse('/admin/user-roles');
         }
 
-        $this->renderer->adminRender('user_roles_form', [
+        return new HtmlResponse($this->renderer->adminRender('user_roles_form', [
             'page_title' => 'Edit User Role',
             'active'     => 'user-roles',
             'is_new'     => false,
             'role'       => $role,
             'role_id'    => $id,
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function save() {
-        $id = (int)($_POST['id'] ?? 0);
+    public function save(Request $request): Response {
+        $post = $request->getPost();
+        $id = (int)($post['id'] ?? 0);
         $data = [
-            'name'        => trim($_POST['name'] ?? ''),
-            'slug'        => trim($_POST['slug'] ?? ''),
-            'description' => trim($_POST['description'] ?? ''),
+            'name'        => trim($post['name'] ?? ''),
+            'slug'        => trim($post['slug'] ?? ''),
+            'description' => trim($post['description'] ?? ''),
         ];
 
-        $errors = $this->validator->check($_POST, [
+        $errors = $this->validator->check($post, [
             'name' => 'required',
             'slug' => 'required',
         ]);
@@ -79,21 +84,21 @@ class AdminUserRolesController {
         if (!$errors) {
             $this->roleService->save($data, $id);
             flash('msg', $id ? 'User role updated.' : 'User role created.');
-            redirect('/admin/user-roles');
+            return new RedirectResponse('/admin/user-roles');
         }
 
-        $this->renderer->adminRender('user_roles_form', [
+        return new HtmlResponse($this->renderer->adminRender('user_roles_form', [
             'page_title' => ($id ? 'Edit' : 'Add') . ' User Role',
             'active'     => 'user-roles',
             'is_new'     => !$id,
             'role'       => $data,
             'role_id'    => $id,
             'errors'     => $errors,
-        ]);
+        ]));
     }
 
-    public function delete() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function delete(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         if ($id) {
             $role = $this->roleService->findById($id);
             if ($role && in_array($role->slug, ['admin', 'customer'])) {
@@ -103,6 +108,6 @@ class AdminUserRolesController {
                 flash('msg', 'User role deleted.');
             }
         }
-        redirect('/admin/user-roles');
+        return new RedirectResponse('/admin/user-roles');
     }
 }

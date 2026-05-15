@@ -1,6 +1,11 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\JsonResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Services\ProductServiceInterface;
 use App\Services\CategoryServiceInterface;
@@ -23,22 +28,20 @@ class StorefrontController {
         private Renderer $renderer
     ) {}
 
-    public function index() {
+    public function index(Request $request): Response {
         $featured_products = $this->productService->getFeatured(8);
         $this->productService->attachActivePromotions($featured_products, $this->authService->currentUser());
 
-        $this->renderer->render('home', [
+        return new HtmlResponse($this->renderer->render('home', [
             'page_title'       => 'Welcome',
             'featured_products' => $featured_products,
-        ]);
+        ]));
     }
 
-    public function suggestions() {
-        $query = trim($_GET['q'] ?? '');
+    public function suggestions(Request $request): Response {
+        $query = trim($request->getQuery('q', ''));
         if (mb_strlen($query) < 3) {
-            header('Content-Type: application/json');
-            echo json_encode([]);
-            return;
+            return new JsonResponse([]);
         }
 
         $products = $this->productService->searchSuggestions($query, 5);
@@ -55,12 +58,11 @@ class StorefrontController {
             ];
         }
 
-        header('Content-Type: application/json');
-        echo json_encode($suggestions);
+        return new JsonResponse($suggestions);
     }
 
-    public function search() {
-        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
+    public function search(Request $request): Response {
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
         $query = $criteria->getSearchTerm();
 
         $products = [];
@@ -88,24 +90,23 @@ class StorefrontController {
             'total_pages'       => $total_pages,
             'current_page'      => $criteria->getPage(),
             'sort'              => $criteria->getSort() ?: 'name',
-            'per_page_param'    => $_GET['per_page'] ?? '12',
+            'per_page_param'    => $request->getQuery('per_page', '12'),
             'available_filters' => $available_filters,
             'active_filters'    => $criteria->getFilters(),
         ];
 
-        if ($this->isAjax()) {
-            $this->renderer->renderPartial('partials/product_list', $data);
+        if ($request->isAjax()) {
+            return new HtmlResponse($this->renderer->renderPartial('partials/product_list', $data));
         } else {
-            $this->renderer->render('search', $data);
+            return new HtmlResponse($this->renderer->render('search', $data));
         }
     }
 
-    public function category($slug = '') {
+    public function category(Request $request, $slug = ''): Response {
         $category = $this->categoryService->findBySlug($slug);
 
         if (!$category) {
-            http_response_code(404);
-            exit('Category not found.');
+            return new HtmlResponse($this->renderer->render('404', ['page_title' => 'Category Not Found']), 404);
         }
 
         $subcategories = $this->categoryService->getSubcategories($category->id);
@@ -120,7 +121,7 @@ class StorefrontController {
             foreach ($subs as $row) $queue[] = $row->id;
         }
 
-        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
 
         $total_products = $this->productService->countByCategory($cat_ids, $criteria);
         $products = $this->productService->getByCategory($cat_ids, $criteria);
@@ -141,26 +142,24 @@ class StorefrontController {
             'total_pages'       => $total_pages,
             'current_page'      => $criteria->getPage(),
             'sort'              => $criteria->getSort() ?: 'name',
-            'per_page_param'    => $_GET['per_page'] ?? '12',
+            'per_page_param'    => $request->getQuery('per_page', '12'),
             'available_filters' => $available_filters,
             'active_filters'    => $criteria->getFilters(),
         ];
 
-        if ($this->isAjax()) {
-            $this->renderer->renderPartial('partials/product_list', $data);
+        if ($request->isAjax()) {
+            return new HtmlResponse($this->renderer->renderPartial('partials/product_list', $data));
         } else {
-            $this->renderer->render('category', $data);
+            return new HtmlResponse($this->renderer->render('category', $data));
         }
     }
 
-    public function promotion($code) {
+    public function promotion(Request $request, $code): Response {
         $promo = $this->promotionService->findByCode($code);
 
         if (!$promo) {
-            http_response_code(404);
             flash('error', 'This promo code does not exist.');
-            $this->renderer->render('404', ['page_title' => 'Promotion Not Found']);
-            exit;
+            return new HtmlResponse($this->renderer->render('404', ['page_title' => 'Promotion Not Found']), 404);
         }
 
         $user = $this->authService->currentUser();
@@ -183,7 +182,7 @@ class StorefrontController {
             }
 
             flash('error', $msg);
-            redirect('/');
+            return new RedirectResponse('/');
         }
 
 
@@ -194,7 +193,7 @@ class StorefrontController {
         if ($promo->target_type === \App\Models\Promotion::TARGET_CATEGORY && count($promo->target_ids) === 1) {
             $category = $this->categoryService->findById($promo->target_ids[0]);
             if ($category) {
-                redirect('/category/' . $category->slug);
+                return new RedirectResponse('/category/' . $category->slug);
             }
         }
 
@@ -202,16 +201,16 @@ class StorefrontController {
         if ($promo->target_type === \App\Models\Promotion::TARGET_PRODUCT && count($promo->target_ids) === 1) {
             $product = $this->productService->findById($promo->target_ids[0]);
             if ($product) {
-                redirect('/product/' . $product->slug);
+                return new RedirectResponse('/product/' . $product->slug);
             }
         }
 
         // 3. Otherwise show a list of qualifying products
-        $this->promotionProducts($promo);
+        return $this->promotionProducts($request, $promo);
     }
 
-    private function promotionProducts(\App\Models\Promotion $promo) {
-        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
+    private function promotionProducts(Request $request, \App\Models\Promotion $promo): Response {
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
         $cat_ids = [];
 
         // We need to fetch all potentially qualifying products to count them correctly
@@ -274,22 +273,20 @@ class StorefrontController {
             'total_pages'       => $total_pages,
             'current_page'      => $criteria->getPage(),
             'sort'              => $criteria->getSort() ?: 'name',
-            'per_page_param'    => $_GET['per_page'] ?? '12',
+            'per_page_param'    => $request->getQuery('per_page', '12'),
             'available_filters' => $available_filters,
             'active_filters'    => $criteria->getFilters(),
         ];
 
-        if ($this->isAjax()) {
-            $this->renderer->renderPartial('partials/product_list', $data);
+        if ($request->isAjax()) {
+            return new HtmlResponse($this->renderer->renderPartial('partials/product_list', $data));
         } else {
-            // We can reuse the products template if it's generic enough,
-            // or create a new one. The products.php template seems okay.
-            $this->renderer->render('products', $data);
+            return new HtmlResponse($this->renderer->render('products', $data));
         }
     }
 
-    public function products() {
-        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
+    public function products(Request $request): Response {
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
 
         $total_products = $this->productService->countAllActive($criteria);
         $products = $this->productService->getAllActive($criteria);
@@ -305,28 +302,23 @@ class StorefrontController {
             'total_pages'       => $total_pages,
             'current_page'      => $criteria->getPage(),
             'sort'              => $criteria->getSort() ?: 'name',
-            'per_page_param'    => $_GET['per_page'] ?? '12',
+            'per_page_param'    => $request->getQuery('per_page', '12'),
             'available_filters' => $available_filters,
             'active_filters'    => $criteria->getFilters(),
         ];
 
-        if ($this->isAjax()) {
-            $this->renderer->renderPartial('partials/product_list', $data);
+        if ($request->isAjax()) {
+            return new HtmlResponse($this->renderer->renderPartial('partials/product_list', $data));
         } else {
-            $this->renderer->render('products', $data);
+            return new HtmlResponse($this->renderer->render('products', $data));
         }
     }
 
-    private function isAjax(): bool {
-        return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_GET['ajax']);
-    }
-
-    public function product($slug = '') {
+    public function product(Request $request, $slug = ''): Response {
         $product = $this->productService->findBySlug($slug);
 
         if (!$product) {
-            http_response_code(404);
-            exit('Product not found.');
+            return new HtmlResponse($this->renderer->render('404', ['page_title' => 'Product Not Found']), 404);
         }
 
         $this->productService->attachActivePromotions([$product], $this->authService->currentUser());
@@ -334,17 +326,19 @@ class StorefrontController {
         $breadcrumb = $product->category_id ? $this->categoryService->getBreadcrumb($product->category_id) : [];
 
         // Track Recently Viewed
-        if (!isset($_SESSION['recently_viewed'])) {
-            $_SESSION['recently_viewed'] = [];
-        }
+        $session = $request->getSession();
+        $recently_viewed_ids = $session['recently_viewed'] ?? [];
+        
         // Remove if already exists to move it to the end
-        $_SESSION['recently_viewed'] = array_filter($_SESSION['recently_viewed'], fn($id) => $id != $product->id);
-        array_unshift($_SESSION['recently_viewed'], $product->id);
-        // Keep only last 8 (7 to show, plus 1 for current product being filtered out)
-        $_SESSION['recently_viewed'] = array_slice($_SESSION['recently_viewed'], 0, 8);
+        $recently_viewed_ids = array_filter($recently_viewed_ids, fn($id) => $id != $product->id);
+        array_unshift($recently_viewed_ids, $product->id);
+        // Keep only last 8
+        $recently_viewed_ids = array_slice($recently_viewed_ids, 0, 8);
+        
+        $_SESSION['recently_viewed'] = $recently_viewed_ids;
 
         // Fetch Recently Viewed products (excluding current)
-        $recent_ids = array_values(array_filter($_SESSION['recently_viewed'], fn($id) => $id != $product->id));
+        $recent_ids = array_values(array_filter($recently_viewed_ids, fn($id) => $id != $product->id));
         $recently_viewed = !empty($recent_ids) ? $this->productService->findByIds($recent_ids) : [];
         
         // Ensure products are returned in the exact order of the history
@@ -367,7 +361,7 @@ class StorefrontController {
         $reviews = $this->reviewService->getByProductId($product->id);
         $avg_rating = $this->reviewService->getAverageRating($product->id);
 
-        $this->renderer->render('product', [
+        return new HtmlResponse($this->renderer->render('product', [
             'page_title'      => $product->name,
             'product'         => $product,
             'breadcrumb'      => $breadcrumb,
@@ -379,30 +373,29 @@ class StorefrontController {
             'avg_rating'      => $avg_rating,
             'flash_success'   => flash('success'),
             'flash_error'     => flash('error'),
-        ]);
+        ]));
     }
 
-    public function submitReview($slug) {
+    public function submitReview(Request $request, $slug): Response {
         $product = $this->productService->findBySlug($slug);
-        if (!$product) redirect('/');
+        if (!$product) return new RedirectResponse('/');
 
         $user = $this->authService->currentUser();
 
-        $rating = (int)($_POST['rating'] ?? 0);
-        $comment = trim($_POST['comment'] ?? '');
+        $rating = (int)$request->getPost('rating', 0);
+        $comment = trim($request->getPost('comment', ''));
 
         if ($rating < 1 || $rating > 5) {
             flash('error', 'Please provide a rating between 1 and 5.');
-            redirect('/product/' . $slug);
+            return new RedirectResponse('/product/' . $slug);
         }
 
         $this->reviewService->submit($product->id, $user->id, $rating, $comment);
         flash('success', 'Your review has been submitted and is awaiting moderation.');
-        redirect('/product/' . $slug);
+        return new RedirectResponse('/product/' . $slug);
     }
 
-    public function handleIcon() {
-        header('Location: ' . BASE_URL . '/public/images/favicon.svg');
-        exit;
+    public function handleIcon(Request $request): Response {
+        return new RedirectResponse(BASE_URL . '/public/images/favicon.svg');
     }
 }

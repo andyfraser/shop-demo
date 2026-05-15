@@ -29,21 +29,36 @@ class Router {
         $this->add('POST', $path, $handler, $middlewares);
     }
 
-    public function dispatch(string $uri, string $method) {
+    public function dispatch(Request $request): Response {
+        $uri = $request->getUri();
+        $method = $request->getMethod();
         $route = $this->match($uri, $method);
         
         if ($route) {
             // Run middlewares
             foreach ($route['middlewares'] as $middleware) {
                 $middlewareInst = $this->container ? $this->container->get($middleware) : new $middleware();
-                $middlewareInst->handle();
+                $response = $middlewareInst->handle($request);
+                if ($response instanceof Response) {
+                    return $response;
+                }
             }
 
             $controllerClass = $route['handler'][0];
             $action = $route['handler'][1];
             
             $controller = $this->container ? $this->container->get($controllerClass) : new $controllerClass();
-            return call_user_func_array([$controller, $action], $route['params']);
+            
+            // Pass $request as the first argument, followed by route params
+            $params = array_merge([$request], $route['params'] ?? []);
+            $response = call_user_func_array([$controller, $action], $params);
+            
+            if ($response instanceof Response) {
+                return $response;
+            }
+            
+            // Fallback if the controller doesn't return a Response (during transition)
+            return new \App\Core\Responses\HtmlResponse((string)$response);
         }
 
         if ($this->logger) {
@@ -52,19 +67,17 @@ class Router {
                 'uri' => $uri
             ]);
         }
-
-        http_response_code(404);
         
         if ($this->container) {
             try {
                 $renderer = $this->container->get(Renderer::class);
-                return $renderer->render('404');
+                return new \App\Core\Responses\HtmlResponse($renderer->render('404'), 404);
             } catch (\Exception $e) {
-                // Fallback to basic message if renderer fails
+                // Fallback
             }
         }
 
-        echo "404 Not Found";
+        return new \App\Core\Responses\HtmlResponse("404 Not Found", 404);
     }
 
     public function match(string $uri, string $method): ?array {

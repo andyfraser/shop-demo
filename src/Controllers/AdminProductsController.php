@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\ProductServiceInterface;
@@ -24,29 +28,29 @@ class AdminProductsController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
     
-    public function list() {
-        $criteria = \App\Core\QueryCriteria::fromRequest($_GET);
-        if (isset($_GET['search'])) {
-            $criteria = new \App\Core\QueryCriteria(['search' => $_GET['search']]);
+    public function list(Request $request): Response {
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
+        if ($request->getQuery('search')) {
+            $criteria = new \App\Core\QueryCriteria(['search' => $request->getQuery('search')]);
         }
         $products = $this->productService->getAllForAdmin($criteria);
 
-        $this->renderer->adminRender('products_list', [
+        return new HtmlResponse($this->renderer->adminRender('products_list', [
             'page_title' => 'Products',
             'active'     => 'products',
             'products'   => $products,
             'search'     => $criteria->getSearchTerm(),
             'flash_msg'  => flash('msg'),
-        ]);
+        ]));
     }
 
-    public function create() {
+    public function create(Request $request): Response {
         $allAttributes = $this->attributeService->getAll();
         foreach ($allAttributes as &$attr) {
             $attr['values'] = $this->attributeService->getValues($attr['id']);
         }
 
-        $this->renderer->adminRender('products_form', [
+        return new HtmlResponse($this->renderer->adminRender('products_form', [
             'page_title' => 'Add Product',
             'active'     => 'products',
             'is_new'     => true,
@@ -58,11 +62,11 @@ class AdminProductsController {
             'all_attributes' => $allAttributes,
             'product_attribute_ids' => [],
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function edit() {
-        $product_id = (int)($_GET['id'] ?? 0);
+    public function edit(Request $request): Response {
+        $product_id = (int)$request->getQuery('id', 0);
         $product = $this->productService->findById($product_id);
 
         $allAttributes = $this->attributeService->getAll();
@@ -70,7 +74,7 @@ class AdminProductsController {
             $attr['values'] = $this->attributeService->getValues($attr['id']);
         }
 
-        $this->renderer->adminRender('products_form', [
+        return new HtmlResponse($this->renderer->adminRender('products_form', [
             'page_title' => 'Edit Product',
             'active'     => 'products',
             'is_new'     => !$product_id,
@@ -80,26 +84,27 @@ class AdminProductsController {
             'all_attributes' => $allAttributes,
             'product_attribute_ids' => $this->attributeService->getProductAttributeValues($product_id),
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function save() {
+    public function save(Request $request): Response {
+        $post = $request->getPost();
         $data = [
-            'name'        => trim($_POST['name'] ?? ''),
-            'sku'         => trim($_POST['sku'] ?? ''),
-            'description' => trim($_POST['description'] ?? ''),
-            'price'       => (float)($_POST['price'] ?? 0),
-            'vat_rate'    => (float)($_POST['vat_rate'] ?? 0),
-            'stock'       => (int)($_POST['stock'] ?? 0),
-            'category_id' => !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null,
-            'image'       => $_POST['existing_image'] ?? null,
-            'active'      => isset($_POST['active']) ? 1 : 0,
-            'featured'    => isset($_POST['featured']) ? 1 : 0,
-            'force_variant' => isset($_POST['force_variant']) ? 1 : 0,
+            'name'        => trim($post['name'] ?? ''),
+            'sku'         => trim($post['sku'] ?? ''),
+            'description' => trim($post['description'] ?? ''),
+            'price'       => (float)($post['price'] ?? 0),
+            'vat_rate'    => (float)($post['vat_rate'] ?? 0),
+            'stock'       => (int)($post['stock'] ?? 0),
+            'category_id' => !empty($post['category_id']) ? (int)$post['category_id'] : null,
+            'image'       => $post['existing_image'] ?? null,
+            'active'      => isset($post['active']) ? 1 : 0,
+            'featured'    => isset($post['featured']) ? 1 : 0,
+            'force_variant' => isset($post['force_variant']) ? 1 : 0,
         ];
-        $product_id = (int)($_POST['id'] ?? 0);
+        $product_id = (int)($post['id'] ?? 0);
 
-        $errors = $this->validator->check($_POST, [
+        $errors = $this->validator->check($post, [
             'name'  => 'required',
             'price' => 'required|positive',
         ]);
@@ -115,7 +120,7 @@ class AdminProductsController {
                         }
                         $data['image'] = $uploaded;
                     }
-                } elseif (isset($_POST['remove_image'])) {
+                } elseif (isset($post['remove_image'])) {
                     if ($data['image']) {
                         $this->imageService->delete($data['image']);
                     }
@@ -131,20 +136,20 @@ class AdminProductsController {
             $final_id = $product_id ?: $saved_id;
 
             // Handle attributes
-            $attrValueIds = isset($_POST['attribute_value_ids']) && is_array($_POST['attribute_value_ids']) 
-                ? array_map('intval', $_POST['attribute_value_ids']) 
+            $attrValueIds = isset($post['attribute_value_ids']) && is_array($post['attribute_value_ids']) 
+                ? array_map('intval', $post['attribute_value_ids']) 
                 : [];
             $this->attributeService->saveProductAttributeValues($final_id, $attrValueIds);
 
             // Handle variant-defining attributes
-            $variantAttrIds = isset($_POST['variant_attribute_ids']) && is_array($_POST['variant_attribute_ids'])
-                ? array_map('intval', $_POST['variant_attribute_ids'])
+            $variantAttrIds = isset($post['variant_attribute_ids']) && is_array($post['variant_attribute_ids'])
+                ? array_map('intval', $post['variant_attribute_ids'])
                 : [];
             $this->attributeService->saveVariantAttributes($final_id, $variantAttrIds);
 
             // Handle variants
-            if (isset($_POST['variants']) && is_array($_POST['variants'])) {
-                foreach ($_POST['variants'] as $v) {
+            if (isset($post['variants']) && is_array($post['variants'])) {
+                foreach ($post['variants'] as $v) {
                     if (!empty($v['delete']) && !empty($v['id'])) {
                         $this->productService->deleteVariant((int)$v['id']);
                         continue;
@@ -185,10 +190,15 @@ class AdminProductsController {
                 ]);
                 flash('msg', 'Product created.');
             }
-            redirect('/admin/products');
+            return new RedirectResponse('/admin/products');
         }
 
-        $this->renderer->adminRender('products_form', [
+        $allAttributes = $this->attributeService->getAll();
+        foreach ($allAttributes as &$attr) {
+            $attr['values'] = $this->attributeService->getValues($attr['id']);
+        }
+
+        return new HtmlResponse($this->renderer->adminRender('products_form', [
             'page_title' => ($product_id ? 'Edit' : 'Add') . ' Product',
             'active'     => 'products',
             'is_new'     => !$product_id,
@@ -196,13 +206,13 @@ class AdminProductsController {
             'product_id' => $product_id,
             'categories' => $this->categoryService->getFlat(),
             'all_attributes' => $allAttributes ?? [], 
-            'product_attribute_ids' => $_POST['attribute_value_ids'] ?? [],
+            'product_attribute_ids' => $post['attribute_value_ids'] ?? [],
             'errors'     => $errors,
-        ]);
+        ]));
     }
 
-    public function delete() {
-        $product_id = (int)($_GET['id'] ?? 0);
+    public function delete(Request $request): Response {
+        $product_id = (int)$request->getQuery('id', 0);
         if ($product_id) {
             $this->productService->deactivate($product_id);
             $this->logger->info("Admin deactivated product: (ID: {id})", [
@@ -210,6 +220,6 @@ class AdminProductsController {
             ]);
             flash('msg', 'Product deactivated.');
         }
-        redirect('/admin/products');
+        return new RedirectResponse('/admin/products');
     }
 }

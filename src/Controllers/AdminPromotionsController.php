@@ -2,6 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\PromotionServiceInterface;
@@ -22,19 +26,19 @@ class AdminPromotionsController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function list() {
+    public function list(Request $request): Response {
         $promotions = $this->promotionService->getAllForAdmin();
 
-        $this->renderer->adminRender('promotions_list', [
+        return new HtmlResponse($this->renderer->adminRender('promotions_list', [
             'page_title' => 'Promotions',
             'active'     => 'promotions',
             'promotions' => $promotions,
             'flash_msg'  => flash('msg'),
-        ]);
+        ]));
     }
 
-    public function create() {
-        $this->renderer->adminRender('promotions_form', [
+    public function create(Request $request): Response {
+        return new HtmlResponse($this->renderer->adminRender('promotions_form', [
             'page_title' => 'Add Promotion',
             'active'     => 'promotions',
             'is_new'     => true,
@@ -44,18 +48,18 @@ class AdminPromotionsController {
             'categories' => $this->categoryService->getFlat(),
             'roles'      => $this->roleService->getAll(),
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function edit() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function edit(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         $promotion = $this->promotionService->findById($id);
 
         if (!$promotion) {
-            redirect('/admin/promotions');
+            return new RedirectResponse('/admin/promotions');
         }
 
-        $this->renderer->adminRender('promotions_form', [
+        return new HtmlResponse($this->renderer->adminRender('promotions_form', [
             'page_title' => 'Edit Promotion',
             'active'     => 'promotions',
             'is_new'     => false,
@@ -65,48 +69,49 @@ class AdminPromotionsController {
             'categories' => $this->categoryService->getFlat(),
             'roles'      => $this->roleService->getAll(),
             'errors'     => [],
-        ]);
+        ]));
     }
 
-    public function save() {
-        $id = (int)($_POST['id'] ?? 0);
+    public function save(Request $request): Response {
+        $post = $request->getPost();
+        $id = (int)($post['id'] ?? 0);
         $data = [
-            'name'                 => trim($_POST['name'] ?? ''),
-            'description'          => trim($_POST['description'] ?? ''),
-            'code'                 => trim($_POST['code'] ?? ''),
-            'type'                 => $_POST['type'] ?? '',
-            'value'                => (float)($_POST['value'] ?? 0),
-            'buy_qty'              => !empty($_POST['buy_qty']) ? (int)$_POST['buy_qty'] : null,
-            'get_qty'              => !empty($_POST['get_qty']) ? (int)$_POST['get_qty'] : null,
-            'target_type'          => $_POST['target_type'] ?? '',
-            'min_order_amount'     => (float)($_POST['min_order_amount'] ?? 0),
-            'start_date'           => !empty($_POST['start_date']) ? $_POST['start_date'] : null,
-            'end_date'             => !empty($_POST['end_date']) ? $_POST['end_date'] : null,
-            'usage_limit'          => isset($_POST['usage_limit']) && $_POST['usage_limit'] !== '' ? (int)$_POST['usage_limit'] : null,
-            'usage_limit_per_user' => isset($_POST['usage_limit_per_user']) && $_POST['usage_limit_per_user'] !== '' ? (int)$_POST['usage_limit_per_user'] : null,
-            'priority'             => (int)($_POST['priority'] ?? 0),
-            'stackable'            => isset($_POST['stackable']) ? 1 : 0,
-            'target_role'          => !empty($_POST['target_role']) ? $_POST['target_role'] : null,
-            'active'               => isset($_POST['active']) ? 1 : 0,
-            'target_ids'           => $_POST['target_ids'] ?? [],
-            'excluded_ids'         => $_POST['excluded_ids'] ?? [],
-            'additional_codes'     => !empty($_POST['additional_codes']) ? array_filter(array_map('trim', explode(',', $_POST['additional_codes']))) : [],
+            'name'                 => trim($post['name'] ?? ''),
+            'description'          => trim($post['description'] ?? ''),
+            'code'                 => trim($post['code'] ?? ''),
+            'type'                 => $post['type'] ?? '',
+            'value'                => (float)($post['value'] ?? 0),
+            'buy_qty'              => !empty($post['buy_qty']) ? (int)$post['buy_qty'] : null,
+            'get_qty'              => !empty($post['get_qty']) ? (int)$post['get_qty'] : null,
+            'target_type'          => $post['target_type'] ?? '',
+            'min_order_amount'     => (float)($post['min_order_amount'] ?? 0),
+            'start_date'           => !empty($post['start_date']) ? $post['start_date'] : null,
+            'end_date'             => !empty($post['end_date']) ? $post['end_date'] : null,
+            'usage_limit'          => isset($post['usage_limit']) && $post['usage_limit'] !== '' ? (int)$post['usage_limit'] : null,
+            'usage_limit_per_user' => isset($post['usage_limit_per_user']) && $post['usage_limit_per_user'] !== '' ? (int)$post['usage_limit_per_user'] : null,
+            'priority'             => (int)($post['priority'] ?? 0),
+            'stackable'            => isset($post['stackable']) ? 1 : 0,
+            'target_role'          => !empty($post['target_role']) ? $post['target_role'] : null,
+            'active'               => isset($post['active']) ? 1 : 0,
+            'target_ids'           => $post['target_ids'] ?? [],
+            'excluded_ids'         => $post['excluded_ids'] ?? [],
+            'additional_codes'     => !empty($post['additional_codes']) ? array_filter(array_map('trim', explode(',', $post['additional_codes']))) : [],
             'tiers'                => []
         ];
 
         // Process tiers
-        if (!empty($_POST['tier_min']) && is_array($_POST['tier_min'])) {
-            foreach ($_POST['tier_min'] as $index => $min) {
-                if ($min !== '' && isset($_POST['tier_value'][$index])) {
+        if (!empty($post['tier_min']) && is_array($post['tier_min'])) {
+            foreach ($post['tier_min'] as $index => $min) {
+                if ($min !== '' && isset($post['tier_value'][$index])) {
                     $data['tiers'][] = [
                         'min_amount' => (float)$min,
-                        'value' => (float)$_POST['tier_value'][$index]
+                        'value' => (float)$post['tier_value'][$index]
                     ];
                 }
             }
         }
 
-        $errors = $this->validator->check($_POST, [
+        $errors = $this->validator->check($post, [
             'name'        => 'required',
             'type'        => 'required',
             'value'       => 'required',
@@ -116,10 +121,10 @@ class AdminPromotionsController {
         if (!$errors) {
             $this->promotionService->save($data, $id);
             flash('msg', $id ? 'Promotion updated.' : 'Promotion created.');
-            redirect('/admin/promotions');
+            return new RedirectResponse('/admin/promotions');
         }
 
-        $this->renderer->adminRender('promotions_form', [
+        return new HtmlResponse($this->renderer->adminRender('promotions_form', [
             'page_title' => ($id ? 'Edit' : 'Add') . ' Promotion',
             'active'     => 'promotions',
             'is_new'     => !$id,
@@ -129,15 +134,15 @@ class AdminPromotionsController {
             'categories' => $this->categoryService->getFlat(),
             'roles'      => $this->roleService->getAll(),
             'errors'     => $errors,
-        ]);
+        ]));
     }
 
-    public function delete() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function delete(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         if ($id) {
             $this->promotionService->delete($id);
             flash('msg', 'Promotion deleted.');
         }
-        redirect('/admin/promotions');
+        return new RedirectResponse('/admin/promotions');
     }
 }

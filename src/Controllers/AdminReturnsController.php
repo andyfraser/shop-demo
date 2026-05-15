@@ -1,6 +1,10 @@
 <?php
 namespace App\Controllers;
 
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Responses\HtmlResponse;
+use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Services\SecurityServiceInterface;
 use App\Services\ReturnServiceInterface;
@@ -15,40 +19,40 @@ class AdminReturnsController {
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
-    public function list() {
+    public function list(Request $request): Response {
         $returns = $this->returnService->getAllForAdmin();
 
-        $this->renderer->adminRender('returns_list', [
+        return new HtmlResponse($this->renderer->adminRender('returns_list', [
             'page_title' => 'Return Requests',
             'active'     => 'returns',
             'returns'    => $returns,
             'flash_msg'  => flash('msg'),
             'flash_error'=> flash('msg_error'),
-        ]);
+        ]));
     }
 
-    public function detail() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function detail(Request $request): Response {
+        $id = (int)$request->getQuery('id', 0);
         $return = $this->returnService->findById($id);
 
         if (!$return) {
-            redirect('/admin/returns');
+            return new RedirectResponse('/admin/returns');
         }
 
         $order = $this->orderService->findById($return->order_id);
 
-        $this->renderer->adminRender('returns_detail', [
+        return new HtmlResponse($this->renderer->adminRender('returns_detail', [
             'page_title' => 'Return Request #' . $id,
             'active'     => 'returns',
             'return'     => $return,
             'order'      => $order,
-        ]);
+        ]));
     }
 
-    public function approve() {
-        $id = (int)($_POST['id'] ?? 0);
-        $refundDelivery = isset($_POST['refund_delivery']) && $_POST['refund_delivery'] === '1';
-        $redirectTo = $_POST['redirect_to'] ?? '/admin/returns';
+    public function approve(Request $request): Response {
+        $id = (int)$request->getPost('id', 0);
+        $refundDelivery = $request->getPost('refund_delivery') === '1';
+        $redirectTo = $request->getPost('redirect_to', '/admin/returns');
         $user = $this->auth->currentUser();
 
         if ($this->returnService->approveReturn($id, $refundDelivery, $user?->id)) {
@@ -57,13 +61,13 @@ class AdminReturnsController {
             flash('msg_error', 'Failed to approve return.');
         }
 
-        redirect($redirectTo);
+        return new RedirectResponse($redirectTo);
     }
 
-    public function reject() {
-        $id = (int)($_POST['id'] ?? 0);
-        $reason = trim($_POST['reject_reason'] ?? '');
-        $redirectTo = $_POST['redirect_to'] ?? '/admin/returns';
+    public function reject(Request $request): Response {
+        $id = (int)$request->getPost('id', 0);
+        $reason = trim($request->getPost('reject_reason', ''));
+        $redirectTo = $request->getPost('redirect_to', '/admin/returns');
         $user = $this->auth->currentUser();
 
         if ($this->returnService->rejectReturn($id, $reason, $user?->id)) {
@@ -72,6 +76,6 @@ class AdminReturnsController {
             flash('msg_error', 'Failed to reject return.');
         }
 
-        redirect($redirectTo);
+        return new RedirectResponse($redirectTo);
     }
 }
