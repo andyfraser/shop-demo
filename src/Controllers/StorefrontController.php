@@ -62,7 +62,7 @@ class StorefrontController {
     }
 
     public function search(Request $request): Response {
-        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery(), 12);
         $query = $criteria->getSearchTerm();
 
         $products = [];
@@ -121,7 +121,7 @@ class StorefrontController {
             foreach ($subs as $row) $queue[] = $row->id;
         }
 
-        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery(), 12);
 
         $total_products = $this->productService->countByCategory($cat_ids, $criteria);
         $products = $this->productService->getByCategory($cat_ids, $criteria);
@@ -210,7 +210,7 @@ class StorefrontController {
     }
 
     private function promotionProducts(Request $request, \App\Models\Promotion $promo): Response {
-        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery(), 12);
         $cat_ids = [];
 
         // We need to fetch all potentially qualifying products to count them correctly
@@ -286,7 +286,7 @@ class StorefrontController {
     }
 
     public function products(Request $request): Response {
-        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery(), 12);
 
         $total_products = $this->productService->countAllActive($criteria);
         $products = $this->productService->getAllActive($criteria);

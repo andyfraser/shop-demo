@@ -26,7 +26,7 @@ class QueryCriteria {
         }
     }
 
-    public static function fromRequest(array $get): self {
+    public static function fromRequest(array $get, ?int $defaultLimit = null): self {
         $filters = [
             'attributes' => []
         ];
@@ -44,7 +44,7 @@ class QueryCriteria {
         return new self([
             'sort'   => $get['sort'] ?? '',
             'page'   => $get['page'] ?? 1,
-            'limit'  => $get['per_page'] ?? null,
+            'limit'  => $get['per_page'] ?? $defaultLimit,
             'search' => $get['q'] ?? '',
             'filters' => $filters
         ]);
