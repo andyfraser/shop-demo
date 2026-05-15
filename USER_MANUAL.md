@@ -97,7 +97,7 @@ The dashboard provides an immediate overview of your business:
 *   **Recent Orders:** A quick-view list of the latest customer activity.
 
 ### Inventory & Reviews
-*   **Products:** CRUD operations for items, including image uploads (JPEG, PNG, GIF, WebP up to 5MB), pricing, and "Featured" status.
+*   **Products:** CRUD operations for items, including image uploads (JPEG, PNG, GIF, WebP up to 5MB), pricing, and "Featured" status. Admins can also enable **"Force Variant"** mode, which restricts customers to purchasing only specific variants (e.g., Size/Color) instead of the base product.
 *   **Attributes Management:** Define custom product attributes (e.g., Brand, Color, Material) and manage their values. These are used for smart recommendations and product details.
 *   **Categories:** Create complex parent-child relationships with custom icons.
 *   **Promotions Management:** Design complex marketing campaigns with ease:

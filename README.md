@@ -32,7 +32,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts.
-- Full CRUD for products (including image upload and featured status), categories, users, delivery options, and orders.
+- Full CRUD for products (including image upload, featured status, and variant-only mode), categories, users, delivery options, and orders.
 - **Attributes Management:** Define custom product attributes (e.g., Brand, Color, Material) and manage their values.
 - **Database Backup & Restore:** Export the entire database (SQLite or MySQL) and restore from a backup file directly through the interface.
 - **Promotions Management:** Create complex discount rules targeting specific products, categories, or entire orders (percentage, fixed, or Buy X Get Y) with date and usage limits.
