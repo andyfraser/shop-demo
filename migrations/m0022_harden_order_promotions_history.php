@@ -53,6 +53,7 @@ return new class {
             return "
                 ALTER TABLE order_promotions DROP FOREIGN KEY fk_order_promotions_promotion_id;
                 ALTER TABLE order_promotions MODIFY promotion_id INT NOT NULL;
+                ALTER TABLE order_promotions MODIFY id INT NOT NULL;
                 ALTER TABLE order_promotions DROP PRIMARY KEY;
                 ALTER TABLE order_promotions DROP COLUMN id;
                 ALTER TABLE order_promotions ADD PRIMARY KEY (order_id, promotion_id);

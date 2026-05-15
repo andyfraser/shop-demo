@@ -8,10 +8,6 @@ class MigrationService implements MigrationServiceInterface {
     public function __construct(private MigrationRepositoryInterface $repository) {}
 
     public function applyMigrations(): array {
-        $driver = DatabaseSeedService::getDriver(); // Hacky but works for now, or just get from connection
-        // Actually, let's just use 'sqlite' or 'mysql' based on repository logic if possible
-        // But better to just pass it in or let repo handle it.
-        // For now, I'll use a local helper to get driver.
         $driver = $this->getDriver();
         $this->repository->ensureMigrationsTable($driver);
 
