@@ -44,6 +44,7 @@ class SettingsService implements SettingsServiceInterface {
      */
     public function set(string $key, mixed $value): void {
         $this->repository->set($key, $value);
+        $this->logger->info("Setting {key} was updated", ['key' => $key]);
         $this->settings = null; // Clear cache
     }
 }

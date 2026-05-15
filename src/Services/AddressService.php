@@ -29,14 +29,35 @@ class AddressService implements AddressServiceInterface {
             $this->setDefault($addressId, $userId);
         }
 
+        $this->logger->info("User {userId} {action} address {id} ({label})", [
+            'userId' => $userId,
+            'id' => $addressId,
+            'label' => $data['label'] ?? 'No label',
+            'action' => $id > 0 ? 'updated' : 'added'
+        ]);
+
         return $addressId;
     }
 
     public function delete(int $id, int $userId): bool {
-        return $this->repository->delete($id, $userId);
+        $deleted = $this->repository->delete($id, $userId);
+        if ($deleted) {
+            $this->logger->info("User {userId} deleted address {id}", [
+                'userId' => $userId,
+                'id' => $id
+            ]);
+        }
+        return $deleted;
     }
 
     public function setDefault(int $id, int $userId): bool {
-        return $this->repository->setDefault($id, $userId);
+        $result = $this->repository->setDefault($id, $userId);
+        if ($result) {
+            $this->logger->info("User {userId} set address {id} as default", [
+                'userId' => $userId,
+                'id' => $id
+            ]);
+        }
+        return $result;
     }
 }

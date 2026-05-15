@@ -2,14 +2,14 @@
 
 namespace App\Commands;
 
-class RotateLogsCommand implements CommandInterface {
-    private string $logDir;
-    private int $retentionDays;
+use Psr\Log\LoggerInterface;
 
-    public function __construct(string $logDir, int $retentionDays = 30) {
-        $this->logDir = $logDir;
-        $this->retentionDays = $retentionDays;
-    }
+class RotateLogsCommand implements CommandInterface {
+    public function __construct(
+        private string $logDir,
+        private int $retentionDays = 30,
+        private ?LoggerInterface $logger = null
+    ) {}
 
     public function getName(): string {
         return 'logs:rotate';
@@ -26,10 +26,16 @@ class RotateLogsCommand implements CommandInterface {
     public function execute(): int {
         if (!is_dir($this->logDir)) {
             echo "Log directory does not exist: {$this->logDir}\n";
+            if ($this->logger) {
+                $this->logger->error("Log rotation failed: directory {dir} does not exist.", ['dir' => $this->logDir]);
+            }
             return 1;
         }
 
         echo "Processing logs in: {$this->logDir}\n";
+        if ($this->logger) {
+            $this->logger->info("Starting log rotation in {dir}", ['dir' => $this->logDir]);
+        }
 
         // 1. Rotate active log files
         // We look for files ending in .log that DON'T have a date pattern (e.g., app.log)
@@ -72,11 +78,20 @@ class RotateLogsCommand implements CommandInterface {
                     if ($gzdata !== false && file_put_contents($compressedFile, $gzdata) !== false) {
                         unlink($rotatedFile);
                         echo "Rotated and compressed: {$filename} -> " . basename($compressedFile) . "\n";
+                        if ($this->logger) {
+                            $this->logger->info("Rotated and compressed log file: {filename}", ['filename' => $filename]);
+                        }
                     } else {
                         echo "Rotated but failed to compress: {$filename}\n";
+                        if ($this->logger) {
+                            $this->logger->warning("Rotated but failed to compress log file: {filename}", ['filename' => $filename]);
+                        }
                     }
                 } else {
                     echo "Failed to rotate: {$filename}\n";
+                    if ($this->logger) {
+                        $this->logger->error("Failed to rotate log file: {filename}", ['filename' => $filename]);
+                    }
                 }
             }
         }
@@ -89,10 +104,17 @@ class RotateLogsCommand implements CommandInterface {
             // Verify it matches the date pattern YYYY-MM-DD
             if (preg_match('/-\d{4}-\d{2}-\d{2}\.log(\.gz)?$/', basename($file))) {
                 if (filemtime($file) < $threshold) {
+                    $basename = basename($file);
                     if (unlink($file)) {
-                        echo "Deleted old log: " . basename($file) . "\n";
+                        echo "Deleted old log: " . $basename . "\n";
+                        if ($this->logger) {
+                            $this->logger->info("Deleted old rotated log file: {filename}", ['filename' => $basename]);
+                        }
                     } else {
-                        echo "Failed to delete: " . basename($file) . "\n";
+                        echo "Failed to delete: " . $basename . "\n";
+                        if ($this->logger) {
+                            $this->logger->error("Failed to delete old rotated log file: {filename}", ['filename' => $basename]);
+                        }
                     }
                 }
             }

@@ -141,11 +141,16 @@ class CartService implements CartServiceInterface {
         $isFirstOrder = $user ? !$this->orderService->hasOrders($user->id) : true;
 
         if (!$promo || !$promo->isActive($user, $isFirstOrder)) {
+            $this->logger->warning("Invalid or inactive promo code attempted: {code}", ['code' => $code]);
             return false;
         }
 
         $cartId = $this->ensureCart();
-        return $this->repository->applyPromoCode($cartId, $code);
+        $applied = $this->repository->applyPromoCode($cartId, $code);
+        if ($applied) {
+            $this->logger->info("Promo code {code} applied to cart {cartId}", ['code' => $code, 'cartId' => $cartId]);
+        }
+        return $applied;
     }
 
     public function removePromoCode(?string $code = null): void {
@@ -153,6 +158,7 @@ class CartService implements CartServiceInterface {
         if (!$cartId) return;
 
         $this->repository->removePromoCode($cartId, $code);
+        $this->logger->info("Promo code {code} removed from cart {cartId}", ['code' => $code ?: 'all', 'cartId' => $cartId]);
     }
 
     public function getAppliedPromotions(): array {
@@ -248,6 +254,10 @@ class CartService implements CartServiceInterface {
         if (!$userCartId) {
             if ($sessionCartId) {
                 $this->repository->attachCartToUser($sessionCartId, $userId);
+                $this->logger->info("Guest cart {cartId} attached to user {userId} on login", [
+                    'cartId' => $sessionCartId,
+                    'userId' => $userId
+                ]);
             }
         } elseif ($sessionCartId) {
             // Merge session cart promotions into user cart
@@ -264,6 +274,11 @@ class CartService implements CartServiceInterface {
 
             // Delete session cart
             $this->repository->deleteCart($sessionCartId);
+            $this->logger->info("Guest cart {sessionCartId} merged into user cart {userCartId} for user {userId}", [
+                'sessionCartId' => $sessionCartId,
+                'userCartId' => $userCartId,
+                'userId' => $userId
+            ]);
         }
     }
 

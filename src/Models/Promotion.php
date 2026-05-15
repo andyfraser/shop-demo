@@ -32,6 +32,7 @@ class Promotion extends Model {
     public int|bool $stackable = 0;
     public ?string $target_role = null;
     public int $used_count;
+    public ?int $user_usage_count = null;
     public int|bool $active;
     public string $created_at;
 

@@ -60,7 +60,8 @@ foreach ($files as $file) {
 }
 
 $db = $container->get(PDO::class);
-$scheduler = new Scheduler($db, array_values($commands));
+$logger = $container->get(\Psr\Log\LoggerInterface::class);
+$scheduler = new Scheduler($db, array_values($commands), $logger);
 
 // CLI Router
 $action = $argv[1] ?? 'list';

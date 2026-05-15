@@ -116,15 +116,35 @@ class PromotionService implements PromotionServiceInterface {
             $this->repository->syncAdditionalCodes($promotionId, $additionalCodes);
 
             $this->repository->commit();
+
+            if ($this->logger) {
+                $action = $id > 0 ? 'updated' : 'created';
+                $this->logger->info("Promotion {name} (ID: {id}) was {action}.", [
+                    'name' => $params['name'],
+                    'id' => $promotionId,
+                    'action' => $action
+                ]);
+            }
+
             return $promotionId;
         } catch (\Exception $e) {
             $this->repository->rollBack();
+            if ($this->logger) {
+                $this->logger->error("Failed to save promotion: {error}", ['error' => $e->getMessage()]);
+            }
             throw $e;
         }
     }
 
     public function delete(int $id): void {
+        $promotion = $this->findById($id);
         $this->repository->delete($id);
+        if ($this->logger && $promotion) {
+            $this->logger->info("Promotion {name} (ID: {id}) was deleted.", [
+                'name' => $promotion->name,
+                'id' => $id
+            ]);
+        }
     }
 
     public function getActiveAutomaticPromotions(?\App\Models\User $user = null): array {

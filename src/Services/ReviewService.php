@@ -15,7 +15,15 @@ class ReviewService implements ReviewServiceInterface {
     }
 
     public function submit(int $productId, int $userId, int $rating, ?string $comment): bool {
-        return $this->repository->submit($productId, $userId, $rating, $comment);
+        $result = $this->repository->submit($productId, $userId, $rating, $comment);
+        if ($result) {
+            $this->logger->info("User {userId} submitted a {rating}-star review for product {productId}", [
+                'userId' => $userId,
+                'rating' => $rating,
+                'productId' => $productId
+            ]);
+        }
+        return $result;
     }
 
     public function getAllForAdmin(): array {
@@ -23,7 +31,14 @@ class ReviewService implements ReviewServiceInterface {
     }
 
     public function updateStatus(int $reviewId, string $status): bool {
-        return $this->repository->updateStatus($reviewId, $status);
+        $result = $this->repository->updateStatus($reviewId, $status);
+        if ($result) {
+            $this->logger->info("Review {id} status updated to {status}", [
+                'id' => $reviewId,
+                'status' => $status
+            ]);
+        }
+        return $result;
     }
 
     public function getAverageRating(int $productId): float {

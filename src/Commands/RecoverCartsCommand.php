@@ -2,18 +2,16 @@
 
 namespace App\Commands;
 
-use App\Core\Container;
 use App\Services\EmailServiceInterface;
+use Psr\Log\LoggerInterface;
 use PDO;
 
 class RecoverCartsCommand implements CommandInterface {
-    private PDO $db;
-    private EmailServiceInterface $emailService;
-
-    public function __construct(PDO $db, EmailServiceInterface $emailService) {
-        $this->db = $db;
-        $this->emailService = $emailService;
-    }
+    public function __construct(
+        private PDO $db,
+        private EmailServiceInterface $emailService,
+        private ?LoggerInterface $logger = null
+    ) {}
 
     public function getName(): string {
         return 'recover-carts';
@@ -53,7 +51,11 @@ class RecoverCartsCommand implements CommandInterface {
         $stmt = $this->db->query($sql);
         $abandonedCarts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        echo "Found " . count($abandonedCarts) . " abandoned carts.\n";
+        $count = count($abandonedCarts);
+        echo "Found {$count} abandoned carts.\n";
+        if ($this->logger) {
+            $this->logger->info("RecoverCartsCommand: Found {count} abandoned carts to process.", ['count' => $count]);
+        }
 
         foreach ($abandonedCarts as $cart) {
             echo "Sending recovery email to {$cart['email']}... ";
@@ -65,11 +67,24 @@ class RecoverCartsCommand implements CommandInterface {
                     $update = $this->db->prepare("UPDATE carts SET recovery_email_sent_at = CURRENT_TIMESTAMP WHERE id = ?");
                     $update->execute([$cart['id']]);
                     echo "Done.\n";
+                    if ($this->logger) {
+                        $this->logger->info("RecoverCartsCommand: Recovery email sent to {email}", ['email' => $cart['email']]);
+                    }
                 } else {
                     echo "Failed (mail() returned false).\n";
+                    if ($this->logger) {
+                        $this->logger->warning("RecoverCartsCommand: Failed to send recovery email to {email}", ['email' => $cart['email']]);
+                    }
                 }
             } catch (\Exception $e) {
                 echo "Error: " . $e->getMessage() . "\n";
+                if ($this->logger) {
+                    $this->logger->error("RecoverCartsCommand: Error processing cart {id} for {email}: {error}", [
+                        'id' => $cart['id'],
+                        'email' => $cart['email'],
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
         }
 

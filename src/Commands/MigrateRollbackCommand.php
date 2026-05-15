@@ -3,10 +3,14 @@
 namespace App\Commands;
 
 use App\Services\MigrationServiceInterface;
+use Psr\Log\LoggerInterface;
 use Exception;
 
 class MigrateRollbackCommand implements CommandInterface {
-    public function __construct(private MigrationServiceInterface $migrationService) {}
+    public function __construct(
+        private MigrationServiceInterface $migrationService,
+        private ?LoggerInterface $logger = null
+    ) {}
 
     public function getName(): string {
         return 'migrate:rollback';
@@ -22,15 +26,28 @@ class MigrateRollbackCommand implements CommandInterface {
 
     public function execute(): int {
         try {
+            if ($this->logger) {
+                $this->logger->warning("Starting database migration rollback...");
+            }
+
             if ($this->migrationService->rollbackMigration()) {
                 echo "Rollback successful.\n";
+                if ($this->logger) {
+                    $this->logger->info("Database migration rollback successful.");
+                }
             } else {
                 echo "No migrations found to rollback.\n";
+                if ($this->logger) {
+                    $this->logger->info("No migrations found to rollback.");
+                }
             }
             return 0;
         } catch (Exception $e) {
             echo "Failed!\n";
             echo "Error: " . $e->getMessage() . "\n";
+            if ($this->logger) {
+                $this->logger->error("Database migration rollback failed: {error}", ['error' => $e->getMessage()]);
+            }
             return 1;
         }
     }

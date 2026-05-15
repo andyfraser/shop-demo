@@ -4,22 +4,30 @@ namespace App\Core;
 
 use App\Commands\CommandInterface;
 use PDO;
+use Psr\Log\LoggerInterface;
 
 class Scheduler {
     private array $commands;
     private PDO $db;
+    private ?LoggerInterface $logger;
 
     /**
      * @param PDO $db
      * @param CommandInterface[] $commands
+     * @param LoggerInterface|null $logger
      */
-    public function __construct(PDO $db, array $commands = []) {
+    public function __construct(PDO $db, array $commands = [], ?LoggerInterface $logger = null) {
         $this->db = $db;
         $this->commands = $commands;
+        $this->logger = $logger;
     }
 
     public function run(): void {
-        echo "Running scheduler at " . date('Y-m-d H:i:s') . "\n";
+        $timestamp = date('Y-m-d H:i:s');
+        echo "Running scheduler at " . $timestamp . "\n";
+        if ($this->logger) {
+            $this->logger->info("Scheduler run started at {timestamp}", ['timestamp' => $timestamp]);
+        }
 
         foreach ($this->commands as $command) {
             $frequency = $command->getSchedule();
@@ -31,9 +39,33 @@ class Scheduler {
 
             if ($this->isDue($name, $frequency)) {
                 echo "Executing command: {$name} ({$frequency})... ";
-                $command->execute();
-                $this->updateLastRun($name);
-                echo "Finished.\n";
+                if ($this->logger) {
+                    $this->logger->info("Executing scheduled command: {name} ({frequency})", [
+                        'name' => $name,
+                        'frequency' => $frequency
+                    ]);
+                }
+
+                try {
+                    $exitCode = $command->execute();
+                    $this->updateLastRun($name);
+                    echo "Finished with exit code {$exitCode}.\n";
+                    
+                    if ($this->logger) {
+                        $this->logger->info("Scheduled command {name} finished with exit code {exitCode}", [
+                            'name' => $name,
+                            'exitCode' => $exitCode
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    echo "Failed!\n";
+                    if ($this->logger) {
+                        $this->logger->error("Scheduled command {name} failed: {error}", [
+                            'name' => $name,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
             } else {
                 echo "Command {$name} is not due yet.\n";
             }
