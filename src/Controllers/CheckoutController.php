@@ -15,6 +15,7 @@ use App\Services\EmailServiceInterface;
 use App\Services\OrderServiceInterface;
 use App\Services\SettingsServiceInterface;
 use App\Services\AddressServiceInterface;
+use App\Services\PricingServiceInterface;
 use App\Services\Payment\PaymentServiceInterface;
 
 class CheckoutController {
@@ -29,6 +30,7 @@ class CheckoutController {
         private SettingsServiceInterface $settings,
         private PaymentServiceInterface $payment,
         private AddressServiceInterface $addressService,
+        private PricingServiceInterface $pricingService,
         private Validator $validator,
         private \Psr\Log\LoggerInterface $logger
     ) {}
@@ -113,14 +115,19 @@ class CheckoutController {
             $user  = $this->auth->currentUser();
             $discount = $this->cart->discount();
             $appliedPromos = $this->cart->getAppliedPromotions();
-            $total = $this->cart->grandTotal() + $deliveryOption->price;
             
             $defaultVatRate = (float)$this->settings->get('default_vat_rate');
-            $deliveryVat = $deliveryOption->price * ($defaultVatRate / (100 + $defaultVatRate));
             
-            // Proportional reduction of VAT based on discount
-            $vatReductionFactor = $this->cart->total() > 0 ? (1 - ($discount / $this->cart->total())) : 1;
-            $totalVat = ($this->cart->totalVat() * $vatReductionFactor) + $deliveryVat;
+            $totals = $this->pricingService->calculateOrderTotals(
+                $this->cart->total(),
+                $this->cart->totalVat(),
+                $discount,
+                $deliveryOption->price,
+                $defaultVatRate
+            );
+            
+            $total = $totals['grand_total'];
+            $totalVat = $totals['total_vat'];
             
             $fullAddress = $address . "\n" . $city . "\n" . $postcode . "\n" . $country;
 

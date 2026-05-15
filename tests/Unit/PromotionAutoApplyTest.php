@@ -35,17 +35,24 @@ class PromotionAutoApplyTest extends TestCase {
         $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
+        
+        $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
+        $pricingService = new \App\Services\PricingService($vatService, $promoEvaluator, $settingsService);
+        
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
-        $this->promotionService = new PromotionService($promotionRepository, $logger, null, $orderService);
+        $this->promotionService = new PromotionService($promotionRepository, $promoEvaluator, $logger, null, $orderService);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger);
         
         $cartRepository = new \App\Repositories\CartRepository($this->db);
         $this->cartService = new CartService(
             $cartRepository,
             $productService,
             $authService,
-            $vatService,
+            $pricingService,
             $this->promotionService,
             $orderService,
             $logger
@@ -90,7 +97,8 @@ class PromotionAutoApplyTest extends TestCase {
         $attrService = new AttributeService($attrRepository, $nullLogger);
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $productService = new ProductService($repository, $attrService, $this->promotionService, $logger);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger);
         $productId = $productService->save([
             'name' => 'Test Product',
             'price' => 200,

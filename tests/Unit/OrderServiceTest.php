@@ -37,10 +37,16 @@ class OrderServiceTest extends TestCase {
         $this->orderService = new OrderService($orderRepository, $logger, new VatService(), $paymentService, $emailService);
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
+        
+        $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
+        
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
-        $promoService = new \App\Services\PromotionService($promotionRepository, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $this->productService = new ProductService($repository, $attrService, $promoService, $logger);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $this->productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger);
     }
 
     public function testCreateOrder() {

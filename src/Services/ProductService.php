@@ -12,6 +12,7 @@ class ProductService implements ProductServiceInterface {
         private ProductRepositoryInterface $repository,
         private AttributeServiceInterface $attributeService,
         private PromotionServiceInterface $promotionService,
+        private ProductVariantServiceInterface $variantService,
         private LoggerInterface $logger
     ) {}
 
@@ -36,7 +37,7 @@ class ProductService implements ProductServiceInterface {
     public function findById(int $id): ?Product {
         $product = $this->repository->findById($id);
         if ($product) {
-            $product->variants = $this->getVariants($id);
+            $product->variants = $this->variantService->getVariants($id);
             $product->variant_attribute_ids = $this->attributeService->getVariantAttributes($id);
         }
         return $product;
@@ -45,7 +46,7 @@ class ProductService implements ProductServiceInterface {
     public function findBySlug(string $slug): ?Product {
         $product = $this->repository->findBySlug($slug);
         if ($product) {
-            $product->variants = $this->getVariants($product->id);
+            $product->variants = $this->variantService->getVariants($product->id);
             $product->variant_attribute_ids = $this->attributeService->getVariantAttributes($product->id);
         }
         return $product;
@@ -100,27 +101,23 @@ class ProductService implements ProductServiceInterface {
     }
 
     public function getVariants(int $productId): array {
-        $variants = $this->repository->getVariants($productId);
-        foreach ($variants as $variant) {
-            $variant->attribute_value_ids = $this->attributeService->getVariantAttributeValues($variant->id);
-        }
-        return $variants;
+        return $this->variantService->getVariants($productId);
     }
 
     public function findVariantById(int $variantId): ?ProductVariant {
-        return $this->repository->findVariantById($variantId);
+        return $this->variantService->findById($variantId);
     }
 
     public function findVariantsByIds(array $ids): array {
-        return $this->repository->findVariantsByIds($ids);
+        return $this->variantService->findByIds($ids);
     }
 
     public function saveVariant(array $data, int $id = 0): int {
-        return $this->repository->saveVariant($data, $id);
+        return $this->variantService->save($data, $id);
     }
 
     public function deleteVariant(int $id): void {
-        $this->repository->deleteVariant($id);
+        $this->variantService->delete($id);
     }
 
     public function getRelatedProducts(int $productId, int $limit = 4): array {

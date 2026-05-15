@@ -28,8 +28,13 @@ class FirstTimePromotionTest extends TestCase {
         $paymentService = new \App\Services\Payment\PaymentService($logger);
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
         $this->orderService = new OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        
+        $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
+        
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
-        $this->promotionService = new PromotionService($promotionRepository, $logger, null, $this->orderService);
+        $this->promotionService = new PromotionService($promotionRepository, $promoEvaluator, $logger, null, $this->orderService);
     }
 
     public function testFirstTimePromotionActiveForNewUser() {

@@ -26,6 +26,8 @@ use App\Services\CartServiceInterface;
 use App\Services\CartService;
 use App\Services\ProductServiceInterface;
 use App\Services\ProductService;
+use App\Services\ProductVariantServiceInterface;
+use App\Services\ProductVariantService;
 use App\Services\CategoryServiceInterface;
 use App\Services\CategoryService;
 use App\Services\OrderServiceInterface;
@@ -67,8 +69,12 @@ use App\Services\UserRoleServiceInterface;
 use App\Services\UserRoleService;
 use App\Services\VatServiceInterface;
 use App\Services\VatService;
+use App\Services\PricingServiceInterface;
+use App\Services\PricingService;
 use App\Services\PromotionServiceInterface;
 use App\Services\PromotionService;
+use App\Services\PromotionEvaluatorInterface;
+use App\Services\PromotionEvaluator;
 
 return function($c, array $config) {
     return [
@@ -78,6 +84,13 @@ return function($c, array $config) {
         VatServiceInterface::class => function($c) {
             return new VatService();
         },
+        PricingServiceInterface::class => function($c) {
+            return new PricingService(
+                $c->get(VatServiceInterface::class),
+                $c->get(PromotionEvaluatorInterface::class),
+                $c->get(SettingsServiceInterface::class)
+            );
+        },
         AuthServiceInterface::class => function($c) {
             return new AuthService($c->get(AuthRepositoryInterface::class), $c->get(SettingsServiceInterface::class), $c->get(LoggerInterface::class));
         },
@@ -86,7 +99,14 @@ return function($c, array $config) {
                 $c->get(ProductRepositoryInterface::class), 
                 $c->get(AttributeServiceInterface::class), 
                 $c->get(PromotionServiceInterface::class),
+                $c->get(ProductVariantServiceInterface::class),
                 $c->get(LoggerInterface::class)
+            );
+        },
+        ProductVariantServiceInterface::class => function($c) {
+            return new ProductVariantService(
+                $c->get(ProductRepositoryInterface::class),
+                $c->get(AttributeServiceInterface::class)
             );
         },
         CartServiceInterface::class => function($c) {
@@ -94,7 +114,7 @@ return function($c, array $config) {
                 $c->get(CartRepositoryInterface::class),
                 $c->get(ProductServiceInterface::class),
                 $c->get(AuthServiceInterface::class),
-                $c->get(VatServiceInterface::class),
+                $c->get(PricingServiceInterface::class),
                 $c->get(PromotionServiceInterface::class),
                 $c->get(OrderServiceInterface::class),
                 $c->get(LoggerInterface::class)
@@ -170,10 +190,14 @@ return function($c, array $config) {
         PromotionServiceInterface::class => function($c) {
             return new PromotionService(
                 $c->get(PromotionRepositoryInterface::class), 
+                $c->get(PromotionEvaluatorInterface::class),
                 $c->get(LoggerInterface::class),
                 $c->get(CategoryServiceInterface::class),
                 $c->get(OrderServiceInterface::class)
             );
+        },
+        PromotionEvaluatorInterface::class => function($c) {
+            return new PromotionEvaluator($c->get(CategoryServiceInterface::class));
         },
         DatabaseSeedServiceInterface::class => function($c) {
             return new DatabaseSeedService(

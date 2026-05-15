@@ -9,7 +9,7 @@ class CartService implements CartServiceInterface {
         private CartRepositoryInterface $repository,
         private ProductServiceInterface $productService,
         private AuthServiceInterface $auth,
-        private VatServiceInterface $vatService,
+        private PricingServiceInterface $pricingService,
         private PromotionServiceInterface $promotionService,
         private OrderServiceInterface $orderService,
         private LoggerInterface $logger
@@ -128,11 +128,11 @@ class CartService implements CartServiceInterface {
     }
 
     public function total(): float {
-        return array_sum(array_map(fn($item) => $item->getSubtotal(), $this->items()));
+        return $this->pricingService->calculateTotalSubtotal($this->items());
     }
 
     public function totalVat(): float {
-        return array_sum(array_map(fn($item) => $item->getVatAmount(), $this->items()));
+        return $this->pricingService->calculateTotalVat($this->items());
     }
 
     public function applyPromoCode(string $code): bool {
@@ -223,7 +223,7 @@ class CartService implements CartServiceInterface {
     }
 
     public function getPromotionDiscount(\App\Models\Promotion $promo): float {
-        return $this->promotionService->calculateDiscount($promo, $this->items(), $this->total());
+        return $this->pricingService->calculateDiscount($promo, $this->items(), $this->total());
     }
 
     public function discount(): float {
@@ -235,7 +235,7 @@ class CartService implements CartServiceInterface {
         $subtotal = $this->total();
 
         foreach ($promotions as $promo) {
-            $totalDiscount += $this->promotionService->calculateDiscount($promo, $items, $subtotal);
+            $totalDiscount += $this->pricingService->calculateDiscount($promo, $items, $subtotal);
         }
 
         return min($totalDiscount, $subtotal);

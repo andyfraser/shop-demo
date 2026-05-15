@@ -8,6 +8,7 @@ use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\ProductServiceInterface;
+use App\Services\ProductVariantServiceInterface;
 use App\Services\CategoryServiceInterface;
 use App\Services\AttributeServiceInterface;
 use App\Services\SecurityServiceInterface;
@@ -18,6 +19,7 @@ use RuntimeException;
 class AdminProductsController {
     public function __construct(
         private ProductServiceInterface $productService,
+        private ProductVariantServiceInterface $variantService,
         private CategoryServiceInterface $categoryService,
         private AttributeServiceInterface $attributeService,
         private Renderer $renderer,
@@ -151,7 +153,7 @@ class AdminProductsController {
             if (isset($post['variants']) && is_array($post['variants'])) {
                 foreach ($post['variants'] as $v) {
                     if (!empty($v['delete']) && !empty($v['id'])) {
-                        $this->productService->deleteVariant((int)$v['id']);
+                        $this->variantService->delete((int)$v['id']);
                         continue;
                     }
 
@@ -167,7 +169,7 @@ class AdminProductsController {
                         'sort_order' => (int)($v['sort_order'] ?? 0)
                     ];
                     $vId = !empty($v['id']) ? (int)$v['id'] : 0;
-                    $savedVId = $this->productService->saveVariant($vData, $vId);
+                    $savedVId = $this->variantService->save($vData, $vId);
                     
                     // Save variant attribute values
                     $vAttrValueIds = isset($v['attr_values']) && is_array($v['attr_values'])

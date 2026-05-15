@@ -45,10 +45,14 @@ class ReturnServiceTest extends TestCase {
         $this->orderService = new OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
+        $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $evaluator = new \App\Services\PromotionEvaluator($categoryService);
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
-        $promoService = new \App\Services\PromotionService($promotionRepository, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $evaluator, $logger);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $this->productService = new ProductService($repository, $attrService, $promoService, $logger);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $this->productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger);
         
         $returnRepository = new \App\Repositories\ReturnRepository($this->db, $logger);
         $this->returnService = new ReturnService(

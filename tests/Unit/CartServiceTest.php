@@ -32,12 +32,19 @@ class CartServiceTest extends TestCase {
         $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
         $attrRepository = new \App\Repositories\AttributeRepository($db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
+        
+        $categoryRepo = new \App\Repositories\CategoryRepository($db, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
+        $pricingService = new \App\Services\PricingService($vatService, $promoEvaluator, $settings);
+
         $promotionRepository = new \App\Repositories\PromotionRepository($db, $logger);
-        $promoService = new \App\Services\PromotionService($promotionRepository, $logger, null, $orderService);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger, null, $orderService);
         $repository = new \App\Repositories\ProductRepository($db, $logger);
-        $productService = new ProductService($repository, $attrService, $promoService, $logger);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger);
         $cartRepository = new \App\Repositories\CartRepository($db);
-        $this->cart = new CartService($cartRepository, $productService, $auth, $vatService, $promoService, $orderService, $logger);
+        $this->cart = new CartService($cartRepository, $productService, $auth, $pricingService, $promoService, $orderService, $logger);
     }
 
     public function testAdd() {

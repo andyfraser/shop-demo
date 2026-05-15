@@ -18,10 +18,14 @@ class ProductServiceTest extends TestCase {
         $logger = new \Tests\NullLogger();
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
+        $categoryRepository = new \App\Repositories\CategoryRepository($this->db, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepository, $logger);
+        $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
-        $promoService = new \App\Services\PromotionService($promotionRepository, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $this->service = new ProductService($repository, $attrService, $promoService, $logger);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $this->service = new ProductService($repository, $attrService, $promoService, $variantService, $logger);
     }
 
     public function testFindById() {
