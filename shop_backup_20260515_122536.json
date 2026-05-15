@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "timestamp": "2026-05-05 12:48:43",
+        "timestamp": "2026-05-15 12:25:36",
         "driver": "mysql",
         "version": "1.0"
     },
@@ -186,13 +186,30 @@
             }
         ],
         "cart_items": [],
+        "cart_promotions": [],
         "carts": [
             {
                 "id": 1,
                 "user_id": 1,
                 "session_id": "7f8db179108c7c6b85a449f308043684",
-                "last_activity": "2026-05-05 13:13:21",
+                "last_activity": "2026-05-15 12:04:53",
                 "recovery_email_sent_at": "2026-05-02 11:31:00",
+                "applied_promo_code": "test1"
+            },
+            {
+                "id": 2,
+                "user_id": 3,
+                "session_id": "99a3e90a252b066260451b7d5fbb7904",
+                "last_activity": "2026-05-15 09:21:15",
+                "recovery_email_sent_at": null,
+                "applied_promo_code": null
+            },
+            {
+                "id": 3,
+                "user_id": 4,
+                "session_id": "9cfde05d540ded6f3f83e4e118e59075",
+                "last_activity": "2026-05-15 10:09:08",
+                "recovery_email_sent_at": null,
                 "applied_promo_code": null
             }
         ],
@@ -516,6 +533,26 @@
                 "id": 20,
                 "migration": "m0018_add_bogo_to_promotions",
                 "created_at": "2026-05-05 13:47:58"
+            },
+            {
+                "id": 22,
+                "migration": "m0019_enhance_promotions",
+                "created_at": "2026-05-14 14:29:52"
+            },
+            {
+                "id": 23,
+                "migration": "m0020_add_user_roles_table",
+                "created_at": "2026-05-14 15:50:47"
+            },
+            {
+                "id": 25,
+                "migration": "m0021_add_promotion_name_to_order_promotions",
+                "created_at": "2026-05-15 09:41:00"
+            },
+            {
+                "id": 26,
+                "migration": "m0022_harden_order_promotions_history",
+                "created_at": "2026-05-15 09:41:00"
             }
         ],
         "order_items": [
@@ -523,421 +560,581 @@
                 "id": 1,
                 "order_id": 1,
                 "product_id": 3,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 299.95,
                 "vat_rate": 0,
-                "vat_amount": 0,
-                "variant_id": null
+                "vat_amount": 0
             },
             {
                 "id": 2,
                 "order_id": 2,
                 "product_id": 22,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 36,
                 "vat_rate": 0,
-                "vat_amount": 0,
-                "variant_id": null
+                "vat_amount": 0
             },
             {
                 "id": 3,
                 "order_id": 3,
                 "product_id": 22,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 36,
                 "vat_rate": 0,
-                "vat_amount": 0,
-                "variant_id": null
+                "vat_amount": 0
             },
             {
                 "id": 4,
                 "order_id": 4,
                 "product_id": 2,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 749,
                 "vat_rate": 20,
-                "vat_amount": 124.83333333333,
-                "variant_id": null
+                "vat_amount": 124.83333333333
             },
             {
                 "id": 5,
                 "order_id": 5,
                 "product_id": 23,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 99,
                 "vat_rate": 0,
-                "vat_amount": 0,
-                "variant_id": null
+                "vat_amount": 0
             },
             {
                 "id": 6,
                 "order_id": 6,
                 "product_id": 3,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 299.95,
                 "vat_rate": 20,
-                "vat_amount": 49.991666666667,
-                "variant_id": null
+                "vat_amount": 49.991666666667
             },
             {
                 "id": 7,
                 "order_id": 7,
                 "product_id": 23,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 99,
                 "vat_rate": 0,
-                "vat_amount": 0,
-                "variant_id": null
+                "vat_amount": 0
             },
             {
                 "id": 8,
                 "order_id": 8,
                 "product_id": 10,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 39.99,
                 "vat_rate": 20,
-                "vat_amount": 6.665,
-                "variant_id": null
+                "vat_amount": 6.665
             },
             {
                 "id": 9,
                 "order_id": 9,
                 "product_id": 5,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 89,
                 "vat_rate": 20,
-                "vat_amount": 14.833333333333,
-                "variant_id": null
+                "vat_amount": 14.833333333333
             },
             {
                 "id": 10,
                 "order_id": 10,
                 "product_id": 10,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 39.99,
                 "vat_rate": 20,
-                "vat_amount": 6.665,
-                "variant_id": null
+                "vat_amount": 6.665
             },
             {
                 "id": 11,
                 "order_id": 10,
                 "product_id": 21,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 200,
                 "vat_rate": 20,
-                "vat_amount": 33.333333333333,
-                "variant_id": null
+                "vat_amount": 33.333333333333
             },
             {
                 "id": 12,
                 "order_id": 11,
                 "product_id": 2,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 749,
                 "vat_rate": 20,
-                "vat_amount": 124.83333333333,
-                "variant_id": null
+                "vat_amount": 124.83333333333
             },
             {
                 "id": 13,
                 "order_id": 12,
                 "product_id": 6,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 449,
                 "vat_rate": 20,
-                "vat_amount": 74.833333333333,
-                "variant_id": null
+                "vat_amount": 74.833333333333
             },
             {
                 "id": 14,
                 "order_id": 12,
                 "product_id": 19,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 70,
                 "vat_rate": 20,
-                "vat_amount": 11.666666666667,
-                "variant_id": null
+                "vat_amount": 11.666666666667
             },
             {
                 "id": 15,
                 "order_id": 13,
                 "product_id": 4,
+                "variant_id": 1,
                 "quantity": 1,
                 "unit_price": 59.99,
                 "vat_rate": 20,
-                "vat_amount": 9.9983333333333,
-                "variant_id": 1
+                "vat_amount": 9.9983333333333
             },
             {
                 "id": 16,
                 "order_id": 14,
                 "product_id": 4,
+                "variant_id": 1,
                 "quantity": 1,
                 "unit_price": 59.99,
                 "vat_rate": 20,
-                "vat_amount": 9.9983333333333,
-                "variant_id": 1
+                "vat_amount": 9.9983333333333
             },
             {
                 "id": 17,
                 "order_id": 15,
                 "product_id": 4,
+                "variant_id": 1,
                 "quantity": 1,
                 "unit_price": 59.99,
                 "vat_rate": 20,
-                "vat_amount": 9.9983333333333,
-                "variant_id": 1
+                "vat_amount": 9.9983333333333
             },
             {
                 "id": 18,
                 "order_id": 16,
                 "product_id": 4,
+                "variant_id": 3,
                 "quantity": 1,
                 "unit_price": 64.99,
                 "vat_rate": 20,
-                "vat_amount": 10.831666666667,
-                "variant_id": 3
+                "vat_amount": 10.831666666667
             },
             {
                 "id": 19,
                 "order_id": 17,
                 "product_id": 9,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 79.95,
                 "vat_rate": 20,
-                "vat_amount": 13.325,
-                "variant_id": null
+                "vat_amount": 13.325
             },
             {
                 "id": 20,
                 "order_id": 17,
                 "product_id": 9,
+                "variant_id": 5,
                 "quantity": 1,
                 "unit_price": 79.95,
                 "vat_rate": 20,
-                "vat_amount": 13.325,
-                "variant_id": 5
+                "vat_amount": 13.325
             },
             {
                 "id": 21,
                 "order_id": 18,
                 "product_id": 9,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 79.95,
                 "vat_rate": 20,
-                "vat_amount": 13.325,
-                "variant_id": null
+                "vat_amount": 13.325
             },
             {
                 "id": 22,
                 "order_id": 18,
                 "product_id": 5,
+                "variant_id": 8,
                 "quantity": 1,
                 "unit_price": 89,
                 "vat_rate": 20,
-                "vat_amount": 14.833333333333,
-                "variant_id": 8
+                "vat_amount": 14.833333333333
             },
             {
                 "id": 23,
                 "order_id": 19,
                 "product_id": 9,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 79.95,
                 "vat_rate": 20,
-                "vat_amount": 13.325,
-                "variant_id": null
+                "vat_amount": 13.325
             },
             {
                 "id": 24,
                 "order_id": 20,
                 "product_id": 13,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 385.99,
                 "vat_rate": 20,
-                "vat_amount": 64.331666666667,
-                "variant_id": null
+                "vat_amount": 64.331666666667
             },
             {
                 "id": 25,
                 "order_id": 21,
                 "product_id": 5,
+                "variant_id": 8,
                 "quantity": 1,
                 "unit_price": 89,
                 "vat_rate": 20,
-                "vat_amount": 14.833333333333,
-                "variant_id": 8
+                "vat_amount": 14.833333333333
             },
             {
                 "id": 26,
                 "order_id": 22,
                 "product_id": 8,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 1099,
                 "vat_rate": 20,
-                "vat_amount": 183.16666666667,
-                "variant_id": null
+                "vat_amount": 183.16666666667
             },
             {
                 "id": 27,
                 "order_id": 23,
                 "product_id": 3,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 299.95,
                 "vat_rate": 20,
-                "vat_amount": 49.991666666667,
-                "variant_id": null
+                "vat_amount": 49.991666666667
             },
             {
                 "id": 28,
                 "order_id": 24,
                 "product_id": 3,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 299.95,
                 "vat_rate": 20,
-                "vat_amount": 49.991666666667,
-                "variant_id": null
+                "vat_amount": 49.991666666667
             },
             {
                 "id": 29,
                 "order_id": 24,
                 "product_id": 22,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 36,
                 "vat_rate": 20,
-                "vat_amount": 6,
-                "variant_id": null
+                "vat_amount": 6
             },
             {
                 "id": 30,
                 "order_id": 25,
                 "product_id": 7,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 24.99,
                 "vat_rate": 20,
-                "vat_amount": 4.165,
-                "variant_id": null
+                "vat_amount": 4.165
             },
             {
                 "id": 31,
                 "order_id": 25,
                 "product_id": 14,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 23,
                 "vat_rate": 20,
-                "vat_amount": 3.8333333333333,
-                "variant_id": null
+                "vat_amount": 3.8333333333333
             },
             {
                 "id": 32,
                 "order_id": 26,
                 "product_id": 9,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 79.95,
                 "vat_rate": 20,
-                "vat_amount": 13.325,
-                "variant_id": null
+                "vat_amount": 13.325
             },
             {
                 "id": 33,
                 "order_id": 27,
                 "product_id": 23,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 99,
                 "vat_rate": 0,
-                "vat_amount": 0,
-                "variant_id": null
+                "vat_amount": 0
             },
             {
                 "id": 34,
                 "order_id": 28,
                 "product_id": 1,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 899.99,
                 "vat_rate": 20,
-                "vat_amount": 149.99833333333,
-                "variant_id": null
+                "vat_amount": 149.99833333333
             },
             {
                 "id": 35,
                 "order_id": 29,
                 "product_id": 21,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 200,
                 "vat_rate": 20,
-                "vat_amount": 33.333333333333,
-                "variant_id": null
+                "vat_amount": 33.333333333333
             },
             {
                 "id": 36,
                 "order_id": 30,
                 "product_id": 3,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 299.95,
                 "vat_rate": 20,
-                "vat_amount": 49.991666666667,
-                "variant_id": null
+                "vat_amount": 49.991666666667
             },
             {
                 "id": 37,
                 "order_id": 31,
                 "product_id": 9,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 79.95,
                 "vat_rate": 20,
-                "vat_amount": 13.325,
-                "variant_id": null
+                "vat_amount": 13.325
             },
             {
                 "id": 38,
                 "order_id": 32,
                 "product_id": 22,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 36,
                 "vat_rate": 20,
-                "vat_amount": 6,
-                "variant_id": null
+                "vat_amount": 6
             },
             {
                 "id": 39,
                 "order_id": 33,
                 "product_id": 24,
+                "variant_id": 14,
                 "quantity": 1,
                 "unit_price": 25,
                 "vat_rate": 20,
-                "vat_amount": 4.1666666666667,
-                "variant_id": 14
+                "vat_amount": 4.1666666666667
             },
             {
                 "id": 40,
                 "order_id": 33,
                 "product_id": 3,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 299.95,
                 "vat_rate": 20,
-                "vat_amount": 49.991666666667,
-                "variant_id": null
+                "vat_amount": 49.991666666667
             },
             {
                 "id": 41,
                 "order_id": 34,
                 "product_id": 9,
+                "variant_id": null,
                 "quantity": 1,
                 "unit_price": 79.95,
                 "vat_rate": 20,
-                "vat_amount": 13.325,
-                "variant_id": null
+                "vat_amount": 13.325
             },
             {
                 "id": 42,
                 "order_id": 35,
                 "product_id": 9,
+                "variant_id": null,
                 "quantity": 4,
                 "unit_price": 79.95,
                 "vat_rate": 20,
-                "vat_amount": 53.3,
-                "variant_id": null
+                "vat_amount": 53.3
+            },
+            {
+                "id": 43,
+                "order_id": 36,
+                "product_id": 9,
+                "variant_id": null,
+                "quantity": 1,
+                "unit_price": 79.95,
+                "vat_rate": 20,
+                "vat_amount": 13.325
+            },
+            {
+                "id": 44,
+                "order_id": 37,
+                "product_id": 9,
+                "variant_id": null,
+                "quantity": 1,
+                "unit_price": 79.95,
+                "vat_rate": 20,
+                "vat_amount": 13.325
+            },
+            {
+                "id": 45,
+                "order_id": 38,
+                "product_id": 9,
+                "variant_id": null,
+                "quantity": 1,
+                "unit_price": 79.95,
+                "vat_rate": 20,
+                "vat_amount": 13.325
+            },
+            {
+                "id": 46,
+                "order_id": 39,
+                "product_id": 20,
+                "variant_id": null,
+                "quantity": 1,
+                "unit_price": 88,
+                "vat_rate": 20,
+                "vat_amount": 14.666666666667
+            },
+            {
+                "id": 47,
+                "order_id": 40,
+                "product_id": 7,
+                "variant_id": null,
+                "quantity": 1,
+                "unit_price": 24.99,
+                "vat_rate": 20,
+                "vat_amount": 4.165
+            },
+            {
+                "id": 48,
+                "order_id": 41,
+                "product_id": 10,
+                "variant_id": null,
+                "quantity": 1,
+                "unit_price": 39.99,
+                "vat_rate": 20,
+                "vat_amount": 6.665
+            },
+            {
+                "id": 49,
+                "order_id": 41,
+                "product_id": 4,
+                "variant_id": 2,
+                "quantity": 1,
+                "unit_price": 59.99,
+                "vat_rate": 20,
+                "vat_amount": 9.9983333333333
+            },
+            {
+                "id": 50,
+                "order_id": 41,
+                "product_id": 11,
+                "variant_id": null,
+                "quantity": 1,
+                "unit_price": 1199,
+                "vat_rate": 20,
+                "vat_amount": 199.83333333333
+            },
+            {
+                "id": 51,
+                "order_id": 42,
+                "product_id": 23,
+                "variant_id": null,
+                "quantity": 1,
+                "unit_price": 99,
+                "vat_rate": 0,
+                "vat_amount": 0
+            },
+            {
+                "id": 52,
+                "order_id": 42,
+                "product_id": 24,
+                "variant_id": 13,
+                "quantity": 1,
+                "unit_price": 24,
+                "vat_rate": 20,
+                "vat_amount": 4
+            },
+            {
+                "id": 53,
+                "order_id": 43,
+                "product_id": 6,
+                "variant_id": null,
+                "quantity": 1,
+                "unit_price": 449,
+                "vat_rate": 20,
+                "vat_amount": 74.833333333333
+            }
+        ],
+        "order_promotions": [
+            {
+                "id": 1,
+                "order_id": 37,
+                "promotion_id": 4,
+                "promotion_name": null,
+                "discount_amount": 7.995,
+                "promo_code": null
+            },
+            {
+                "id": 2,
+                "order_id": 39,
+                "promotion_id": 4,
+                "promotion_name": "New Customer",
+                "discount_amount": 8.8,
+                "promo_code": null
+            },
+            {
+                "id": 3,
+                "order_id": 40,
+                "promotion_id": 5,
+                "promotion_name": "VIP 20% off gaming",
+                "discount_amount": 4.998,
+                "promo_code": null
+            },
+            {
+                "id": 4,
+                "order_id": 41,
+                "promotion_id": 6,
+                "promotion_name": "Test Three",
+                "discount_amount": 324.745,
+                "promo_code": null
+            },
+            {
+                "id": 5,
+                "order_id": 42,
+                "promotion_id": 6,
+                "promotion_name": "Test Three",
+                "discount_amount": 30.75,
+                "promo_code": null
+            },
+            {
+                "id": 6,
+                "order_id": 43,
+                "promotion_id": 6,
+                "promotion_name": "Test Three",
+                "discount_amount": 112.25,
+                "promo_code": null
             }
         ],
         "order_status_history": [
@@ -1220,6 +1417,254 @@
                 "notes": "Paid via TEST-69f9dee1606b6",
                 "created_by_user_id": 1,
                 "created_at": "2026-05-05 13:13:21"
+            },
+            {
+                "id": 36,
+                "order_id": 36,
+                "status": "pending",
+                "notes": "Order created",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-14 12:06:23"
+            },
+            {
+                "id": 37,
+                "order_id": 36,
+                "status": "confirmed",
+                "notes": "Paid via TEST-6a05acaf07e13",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-14 12:06:23"
+            },
+            {
+                "id": 38,
+                "order_id": 37,
+                "status": "pending",
+                "notes": "Order created",
+                "created_by_user_id": 3,
+                "created_at": "2026-05-15 09:06:26"
+            },
+            {
+                "id": 39,
+                "order_id": 37,
+                "status": "confirmed",
+                "notes": "Paid via TEST-6a06d402c1b3c",
+                "created_by_user_id": 3,
+                "created_at": "2026-05-15 09:06:26"
+            },
+            {
+                "id": 40,
+                "order_id": 38,
+                "status": "pending",
+                "notes": "Order created",
+                "created_by_user_id": 3,
+                "created_at": "2026-05-15 09:18:54"
+            },
+            {
+                "id": 41,
+                "order_id": 38,
+                "status": "confirmed",
+                "notes": "Paid via TEST-6a06d6ee22a3e",
+                "created_by_user_id": 3,
+                "created_at": "2026-05-15 09:18:54"
+            },
+            {
+                "id": 42,
+                "order_id": 39,
+                "status": "pending",
+                "notes": "Order created",
+                "created_by_user_id": 4,
+                "created_at": "2026-05-15 09:49:58"
+            },
+            {
+                "id": 43,
+                "order_id": 39,
+                "status": "confirmed",
+                "notes": "Paid via TEST-6a06de362661a",
+                "created_by_user_id": 4,
+                "created_at": "2026-05-15 09:49:58"
+            },
+            {
+                "id": 44,
+                "order_id": 40,
+                "status": "pending",
+                "notes": "Order created",
+                "created_by_user_id": 4,
+                "created_at": "2026-05-15 10:09:08"
+            },
+            {
+                "id": 45,
+                "order_id": 40,
+                "status": "confirmed",
+                "notes": "Paid via TEST-6a06e2b47848c",
+                "created_by_user_id": 4,
+                "created_at": "2026-05-15 10:09:08"
+            },
+            {
+                "id": 46,
+                "order_id": 30,
+                "status": "shipped",
+                "notes": "",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 11:54:08"
+            },
+            {
+                "id": 47,
+                "order_id": 30,
+                "status": "delivered",
+                "notes": "",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 11:54:55"
+            },
+            {
+                "id": 48,
+                "order_id": 30,
+                "status": "returning",
+                "notes": "Return requested: Didn't work.",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 11:55:15"
+            },
+            {
+                "id": 49,
+                "order_id": 30,
+                "status": "partial refund",
+                "notes": "Return #15 approved. Refunded \u00a3299.95",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 11:58:41"
+            },
+            {
+                "id": 50,
+                "order_id": 31,
+                "status": "shipped",
+                "notes": "",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 11:58:59"
+            },
+            {
+                "id": 51,
+                "order_id": 31,
+                "status": "delivered",
+                "notes": "",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 11:59:01"
+            },
+            {
+                "id": 52,
+                "order_id": 31,
+                "status": "returning",
+                "notes": "Return requested: No good.",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 11:59:18"
+            },
+            {
+                "id": 53,
+                "order_id": 31,
+                "status": "fully refunded",
+                "notes": "Return #16 approved. Refunded \u00a383.94",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 11:59:27"
+            },
+            {
+                "id": 54,
+                "order_id": 34,
+                "status": "delivered",
+                "notes": "",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 11:59:55"
+            },
+            {
+                "id": 55,
+                "order_id": 34,
+                "status": "returning",
+                "notes": "Return requested: Boo!",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 12:00:10"
+            },
+            {
+                "id": 56,
+                "order_id": 34,
+                "status": "not refunded",
+                "notes": "Return #17 rejected: Boo to you!",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 12:00:26"
+            },
+            {
+                "id": 57,
+                "order_id": 41,
+                "status": "pending",
+                "notes": "Order created",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 12:02:37"
+            },
+            {
+                "id": 58,
+                "order_id": 41,
+                "status": "confirmed",
+                "notes": "Paid via TEST-6a06fd4d3deeb",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 12:02:37"
+            },
+            {
+                "id": 59,
+                "order_id": 42,
+                "status": "pending",
+                "notes": "Order created",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 12:04:15"
+            },
+            {
+                "id": 60,
+                "order_id": 42,
+                "status": "confirmed",
+                "notes": "Paid via TEST-6a06fdaf0c8a5",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 12:04:15"
+            },
+            {
+                "id": 61,
+                "order_id": 43,
+                "status": "pending",
+                "notes": "Order created",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 12:04:53"
+            },
+            {
+                "id": 62,
+                "order_id": 43,
+                "status": "confirmed",
+                "notes": "Paid via TEST-6a06fdd53a6b4",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 12:04:53"
+            },
+            {
+                "id": 63,
+                "order_id": 43,
+                "status": "shipped",
+                "notes": "",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 13:23:00"
+            },
+            {
+                "id": 64,
+                "order_id": 43,
+                "status": "delivered",
+                "notes": "",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 13:23:55"
+            },
+            {
+                "id": 65,
+                "order_id": 43,
+                "status": "returning",
+                "notes": "Return requested: Don't want it.",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 13:24:13"
+            },
+            {
+                "id": 66,
+                "order_id": 43,
+                "status": "fully refunded",
+                "notes": "Return #18 approved. Refunded \u00a3449.00",
+                "created_by_user_id": 1,
+                "created_at": "2026-05-15 13:24:46"
             }
         ],
         "orders": [
@@ -1228,6 +1673,7 @@
                 "user_id": 1,
                 "status": "delivered",
                 "total": 306.94,
+                "total_vat_amount": 0,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Next Day Delivery",
@@ -1236,20 +1682,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-18 09:59:47",
-                "total_vat_amount": 0,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 2,
                 "user_id": 1,
                 "status": "confirmed",
                 "total": 39.99,
+                "total_vat_amount": 0,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1258,20 +1706,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-18 13:27:43",
-                "total_vat_amount": 0,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 3,
                 "user_id": 1,
                 "status": "cancelled",
                 "total": 42.99,
+                "total_vat_amount": 0,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Next Day Delivery",
@@ -1280,20 +1730,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-21 12:14:04",
-                "total_vat_amount": 0,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 4,
                 "user_id": 1,
                 "status": "shipped",
                 "total": 752.99,
+                "total_vat_amount": 125.49833333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1302,20 +1754,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-22 14:35:03",
-                "total_vat_amount": 125.49833333333,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 5,
                 "user_id": 1,
                 "status": "shipped",
                 "total": 102.99,
+                "total_vat_amount": 0.665,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1324,20 +1778,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-22 14:42:49",
-                "total_vat_amount": 0.665,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 6,
                 "user_id": 1,
                 "status": "shipped",
                 "total": 303.94,
+                "total_vat_amount": 50.656666666667,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1346,20 +1802,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-25 10:49:11",
-                "total_vat_amount": 50.656666666667,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 7,
                 "user_id": 1,
                 "status": "shipped",
                 "total": 99,
+                "total_vat_amount": 0,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Free Shipping (Over \u00a350)",
@@ -1368,20 +1826,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-25 12:54:27",
-                "total_vat_amount": 0,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 8,
                 "user_id": 1,
                 "status": "confirmed",
                 "total": 43.98,
+                "total_vat_amount": 7.33,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1390,20 +1850,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-26 11:26:26",
-                "total_vat_amount": 7.33,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 9,
                 "user_id": 1,
                 "status": "cancelled",
                 "total": 89,
+                "total_vat_amount": 14.833333333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Free Shipping (Over \u00a350)",
@@ -1412,20 +1874,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-26 13:32:24",
-                "total_vat_amount": 14.833333333333,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 10,
                 "user_id": 1,
                 "status": "confirmed",
                 "total": 246.98,
+                "total_vat_amount": 41.163333333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Next Day Delivery",
@@ -1434,20 +1898,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-26 15:15:20",
-                "total_vat_amount": 41.163333333333,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 11,
                 "user_id": 1,
                 "status": "pending",
                 "total": 759.99,
+                "total_vat_amount": 126.665,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Special Delivery (before 9am next day)",
@@ -1456,20 +1922,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-26 16:26:08",
-                "total_vat_amount": 126.665,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 12,
                 "user_id": 2,
                 "status": "shipped",
                 "total": 525.99,
+                "total_vat_amount": 87.665,
                 "shipping_address": "2 Test St\r\nTest\r\nTS2 2ST",
                 "notes": "",
                 "delivery_method": "Next Day Delivery",
@@ -1478,20 +1946,22 @@
                 "customer_email": "jane@example.com",
                 "customer_name": "Jane Smith",
                 "created_at": "2026-04-27 12:12:14",
-                "total_vat_amount": 87.665,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 13,
                 "user_id": 1,
                 "status": "pending",
                 "total": 63.98,
+                "total_vat_amount": 10.663333333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1500,20 +1970,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-27 13:49:48",
-                "total_vat_amount": 10.663333333333,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 14,
                 "user_id": 1,
                 "status": "delivered",
                 "total": 63.98,
+                "total_vat_amount": 10.663333333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1522,20 +1994,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-27 13:55:45",
-                "total_vat_amount": 10.663333333333,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 15,
                 "user_id": 1,
                 "status": "delivered",
                 "total": 63.98,
+                "total_vat_amount": 10.663333333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1544,20 +2018,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-27 13:57:34",
-                "total_vat_amount": 10.663333333333,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 16,
                 "user_id": 1,
                 "status": "delivered",
                 "total": 68.98,
+                "total_vat_amount": 11.496666666667,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1566,20 +2042,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-27 14:01:56",
-                "total_vat_amount": 11.496666666667,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 17,
                 "user_id": 1,
                 "status": "cancelled",
                 "total": 166.89,
+                "total_vat_amount": 27.815,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Next Day Delivery",
@@ -1588,20 +2066,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-27 14:05:22",
-                "total_vat_amount": 27.815,
                 "payment_method": null,
                 "payment_status": "pending",
                 "payment_transaction_id": null,
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 18,
                 "user_id": 1,
                 "status": "delivered",
                 "total": 175.94,
+                "total_vat_amount": 29.323333333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Next Day Delivery",
@@ -1610,20 +2090,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 13:59:34",
-                "total_vat_amount": 29.323333333333,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0af36576fe",
                 "refund_status": "partially_refunded",
                 "refunded_amount": "79.95",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 19,
                 "user_id": 1,
                 "status": "cancelled",
                 "total": 83.94,
+                "total_vat_amount": 13.99,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1632,20 +2114,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 14:28:24",
-                "total_vat_amount": 13.99,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0b5f828e86",
                 "refund_status": "refunded",
                 "refunded_amount": "83.94",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 20,
                 "user_id": 1,
                 "status": "cancelled",
                 "total": 389.98,
+                "total_vat_amount": 64.996666666667,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1654,20 +2138,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 14:31:36",
-                "total_vat_amount": 64.996666666667,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0b6b8419e1",
                 "refund_status": "refunded",
                 "refunded_amount": "389.98",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 21,
                 "user_id": 1,
                 "status": "delivered",
                 "total": 92.99,
+                "total_vat_amount": 15.498333333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1676,20 +2162,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 14:32:48",
-                "total_vat_amount": 15.498333333333,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0b700318ac",
                 "refund_status": "partially_refunded",
                 "refunded_amount": "89.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 22,
                 "user_id": 1,
                 "status": "delivered",
                 "total": 1102.99,
+                "total_vat_amount": 183.83166666667,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1698,20 +2186,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 14:53:37",
-                "total_vat_amount": 183.83166666667,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0bbe118637",
                 "refund_status": "partially_refunded",
                 "refunded_amount": "1099.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 23,
                 "user_id": 1,
                 "status": "fully refunded",
                 "total": 303.94,
+                "total_vat_amount": 50.656666666667,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1720,20 +2210,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 15:03:44",
-                "total_vat_amount": 50.656666666667,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0be40ef8e3",
                 "refund_status": "fully_refunded",
                 "refunded_amount": "303.94",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 24,
                 "user_id": 1,
                 "status": "not refunded",
                 "total": 342.94,
+                "total_vat_amount": 57.156666666667,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Next Day Delivery",
@@ -1742,20 +2234,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 15:07:25",
-                "total_vat_amount": 57.156666666667,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0bf1d9283e",
                 "refund_status": "partially_refunded",
                 "refunded_amount": "42.99",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 25,
                 "user_id": 1,
                 "status": "fully refunded",
                 "total": 51.98,
+                "total_vat_amount": 8.6633333333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1764,20 +2258,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 15:48:57",
-                "total_vat_amount": 8.6633333333333,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0c8d9dce1f",
                 "refund_status": "fully_refunded",
                 "refunded_amount": "51.98",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 26,
                 "user_id": 1,
                 "status": "refunded",
                 "total": 86.94,
+                "total_vat_amount": 14.49,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Next Day Delivery",
@@ -1786,20 +2282,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 16:09:12",
-                "total_vat_amount": 14.49,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0cd986320b",
                 "refund_status": "partially_refunded",
                 "refunded_amount": "79.95",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 27,
                 "user_id": 1,
                 "status": "confirmed",
                 "total": 102.99,
+                "total_vat_amount": 0.665,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1808,20 +2306,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 16:18:06",
-                "total_vat_amount": 0.665,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0cfae9565d",
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 28,
                 "user_id": 1,
                 "status": "confirmed",
                 "total": 903.98,
+                "total_vat_amount": 150.66333333333,
                 "shipping_address": "1 Test St\r\nTest Town\r\nTest\r\nTS1 1ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1830,20 +2330,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-28 17:01:33",
-                "total_vat_amount": 150.66333333333,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0d9ddda230",
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 29,
                 "user_id": 2,
                 "status": "refunded",
                 "total": 203.99,
+                "total_vat_amount": 33.998333333333,
                 "shipping_address": "2 Test St\r\nTest\r\nTS2 2ST",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1852,20 +2354,22 @@
                 "customer_email": "jane@example.com",
                 "customer_name": "Jane Smith",
                 "created_at": "2026-04-28 17:02:21",
-                "total_vat_amount": 33.998333333333,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f0da0d0ed20",
                 "refund_status": "partially_refunded",
                 "refunded_amount": "200.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 30,
                 "user_id": 1,
-                "status": "confirmed",
+                "status": "partial refund",
                 "total": 303.94,
+                "total_vat_amount": 50.656666666667,
                 "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1874,42 +2378,46 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-29 14:51:16",
-                "total_vat_amount": 50.656666666667,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f20cd42999c",
-                "refund_status": null,
-                "refunded_amount": "0.00",
+                "refund_status": "partially_refunded",
+                "refunded_amount": "299.95",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 31,
                 "user_id": 1,
-                "status": "confirmed",
+                "status": "fully refunded",
                 "total": 83.94,
+                "total_vat_amount": 13.99,
                 "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
                 "delivery_cost": 3.99,
-                "delivery_refunded": 0,
+                "delivery_refunded": 1,
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-04-29 15:53:41",
-                "total_vat_amount": 13.99,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f21b75c336c",
-                "refund_status": null,
-                "refunded_amount": "0.00",
+                "refund_status": "fully_refunded",
+                "refunded_amount": "83.94",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 32,
                 "user_id": 1,
                 "status": "confirmed",
                 "total": 39.99,
+                "total_vat_amount": 6.665,
                 "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1918,20 +2426,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-05-02 12:35:32",
-                "total_vat_amount": 6.665,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f5e184bf341",
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": null,
-                "discount_amount": 0
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 33,
                 "user_id": 1,
                 "status": "confirmed",
                 "total": 298.945,
+                "total_vat_amount": 49.824166666667,
                 "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1940,20 +2450,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-05-05 11:44:23",
-                "total_vat_amount": 49.824166666667,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f9ca07b97da",
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": 1,
-                "discount_amount": 29.995
+                "discount_amount": 29.995,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 34,
                 "user_id": 1,
-                "status": "shipped",
+                "status": "not refunded",
                 "total": 67.95,
+                "total_vat_amount": 11.325,
                 "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1962,20 +2474,22 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-05-05 12:16:39",
-                "total_vat_amount": 11.325,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f9d1971cbda",
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": 1,
-                "discount_amount": 15.99
+                "discount_amount": 15.99,
+                "applied_promo_name": null,
+                "applied_promo_code": null
             },
             {
                 "id": 35,
                 "user_id": 1,
                 "status": "confirmed",
                 "total": 243.84,
+                "total_vat_amount": 40.64,
                 "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
                 "notes": "",
                 "delivery_method": "Standard Delivery",
@@ -1984,14 +2498,207 @@
                 "customer_email": "admin@shop.local",
                 "customer_name": "Admin",
                 "created_at": "2026-05-05 13:13:21",
-                "total_vat_amount": 40.64,
                 "payment_method": "manual",
                 "payment_status": "paid",
                 "payment_transaction_id": "TEST-69f9dee1606b6",
                 "refund_status": null,
                 "refunded_amount": "0.00",
                 "promotion_id": 2,
-                "discount_amount": 79.95
+                "discount_amount": 79.95,
+                "applied_promo_name": null,
+                "applied_promo_code": null
+            },
+            {
+                "id": 36,
+                "user_id": 1,
+                "status": "confirmed",
+                "total": 67.95,
+                "total_vat_amount": 11.325,
+                "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
+                "notes": "",
+                "delivery_method": "Standard Delivery",
+                "delivery_cost": 3.99,
+                "delivery_refunded": 0,
+                "customer_email": "admin@shop.local",
+                "customer_name": "Admin",
+                "created_at": "2026-05-14 12:06:23",
+                "payment_method": "manual",
+                "payment_status": "paid",
+                "payment_transaction_id": "TEST-6a05acaf07e13",
+                "refund_status": null,
+                "refunded_amount": "0.00",
+                "promotion_id": 3,
+                "discount_amount": 15.99,
+                "applied_promo_name": null,
+                "applied_promo_code": null
+            },
+            {
+                "id": 37,
+                "user_id": 3,
+                "status": "confirmed",
+                "total": 75.945,
+                "total_vat_amount": 12.6575,
+                "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
+                "notes": "",
+                "delivery_method": "Standard Delivery",
+                "delivery_cost": 3.99,
+                "delivery_refunded": 0,
+                "customer_email": "testone@shop.test",
+                "customer_name": "Test One",
+                "created_at": "2026-05-15 09:06:26",
+                "payment_method": "manual",
+                "payment_status": "paid",
+                "payment_transaction_id": "TEST-6a06d402c1b3c",
+                "refund_status": null,
+                "refunded_amount": "0.00",
+                "promotion_id": 4,
+                "discount_amount": 7.995,
+                "applied_promo_name": "New Customer",
+                "applied_promo_code": null
+            },
+            {
+                "id": 38,
+                "user_id": 3,
+                "status": "confirmed",
+                "total": 83.94,
+                "total_vat_amount": 13.99,
+                "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
+                "notes": "",
+                "delivery_method": "Standard Delivery",
+                "delivery_cost": 3.99,
+                "delivery_refunded": 0,
+                "customer_email": "testone@shop.test",
+                "customer_name": "Test One",
+                "created_at": "2026-05-15 09:18:54",
+                "payment_method": "manual",
+                "payment_status": "paid",
+                "payment_transaction_id": "TEST-6a06d6ee22a3e",
+                "refund_status": null,
+                "refunded_amount": "0.00",
+                "promotion_id": null,
+                "discount_amount": 0,
+                "applied_promo_name": null,
+                "applied_promo_code": null
+            },
+            {
+                "id": 39,
+                "user_id": 4,
+                "status": "confirmed",
+                "total": 83.19,
+                "total_vat_amount": 13.865,
+                "shipping_address": "2 Test St\nTest\nTS2 2ST\nUnited Kingdom",
+                "notes": "",
+                "delivery_method": "Standard Delivery",
+                "delivery_cost": 3.99,
+                "delivery_refunded": 0,
+                "customer_email": "testtwo@shop.test",
+                "customer_name": "Test Two",
+                "created_at": "2026-05-15 09:49:58",
+                "payment_method": "manual",
+                "payment_status": "paid",
+                "payment_transaction_id": "TEST-6a06de362661a",
+                "refund_status": null,
+                "refunded_amount": "0.00",
+                "promotion_id": 4,
+                "discount_amount": 8.8,
+                "applied_promo_name": "New Customer",
+                "applied_promo_code": null
+            },
+            {
+                "id": 40,
+                "user_id": 4,
+                "status": "confirmed",
+                "total": 26.982,
+                "total_vat_amount": 4.497,
+                "shipping_address": "2 Test St\nTest\nTS2 2ST\nUnited Kingdom",
+                "notes": "",
+                "delivery_method": "Next Day Delivery",
+                "delivery_cost": 6.99,
+                "delivery_refunded": 0,
+                "customer_email": "testtwo@shop.test",
+                "customer_name": "Test Two",
+                "created_at": "2026-05-15 10:09:08",
+                "payment_method": "manual",
+                "payment_status": "paid",
+                "payment_transaction_id": "TEST-6a06e2b47848c",
+                "refund_status": null,
+                "refunded_amount": "0.00",
+                "promotion_id": 5,
+                "discount_amount": 4.998,
+                "applied_promo_name": "VIP 20% off gaming",
+                "applied_promo_code": null
+            },
+            {
+                "id": 41,
+                "user_id": 1,
+                "status": "confirmed",
+                "total": 981.225,
+                "total_vat_amount": 163.5375,
+                "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
+                "notes": "",
+                "delivery_method": "Next Day Delivery",
+                "delivery_cost": 6.99,
+                "delivery_refunded": 0,
+                "customer_email": "admin@shop.local",
+                "customer_name": "Admin",
+                "created_at": "2026-05-15 12:02:37",
+                "payment_method": "manual",
+                "payment_status": "paid",
+                "payment_transaction_id": "TEST-6a06fd4d3deeb",
+                "refund_status": null,
+                "refunded_amount": "0.00",
+                "promotion_id": 6,
+                "discount_amount": 324.745,
+                "applied_promo_name": "Test Three",
+                "applied_promo_code": null
+            },
+            {
+                "id": 42,
+                "user_id": 1,
+                "status": "confirmed",
+                "total": 96.24,
+                "total_vat_amount": 3.665,
+                "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
+                "notes": "",
+                "delivery_method": "Standard Delivery",
+                "delivery_cost": 3.99,
+                "delivery_refunded": 0,
+                "customer_email": "admin@shop.local",
+                "customer_name": "Admin",
+                "created_at": "2026-05-15 12:04:15",
+                "payment_method": "manual",
+                "payment_status": "paid",
+                "payment_transaction_id": "TEST-6a06fdaf0c8a5",
+                "refund_status": null,
+                "refunded_amount": "0.00",
+                "promotion_id": 6,
+                "discount_amount": 30.75,
+                "applied_promo_name": "Test Three",
+                "applied_promo_code": null
+            },
+            {
+                "id": 43,
+                "user_id": 1,
+                "status": "fully refunded",
+                "total": 347.74,
+                "total_vat_amount": 57.956666666667,
+                "shipping_address": "1 Test St\nTest\nTS1 1ST\nUnited Kingdom",
+                "notes": "",
+                "delivery_method": "Special Delivery (before 9am next day)",
+                "delivery_cost": 10.99,
+                "delivery_refunded": 0,
+                "customer_email": "admin@shop.local",
+                "customer_name": "Admin",
+                "created_at": "2026-05-15 12:04:53",
+                "payment_method": "manual",
+                "payment_status": "paid",
+                "payment_transaction_id": "TEST-6a06fdd53a6b4",
+                "refund_status": "fully_refunded",
+                "refunded_amount": "449.00",
+                "promotion_id": 6,
+                "discount_amount": 112.25,
+                "applied_promo_name": "Test Three",
+                "applied_promo_code": null
             }
         ],
         "product_attribute_values": [
@@ -2234,7 +2941,7 @@
                 "name": "Medium",
                 "sku": "MEN-OXFRD-MEDIUM",
                 "price": null,
-                "stock": 20,
+                "stock": 19,
                 "active": 1,
                 "sort_order": 1,
                 "created_at": "2026-04-27 14:00:38"
@@ -2355,7 +3062,7 @@
                 "name": "Large Green",
                 "sku": "MENS-REG-SHIRT-LG",
                 "price": null,
-                "stock": 30,
+                "stock": 29,
                 "active": 1,
                 "sort_order": 2,
                 "created_at": "2026-05-04 14:05:32"
@@ -2377,397 +3084,417 @@
                 "id": 1,
                 "name": "ProBook Laptop 15\"",
                 "slug": "probook-laptop-15",
+                "sku": "LAP-PROBK-15",
                 "description": "A powerful 15-inch laptop with 16GB RAM, 512GB SSD and a stunning display. Perfect for work and creativity.",
                 "price": 899.99,
+                "vat_rate": 20,
                 "stock": 10,
                 "category_id": 4,
                 "image": "img_69bd3779ba9bf9.94612358.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "LAP-PROBK-15",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 2,
                 "name": "UltraPhone X12",
                 "slug": "ultraphone-x12",
+                "sku": "PHN-UX12",
                 "description": "The latest flagship smartphone featuring a triple-camera system, 5G connectivity and all-day battery life.",
                 "price": 749,
+                "vat_rate": 20,
                 "stock": 20,
                 "category_id": 5,
                 "image": "img_69bd376dc40e67.91131762.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "PHN-UX12",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 3,
                 "name": "Studio Wireless Headphones",
                 "slug": "studio-wireless-headphones",
+                "sku": "AUD-STWIR",
                 "description": "Premium over-ear headphones with active noise cancellation and 30-hour battery. Studio-quality sound anywhere.",
                 "price": 299.95,
-                "stock": 37,
+                "vat_rate": 20,
+                "stock": 38,
                 "category_id": 6,
                 "image": "img_69bd3762e90036.79611024.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "AUD-STWIR",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 4,
                 "name": "Classic Oxford Shirt",
                 "slug": "classic-oxford-shirt",
+                "sku": "MEN-OXFRD",
                 "description": "Timeless Oxford weave cotton shirt. Versatile enough for the office or weekend. Available in multiple colours.",
                 "price": 59.99,
+                "vat_rate": 20,
                 "stock": 79,
                 "category_id": 7,
                 "image": "img_69bd3757beda69.95266902.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "MEN-OXFRD",
-                "force_variant": 1
+                "force_variant": 1,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 5,
                 "name": "Merino Wool Jumper",
                 "slug": "merino-wool-jumper",
+                "sku": "WOM-MERIN",
                 "description": "Soft, lightweight and warm. This merino wool jumper is a wardrobe essential for the cooler months.",
                 "price": 89,
+                "vat_rate": 20,
                 "stock": 33,
                 "category_id": 8,
                 "image": "img_69bd3728f36b86.03617973.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "WOM-MERIN",
-                "force_variant": 1
+                "force_variant": 1,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 6,
                 "name": "Espresso Machine Pro",
                 "slug": "espresso-machine-pro",
+                "sku": "KIT-ESPRO",
                 "description": "Barista-grade espresso at home. 15-bar pump pressure, built-in grinder, and milk frother included.",
                 "price": 449,
+                "vat_rate": 20,
                 "stock": 11,
                 "category_id": 9,
                 "image": "img_69bd371c0a7f91.86115081.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "KIT-ESPRO",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 7,
                 "name": "Carbon Steel Garden Trowel",
                 "slug": "carbon-steel-garden-trowel",
+                "sku": "GAR-TROWL",
                 "description": "Professional-grade carbon steel trowel with an ergonomic hardwood handle. Built to last a lifetime.",
                 "price": 24.99,
-                "stock": 59,
+                "vat_rate": 20,
+                "stock": 58,
                 "category_id": 10,
                 "image": "img_69bd370cad5f19.97444002.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "GAR-TROWL",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 8,
                 "name": "MiniBook Air 13\"",
                 "slug": "minibook-air-13",
+                "sku": "LAP-MINIB-13",
                 "description": "Featherlight 13-inch ultrabook. All-day battery, fanless design, and a gorgeous Retina-class display.",
                 "price": 1099,
+                "vat_rate": 20,
                 "stock": 7,
                 "category_id": 4,
                 "image": "img_69bd36fea24797.63486949.jpg",
                 "active": 1,
                 "featured": 1,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "LAP-MINIB-13",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 9,
                 "name": "Bluetooth Speaker Cube",
                 "slug": "bluetooth-speaker-cube",
+                "sku": "AUD-BTCUB",
                 "description": "Compact, waterproof Bluetooth speaker delivering surprisingly big sound. Perfect for outdoors.",
                 "price": 79.95,
-                "stock": 47,
+                "vat_rate": 20,
+                "stock": 45,
                 "category_id": 6,
                 "image": "img_69bd3678dda058.99673075.jpg",
                 "active": 1,
                 "featured": 1,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "AUD-BTCUB",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 10,
                 "name": "Cast Iron Skillet 28cm",
                 "slug": "cast-iron-skillet-28cm",
+                "sku": "KIT-SKILT-28",
                 "description": "Pre-seasoned cast iron skillet. Sears, bakes, grills and fries. Virtually indestructible.",
                 "price": 39.99,
-                "stock": 26,
+                "vat_rate": 20,
+                "stock": 25,
                 "category_id": 9,
                 "image": "img_69bd39df6196a1.38026816.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "KIT-SKILT-28",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 11,
                 "name": "iPhone 17 Pro Max",
                 "slug": "iphone-17-pro-max",
+                "sku": "PHN-I17PM",
                 "description": "iPhone 17 Pro Max. The most powerful iPhone ever. Brilliant 6.9-inch display, aluminium unibody design, A19 Pro chip, all 48MP rear cameras and best-ever battery life. UNIBODY DESIGN. FOR EXCEPTIONAL POWER - Heat-forged aluminium unibody design for the most powerful iPhone ever made. DURABLE CERAMIC SHIELD. FRONT AND BACK - Ceramic Shield protects the back of iPhone 17 Pro Max, making it 4x more resistant to cracks. And the new Ceramic Shield 2 on the front has 3x better scratch resistance.",
                 "price": 1199,
-                "stock": 2,
+                "vat_rate": 20,
+                "stock": 1,
                 "category_id": 5,
                 "image": "img_69bd46751926a3.56450672.webp",
                 "active": 1,
                 "featured": 1,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "PHN-I17PM",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 12,
                 "name": "Playstation 5",
                 "slug": "playstation-5",
+                "sku": "GAM-PS5",
                 "description": "PlayStation 5 Console. The PS5 console unleashes new gaming possibilities that you never anticipated. Experience lightning-fast loading with an ultra-high speed SSD, deeper immersion with support for haptic feedback, adaptive triggers, and 3D Audio, and an all-new generation of incredible PlayStation games.",
                 "price": 479.99,
+                "vat_rate": 20,
                 "stock": 0,
                 "category_id": 14,
                 "image": "img_69bd4d700341b0.13942450.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "GAM-PS5",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 13,
                 "name": "Nintendo Switch 2 Console",
                 "slug": "nintendo-switch-2-console",
+                "sku": "GAM-NSW2",
                 "description": "The next evolution of the Nintendo Switch console is here!\r\n\r\nBring games to life with a larger 1080p screen\u2014or connect to a TV and play in up to 4K resolution. Support for HDR, VRR, and frame rates up to 120 fps lets you enjoy vivid colour, clarity, and smooth gameplay. Snap the new Joy-Con 2 controllers into place with magnetic connectors. Each controller can even be used as a mouse in compatible games.",
                 "price": 385.99,
+                "vat_rate": 20,
                 "stock": 28,
                 "category_id": 14,
                 "image": "img_69bd4ec03e4005.93093090.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "GAM-NSW2",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 14,
                 "name": "LEGO Speed Champions Mercedes-AMG F1 W15 Race Car Toy",
                 "slug": "lego-speed-champions-mercedes-amg-f1-w15-race-car-toy",
+                "sku": "LEG-MERC-F1",
                 "description": "F1 fans and kids aged 10 and up can enjoy exciting race action with this LEGO Speed Champions Mercedes-AMG PETRONAS F1 Team toy car.",
                 "price": 23,
+                "vat_rate": 20,
                 "stock": 11,
                 "category_id": 17,
                 "image": "img_69bd50dc58de60.49794891.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "LEG-MERC-F1",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 15,
                 "name": "LEGO Star Wars BB-8 Astromech Droid",
                 "slug": "lego-star-wars-bb-8-astromech-droid",
+                "sku": "LEG-BB8",
                 "description": "STAR WARS LEGO DROID FIGURE \u2013 Inspire kids to create the LEGO Star Wars BB-8 Astromech Droid toy for 10+ year old boys and girls, capturing the charm of the character from The Force Awakens.",
                 "price": 80,
+                "vat_rate": 20,
                 "stock": 9,
                 "category_id": 17,
                 "image": "img_69bd54828d6ee5.27048989.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "LEG-BB8",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 16,
                 "name": "Science Mad 20cm Illuminated Night Globe",
                 "slug": "science-mad-20cm-illuminated-night-globe",
+                "sku": "DIS-GLOBE",
                 "description": "And you're off exploring the world! The planet earth really is astonishing. It's difficult to imagine the vast distances between neighbouring continents, the wide oceans and seas that cover over 70% of its surface, and the near 200 countries that exist around the world. This 20cm diameter globe is a miniature model of our huge planet at your finger-tips, giving you access to continents, oceans, countries and major cities. It's a useful introduction to the fascinating science of geography, as well as being a convenient desktop reference.",
                 "price": 22,
+                "vat_rate": 20,
                 "stock": 0,
                 "category_id": 16,
                 "image": "img_69bd5739b3ac33.55848488.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "DIS-GLOBE",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 17,
                 "name": "Pok\u00e9mon Mega Charizard X Ex Trading Card",
                 "slug": "pok-mon-mega-charizard-x-ex-trading-card",
+                "sku": "TOY-PKMN-CHAR",
                 "description": "Under the right conditions - including a strong bond with its Trainer - Charizard can surpass its own limits and Mega Evolve! With this tin, you can choose the raging blue flames of Mega Charizard X ex, then find more Pokemon inside a handful of booster packs.",
                 "price": 22,
+                "vat_rate": 20,
                 "stock": 0,
                 "category_id": 15,
                 "image": "img_69bd57c1b0b871.21861055.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "TOY-PKMN-CHAR",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 18,
                 "name": "SIM Free Samsung Galaxy S26 Ultra 5G 512GB AI Phone Violet",
                 "slug": "sim-free-samsung-galaxy-s26-ultra-5g-512gb-ai-phone-violet",
+                "sku": "PHN-S26U-512",
                 "description": "Meet Galaxy S26 Ultra. Featuring our most advanced display yet, dazzling camera innovation, and powerful Galaxy AI, it's here to help simplify your everyday. Your screen is personal by nature. And thanks to Privacy Display, it stays viewable only to you. Backed by the latest Qualcomm chipset built for Galaxy, it can perform deep searches and learn your habits with its Personal Data Engine. Galaxy S26 Ultra defines a new era of Galaxy AI phones \u2013 here to anticipate your every need and support you every step of the way. Just tap the Galaxy stars button to try out Galaxy AI's Photo Assist. Galaxy AI runs through every action \u2013 saving you time, keeping you connected and streamlining every day. And there's the all new Now Nudge, which gives content-aware suggestions related to you.",
                 "price": 1449,
+                "vat_rate": 20,
                 "stock": 1,
                 "category_id": 5,
                 "image": "img_69bd589eb18a70.09464393.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "PHN-S26U-512",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 19,
                 "name": "Petface House Scratcher",
                 "slug": "petface-house-scratcher",
+                "sku": "CAT-HOUSE",
                 "description": "This Cat house scratcher gives your cat a place to have fun, exercise, explore, scratch and just relax. It features three different locations for them to relax including a house and a ladder.",
                 "price": 70,
+                "vat_rate": 20,
                 "stock": 13,
                 "category_id": 20,
                 "image": "img_69bd632bc82e28.46608911.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "CAT-HOUSE",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 20,
                 "name": "Cat Lounge and Play Scratcher",
                 "slug": "cat-lounge-and-play-scratcher",
+                "sku": "CAT-LOUNG",
                 "description": "This cozy home they can call their own features a roomy condo, relaxing lounge basket, and two perfectly placed perches. Partially wrapped jute posts encourage satisfying cat-scratching sessions that can help maintain healthy nails. This cat tree is designed with overall stability in mind so you can feel good letting your fur friend climb, scratch, play, and nap to their heart's content.",
                 "price": 88,
-                "stock": 11,
+                "vat_rate": 20,
+                "stock": 10,
                 "category_id": 20,
                 "image": "img_69bd63cfc64980.14864876.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "CAT-LOUNG",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 21,
                 "name": "Ninja 7.6L Foodi Dual Zone Air Fryer and Dehydrator",
                 "slug": "ninja-7-6l-foodi-dual-zone-air-fryer-and-dehydrator",
+                "sku": "KIT-NINJA-AF",
                 "description": "The air fryer that cooks 2 foods, 2 ways, and finishes at the same time. With 2 independent cooking zones, Sync to use different programs and times in each drawer - both finish cooking at the same time! Enjoy freshly cooked mains and sides together or cater to two different tastes. More people to feed? Match to make double the amount of food in the same amount of time! Uses little to no oil. 6 cooking functions. Cook from frozen. Extra-large 7.6L capacity. Dishwasher-safe parts.",
                 "price": 200,
+                "vat_rate": 20,
                 "stock": 21,
                 "category_id": 9,
                 "image": "img_69cfa1d4e5f6c3.95570107.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "KIT-NINJA-AF",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 22,
                 "name": "McGregor 23cm Cordless Grass Trimmer - 18V",
                 "slug": "mcgregor-23cm-cordless-grass-trimmer-18v",
+                "sku": "GAR-MCGR-TRIM",
                 "description": "This McGregor 18V 23cm grass trimmer is ideal for cutting fine to coarse grass - anywhere. You can change the angle of the cutting head to enable you to edge your lawn, trim your grass and reach under objects such as benches and trampolines. The flower guard allows you to cut right up to the edge of your garden while protecting your flowers and plants. This grass trimmer has been designed with comfort in mind, featuring an adjustable front handle and telescopic shaft to adjust the trimmer to suit your height.",
                 "price": 36,
+                "vat_rate": 20,
                 "stock": 11,
                 "category_id": 10,
                 "image": "img_69d25436496576.37754497.jpg",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-04-17 14:21:37",
-                "vat_rate": 20,
-                "sku": "GAR-MCGR-TRIM",
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-17 14:21:37"
             },
             {
                 "id": 23,
                 "name": "The Book",
                 "slug": "the-book",
+                "sku": null,
                 "description": "The Book is a hand-illustrated guide to the discoveries, inventions, and social systems that have propelled our species forward. It is a celebration of human creativity and achievement, brought to you by artists, writers, researchers, and other makers of things, to be touched, shared, and passed from one hungry mind to another.",
                 "price": 99,
-                "stock": 12,
+                "vat_rate": 0,
+                "stock": 11,
                 "category_id": 23,
                 "image": "img_69e8d00f114974.93305311.webp",
                 "active": 1,
                 "featured": 1,
-                "created_at": "2026-04-22 14:41:35",
-                "vat_rate": 0,
-                "sku": null,
-                "force_variant": 0
+                "force_variant": 0,
+                "created_at": "2026-04-22 14:41:35"
             },
             {
                 "id": 24,
                 "name": "Men's Regular Fit Dress Shirt",
                 "slug": "men-s-regular-fit-dress-shirt",
+                "sku": "MENS-REG-SHIRT",
                 "description": "A shirt.",
                 "price": 24,
+                "vat_rate": 20,
                 "stock": 20,
                 "category_id": 7,
-                "image": "img_69f8a569a01442.55140529.jpg",
+                "image": "img_6a05da548f6aa2.13267755.webp",
                 "active": 1,
                 "featured": 0,
-                "created_at": "2026-05-04 14:05:32",
-                "vat_rate": 20,
-                "sku": "MENS-REG-SHIRT",
-                "force_variant": 1
+                "force_variant": 1,
+                "created_at": "2026-05-04 14:05:32"
+            }
+        ],
+        "promotion_codes": [
+            {
+                "id": 29,
+                "promotion_id": 3,
+                "code": "TEST2"
+            },
+            {
+                "id": 30,
+                "promotion_id": 3,
+                "code": "TEST3"
             }
         ],
         "promotion_targets": [
             {
                 "promotion_id": 1,
-                "target_id": 6
+                "target_id": 6,
+                "is_exclusion": 0
             },
             {
                 "promotion_id": 2,
-                "target_id": 9
+                "target_id": 9,
+                "is_exclusion": 0
+            },
+            {
+                "promotion_id": 3,
+                "target_id": 1,
+                "is_exclusion": 0
             }
         ],
+        "promotion_tiers": [],
         "promotions": [
             {
                 "id": 1,
@@ -2785,7 +3512,11 @@
                 "active": 1,
                 "created_at": "2026-05-05 11:43:03",
                 "buy_qty": null,
-                "get_qty": null
+                "get_qty": null,
+                "usage_limit_per_user": null,
+                "priority": 0,
+                "stackable": 0,
+                "target_role": null
             },
             {
                 "id": 2,
@@ -2797,13 +3528,105 @@
                 "target_type": "product",
                 "min_order_amount": 0,
                 "start_date": null,
+                "end_date": "2026-05-05 14:30:00",
+                "usage_limit": null,
+                "used_count": 1,
+                "active": 1,
+                "created_at": "2026-05-05 12:19:12",
+                "buy_qty": 2,
+                "get_qty": 1,
+                "usage_limit_per_user": null,
+                "priority": 0,
+                "stackable": 0,
+                "target_role": null
+            },
+            {
+                "id": 3,
+                "name": "Test Code",
+                "description": "A test code.",
+                "code": "TEST1",
+                "type": "percentage",
+                "value": 20,
+                "target_type": "category",
+                "min_order_amount": 0,
+                "start_date": "2026-05-05 00:00:00",
+                "end_date": "2026-05-15 00:00:00",
+                "usage_limit": null,
+                "used_count": 1,
+                "active": 1,
+                "created_at": "2026-05-14 11:52:31",
+                "buy_qty": 2,
+                "get_qty": 1,
+                "usage_limit_per_user": null,
+                "priority": 0,
+                "stackable": 0,
+                "target_role": null
+            },
+            {
+                "id": 4,
+                "name": "New Customer",
+                "description": "New customer 10% off",
+                "code": null,
+                "type": "percentage",
+                "value": 10,
+                "target_type": "order",
+                "min_order_amount": 0,
+                "start_date": null,
+                "end_date": null,
+                "usage_limit": null,
+                "used_count": 2,
+                "active": 1,
+                "created_at": "2026-05-15 09:01:50",
+                "buy_qty": null,
+                "get_qty": null,
+                "usage_limit_per_user": null,
+                "priority": 0,
+                "stackable": 0,
+                "target_role": "first_time"
+            },
+            {
+                "id": 5,
+                "name": "VIP 20% off gaming",
+                "description": "VIP 20% off gaming",
+                "code": null,
+                "type": "percentage",
+                "value": 20,
+                "target_type": "order",
+                "min_order_amount": 0,
+                "start_date": null,
                 "end_date": null,
                 "usage_limit": null,
                 "used_count": 1,
-                "active": 0,
-                "created_at": "2026-05-05 12:19:12",
+                "active": 1,
+                "created_at": "2026-05-15 09:52:59",
                 "buy_qty": null,
-                "get_qty": null
+                "get_qty": null,
+                "usage_limit_per_user": null,
+                "priority": 0,
+                "stackable": 0,
+                "target_role": "vip"
+            },
+            {
+                "id": 6,
+                "name": "Test Three",
+                "description": "Test three",
+                "code": null,
+                "type": "percentage",
+                "value": 25,
+                "target_type": "order",
+                "min_order_amount": 100,
+                "start_date": null,
+                "end_date": "2026-05-16 00:00:00",
+                "usage_limit": 3,
+                "used_count": 3,
+                "active": 1,
+                "created_at": "2026-05-15 12:01:56",
+                "buy_qty": null,
+                "get_qty": null,
+                "usage_limit_per_user": null,
+                "priority": 0,
+                "stackable": 0,
+                "target_role": null
             }
         ],
         "rate_limits": [],
@@ -2811,8 +3634,8 @@
             {
                 "id": 6,
                 "user_id": 1,
-                "token": "24a95b1c92ab5b346091f10de927a7465d6a07d88d3fcd2447c5f2467142f5a0",
-                "expires_at": 1780495454
+                "token": "9bc6851e0b2eeb3a6612d9ba322c1c41334048ceda8373eb263bd132b9cc9510",
+                "expires_at": 1781335373
             }
         ],
         "return_items": [
@@ -2898,6 +3721,30 @@
                 "id": 14,
                 "return_id": 14,
                 "order_item_id": 35,
+                "quantity": 1
+            },
+            {
+                "id": 15,
+                "return_id": 15,
+                "order_item_id": 36,
+                "quantity": 1
+            },
+            {
+                "id": 16,
+                "return_id": 16,
+                "order_item_id": 37,
+                "quantity": 1
+            },
+            {
+                "id": 17,
+                "return_id": 17,
+                "order_item_id": 41,
+                "quantity": 1
+            },
+            {
+                "id": 18,
+                "return_id": 18,
+                "order_item_id": 53,
                 "quantity": 1
             }
         ],
@@ -3041,6 +3888,46 @@
                 "refund_amount": "200.00",
                 "created_at": "2026-04-28 17:03:31",
                 "updated_at": "2026-04-28 17:03:44"
+            },
+            {
+                "id": 15,
+                "order_id": 30,
+                "user_id": 1,
+                "status": "approved",
+                "reason": "Didn't work.",
+                "refund_amount": "299.95",
+                "created_at": "2026-05-15 11:55:15",
+                "updated_at": "2026-05-15 11:58:41"
+            },
+            {
+                "id": 16,
+                "order_id": 31,
+                "user_id": 1,
+                "status": "approved",
+                "reason": "No good.",
+                "refund_amount": "83.94",
+                "created_at": "2026-05-15 11:59:18",
+                "updated_at": "2026-05-15 11:59:27"
+            },
+            {
+                "id": 17,
+                "order_id": 34,
+                "user_id": 1,
+                "status": "rejected",
+                "reason": "Boo to you!",
+                "refund_amount": "0.00",
+                "created_at": "2026-05-15 12:00:10",
+                "updated_at": "2026-05-15 12:00:26"
+            },
+            {
+                "id": 18,
+                "order_id": 43,
+                "user_id": 1,
+                "status": "approved",
+                "reason": "Don't want it.",
+                "refund_amount": "449.00",
+                "created_at": "2026-05-15 13:24:13",
+                "updated_at": "2026-05-15 13:24:46"
             }
         ],
         "reviews": [
@@ -3094,17 +3981,17 @@
             {
                 "id": 1,
                 "name": "recover-carts",
-                "last_run_at": "2026-05-05 02:21:00"
+                "last_run_at": "2026-05-15 01:18:00"
             },
             {
                 "id": 2,
                 "name": "logs:rotate",
-                "last_run_at": "2026-05-05 02:21:00"
+                "last_run_at": "2026-05-15 01:18:00"
             },
             {
                 "id": 3,
                 "name": "images:cleanup",
-                "last_run_at": "2026-05-04 15:23:00"
+                "last_run_at": "2026-05-11 01:53:01"
             }
         ],
         "settings": [
@@ -3189,6 +4076,65 @@
                 "country": "United Kingdom",
                 "is_default": 0,
                 "created_at": "2026-04-29 14:52:07"
+            },
+            {
+                "id": 3,
+                "user_id": 3,
+                "label": "Home",
+                "name": "Test One",
+                "address": "1 Test St",
+                "city": "Test",
+                "postcode": "TS1 1ST",
+                "country": "United Kingdom",
+                "is_default": 1,
+                "created_at": "2026-05-15 09:05:48"
+            },
+            {
+                "id": 4,
+                "user_id": 4,
+                "label": "Home",
+                "name": "Test Two",
+                "address": "2 Test St",
+                "city": "Test",
+                "postcode": "TS2 2ST",
+                "country": "United Kingdom",
+                "is_default": 1,
+                "created_at": "2026-05-15 09:49:44"
+            },
+            {
+                "id": 5,
+                "user_id": 1,
+                "label": "Test",
+                "name": "Test",
+                "address": "Test",
+                "city": "Test",
+                "postcode": "TS1 1ST",
+                "country": "United Kingdom",
+                "is_default": 0,
+                "created_at": "2026-05-15 11:53:25"
+            }
+        ],
+        "user_roles": [
+            {
+                "id": 1,
+                "name": "Customer",
+                "slug": "customer",
+                "description": "Standard customer role",
+                "created_at": "2026-05-14 15:50:47"
+            },
+            {
+                "id": 2,
+                "name": "VIP",
+                "slug": "vip",
+                "description": "Special VIP customers",
+                "created_at": "2026-05-14 15:50:47"
+            },
+            {
+                "id": 3,
+                "name": "Wholesale",
+                "slug": "wholesale",
+                "description": "Wholesale business customers",
+                "created_at": "2026-05-14 15:50:47"
             }
         ],
         "users": [
@@ -3213,6 +4159,28 @@
                 "verification_token": null,
                 "address": "2 Test St\r\nTest\r\nTS2 2ST",
                 "created_at": "2026-04-17 14:21:38"
+            },
+            {
+                "id": 3,
+                "name": "Test One",
+                "email": "testone@shop.test",
+                "password_hash": "$2y$12$rUmbBVFFjLc\/QN3pO6UnlO0PFJy5fMj7Fkn5Zo31Gt7DPLBilLfk2",
+                "role": "customer",
+                "is_verified": 1,
+                "verification_token": null,
+                "address": "1 Test St\r\nTest",
+                "created_at": "2026-05-15 09:01:02"
+            },
+            {
+                "id": 4,
+                "name": "Test Two",
+                "email": "testtwo@shop.test",
+                "password_hash": "$2y$12$O6soGNCDZoZ38eoosXvw8upXFE8gQ5U9GodAESQOhSprTlSzhMwoa",
+                "role": "vip",
+                "is_verified": 0,
+                "verification_token": null,
+                "address": "",
+                "created_at": "2026-05-15 09:48:25"
             }
         ],
         "wishlists": [
