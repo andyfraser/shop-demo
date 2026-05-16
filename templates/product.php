@@ -83,10 +83,13 @@
       <?php endif; ?>
 
       <div id="stock-status">
-        <?php if ($product->stock > settings()->low_stock_threshold): ?>
+        <?php 
+          $availableStock = $product->getAvailableStock();
+          if ($availableStock > settings()->low_stock_threshold): 
+        ?>
           <?= (new \App\View\Components\StatusBadge('✓ In Stock', 'badge-success'))->render() ?>
-        <?php elseif ($product->stock > 0): ?>
-          <?= (new \App\View\Components\StatusBadge('⚠ Only ' . $product->stock . ' left', 'badge-warning'))->render() ?>
+        <?php elseif ($availableStock > 0): ?>
+          <?= (new \App\View\Components\StatusBadge('⚠ Only ' . $availableStock . ' left', 'badge-warning'))->render() ?>
         <?php else: ?>
           <?= (new \App\View\Components\StatusBadge('✗ Out of Stock', 'badge-danger'))->render() ?>
         <?php endif; ?>
@@ -117,7 +120,7 @@
         </div>
       <?php endif; ?>
 
-      <?php if ($product->stock > 0 || !empty($product->variants)): ?>
+      <?php if ($availableStock > 0 || !empty($product->variants)): ?>
         <div id="cart-message"></div>
         <form method="POST" id="add-to-cart-form">
             <?= csrf_field() ?>
@@ -128,7 +131,7 @@
             <div class="form-group" style="margin:0">
               <label for="qty">Quantity</label>
               <input type="number" id="qty" name="qty" class="form-control qty-input"
-                     value="1" min="1" max="<?= $product->stock ?>">
+                     value="1" min="1" max="<?= $availableStock ?>">
             </div>
             <button type="submit" id="add-to-cart-btn" name="add_to_cart" class="btn btn-primary" style="padding:.65rem 1.8rem;" <?= $product->force_variant && !empty($product->variants) ? 'disabled' : '' ?>>
               Add to Cart

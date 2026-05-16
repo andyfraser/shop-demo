@@ -32,6 +32,7 @@ class Product extends Model {
     public ?string $cat_name = null;
     public ?string $cat_slug = null;
     public ?int $relevance_score = null;
+    public ?int $variant_stock = null;
 
     /** @var \App\Models\Promotion[] */
     public array $active_promotions = [];
@@ -51,10 +52,28 @@ class Product extends Model {
     }
 
     /**
+     * Get available stock, aggregating from variants.
+     */
+    public function getAvailableStock(): int {
+        $vStock = 0;
+        if (!empty($this->variants)) {
+            $vStock = array_reduce($this->variants, fn($sum, $v) => $sum + $v->stock, 0);
+        } elseif ($this->variant_stock !== null) {
+            $vStock = $this->variant_stock;
+        }
+
+        if ($this->force_variant) {
+            return $vStock;
+        }
+        
+        return $this->stock + $vStock;
+    }
+
+    /**
      * Check if product has low stock.
      */
     public function isLowStock(int $threshold): bool {
-        return $this->stock <= $threshold;
+        return $this->getAvailableStock() <= $threshold;
     }
 
     /**

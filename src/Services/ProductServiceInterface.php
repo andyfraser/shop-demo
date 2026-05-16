@@ -18,6 +18,7 @@ interface ProductServiceInterface {
     public function countAllActive(\App\Core\QueryCriteria $criteria): int;
     public function getAvailableFilters(array $categoryIds = [], string $query = ''): array;
     public function getLowStock(int $threshold, int $limit = 10): array;
+    public function countLowStock(int $threshold): int;
     public function getFeatured(int $limit = 8): array;
     public function getVariants(int $productId): array;
     public function findVariantById(int $variantId): ?\App\Models\ProductVariant;

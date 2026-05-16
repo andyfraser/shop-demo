@@ -8,9 +8,9 @@
 </div>
 
 <div class="content">
-  <?php if ($low_stock): ?>
+  <?php if ($low_stock_count > 0): ?>
     <?= (new \App\View\Components\Alert(
-        'There are ' . count($low_stock) . ' products running low on stock. Please review the inventory below.',
+        'There are ' . $low_stock_count . ' products or variants running low on stock. Please review the inventory below.',
         'warning'
     ))->render() ?>
   <?php endif; ?>
@@ -71,6 +71,7 @@
     <div>
       <div class="page-actions mb-2">
         <strong class="text-sm">Low Stock</strong>
+        <a href="/admin/products" class="btn btn-outline btn-sm">View All</a>
       </div>
       <div class="card p-0 overflow-hidden">
         <?php if ($low_stock): ?>
@@ -79,9 +80,10 @@
               <div class="text-sm font-bold nowrap" style="flex:1;min-width:0;">
                 <?= h($p->name) ?>
               </div>
+              <?php $stock = $p->getAvailableStock(); ?>
               <?= (new \App\View\Components\StatusBadge(
-                  $p->stock . ' left', 
-                  $p->stock == 0 ? 'badge-danger' : 'badge-warning'
+                  $stock . ' left', 
+                  $stock == 0 ? 'badge-danger' : 'badge-warning'
               ))->render() ?>
             </div>
           <?php endforeach; ?>

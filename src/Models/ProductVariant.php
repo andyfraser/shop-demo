@@ -26,6 +26,20 @@ class ProductVariant extends Model {
     }
 
     /**
+     * Get available stock (same as stock for variants).
+     */
+    public function getAvailableStock(): int {
+        return $this->stock;
+    }
+
+    /**
+     * Check if variant has low stock.
+     */
+    public function isLowStock(int $threshold): bool {
+        return $this->stock <= $threshold;
+    }
+
+    /**
      * Format price for display.
      */
     public function formattedPrice(float $productPrice): string {

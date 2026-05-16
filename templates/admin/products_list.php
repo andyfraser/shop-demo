@@ -47,12 +47,13 @@
           <td><?= h($p->cat_name ?? '—') ?></td>
           <td>£<?= number_format($p->price, 2) ?></td>
           <td>
-            <?php if ($p->stock == 0): ?>
-              <span class="badge badge-danger"><?= $p->stock ?></span>
-            <?php elseif ($p->isLowStock(settings()->low_stock_threshold)): ?>
-              <span class="badge badge-warning"><?= $p->stock ?></span>
+            <?php $stock = $p->getAvailableStock(); ?>
+            <?php if ($stock == 0): ?>
+              <span class="badge badge-danger"><?= $stock ?></span>
+            <?php elseif ($stock <= settings()->low_stock_threshold): ?>
+              <span class="badge badge-warning"><?= $stock ?></span>
             <?php else: ?>
-              <span class="badge badge-success"><?= $p->stock ?></span>
+              <span class="badge badge-success"><?= $stock ?></span>
             <?php endif; ?>
           </td>
           <td>

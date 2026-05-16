@@ -13,9 +13,11 @@ class ProductRepository implements ProductRepositoryInterface {
 
     public function getAllForAdmin(\App\Core\QueryCriteria $criteria): array {
         $search = $criteria->getSearchTerm();
+        $variantStockSql = "(SELECT COALESCE(SUM(pv.stock), 0) FROM product_variants pv WHERE pv.product_id = p.id AND pv.active = 1)";
+        
         if ($search !== '') {
             $stmt = $this->db->prepare(
-                "SELECT p.*, c.name as cat_name
+                "SELECT p.*, c.name as cat_name, $variantStockSql as variant_stock
                  FROM products p
                  LEFT JOIN categories c ON p.category_id = c.id
                  WHERE p.name LIKE ?
@@ -26,7 +28,7 @@ class ProductRepository implements ProductRepositoryInterface {
         }
 
         return $this->db->query(
-            "SELECT p.*, c.name as cat_name
+            "SELECT p.*, c.name as cat_name, $variantStockSql as variant_stock
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
              ORDER BY p.name ASC"
@@ -259,7 +261,7 @@ class ProductRepository implements ProductRepositoryInterface {
             LEFT JOIN product_variants pv ON p.id = pv.product_id AND pv.active = 1
             LEFT JOIN product_variant_attribute_values pvav ON pv.id = pvav.variant_id AND av.id = pvav.attribute_value_id
             WHERE $where 
-              AND (p.force_variant = 0 OR (pva.attribute_id IS NOT NULL AND pvav.attribute_value_id IS NOT NULL))
+              AND (p.force_variant = 0 OR pva.attribute_id IS NULL OR pvav.attribute_value_id IS NOT NULL)
             GROUP BY a.id, a.name, av.id, av.value, av.sort_order
             ORDER BY a.name ASC, av.sort_order ASC, av.value ASC
         ";
@@ -293,13 +295,56 @@ class ProductRepository implements ProductRepositoryInterface {
     }
 
     public function getLowStock(int $threshold, int $limit = 10): array {
-        $stmt = $this->db->prepare(
-            "SELECT * FROM products WHERE active = 1 AND stock <= ? ORDER BY stock ASC LIMIT ?"
+        $isMysql = $this->db->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'mysql';
+        $concat = $isMysql 
+            ? "CONCAT(p.name, ' - ', pv.name)" 
+            : "p.name || ' - ' || pv.name";
+
+        // Query for products (only if not force_variant or total stock is low)
+        $pStmt = $this->db->prepare(
+            "SELECT p.* FROM products p 
+             WHERE p.active = 1 AND p.force_variant = 0 AND p.stock <= ?
+             ORDER BY p.stock ASC LIMIT ?"
         );
-        $stmt->bindValue(1, $threshold, \PDO::PARAM_INT);
-        $stmt->bindValue(2, $limit, \PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
+        $pStmt->bindValue(1, $threshold, \PDO::PARAM_INT);
+        $pStmt->bindValue(2, $limit, \PDO::PARAM_INT);
+        $pStmt->execute();
+        $products = $pStmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
+
+        // Query for variants
+        $vStmt = $this->db->prepare(
+            "SELECT pv.*, $concat as name 
+             FROM product_variants pv
+             JOIN products p ON pv.product_id = p.id
+             WHERE pv.active = 1 AND p.active = 1 AND pv.stock <= ?
+             ORDER BY pv.stock ASC LIMIT ?"
+        );
+        $vStmt->bindValue(1, $threshold, \PDO::PARAM_INT);
+        $vStmt->bindValue(2, $limit, \PDO::PARAM_INT);
+        $vStmt->execute();
+        $variants = $vStmt->fetchAll(\PDO::FETCH_CLASS, ProductVariant::class, [$this->logger]);
+
+        // Merge and sort
+        $all = array_merge($products, $variants);
+        usort($all, fn($a, $b) => $a->stock <=> $b->stock);
+
+        return array_slice($all, 0, $limit);
+    }
+
+    public function countLowStock(int $threshold): int {
+        $pStmt = $this->db->prepare("SELECT COUNT(*) FROM products WHERE active = 1 AND force_variant = 0 AND stock <= ?");
+        $pStmt->execute([$threshold]);
+        $pCount = (int)$pStmt->fetchColumn();
+
+        $vStmt = $this->db->prepare(
+            "SELECT COUNT(*) FROM product_variants pv
+             JOIN products p ON pv.product_id = p.id
+             WHERE pv.active = 1 AND p.active = 1 AND pv.stock <= ?"
+        );
+        $vStmt->execute([$threshold]);
+        $vCount = (int)$vStmt->fetchColumn();
+
+        return $pCount + $vCount;
     }
 
     public function getFeatured(int $limit = 8): array {
@@ -307,7 +352,7 @@ class ProductRepository implements ProductRepositoryInterface {
             "SELECT p.*, c.name as cat_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.active = 1 AND p.stock > 0
+             WHERE p.active = 1 AND (p.stock > 0 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
              ORDER BY p.featured DESC, p.created_at DESC
              LIMIT ?"
         );
@@ -380,7 +425,7 @@ class ProductRepository implements ProductRepositoryInterface {
                 WHERE pav1.product_id = ? AND pav2.product_id != ?
                 GROUP BY pav2.product_id
             ) shared_attrs ON p.id = shared_attrs.product_id
-            WHERE p.id != ? AND p.active = 1 AND p.stock > 0
+            WHERE p.id != ? AND p.active = 1 AND (p.stock > 0 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
             ORDER BY relevance_score DESC, p.created_at DESC
             LIMIT ?
         ";
@@ -475,7 +520,7 @@ class ProductRepository implements ProductRepositoryInterface {
                     LEFT JOIN product_variants pv2 ON p2.id = pv2.product_id AND pv2.active = 1
                     LEFT JOIN product_variant_attribute_values pvav2 ON pv2.id = pvav2.variant_id AND av2.id = pvav2.attribute_value_id
                     WHERE pav2.attribute_value_id IN ($placeholders)
-                      AND (p2.force_variant = 0 OR (pva.attribute_id IS NOT NULL AND pvav2.attribute_value_id IS NOT NULL))
+                      AND (p2.force_variant = 0 OR pva.attribute_id IS NULL OR pvav2.attribute_value_id IS NOT NULL)
                     GROUP BY pav2.product_id
                     HAVING COUNT(DISTINCT av2.attribute_id) = $expectedGroupsInt
                 )";

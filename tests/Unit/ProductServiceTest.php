@@ -262,6 +262,62 @@ class ProductServiceTest extends TestCase {
         $this->assertNotEmpty($results);
     }
 
+    public function testProductLevelAttributeWithForceVariant() {
+        // Create an attribute "Brand Reproduction"
+        $this->db->exec("INSERT INTO attributes (name) VALUES ('Brand Reproduction')");
+        $attrId = $this->db->lastInsertId();
+
+        // Create an attribute value "TestBrandRepro"
+        $this->db->exec("INSERT INTO attribute_values (attribute_id, value, sort_order) VALUES ($attrId, 'TestBrandRepro', 0)");
+        $valId = $this->db->lastInsertId();
+
+        // Create a product with force_variant = 1
+        $productId = $this->service->save([
+            'name' => 'Force Variant Product',
+            'price' => 100,
+            'vat_rate' => 20,
+            'stock' => 10,
+            'active' => 1,
+            'featured' => 0,
+            'image' => null,
+            'category_id' => null,
+            'force_variant' => 1
+        ]);
+
+        // Link the "TestBrandRepro" value to the product in product_attribute_values
+        $this->db->exec("INSERT INTO product_attribute_values (product_id, attribute_value_id) VALUES ($productId, $valId)");
+
+        // 1. Verify it shows up in getAvailableFilters()
+        $filters = $this->service->getAvailableFilters();
+        $found = false;
+        foreach ($filters['attributes'] as $attr) {
+            if ($attr['name'] === 'Brand Reproduction') {
+                foreach ($attr['values'] as $val) {
+                    if ($val['name'] === 'TestBrandRepro') {
+                        $found = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+        $this->assertTrue($found, "Product-level attribute should be available in filters even if force_variant=1");
+
+        // 2. Verify filtering by this attribute works
+        $criteria = new \App\Core\QueryCriteria([
+            'filters' => ['attributes' => [(int)$valId]]
+        ]);
+        $results = $this->service->getAllActive($criteria);
+        
+        $foundProduct = false;
+        foreach ($results as $p) {
+            if ($p->id == $productId) {
+                $foundProduct = true;
+                break;
+            }
+        }
+        $this->assertTrue($foundProduct, "Product with force_variant=1 should be findable by product-level attribute");
+    }
+
     public function testSearchSuggestions() {
         // 'ProBook' in seed data
         $results = $this->service->searchSuggestions('ProB', 5);
@@ -271,5 +327,76 @@ class ProductServiceTest extends TestCase {
         // Test limit
         $results = $this->service->searchSuggestions('P', 1);
         $this->assertCount(1, $results);
+    }
+
+    public function testAdminListProductStockAggregation() {
+        // ... (previous test code)
+    }
+
+    public function testGetLowStockIncludingVariants() {
+        // 1. Create a product with high stock (not low)
+        $pIdHigh = $this->service->save([
+            'name' => 'High Stock Product',
+            'price' => 10,
+            'vat_rate' => 20,
+            'stock' => 100,
+            'active' => 1,
+            'featured' => 0,
+            'force_variant' => 0,
+            'category_id' => null
+        ]);
+
+        // 2. Create a product with low stock
+        $pIdLow = $this->service->save([
+            'name' => 'Low Stock Product',
+            'price' => 10,
+            'vat_rate' => 20,
+            'stock' => 2,
+            'active' => 1,
+            'featured' => 0,
+            'force_variant' => 0,
+            'category_id' => null
+        ]);
+
+        // 3. Create a product with high total stock but one low stock variant
+        $pIdVariant = $this->service->save([
+            'name' => 'Variant Product',
+            'price' => 10,
+            'vat_rate' => 20,
+            'stock' => 100,
+            'active' => 1,
+            'featured' => 0,
+            'force_variant' => 1,
+            'category_id' => null
+        ]);
+        $this->service->saveVariant([
+            'product_id' => $pIdVariant,
+            'name' => 'Low Stock Variant',
+            'stock' => 1,
+            'active' => 1
+        ]);
+        $this->service->saveVariant([
+            'product_id' => $pIdVariant,
+            'name' => 'High Stock Variant',
+            'stock' => 50,
+            'active' => 1
+        ]);
+
+        $threshold = 5;
+        $lowStockItems = $this->service->getLowStock($threshold);
+
+        $foundLowProduct = false;
+        $foundLowVariant = false;
+        $foundHighProduct = false;
+
+        foreach ($lowStockItems as $item) {
+            if ($item->name === 'Low Stock Product') $foundLowProduct = true;
+            if ($item->name === 'Variant Product - Low Stock Variant') $foundLowVariant = true;
+            if ($item->name === 'High Stock Product') $foundHighProduct = true;
+        }
+
+        $this->assertTrue($foundLowProduct, "Low stock product should be in results");
+        $this->assertTrue($foundLowVariant, "Low stock variant should be in results");
+        $this->assertFalse($foundHighProduct, "High stock product should not be in results");
     }
 }

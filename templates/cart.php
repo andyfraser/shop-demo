@@ -32,7 +32,7 @@
                   $p = $item->product;
                   $v = $item->variant;
                   $key = $item->key;
-                  $maxStock = $v ? $v->stock : $p->stock;
+                  $maxStock = $v ? $v->stock : $p->getAvailableStock();
                 ?>
                   <tr data-item-key="<?= h($key) ?>">
                     <td style="width:80px;">
