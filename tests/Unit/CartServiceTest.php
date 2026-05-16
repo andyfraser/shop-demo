@@ -104,4 +104,46 @@ class CartServiceTest extends TestCase {
         $expected = $items[0]['product']->price;
         $this->assertEquals($expected, $this->cart->total());
     }
+
+    public function testRecoveryEmailFlagReset() {
+        $db = Database::getConnection();
+        
+        // 1. Add item and manually set the recovery_email_sent_at flag
+        $this->cart->add(1, 1);
+        $stmt = $db->query("SELECT id FROM carts LIMIT 1");
+        $cartId = $stmt->fetchColumn();
+        
+        $db->prepare("UPDATE carts SET recovery_email_sent_at = CURRENT_TIMESTAMP WHERE id = ?")
+           ->execute([$cartId]);
+        
+        $sentAt = $db->query("SELECT recovery_email_sent_at FROM carts WHERE id = $cartId")->fetchColumn();
+        $this->assertNotNull($sentAt);
+
+        // 2. Modify cart and check if flag is reset
+        $this->cart->add(1, 1); // increment qty
+        $sentAt = $db->query("SELECT recovery_email_sent_at FROM carts WHERE id = $cartId")->fetchColumn();
+        $this->assertNull($sentAt, "Flag should be reset after adding an item");
+
+        // 3. Set flag again and test removal
+        $db->prepare("UPDATE carts SET recovery_email_sent_at = CURRENT_TIMESTAMP WHERE id = ?")
+           ->execute([$cartId]);
+        $this->cart->remove('1');
+        $sentAt = $db->query("SELECT recovery_email_sent_at FROM carts WHERE id = $cartId")->fetchColumn();
+        $this->assertNull($sentAt, "Flag should be reset after removing an item");
+
+        // 4. Set flag again and test update
+        $this->cart->add(1, 1);
+        $db->prepare("UPDATE carts SET recovery_email_sent_at = CURRENT_TIMESTAMP WHERE id = ?")
+           ->execute([$cartId]);
+        $this->cart->update('1', 5);
+        $sentAt = $db->query("SELECT recovery_email_sent_at FROM carts WHERE id = $cartId")->fetchColumn();
+        $this->assertNull($sentAt, "Flag should be reset after updating quantity");
+
+        // 5. Set flag again and test clear (simulates post-order behavior)
+        $db->prepare("UPDATE carts SET recovery_email_sent_at = CURRENT_TIMESTAMP WHERE id = ?")
+           ->execute([$cartId]);
+        $this->cart->clear();
+        $sentAt = $db->query("SELECT recovery_email_sent_at FROM carts WHERE id = $cartId")->fetchColumn();
+        $this->assertNull($sentAt, "Flag should be reset after clearing the cart");
+    }
 }

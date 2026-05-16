@@ -85,7 +85,7 @@ class CartRepository implements CartRepositoryInterface {
     }
 
     public function updateLastActivity(int $cartId): void {
-        $this->db->prepare("UPDATE carts SET last_activity = CURRENT_TIMESTAMP WHERE id = ?")->execute([$cartId]);
+        $this->db->prepare("UPDATE carts SET last_activity = CURRENT_TIMESTAMP, recovery_email_sent_at = NULL WHERE id = ?")->execute([$cartId]);
     }
 
     public function attachCartToUser(int $cartId, int $userId): void {
