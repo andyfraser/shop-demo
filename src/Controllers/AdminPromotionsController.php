@@ -138,7 +138,7 @@ class AdminPromotionsController {
     }
 
     public function delete(Request $request): Response {
-        $id = (int)$request->getQuery('id', 0);
+        $id = (int)$request->getPost('id', 0);
         if ($id) {
             $this->promotionService->delete($id);
             flash('msg', 'Promotion deleted.');

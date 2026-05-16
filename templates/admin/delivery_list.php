@@ -34,8 +34,11 @@
           </td>
           <td>
             <a href="/admin/delivery/edit?id=<?= $opt->id ?>" class="btn btn-outline btn-sm">Edit</a>
-            <a href="/admin/delivery/delete?id=<?= $opt->id ?>" class="btn btn-danger btn-sm"
-               onclick="return confirm('Are you sure you want to delete this option?')">Delete</a>
+            <form action="/admin/delivery/delete" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this option?')">
+                <?= csrf_field() ?>
+                <input type="hidden" name="id" value="<?= $opt->id ?>">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
           </td>
         </tr>
       <?php endforeach; ?>

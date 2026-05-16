@@ -259,7 +259,7 @@ class AdminProductsController {
     }
 
     public function delete(Request $request): Response {
-        $product_id = (int)$request->getQuery('id', 0);
+        $product_id = (int)$request->getPost('id', 0);
         if ($product_id) {
             $this->productService->deactivate($product_id);
             $this->logger->info("Admin deactivated product: (ID: {id})", [

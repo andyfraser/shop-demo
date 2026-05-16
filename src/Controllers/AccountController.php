@@ -148,7 +148,7 @@ class AccountController {
             }
 
             try {
-                $this->returnService->createReturnRequest($order_id, $items, $reason);
+                $this->returnService->createReturnRequest($order_id, $user->id, $items, $reason);
                 flash('msg', 'Return request submitted successfully.');
             } catch (\Exception $e) {
                 flash('msg_error', 'Failed to submit return request: ' . $e->getMessage());

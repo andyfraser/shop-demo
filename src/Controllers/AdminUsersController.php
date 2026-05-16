@@ -136,7 +136,7 @@ class AdminUsersController {
     }
 
     public function delete(Request $request): Response {
-        $user_id = (int)$request->getQuery('id', 0);
+        $user_id = (int)$request->getPost('id', 0);
         $current = $this->userService->findById((int)current_user()->id);
         
         if ($user_id === $current->id) {

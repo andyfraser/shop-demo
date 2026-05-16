@@ -98,7 +98,7 @@ class AdminUserRolesController {
     }
 
     public function delete(Request $request): Response {
-        $id = (int)$request->getQuery('id', 0);
+        $id = (int)$request->getPost('id', 0);
         if ($id) {
             $role = $this->roleService->findById($id);
             if ($role && in_array($role->slug, ['admin', 'customer'])) {

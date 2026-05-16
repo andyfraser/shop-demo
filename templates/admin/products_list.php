@@ -63,8 +63,11 @@
           </td>
           <td>
             <a href="/admin/products/edit?id=<?= $p->id ?>" class="btn btn-outline btn-sm">Edit</a>
-            <a href="/admin/products/delete?id=<?= $p->id ?>" class="btn btn-danger btn-sm"
-               onclick="return confirm('Deactivate this product?')">Delete</a>
+            <form action="/admin/products/delete" method="POST" style="display:inline;" onsubmit="return confirm('Deactivate this product?')">
+                <?= csrf_field() ?>
+                <input type="hidden" name="id" value="<?= $p->id ?>">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
           </td>
         </tr>
       <?php endforeach; ?>

@@ -86,7 +86,7 @@ class AdminDeliveryController {
     }
 
     public function delete(Request $request): Response {
-        $id = (int)$request->getQuery('id', 0);
+        $id = (int)$request->getPost('id', 0);
         $this->delivery->delete($id);
         $this->logger->info("Admin deleted delivery option ID: {id}", ['id' => $id]);
         flash('success', 'Delivery option deleted.');

@@ -86,6 +86,7 @@ class MigrationRepository implements MigrationRepositoryInterface {
     }
 
     public function dropTable(string $tableName): void {
+        $this->validateIdentifier($tableName);
         $this->db->exec("DROP TABLE IF EXISTS `{$tableName}`");
     }
 
@@ -98,17 +99,29 @@ class MigrationRepository implements MigrationRepositoryInterface {
     }
 
     public function truncateTable(string $tableName): void {
+        $this->validateIdentifier($tableName);
         $this->db->exec("DELETE FROM `{$tableName}`");
     }
 
     public function insertRow(string $table, array $data): void {
+        $this->validateIdentifier($table);
         $columns = array_keys($data);
+        foreach ($columns as $column) {
+            $this->validateIdentifier($column);
+        }
+
         $colList = implode('`, `', $columns);
         $placeholders = implode(', ', array_fill(0, count($columns), '?'));
         
         $sql = "INSERT INTO `{$table}` (`{$colList}`) VALUES ({$placeholders})";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(array_values($data));
+    }
+
+    private function validateIdentifier(string $identifier): void {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $identifier)) {
+            throw new \InvalidArgumentException("Invalid database identifier: {$identifier}");
+        }
     }
 
     public function fetchAll(string $query, array $params = []): array {

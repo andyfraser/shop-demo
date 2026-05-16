@@ -24,17 +24,20 @@ class AddressRepository implements AddressRepositoryInterface {
     }
 
     public function save(int $userId, array $data, int $id = 0): int {
-        $params = [
-            $userId, $data['label'] ?? null, $data['name'], $data['address'], $data['city'], 
-            $data['postcode'], $data['country'], (int)($data['is_default'] ?? 0)
-        ];
-
         if ($id) {
             $this->db->prepare(
-                "UPDATE user_addresses SET user_id=?, label=?, name=?, address=?, city=?, postcode=?, country=?, is_default=? WHERE id=?"
-            )->execute([...$params, $id]);
+                "UPDATE user_addresses SET label=?, name=?, address=?, city=?, postcode=?, country=?, is_default=? WHERE id=? AND user_id=?"
+            )->execute([
+                $data['label'] ?? null, $data['name'], $data['address'], $data['city'], 
+                $data['postcode'], $data['country'], (int)($data['is_default'] ?? 0),
+                $id, $userId
+            ]);
             return $id;
         } else {
+            $params = [
+                $userId, $data['label'] ?? null, $data['name'], $data['address'], $data['city'], 
+                $data['postcode'], $data['country'], (int)($data['is_default'] ?? 0)
+            ];
             $this->db->prepare(
                 "INSERT INTO user_addresses (user_id, label, name, address, city, postcode, country, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
             )->execute($params);

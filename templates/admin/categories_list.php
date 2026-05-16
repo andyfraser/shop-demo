@@ -39,8 +39,11 @@
           </td>
           <td>
             <a href="/admin/categories/edit?id=<?= $c->id ?>" class="btn btn-outline btn-sm">Edit</a>
-            <a href="/admin/categories/delete?id=<?= $c->id ?>" class="btn btn-danger btn-sm"
-               onclick="return confirm('Delete this category? Products will become uncategorised.')">Delete</a>
+            <form action="/admin/categories/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this category? Products will become uncategorised.')">
+                <?= csrf_field() ?>
+                <input type="hidden" name="id" value="<?= $c->id ?>">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
           </td>
         </tr>
       <?php endforeach; ?>

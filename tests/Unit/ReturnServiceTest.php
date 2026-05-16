@@ -89,10 +89,10 @@ class ReturnServiceTest extends TestCase {
         $this->orderService->updateStatus($orderId, Order::STATUS_DELIVERED);
 
         // 2. Create Return Request 1 (Item 1)
-        $return1Id = $this->returnService->createReturnRequest($orderId, [$order->items[0]->id => 1], 'Defective');
+        $return1Id = $this->returnService->createReturnRequest($orderId, $order->user_id, [$order->items[0]->id => 1], 'Defective');
         
         // 3. Create Return Request 2 (Item 2)
-        $return2Id = $this->returnService->createReturnRequest($orderId, [$order->items[1]->id => 1], 'Changed mind');
+        $return2Id = $this->returnService->createReturnRequest($orderId, $order->user_id, [$order->items[1]->id => 1], 'Changed mind');
 
         // 4. Approve Return 1
         $this->returnService->approveReturn($return1Id);
@@ -130,8 +130,8 @@ class ReturnServiceTest extends TestCase {
         $this->orderService->updateStatus($orderId, Order::STATUS_DELIVERED);
 
         // 2. Create Return Requests
-        $return1Id = $this->returnService->createReturnRequest($orderId, [$order->items[0]->id => 1], 'Defective');
-        $return2Id = $this->returnService->createReturnRequest($orderId, [$order->items[1]->id => 1], 'Changed mind');
+        $return1Id = $this->returnService->createReturnRequest($orderId, $order->user_id, [$order->items[0]->id => 1], 'Defective');
+        $return2Id = $this->returnService->createReturnRequest($orderId, $order->user_id, [$order->items[1]->id => 1], 'Changed mind');
 
         // 3. Reject Return 1 first
         $this->returnService->rejectReturn($return1Id, 'Not defective');
@@ -156,6 +156,7 @@ class ReturnServiceTest extends TestCase {
 
         $product = $this->productService->findById(1);
         $orderData = [
+            'user_id'          => $adminId,
             'customer_name'    => 'History User',
             'customer_email'   => 'history@example.com',
             'total'            => 50.00,
@@ -174,7 +175,7 @@ class ReturnServiceTest extends TestCase {
         $this->assertCount(2, $history);
 
         // Request return
-        $returnId = $this->returnService->createReturnRequest($orderId, [$order->items[0]->id => 1], 'Testing history');
+        $returnId = $this->returnService->createReturnRequest($orderId, $order->user_id, [$order->items[0]->id => 1], 'Testing history');
         $history = $this->orderService->getStatusHistory($orderId);
         $this->assertCount(3, $history);
         $this->assertEquals(Order::STATUS_RETURNING, $history[0]['status']);

@@ -36,8 +36,11 @@
           <td>
             <a href="/admin/users/edit?id=<?= $u->id ?>" class="btn btn-outline btn-sm">Edit</a>
             <?php if ($u->id != $current_user->id): ?>
-              <a href="/admin/users/delete?id=<?= $u->id ?>" class="btn btn-danger btn-sm"
-                 onclick="return confirm('Delete user <?= h(addslashes($u->name)) ?>?')">Delete</a>
+              <form action="/admin/users/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete user <?= h(addslashes($u->name)) ?>?')">
+                  <?= csrf_field() ?>
+                  <input type="hidden" name="id" value="<?= $u->id ?>">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
             <?php endif; ?>
           </td>
         </tr>

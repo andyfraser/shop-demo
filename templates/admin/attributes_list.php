@@ -29,8 +29,11 @@
           </td>
           <td>
             <a href="/admin/attributes/edit?id=<?= $attr->id ?>" class="btn btn-outline btn-sm">Edit</a>
-            <a href="/admin/attributes/delete?id=<?= $attr->id ?>" class="btn btn-danger btn-sm"
-               onclick="return confirm('Delete this attribute and all its values?')">Delete</a>
+            <form action="/admin/attributes/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this attribute and all its values?')">
+                <?= csrf_field() ?>
+                <input type="hidden" name="id" value="<?= $attr->id ?>">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
           </td>
         </tr>
       <?php endforeach; ?>

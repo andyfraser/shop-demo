@@ -33,8 +33,11 @@
           <td class="text-right">
             <a href="/admin/user-roles/edit?id=<?= $role->id ?>" class="btn btn-outline btn-sm">Edit</a>
             <?php if (!in_array($role->slug, ['admin', 'customer'])): ?>
-              <a href="/admin/user-roles/delete?id=<?= $role->id ?>" class="btn btn-danger btn-sm" 
-                 onclick="return confirm('Are you sure?')">Delete</a>
+              <form action="/admin/user-roles/delete" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure?')">
+                  <?= csrf_field() ?>
+                  <input type="hidden" name="id" value="<?= $role->id ?>">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
             <?php endif; ?>
           </td>
         </tr>

@@ -20,10 +20,33 @@ class ImageService implements ImageServiceInterface {
         }
     }
 
+    private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    private const ALLOWED_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp'
+    ];
+
     public function processUpload(array $file): ?string {
         if (!$file || $file['error'] !== UPLOAD_ERR_OK) return null;
 
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        if (!in_array($ext, self::ALLOWED_EXTENSIONS)) {
+            $this->logger->error("Disallowed file extension: {$ext}");
+            return null;
+        }
+
+        // Validate MIME type
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file['tmp_name']);
+        
+        if (!in_array($mimeType, self::ALLOWED_MIME_TYPES)) {
+            $this->logger->error("Disallowed MIME type: {$mimeType}");
+            return null;
+        }
+
         $baseName = uniqid('img_', true);
         $originalName = $baseName . '.' . $ext;
         

@@ -104,7 +104,7 @@ class AdminCategoriesController {
     }
 
     public function delete(Request $request): Response {
-        $category_id = (int)$request->getQuery('id', 0);
+        $category_id = (int)$request->getPost('id', 0);
         if ($category_id) {
             $this->categoryService->delete($category_id);
             $this->logger->info("Admin deleted category ID: {id}", ['id' => $category_id]);

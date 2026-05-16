@@ -19,9 +19,9 @@ class ReturnService implements ReturnServiceInterface {
         private EmailServiceInterface $emailService
     ) {}
 
-    public function createReturnRequest(int $orderId, array $items, string $reason): int {
+    public function createReturnRequest(int $orderId, int $userId, array $items, string $reason): int {
         $order = $this->orderService->findById($orderId);
-        if (!$order || !$order->canBeReturned()) {
+        if (!$order || $order->user_id !== $userId || !$order->canBeReturned()) {
             throw new \Exception("Order cannot be returned.");
         }
 
