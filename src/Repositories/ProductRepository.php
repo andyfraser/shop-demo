@@ -294,17 +294,20 @@ class ProductRepository implements ProductRepositoryInterface {
         ];
     }
 
-    public function getLowStock(int $threshold, int $limit = 10): array {
+    public function getLowStock(int $threshold, int $limit = 1000, string $sort = 'name'): array {
         $isMysql = $this->db->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'mysql';
         $concat = $isMysql 
             ? "CONCAT(p.name, ' - ', pv.name)" 
             : "p.name || ' - ' || pv.name";
 
+        $orderSql = ($sort === 'stock') ? "p.stock ASC, p.name ASC" : "p.name ASC";
+        $vOrderSql = ($sort === 'stock') ? "pv.stock ASC, p.name ASC, pv.name ASC" : "p.name ASC, pv.name ASC";
+
         // Query for products (only if not force_variant or total stock is low)
         $pStmt = $this->db->prepare(
             "SELECT p.* FROM products p 
              WHERE p.active = 1 AND p.force_variant = 0 AND p.stock <= ?
-             ORDER BY p.stock ASC LIMIT ?"
+             ORDER BY $orderSql LIMIT ?"
         );
         $pStmt->bindValue(1, $threshold, \PDO::PARAM_INT);
         $pStmt->bindValue(2, $limit, \PDO::PARAM_INT);
@@ -317,7 +320,7 @@ class ProductRepository implements ProductRepositoryInterface {
              FROM product_variants pv
              JOIN products p ON pv.product_id = p.id
              WHERE pv.active = 1 AND p.active = 1 AND pv.stock <= ?
-             ORDER BY pv.stock ASC LIMIT ?"
+             ORDER BY $vOrderSql LIMIT ?"
         );
         $vStmt->bindValue(1, $threshold, \PDO::PARAM_INT);
         $vStmt->bindValue(2, $limit, \PDO::PARAM_INT);
@@ -326,7 +329,17 @@ class ProductRepository implements ProductRepositoryInterface {
 
         // Merge and sort
         $all = array_merge($products, $variants);
-        usort($all, fn($a, $b) => $a->stock <=> $b->stock);
+        
+        if ($sort === 'stock') {
+            usort($all, function($a, $b) {
+                if ($a->stock === $b->stock) {
+                    return strcasecmp($a->name, $b->name);
+                }
+                return $a->stock <=> $b->stock; // ASC
+            });
+        } else {
+            usort($all, fn($a, $b) => strcasecmp($a->name, $b->name));
+        }
 
         return array_slice($all, 0, $limit);
     }

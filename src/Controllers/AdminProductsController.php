@@ -46,6 +46,42 @@ class AdminProductsController {
         ]));
     }
 
+    public function lowStock(Request $request): Response {
+        $threshold = (int)$this->settings->get('low_stock_threshold');
+        // We want all low stock items, so we use a high limit or better, we can modify getLowStock to accept a very high limit
+        // Or we could add a method for this, but let's just use 1000 for now.
+        $items = $this->productService->getLowStock($threshold, 1000);
+
+        return new HtmlResponse($this->renderer->adminRender('products_low_stock', [
+            'page_title' => 'Low Stock Management',
+            'active'     => 'products',
+            'items'      => $items,
+            'flash_msg'  => flash('msg'),
+        ]));
+    }
+
+    public function updateLowStock(Request $request): Response {
+        $post = $request->getPost();
+        $stock = $post['stock'] ?? [];
+        $vStock = $post['variant_stock'] ?? [];
+
+        foreach ($stock as $id => $val) {
+            $this->productService->save(['stock' => (int)$val], (int)$id);
+        }
+
+        foreach ($vStock as $id => $val) {
+            $this->productService->saveVariant(['stock' => (int)$val], (int)$id);
+        }
+
+        $this->logger->info("Admin updated low stock inventory. Products: {p_count}, Variants: {v_count}", [
+            'p_count' => count($stock),
+            'v_count' => count($vStock)
+        ]);
+
+        flash('msg', 'Stock levels updated.');
+        return new RedirectResponse('/admin/products/low-stock');
+    }
+
     public function create(Request $request): Response {
         $allAttributes = $this->attributeService->getAll();
         foreach ($allAttributes as &$attr) {
@@ -69,6 +105,7 @@ class AdminProductsController {
 
     public function edit(Request $request): Response {
         $product_id = (int)$request->getQuery('id', 0);
+        $return_to = $request->getQuery('return_to');
         $product = $this->productService->findById($product_id);
 
         $allAttributes = $this->attributeService->getAll();
@@ -82,6 +119,7 @@ class AdminProductsController {
             'is_new'     => !$product_id,
             'product'    => $product,
             'product_id' => $product_id,
+            'return_to'  => $return_to,
             'categories' => $this->categoryService->getFlat(),
             'all_attributes' => $allAttributes,
             'product_attribute_ids' => $this->attributeService->getProductAttributeValues($product_id),
@@ -192,7 +230,9 @@ class AdminProductsController {
                 ]);
                 flash('msg', 'Product created.');
             }
-            return new RedirectResponse('/admin/products');
+
+            $redirectUrl = !empty($post['return_to']) ? $post['return_to'] : '/admin/products';
+            return new RedirectResponse($redirectUrl);
         }
 
         $allAttributes = $this->attributeService->getAll();
@@ -206,6 +246,7 @@ class AdminProductsController {
             'is_new'     => !$product_id,
             'product'    => $data, 
             'product_id' => $product_id,
+            'return_to'  => $post['return_to'] ?? null,
             'categories' => $this->categoryService->getFlat(),
             'all_attributes' => $allAttributes ?? [], 
             'product_attribute_ids' => $post['attribute_value_ids'] ?? [],

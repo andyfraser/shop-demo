@@ -383,7 +383,7 @@ class ProductServiceTest extends TestCase {
         ]);
 
         $threshold = 5;
-        $lowStockItems = $this->service->getLowStock($threshold);
+        $lowStockItems = $this->service->getLowStock($threshold, 100);
 
         $foundLowProduct = false;
         $foundLowVariant = false;
@@ -398,5 +398,11 @@ class ProductServiceTest extends TestCase {
         $this->assertTrue($foundLowProduct, "Low stock product should be in results");
         $this->assertTrue($foundLowVariant, "Low stock variant should be in results");
         $this->assertFalse($foundHighProduct, "High stock product should not be in results");
+
+        // Verify alphabetical sorting
+        $names = array_map(fn($i) => $i->name, $lowStockItems);
+        $sortedNames = $names;
+        usort($sortedNames, 'strcasecmp');
+        $this->assertEquals($sortedNames, $names, "Results should be sorted alphabetically");
     }
 }

@@ -3,7 +3,7 @@
 <div class="admin-topbar">
   <h1><?= $is_new ? 'Add Product' : 'Edit Product' ?></h1>
   <div class="actions">
-    <a href="/admin/products" class="btn btn-outline">← Back</a>
+    <a href="<?= $return_to ?? '/admin/products' ?>" class="btn btn-outline">← Back</a>
   </div>
 </div>
 
@@ -24,6 +24,9 @@
         <?= csrf_field() ?>
       <?php if ($product_id): ?>
         <input type="hidden" name="id" value="<?= $product_id ?>">
+      <?php endif; ?>
+      <?php if (isset($return_to)): ?>
+        <input type="hidden" name="return_to" value="<?= h($return_to) ?>">
       <?php endif; ?>
 
       <div class="form-grid">
@@ -264,9 +267,8 @@
         <button type="submit" name="save" class="btn btn-primary">
           <?= $is_new ? 'Create Product' : 'Save Changes' ?>
         </button>
-        <a href="/admin/products" class="btn btn-outline">Cancel</a>
-      </div>
-    </form>
+        <a href="<?= $return_to ?? '/admin/products' ?>" class="btn btn-outline">Cancel</a>
+      </div>    </form>
   </div>
 </div>
 

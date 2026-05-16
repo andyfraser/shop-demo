@@ -30,7 +30,7 @@ class AdminDashboardController {
         $recent_orders = $this->orderService->getRecentOrders(10);
 
         $threshold = (int)$this->settingsService->get('low_stock_threshold');
-        $low_stock = $this->productService->getLowStock($threshold);
+        $low_stock = $this->productService->getLowStock($threshold, 10, 'stock');
         $low_stock_count = $this->productService->countLowStock($threshold);
 
         return new HtmlResponse($this->renderer->adminRender('dashboard', [

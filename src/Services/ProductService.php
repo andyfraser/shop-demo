@@ -102,8 +102,8 @@ class ProductService implements ProductServiceInterface {
         return $this->repository->getAvailableFilters($categoryIds, $query);
     }
 
-    public function getLowStock(int $threshold, int $limit = 10): array {
-        $items = $this->repository->getLowStock($threshold, $limit);
+    public function getLowStock(int $threshold, int $limit = 10, string $sort = 'name'): array {
+        $items = $this->repository->getLowStock($threshold, $limit, $sort);
         foreach ($items as $item) {
             if ($item instanceof Product) {
                 $this->hydrateProduct($item);

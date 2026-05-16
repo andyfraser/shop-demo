@@ -95,6 +95,8 @@ return [
     ['method' => 'GET', 'path' => '/admin/categories/delete', 'handler' => [AdminCategoriesController::class, 'delete'], 'middlewares' => $adminMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/products', 'handler' => [AdminProductsController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/products/low-stock', 'handler' => [AdminProductsController::class, 'lowStock'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/products/low-stock/update', 'handler' => [AdminProductsController::class, 'updateLowStock'], 'middlewares' => $adminPostMiddleware],
     ['method' => 'GET', 'path' => '/admin/products/new', 'handler' => [AdminProductsController::class, 'create'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/products/edit', 'handler' => [AdminProductsController::class, 'edit'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/products/new', 'handler' => [AdminProductsController::class, 'save'], 'middlewares' => $adminPostMiddleware],

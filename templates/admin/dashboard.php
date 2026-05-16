@@ -71,7 +71,7 @@
     <div>
       <div class="page-actions mb-2">
         <strong class="text-sm">Low Stock</strong>
-        <a href="/admin/products" class="btn btn-outline btn-sm">View All</a>
+        <a href="/admin/products/low-stock" class="btn btn-outline btn-sm">View All</a>
       </div>
       <div class="card p-0 overflow-hidden">
         <?php if ($low_stock): ?>
