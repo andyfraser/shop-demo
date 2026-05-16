@@ -125,6 +125,41 @@ try {
     define('SITE_NAME', $settings->get('site_name'));
     define('SITE_NAME_PLAIN', str_replace('|', '', SITE_NAME));
 
+    // Maintenance Mode Check
+    if ($settings->get('maintenance_mode') === '1') {
+        $request = \App\Core\Request::createFromGlobals();
+        $path = parse_url($request->getUri(), PHP_URL_PATH);
+        
+        // Normalize path by stripping BASE_URL (similar to Router logic)
+        $relative = $path;
+        if (defined('BASE_URL') && BASE_URL !== '' && strpos($relative, BASE_URL) === 0) {
+            $baseUrlLen = strlen(BASE_URL);
+            $nextChar = substr($relative, $baseUrlLen, 1);
+            if ($nextChar === '/' || $nextChar === '' || $nextChar === false) {
+                $relative = substr($relative, $baseUrlLen);
+                if ($relative === '' || $relative === false) {
+                    $relative = '/';
+                }
+            }
+        }
+        
+        // Remove trailing slash for comparison, but keep root /
+        $trimmedPath = rtrim($relative, '/');
+        if ($trimmedPath === '') $trimmedPath = '/';
+
+        // Allow admin routes, login, logout and static assets even in maintenance mode
+        $isAdminRoute = strpos($trimmedPath, '/admin') === 0;
+        $isAuthRoute = in_array($trimmedPath, ['/login', '/logout']);
+        $isAsset = strpos($trimmedPath, '/public') === 0 || strpos($trimmedPath, '/css') === 0 || strpos($trimmedPath, '/js') === 0 || strpos($trimmedPath, '/images') === 0 || strpos($trimmedPath, '/favicon.ico') === 0;
+        
+        if (!$isAdminRoute && !$isAuthRoute && !$isAsset) {
+             http_response_code(503);
+             $renderer = $container->get(\App\Core\Renderer::class);
+             echo $renderer->render('maintenance');
+             exit;
+        }
+    }
+
 } catch (\PDOException $e) {
     $error_message = $e->getMessage();
     include __DIR__ . '/templates/setup_guide.php';

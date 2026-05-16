@@ -4,10 +4,13 @@ use App\Commands\RotateLogsCommand;
 use App\Commands\ImageCleanupCommand;
 use App\Commands\SeedCommand;
 use App\Commands\RecoverCartsCommand;
+use App\Commands\MaintenanceDownCommand;
+use App\Commands\MaintenanceUpCommand;
 use App\Services\ImageCleanupServiceInterface;
 use App\Services\MigrationServiceInterface;
 use App\Services\DatabaseSeedServiceInterface;
 use App\Services\EmailServiceInterface;
+use App\Services\SettingsServiceInterface;
 use Psr\Log\LoggerInterface;
 
 return function($c, array $config) {
@@ -32,6 +35,12 @@ return function($c, array $config) {
         },
         RecoverCartsCommand::class => function($c) {
             return new RecoverCartsCommand($c->get(PDO::class), $c->get(EmailServiceInterface::class), $c->get(LoggerInterface::class));
+        },
+        MaintenanceDownCommand::class => function($c) {
+            return new MaintenanceDownCommand($c->get(SettingsServiceInterface::class));
+        },
+        MaintenanceUpCommand::class => function($c) {
+            return new MaintenanceUpCommand($c->get(SettingsServiceInterface::class));
         },
     ];
 };
