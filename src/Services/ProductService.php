@@ -54,6 +54,10 @@ class ProductService implements ProductServiceInterface {
         return $this->repository->save($data, $id);
     }
 
+    public function updateStock(int $id, int $newStock): void {
+        $this->repository->updateStock($id, $newStock);
+    }
+
     public function deactivate(int $id): void {
         $this->repository->deactivate($id);
     }
@@ -138,6 +142,10 @@ class ProductService implements ProductServiceInterface {
 
     public function saveVariant(array $data, int $id = 0): int {
         return $this->variantService->save($data, $id);
+    }
+
+    public function updateVariantStock(int $id, int $newStock): void {
+        $this->variantService->updateStock($id, $newStock);
     }
 
     public function deleteVariant(int $id): void {

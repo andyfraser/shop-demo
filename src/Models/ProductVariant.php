@@ -12,6 +12,7 @@ class ProductVariant extends Model {
     public int|bool $active;
     public int $sort_order = 0;
     public string $created_at;
+    public ?string $product_name = null;
 
     /**
      * @var int[] IDs of attribute values assigned to this variant.

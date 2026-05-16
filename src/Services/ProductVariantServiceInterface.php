@@ -18,5 +18,7 @@ interface ProductVariantServiceInterface {
     
     public function save(array $data, int $id = 0): int;
     
+    public function updateStock(int $id, int $newStock): void;
+    
     public function delete(int $id): void;
 }

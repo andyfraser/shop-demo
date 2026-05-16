@@ -31,6 +31,10 @@ class ProductVariantService implements ProductVariantServiceInterface {
         return $this->repository->saveVariant($data, $id);
     }
 
+    public function updateStock(int $id, int $newStock): void {
+        $this->repository->updateVariantStock($id, $newStock);
+    }
+
     public function delete(int $id): void {
         $this->repository->deleteVariant($id);
     }

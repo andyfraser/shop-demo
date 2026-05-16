@@ -70,6 +70,51 @@ class ProductServiceTest extends TestCase {
         $this->assertEquals(0, (int)$product->active);
     }
 
+    public function testUpdateStock() {
+        $productId = $this->service->save([
+            'name' => 'Stock Update Test',
+            'price' => 10,
+            'vat_rate' => 20,
+            'stock' => 50,
+            'active' => 1,
+            'featured' => 0,
+            'image' => null,
+            'category_id' => null
+        ]);
+
+        $this->service->updateStock($productId, 75);
+        
+        $updatedProduct = $this->service->findById($productId);
+        $this->assertEquals(75, $updatedProduct->stock);
+        $this->assertEquals('Stock Update Test', $updatedProduct->name);
+    }
+
+    public function testUpdateVariantStock() {
+        $productId = $this->service->save([
+            'name' => 'Variant Stock Update Test',
+            'price' => 10,
+            'vat_rate' => 20,
+            'stock' => 10,
+            'active' => 1,
+            'featured' => 0,
+            'image' => null,
+            'category_id' => null
+        ]);
+
+        $variantId = $this->service->saveVariant([
+            'product_id' => $productId,
+            'name' => 'Test Variant',
+            'stock' => 5,
+            'active' => 1
+        ]);
+
+        $this->service->updateVariantStock($variantId, 25);
+        
+        $updatedVariant = $this->service->findVariantById($variantId);
+        $this->assertEquals(25, $updatedVariant->stock);
+        $this->assertEquals('Test Variant', $updatedVariant->name);
+    }
+
     public function testSearch() {
         // 'ProBook' should be in seed data
         $criteria = new \App\Core\QueryCriteria(['search' => 'ProBook', 'limit' => 10, 'sort' => 'name']);
@@ -391,7 +436,10 @@ class ProductServiceTest extends TestCase {
 
         foreach ($lowStockItems as $item) {
             if ($item->name === 'Low Stock Product') $foundLowProduct = true;
-            if ($item->name === 'Variant Product - Low Stock Variant') $foundLowVariant = true;
+            if ($item instanceof \App\Models\ProductVariant && $item->name === 'Variant Product - Low Stock Variant') {
+                $foundLowVariant = true;
+                $this->assertEquals('Variant Product', $item->product_name, "Variant should have product_name populated");
+            }
             if ($item->name === 'High Stock Product') $foundHighProduct = true;
         }
 

@@ -66,11 +66,11 @@ class AdminProductsController {
         $vStock = $post['variant_stock'] ?? [];
 
         foreach ($stock as $id => $val) {
-            $this->productService->save(['stock' => (int)$val], (int)$id);
+            $this->productService->updateStock((int)$id, (int)$val);
         }
 
         foreach ($vStock as $id => $val) {
-            $this->productService->saveVariant(['stock' => (int)$val], (int)$id);
+            $this->productService->updateVariantStock((int)$id, (int)$val);
         }
 
         $this->logger->info("Admin updated low stock inventory. Products: {p_count}, Variants: {v_count}", [

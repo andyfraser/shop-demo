@@ -31,7 +31,7 @@
                 <td>
                   <div class="font-bold"><?= h($item->name) ?></div>
                   <?php if ($item instanceof \App\Models\ProductVariant): ?>
-                    <small class="text-muted">Variant of Product ID: <?= $item->product_id ?></small>
+                    <small class="text-muted">Variant of Product: <?= h($item->product_name) ?></small>
                   <?php else: ?>
                     <small class="text-muted">Standalone Product</small>
                   <?php endif; ?>

@@ -105,6 +105,10 @@ class ProductRepository implements ProductRepositoryInterface {
         }
     }
 
+    public function updateStock(int $id, int $newStock): void {
+        $this->db->prepare("UPDATE products SET stock = ? WHERE id = ?")->execute([$newStock, $id]);
+    }
+
     public function deactivate(int $id): void {
         $this->db->prepare("UPDATE products SET active = 0 WHERE id = ?")->execute([$id]);
     }
@@ -316,7 +320,7 @@ class ProductRepository implements ProductRepositoryInterface {
 
         // Query for variants
         $vStmt = $this->db->prepare(
-            "SELECT pv.*, $concat as name 
+            "SELECT pv.*, $concat as name, p.name as product_name 
              FROM product_variants pv
              JOIN products p ON pv.product_id = p.id
              WHERE pv.active = 1 AND p.active = 1 AND pv.stock <= ?
@@ -413,6 +417,10 @@ class ProductRepository implements ProductRepositoryInterface {
             )->execute($params);
             return (int)$this->db->lastInsertId();
         }
+    }
+
+    public function updateVariantStock(int $id, int $newStock): void {
+        $this->db->prepare("UPDATE product_variants SET stock = ? WHERE id = ?")->execute([$newStock, $id]);
     }
 
     public function deleteVariant(int $id): void {
