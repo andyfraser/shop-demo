@@ -112,7 +112,7 @@ The test suite covers Core components, Repositories, Services, and Models, inclu
 shop-demo/
 │
 ├── cli/                    # Command-line scripts
-│   └── console.php         # Central CLI entry point and task scheduler runner
+│   └── console.php         # Central CLI entry point (migrations, seeding, tasks, maintenance)
 │
 ├── config/                 # Application configuration files
 │   ├── config.php          # Local configuration (ignored by Git)

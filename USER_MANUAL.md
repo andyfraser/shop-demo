@@ -245,12 +245,16 @@ To run the scheduler every minute, add the following line to your server's cront
 * * * * * php /path/to/shop-demo/cli/console.php schedule:run >> /dev/null 2>&1
 ```
 
-### Manual Execution
-You can also run specific commands manually via the console:
+### Manual Execution & Control
+You can also run specific commands manually or control the scheduler via the console:
 
 ```bash
 # List all available commands
 php cli/console.php
+
+# Pause/Resume the entire scheduler
+php cli/console.php schedule:pause
+php cli/console.php schedule:resume
 
 # Run a specific command immediately
 php cli/console.php recover-carts
@@ -260,6 +264,8 @@ php cli/console.php logs:rotate
 
 ### How it Works
 The scheduler tracks the execution of each task in the `scheduled_tasks` database table. It ensures that tasks registered with a specific frequency only run once during their respective periods, even if the `schedule:run` command is executed every minute.
+
+If the scheduler is paused via `schedule:pause`, it will skip all tasks and log a notification until `schedule:resume` is called.
 
 Common tasks include:
 *   **`recover-carts`**: Sends email reminders for abandoned carts (Daily).
