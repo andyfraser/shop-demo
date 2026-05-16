@@ -23,7 +23,7 @@
 <?php endif; ?>
 
 <?php if (file_exists(__DIR__ . '/../public/js/shop.js')): ?>
-<script src="<?= BASE_URL ?>/public/js/shop.js?v=<?= filemtime(__DIR__ . '/../public/js/shop.js') ?>"></script>
+<script src="<?= BASE_URL ?>/js/shop.js?v=<?= filemtime(__DIR__ . '/../public/js/shop.js') ?>"></script>
 <?php endif; ?>
 
 </body>

@@ -7,10 +7,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= h($page_title) ?> — Admin — <?= SITE_NAME_PLAIN ?></title>
-<link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/public/css/admin.css?v=<?= filemtime(__DIR__ . '/../../public/css/admin.css') ?>">
+<link rel="stylesheet" href="/css/admin.css?v=<?= filemtime(__DIR__ . '/../../public/css/admin.css') ?>">
 </head>
 <body>
 

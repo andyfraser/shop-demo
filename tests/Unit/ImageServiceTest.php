@@ -95,7 +95,7 @@ class ImageServiceTest extends TestCase {
         $filename = 'img_123.jpg';
         $url = $this->service->getUrl($filename);
         // Note: it will return placeholder if file doesn't exist
-        $this->assertEquals('/public/images/placeholder.svg', $url);
+        $this->assertEquals('/images/placeholder.svg', $url);
         
         // Create a file to see it return the correct URL
         touch($this->testDir . $filename);

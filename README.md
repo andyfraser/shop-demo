@@ -79,7 +79,7 @@ cd shop-demo
 cp config/config.example.php config/config.php
 php cli/console.php migrate
 php cli/console.php db:seed
-php -S localhost:8080 index.php
+php -S localhost:8080 -t public
 ```
 
 Open **http://localhost:8080** in your browser.
@@ -170,7 +170,7 @@ shop-demo/
 - **`AuthMiddleware` / `AdminMiddleware`**: Enforce authentication and role-based access.
 - **`VerifiedMiddleware`**: Enforces email verification for sensitive actions.
 
-**Front Controller:** All requests enter through `index.php`, which bootstraps the application and dispatches to the router. The application uses a custom `Request` and `Response` system to handle HTTP communication cleanly.
+**Front Controller:** All requests enter through `public/index.php`, which bootstraps the application and dispatches to the router. The application uses a custom `Request` and `Response` system to handle HTTP communication cleanly.
 
 ---
 

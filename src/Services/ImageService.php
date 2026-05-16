@@ -13,7 +13,7 @@ class ImageService implements ImageServiceInterface {
         ?string $baseUrl = null
     ) {
         $this->uploadDir = $uploadDir ?? (__DIR__ . '/../../public/uploads/');
-        $this->baseUrl = $baseUrl ?? '/public/uploads/';
+        $this->baseUrl = $baseUrl ?? '/uploads/';
         
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0755, true);
@@ -61,7 +61,7 @@ class ImageService implements ImageServiceInterface {
     }
 
     public function getUrl(?string $filename, string $size = 'original'): string {
-        if (!$filename) return '/public/images/placeholder.svg';
+        if (!$filename) return '/images/placeholder.svg';
         
         $pathInfo = pathinfo($filename);
         $base = $pathInfo['filename'];
@@ -82,10 +82,10 @@ class ImageService implements ImageServiceInterface {
         // Fallback for old images
         $oldPath = __DIR__ . '/../../public/images/' . $filename;
         if (file_exists($oldPath)) {
-            return '/public/images/' . $filename;
+            return '/images/' . $filename;
         }
         
-        return '/public/images/placeholder.svg';
+        return '/images/placeholder.svg';
     }
 
     public function delete(?string $filename): void {

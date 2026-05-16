@@ -43,7 +43,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 4.  **Start the Server:**
     *   Using the PHP built-in server:
         ```bash
-        php -S localhost:8080 index.php
+        php -S localhost:8080 -t public
         ```
     *   Visit `http://localhost:8080` in your browser.
 
@@ -189,7 +189,7 @@ The logging system follows the PHP Standard Recommendation for logging (PSR-3). 
 *   **Repository Pattern:** A dedicated data access layer that decouples business logic from SQL queries. Every entity has a Repository that implements a corresponding interface.
 *   **DI Container:** Custom container (`App\Core\Container`) with autowiring and interface mapping support. Service registrations are centralized in `config/services.php`.
 *   **MVC Pattern:** Strict separation of Controllers, Services, Repositories, Models, and Views.
-*   **Front Controller:** All traffic routes through `index.php`, which initializes the DI system and sets up global error handling.
+*   **Front Controller:** All traffic routes through `public/index.php`, which initializes the DI system and sets up global error handling.
 
 ### Directory Structure Highlights
 *   `src/Core/`: Foundation classes including the `Container`, `Router`, `Database`, `Request`, `Response`, and `Renderer`.

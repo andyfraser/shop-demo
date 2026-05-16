@@ -1,13 +1,13 @@
 <?php
 
-require_once __DIR__ . '/src/Core/Autoloader.php';
+require_once __DIR__ . '/../src/Core/Autoloader.php';
 \App\Core\Autoloader::register();
-require_once __DIR__ . '/src/Helpers.php';
+require_once __DIR__ . '/../src/Helpers.php';
 
 // Load configuration
 $config = [];
-if (file_exists(__DIR__ . '/config/config.php')) {
-    $config = require __DIR__ . '/config/config.php';
+if (file_exists(__DIR__ . '/../config/config.php')) {
+    $config = require __DIR__ . '/../config/config.php';
 }
 
 $isDebug = $config['app']['debug'] ?? false;
@@ -44,7 +44,7 @@ $errorHandler = function ($severity, $message, $file, $line) {
 $exceptionHandler = function ($exception) use ($isDebug, $config) {
     // Attempt to log the error
     try {
-        $logFile = $config['app']['log_path'] ?? __DIR__ . '/logs/app.log';
+        $logFile = $config['app']['log_path'] ?? __DIR__ . '/../logs/app.log';
         $date = date('Y-m-d H:i:s');
         $logEntry = sprintf("[%s] CRITICAL: Uncaught Exception: %s in %s on line %d" . PHP_EOL, 
             $date, $exception->getMessage(), $exception->getFile(), $exception->getLine());
@@ -72,7 +72,7 @@ $exceptionHandler = function ($exception) use ($isDebug, $config) {
                 $renderer = $container->get(\App\Core\Renderer::class);
                 $renderer->render('500');
             } else {
-                include __DIR__ . '/templates/500.php';
+                include __DIR__ . '/../templates/500.php';
             }
         } catch (\Exception $e) {
             echo "<h1>500 Internal Server Error</h1>";
@@ -88,7 +88,7 @@ set_exception_handler($exceptionHandler);
 // Database configuration
 $dbConfig = $config['db'] ?? [
     'driver' => 'sqlite',
-    'path'   => __DIR__ . '/shop.db',
+    'path'   => __DIR__ . '/../shop.db',
 ];
 define('DB_CONFIG', $dbConfig);
 
@@ -99,7 +99,7 @@ try {
     $container = new Container();
 
     // Register services
-    $servicesFactory = require __DIR__ . '/config/services.php';
+    $servicesFactory = require __DIR__ . '/../config/services.php';
     $services = $servicesFactory($config);
     foreach ($services as $id => $factory) {
         $container->set($id, $factory);
@@ -118,7 +118,7 @@ try {
     }
 
     if (!$isInitialized) {
-        include __DIR__ . '/templates/setup_guide.php';
+        include __DIR__ . '/../templates/setup_guide.php';
         exit;
     }
 
@@ -170,7 +170,7 @@ try {
 
 } catch (\PDOException $e) {
     $error_message = $e->getMessage();
-    include __DIR__ . '/templates/setup_guide.php';
+    include __DIR__ . '/../templates/setup_guide.php';
     exit;
 } catch (\Exception $e) {
     // Re-throw other exceptions to be handled by the global exception handler
@@ -180,7 +180,7 @@ try {
 $router = new Router($container);
 
 // Load and register routes
-$routes = require __DIR__ . '/config/routes.php';
+$routes = require __DIR__ . '/../config/routes.php';
 foreach ($routes as $route) {
     $router->add(
         $route['method'],
@@ -197,19 +197,12 @@ $request = \App\Core\Request::createFromGlobals();
 if (php_sapi_name() === 'cli-server') {
     $path = parse_url($request->getUri(), PHP_URL_PATH);
     if ($path !== '/') {
-        $publicPath = __DIR__ . '/public' . $path;
-        // If the path already starts with /public, don't prepend it again
-        if (strpos($path, '/public/') === 0) {
-            $publicPath = __DIR__ . $path;
-        }
+        // When index.php is in public/, we check directly in public/ (which is __DIR__)
+        $filePath = __DIR__ . $path;
         
-        if (file_exists($publicPath) && is_file($publicPath)) {
+        if (file_exists($filePath) && is_file($filePath) && $path !== '/index.php') {
             return false;
         }
-    }
-    // Also check if they mistakenly request the root file directly
-    if (file_exists(__DIR__ . $path) && is_file(__DIR__ . $path) && $path !== '/index.php') {
-        return false;
     }
 }
 

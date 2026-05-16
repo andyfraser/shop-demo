@@ -396,6 +396,6 @@ class StorefrontController {
     }
 
     public function handleIcon(Request $request): Response {
-        return new RedirectResponse(BASE_URL . '/public/images/favicon.svg');
+        return new RedirectResponse(BASE_URL . '/images/favicon.svg');
     }
 }
