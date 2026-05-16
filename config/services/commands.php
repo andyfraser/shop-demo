@@ -42,5 +42,11 @@ return function($c, array $config) {
         MaintenanceUpCommand::class => function($c) {
             return new MaintenanceUpCommand($c->get(SettingsServiceInterface::class));
         },
+        SchedulePauseCommand::class => function($c) {
+            return new SchedulePauseCommand($c->get(SettingsServiceInterface::class));
+        },
+        ScheduleResumeCommand::class => function($c) {
+            return new ScheduleResumeCommand($c->get(SettingsServiceInterface::class));
+        },
     ];
 };

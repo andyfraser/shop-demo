@@ -18,6 +18,8 @@ class Settings extends Model {
     public string $email_from = 'noreply@shop.local';
     public string $site_url = 'http://localhost';
     public string $base_url = '';
+    public string $maintenance_mode = '0';
+    public string $scheduler_paused = '0';
 
     /**
      * Fill settings from an associative array of key => value pairs.

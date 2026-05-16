@@ -9,20 +9,36 @@ use Psr\Log\LoggerInterface;
 class Scheduler {
     private array $commands;
     private PDO $db;
-    private ?LoggerInterface $logger;
+    private ?\Psr\Log\LoggerInterface $logger;
+    private \App\Services\SettingsServiceInterface $settingsService;
 
     /**
      * @param PDO $db
+     * @param \App\Services\SettingsServiceInterface $settingsService
      * @param CommandInterface[] $commands
-     * @param LoggerInterface|null $logger
+     * @param \Psr\Log\LoggerInterface|null $logger
      */
-    public function __construct(PDO $db, array $commands = [], ?LoggerInterface $logger = null) {
+    public function __construct(
+        PDO $db,
+        \App\Services\SettingsServiceInterface $settingsService,
+        array $commands = [],
+        ?\Psr\Log\LoggerInterface $logger = null
+    ) {
         $this->db = $db;
+        $this->settingsService = $settingsService;
         $this->commands = $commands;
         $this->logger = $logger;
     }
 
     public function run(): void {
+        if ($this->settingsService->get('scheduler_paused') === '1') {
+            echo "Scheduler is currently PAUSED. Skipping execution.\n";
+            if ($this->logger) {
+                $this->logger->info("Scheduler run skipped because it is paused.");
+            }
+            return;
+        }
+
         $timestamp = date('Y-m-d H:i:s');
         echo "Running scheduler at " . $timestamp . "\n";
         if ($this->logger) {
