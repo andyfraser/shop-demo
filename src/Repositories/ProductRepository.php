@@ -479,6 +479,24 @@ class ProductRepository implements ProductRepositoryInterface {
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);
     }
 
+    public function getTiers(int $productId): array {
+        $stmt = $this->db->prepare("SELECT min_qty, discount FROM product_tiers WHERE product_id = ? ORDER BY min_qty ASC");
+        $stmt->execute([$productId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function syncTiers(int $productId, array $tiers): void {
+        $this->db->prepare("DELETE FROM product_tiers WHERE product_id = ?")->execute([$productId]);
+        if (empty($tiers)) return;
+
+        $sql = "INSERT INTO product_tiers (product_id, min_qty, discount) VALUES (?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        foreach ($tiers as $tier) {
+            if (empty($tier['min_qty']) || empty($tier['discount'])) continue;
+            $stmt->execute([$productId, (int)$tier['min_qty'], (float)$tier['discount']]);
+        }
+    }
+
     private function normalizeQuery(string $query): string {
         return preg_replace('/[^\p{L}\p{N}\s]/u', '', $query);
     }

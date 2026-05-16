@@ -30,4 +30,5 @@ interface ProductServiceInterface {
     public function getRelatedProducts(int $productId, int $limit = 4): array;
     public function attachActivePromotions(array $products, ?\App\Models\User $user = null): void;
     public function searchSuggestions(string $query, int $limit = 5): array;
+    public function syncTiers(int $productId, array $tiers): void;
 }

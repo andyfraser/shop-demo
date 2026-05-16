@@ -185,10 +185,13 @@ if (cartForm) {
             }
 
             if (isUpdate) {
-                // Update each row subtotal
+                // Update each row subtotal and unit price
                 data.items.forEach(item => {
-                    const cell = cartForm.querySelector(`.item-subtotal[data-item-key="${item.key}"]`);
-                    if (cell) cell.innerHTML = `<strong>${item.subtotal}</strong>`;
+                    const subtotalCell = cartForm.querySelector(`.item-subtotal[data-item-key="${item.key}"]`);
+                    if (subtotalCell) subtotalCell.innerHTML = `<strong>${item.subtotal}</strong>`;
+                    
+                    const unitPriceCell = cartForm.querySelector(`.item-unit-price[data-item-key="${item.key}"]`);
+                    if (unitPriceCell) unitPriceCell.textContent = item.unit_price;
                 });
 
                 showToast(data.message, 'success');
@@ -215,12 +218,22 @@ if (variantSelect) {
 
     variantSelect.addEventListener('change', function() {
         const option = variantSelect.options[variantSelect.selectedIndex];
-        const price = option.dataset.price;
+        const price = parseFloat(option.dataset.price);
         const stock = parseInt(option.dataset.stock);
         const vid = option.value;
 
         // Update price
         displayPrice.textContent = formatMoney(price);
+
+        // Update Quantity Discount Table
+        const tierRows = document.querySelectorAll('.tier-row');
+        tierRows.forEach(row => {
+            const discount = parseFloat(row.dataset.discount);
+            const tierPriceCell = row.querySelector('.tier-price');
+            if (tierPriceCell) {
+                tierPriceCell.textContent = formatMoney(price - discount);
+            }
+        });
 
         // Update hidden variant ID
         variantIdInput.value = vid;

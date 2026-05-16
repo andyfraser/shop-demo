@@ -5,6 +5,7 @@ use App\Models\CartItem;
 use App\Models\Promotion;
 
 interface PricingServiceInterface {
+    public function calculateItemUnitPrice(CartItem $item): float;
     public function calculateItemSubtotal(CartItem $item): float;
     public function calculateItemVat(CartItem $item): float;
     public function calculateTotalSubtotal(array $items): float;

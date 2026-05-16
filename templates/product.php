@@ -34,6 +34,30 @@
       <h1 class="product-title"><?= h($product->name) ?></h1>
       <div class="product-price" id="display-price"><?= money($product->price) ?></div>
 
+      <?php if (!empty($product->tiers)): ?>
+        <div class="quantity-discounts" style="margin: 1rem 0; padding: 1rem; background: var(--sand); border-radius: var(--radius); border: 1px solid var(--line);">
+          <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-2);">Quantity Discounts</h4>
+          <table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
+            <thead>
+              <tr style="text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                <th style="padding: 0.25rem 0;">Qty</th>
+                <th style="padding: 0.25rem 0;">Price Each</th>
+                <th style="padding: 0.25rem 0; text-align: right;">Savings</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($product->tiers as $tier): ?>
+                <tr class="tier-row" data-discount="<?= $tier['discount'] ?>">
+                  <td style="padding: 0.4rem 0;"><?= $tier['min_qty'] ?>+</td>
+                  <td style="padding: 0.4rem 0;" class="tier-price"><?= money($product->price - $tier['discount']) ?></td>
+                  <td style="padding: 0.4rem 0; text-align: right; color: var(--success); font-weight: 600;">Save <?= money($tier['discount']) ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      <?php endif; ?>
+
       <?php if ($promo = get_active_promotion($product)): ?>
         <div class="promo-callout">
           <div class="promo-icon">🏷️</div>

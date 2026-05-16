@@ -99,6 +99,13 @@ The dashboard provides an immediate overview of your business:
 ### Inventory & Reviews
 *   **Products:** CRUD operations for items, including image uploads (JPEG, PNG, GIF, WebP up to 5MB), pricing, and "Featured" status. Admins can also enable **"Force Variant"** mode, which restricts customers to purchasing only specific variants (e.g., Size/Color) instead of the base product.
 *   **Attributes Management:** Define custom product attributes (e.g., Brand, Color, Material) and manage their values. These are used for smart recommendations and product details.
+*   **Quantity Tiers:** Implement bulk quantity discounts (e.g., "Buy 10, save £1.00 each"). 
+    *   **Logic:** Tiers are defined as a fixed discount amount subtracted from the base or variant price.
+    *   **Variant Support:** Tier prices update dynamically on the storefront based on the selected product variant.
+    *   **Example Setup:** To achieve "1-5 units = £10, 6-10 units = £9, 11+ units = £8":
+        1. Set **Base Price** to `10.00`.
+        2. Add **Tier 1**: Min Qty `6`, Discount `1.00` (results in £9 price).
+        3. Add **Tier 2**: Min Qty `11`, Discount `2.00` (results in £8 price).
 *   **Categories:** Create complex parent-child relationships with custom icons.
 *   **Promotions Management:** Design complex marketing campaigns with ease:
     *   **Types:** Percentage, fixed amount, free shipping, or "Buy X Get Y" (BOGO) discounts.

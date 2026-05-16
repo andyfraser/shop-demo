@@ -20,7 +20,7 @@ class CartItem extends Model {
 
     public function getSubtotal(): float {
         if (!$this->product) return 0.0;
-        $unitPrice = $this->variant ? $this->variant->getEffectivePrice($this->product->price) : $this->product->price;
+        $unitPrice = isset($this->unit_price) ? $this->unit_price : ($this->variant ? $this->variant->getEffectivePrice($this->product->price) : $this->product->price);
         return $unitPrice * $this->qty;
     }
 

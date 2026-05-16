@@ -139,6 +139,47 @@
 
         <div class="span-2 mt-2">
           <h3 class="section-title border-bottom">
+            Quantity Tiers
+          </h3>
+          <p class="text-sm text-muted mb-2">
+            Add fixed discounts for bulk quantities. These will be subtracted from the base or variant price.
+          </p>
+          <div id="tiers-container">
+            <table class="w-100" id="tiers-table" style="max-width: 500px; border-collapse: collapse;">
+                <thead>
+                    <tr class="text-xs text-muted font-bold" style="text-align: left; border-bottom: 1px solid var(--line);">
+                        <th style="padding: 0.5rem 0;">Min. Quantity</th>
+                        <th style="padding: 0.5rem 0;">Discount Amount (£)</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                      $tiers = is_object($product) ? ($product->tiers ?? []) : ($post['tiers'] ?? []);
+                      foreach ($tiers as $tIndex => $tier): 
+                    ?>
+                        <tr>
+                            <td style="padding: 0.5rem 0; padding-right: 1rem;">
+                                <input type="number" name="tiers[<?= $tIndex ?>][min_qty]" class="form-control" value="<?= h($tier['min_qty']) ?>" min="2" required>
+                            </td>
+                            <td style="padding: 0.5rem 0; padding-right: 1rem;">
+                                <input type="number" name="tiers[<?= $tIndex ?>][discount]" step="0.01" min="0.01" class="form-control" value="<?= h($tier['discount']) ?>" required>
+                            </td>
+                            <td style="padding: 0.5rem 0;">
+                                <button type="button" class="btn btn-outline btn-sm" onclick="this.closest('tr').remove()" style="color: var(--accent); border-color: transparent;">×</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-outline btn-sm mt-1" id="add-tier">
+                + Add Tier
+            </button>
+          </div>
+        </div>
+
+        <div class="span-2 mt-2">
+          <h3 class="section-title border-bottom">
             Product Attributes
           </h3>
           <p class="text-sm text-muted mb-2">
@@ -325,6 +366,30 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     updateAttrCounts();
+
+    // ── Tiers Table Logic ──────────────────────────────────────────────────
+    const addTierBtn = document.getElementById('add-tier');
+    const tiersTbody = document.querySelector('#tiers-table tbody');
+    let tierIndex = <?= count($tiers ?? []) ?>;
+
+    if (addTierBtn) {
+        addTierBtn.addEventListener('click', function() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 0.5rem 0; padding-right: 1rem;">
+                    <input type="number" name="tiers[${tierIndex}][min_qty]" class="form-control" value="" min="2" required>
+                </td>
+                <td style="padding: 0.5rem 0; padding-right: 1rem;">
+                    <input type="number" name="tiers[${tierIndex}][discount]" step="0.01" min="0.01" class="form-control" value="" required>
+                </td>
+                <td style="padding: 0.5rem 0;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="this.closest('tr').remove()" style="color: var(--accent); border-color: transparent;">×</button>
+                </td>
+            `;
+            tiersTbody.appendChild(tr);
+            tierIndex++;
+        });
+    }
 
     // ── Variants Table Logic ───────────────────────────────────────────────
     const btn = document.getElementById('add-variant');

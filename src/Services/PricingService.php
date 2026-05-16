@@ -12,9 +12,28 @@ class PricingService implements PricingServiceInterface {
         private SettingsServiceInterface $settings
     ) {}
 
-    public function calculateItemSubtotal(CartItem $item): float {
+    public function calculateItemUnitPrice(CartItem $item): float {
         if (!$item->product) return 0.0;
-        $unitPrice = $item->variant ? $item->variant->getEffectivePrice($item->product->price) : $item->product->price;
+        
+        $baseUnitPrice = $item->variant ? $item->variant->getEffectivePrice($item->product->price) : $item->product->price;
+        $unitPrice = $baseUnitPrice;
+
+        // Apply quantity tiers (fixed discount from base/variant price)
+        if (!empty($item->product->tiers)) {
+            $applicableDiscount = 0.0;
+            foreach ($item->product->tiers as $tier) {
+                if ($item->qty >= $tier['min_qty']) {
+                    $applicableDiscount = max($applicableDiscount, (float)$tier['discount']);
+                }
+            }
+            $unitPrice = max(0, $baseUnitPrice - $applicableDiscount);
+        }
+
+        return $this->round($unitPrice);
+    }
+
+    public function calculateItemSubtotal(CartItem $item): float {
+        $unitPrice = $this->calculateItemUnitPrice($item);
         return $this->round($unitPrice * $item->qty);
     }
 

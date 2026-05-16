@@ -68,8 +68,9 @@ class CartController
         if ($request->isAjax()) {
             $items = $this->cartService->items();
             $lineItems = array_map(fn($i) => [
-                'key'      => $i->key,
-                'subtotal' => money($i->getSubtotal()),
+                'key'        => $i->key,
+                'subtotal'   => money($i->getSubtotal()),
+                'unit_price' => money($i->unit_price),
             ], $items);
 
             $promos = $this->cartService->getAppliedPromotions();

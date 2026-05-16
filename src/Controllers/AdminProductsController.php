@@ -187,6 +187,10 @@ class AdminProductsController {
                 : [];
             $this->attributeService->saveVariantAttributes($final_id, $variantAttrIds);
 
+            // Handle quantity tiers
+            $tiers = isset($post['tiers']) && is_array($post['tiers']) ? $post['tiers'] : [];
+            $this->productService->syncTiers($final_id, $tiers);
+
             // Handle variants
             if (isset($post['variants']) && is_array($post['variants'])) {
                 foreach ($post['variants'] as $v) {

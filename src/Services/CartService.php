@@ -111,8 +111,6 @@ class CartService implements CartServiceInterface {
             $product = $products[$pid];
             $variant = $vid ? ($variants[$vid] ?? null) : null;
 
-            $unitPrice = $variant ? $variant->getEffectivePrice($product->price) : $product->price;
-
             $item = new \App\Models\CartItem($this->logger);
             $item->key = $key;
             $item->product_id = $pid;
@@ -120,7 +118,7 @@ class CartService implements CartServiceInterface {
             $item->qty = $qty;
             $item->product = $product;
             $item->variant = $variant;
-            $item->unit_price = $unitPrice;
+            $item->unit_price = $this->pricingService->calculateItemUnitPrice($item);
 
             $items[] = $item;
         }

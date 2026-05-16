@@ -37,6 +37,9 @@ class Product extends Model {
     /** @var \App\Models\Promotion[] */
     public array $active_promotions = [];
 
+    /** @var array List of quantity tiers [{min_qty, discount}] */
+    public array $tiers = [];
+
     /**
      * Calculate subtotal for a given quantity.
      */

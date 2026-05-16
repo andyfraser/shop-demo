@@ -48,7 +48,7 @@
                         </div>
                       <?php endif; ?>
                     </td>
-                    <td><?= money($item->unit_price) ?></td>
+                    <td class="item-unit-price" data-item-key="<?= h($key) ?>"><?= money($item->unit_price) ?></td>
                     <td>
                       <input type="number" name="qty[<?= h($key) ?>]" value="<?= $item->qty ?>" min="0"
                         max="<?= $maxStock ?>" class="form-control qty-ctrl">

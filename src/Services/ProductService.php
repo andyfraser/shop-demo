@@ -63,7 +63,11 @@ class ProductService implements ProductServiceInterface {
     }
 
     public function findByIds(array $ids): array {
-        return $this->repository->findByIds($ids);
+        $products = $this->repository->findByIds($ids);
+        foreach ($products as $product) {
+            $this->hydrateProduct($product);
+        }
+        return $products;
     }
 
     public function search(\App\Core\QueryCriteria $criteria): array {
@@ -164,8 +168,13 @@ class ProductService implements ProductServiceInterface {
         return $this->repository->searchSuggestions($query, $limit);
     }
 
+    public function syncTiers(int $productId, array $tiers): void {
+        $this->repository->syncTiers($productId, $tiers);
+    }
+
     private function hydrateProduct(Product $product): void {
         $product->variants = $this->variantService->getVariants($product->id);
         $product->variant_attribute_ids = $this->attributeService->getVariantAttributes($product->id);
+        $product->tiers = $this->repository->getTiers($product->id);
     }
 }
