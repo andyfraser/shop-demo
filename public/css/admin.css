@@ -98,9 +98,10 @@ button, input, select, textarea { font: inherit; }
 .btn {
     display: inline-flex; align-items: center; gap: .4rem;
     padding: .55rem 1.1rem;
-    border: none; border-radius: var(--radius);
+    border: 1.5px solid transparent; border-radius: var(--radius);
     cursor: pointer; font-size: .825rem; font-weight: 500;
     transition: background var(--trans); text-decoration: none;
+    line-height: 1.2;
 }
 .btn:active        { transform: scale(.98); }
 .btn-primary       { background: var(--accent); color: var(--white); }
