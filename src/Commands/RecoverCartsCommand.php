@@ -22,7 +22,7 @@ class RecoverCartsCommand implements CommandInterface {
     }
 
     public function getSchedule(): ?string {
-        return 'daily';
+        return 'hourly';
     }
 
     public function execute(): int {
