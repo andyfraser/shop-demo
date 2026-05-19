@@ -1,26 +1,36 @@
 <?php
 
 use App\Core\Events\EventDispatcherInterface;
+use App\Core\Events\EventDispatcher;
 use App\Events\OrderPlaced;
+use App\Events\UserLoggedIn;
+use App\Events\UserLoginFailed;
 use App\Listeners\OrderEmailListener;
+use App\Listeners\AuthListener;
 
 return function($c, array $config) {
-    // This registrar doesn't return mappings, but configures the dispatcher
-    // However, the current services structure expects an array of mappings.
-    // We can use the factory for EventDispatcherInterface to do this, 
-    // or return an empty array and just use the side effect.
-    
-    // Better: We can extend the EventDispatcherInterface factory in core.php
-    // or register the listeners here if we can access the dispatcher instance.
-    
-    // Since the container is passed to these closures, we can't easily "decorate" 
-    // without returning the service.
-    
     return [
-        // We can use a trick: register a "dummy" service that depends on the dispatcher
-        // and performs the registration. But that's ugly.
-        
-        // Let's just do it in the EventDispatcherInterface factory in core.php for now,
-        // or refine how services are registered.
+        // Central Event Dispatcher
+        EventDispatcherInterface::class => function($c) {
+            $dispatcher = new EventDispatcher();
+            
+            // Register Listeners
+            $dispatcher->addListener(
+                OrderPlaced::class, 
+                $c->get(OrderEmailListener::class)
+            );
+
+            $dispatcher->addListener(
+                UserLoggedIn::class,
+                $c->get(AuthListener::class)
+            );
+
+            $dispatcher->addListener(
+                UserLoginFailed::class,
+                $c->get(AuthListener::class)
+            );
+            
+            return $dispatcher;
+        },
     ];
 };

@@ -13,6 +13,7 @@ return function(array $config) {
     
     $registrationFiles = [
         __DIR__ . '/services/core.php',
+        __DIR__ . '/services/events.php',
         __DIR__ . '/services/repositories.php',
         __DIR__ . '/services/services.php',
         __DIR__ . '/services/commands.php',
