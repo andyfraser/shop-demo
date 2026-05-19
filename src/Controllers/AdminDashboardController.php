@@ -9,6 +9,7 @@ use App\Services\SettingsServiceInterface;
 use App\Services\ProductServiceInterface;
 use App\Services\OrderServiceInterface;
 use App\Services\UserServiceInterface;
+use App\Services\AnalyticsServiceInterface;
 
 class AdminDashboardController {
     public function __construct(
@@ -16,7 +17,8 @@ class AdminDashboardController {
         private SettingsServiceInterface $settingsService,
         private ProductServiceInterface $productService,
         private OrderServiceInterface $orderService,
-        private UserServiceInterface $userService
+        private UserServiceInterface $userService,
+        private AnalyticsServiceInterface $analyticsService
     ) {}
 
     public function index(Request $request): Response {
@@ -33,6 +35,10 @@ class AdminDashboardController {
         $low_stock = $this->productService->getLowStock($threshold, 10, 'stock');
         $low_stock_count = $this->productService->countLowStock($threshold);
 
+        // Fetch Analytics Data
+        $salesData = $this->analyticsService->getDailySales(30);
+        $categoryData = $this->analyticsService->getTopCategories(5);
+
         return new HtmlResponse($this->renderer->adminRender('dashboard', [
             'page_title'    => 'Dashboard',
             'active'        => 'dashboard',
@@ -40,6 +46,8 @@ class AdminDashboardController {
             'recent_orders' => $recent_orders,
             'low_stock'     => $low_stock,
             'low_stock_count' => $low_stock_count,
+            'sales_chart'     => $this->analyticsService->renderSalesChart($salesData),
+            'category_chart'  => $this->analyticsService->renderCategoryChart($categoryData),
         ]));
     }
 }

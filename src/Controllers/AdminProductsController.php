@@ -97,6 +97,7 @@ class AdminProductsController {
             ],
             'product_id' => 0,
             'categories' => $this->categoryService->getFlat(),
+            'all_products' => $this->productService->getAllActive(new \App\Core\QueryCriteria(['sort' => 'name'])),
             'all_attributes' => $allAttributes,
             'product_attribute_ids' => [],
             'errors'     => [],
@@ -121,6 +122,7 @@ class AdminProductsController {
             'product_id' => $product_id,
             'return_to'  => $return_to,
             'categories' => $this->categoryService->getFlat(),
+            'all_products' => $this->productService->getAllActive(new \App\Core\QueryCriteria(['sort' => 'name'])),
             'all_attributes' => $allAttributes,
             'product_attribute_ids' => $this->attributeService->getProductAttributeValues($product_id),
             'errors'     => [],
@@ -192,6 +194,10 @@ class AdminProductsController {
             $tiers = isset($post['tiers']) && is_array($post['tiers']) ? $post['tiers'] : [];
             $this->productService->syncTiers($final_id, $tiers);
 
+            // Handle bundle items
+            $bundleItems = isset($post['bundle_items']) && is_array($post['bundle_items']) ? $post['bundle_items'] : [];
+            $this->productService->syncBundleItems($final_id, $bundleItems);
+
             // Handle variants
             if (isset($post['variants']) && is_array($post['variants'])) {
                 foreach ($post['variants'] as $v) {
@@ -253,6 +259,7 @@ class AdminProductsController {
             'product_id' => $product_id,
             'return_to'  => $post['return_to'] ?? null,
             'categories' => $this->categoryService->getFlat(),
+            'all_products' => $this->productService->getAllActive(new \App\Core\QueryCriteria(['sort' => 'name'])),
             'all_attributes' => $allAttributes ?? [], 
             'product_attribute_ids' => $post['attribute_value_ids'] ?? [],
             'errors'     => $errors,

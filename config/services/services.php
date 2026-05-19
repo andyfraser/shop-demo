@@ -78,8 +78,18 @@ use App\Services\PromotionEvaluator;
 use App\Services\CurrencyServiceInterface;
 use App\Services\CurrencyService;
 
+use App\Services\AnalyticsServiceInterface;
+use App\Services\AnalyticsService;
+
 return function($c, array $config) {
     return [
+        AnalyticsServiceInterface::class => function($c) {
+            return new AnalyticsService(
+                $c->get(\PDO::class),
+                $c->get(LoggerInterface::class),
+                $c->get(PricingServiceInterface::class)
+            );
+        },
         SettingsServiceInterface::class => function($c) {
             return new SettingsService(
                 $c->get(SettingsRepositoryInterface::class), 

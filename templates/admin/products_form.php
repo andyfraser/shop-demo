@@ -136,11 +136,61 @@
             Force Variant
           </label>
           <label class="toggle-label">
-            <input type="checkbox" name="is_bundle" value="1"
+            <input type="checkbox" name="is_bundle" value="1" id="is-bundle-toggle"
                    <?= ($get('is_bundle') ?? 0) ? 'checked' : '' ?>>
             <span class="toggle-track"></span>
             Product Bundle
           </label>
+        </div>
+
+        <div class="span-2 mt-2" id="bundle-items-section" style="<?= ($get('is_bundle') ?? 0) ? '' : 'display:none;' ?>">
+          <h3 class="section-title border-bottom">
+            Bundle Components
+          </h3>
+          <p class="text-sm text-muted mb-2">
+            Select the products that make up this bundle. Inventory will be subtracted from these items when the bundle is sold.
+          </p>
+          <div id="bundle-items-container">
+            <table class="w-100" id="bundle-items-table" style="max-width: 600px; border-collapse: collapse;">
+                <thead>
+                    <tr class="text-xs text-muted font-bold" style="text-align: left; border-bottom: 1px solid var(--line);">
+                        <th style="padding: 0.5rem 0;">Product</th>
+                        <th style="padding: 0.5rem 0; width: 100px;">Quantity</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                      $bundle_items = is_object($product) ? ($product->bundle_items ?? []) : ($post['bundle_items'] ?? []);
+                      foreach ($bundle_items as $bIndex => $bi): 
+                    ?>
+                        <tr>
+                            <td style="padding: 0.5rem 0; padding-right: 1rem;">
+                                <select name="bundle_items[<?= $bIndex ?>][product_id]" class="form-control" required>
+                                    <option value="">— Select Product —</option>
+                                    <?php foreach ($all_products as $ap): ?>
+                                        <?php if ($ap->id != $product_id): ?>
+                                            <option value="<?= $ap->id ?>" <?= $bi['product_id'] == $ap->id ? 'selected' : '' ?>>
+                                                <?= h($ap->name) ?> (SKU: <?= h($ap->sku) ?>)
+                                            </option>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td style="padding: 0.5rem 0; padding-right: 1rem;">
+                                <input type="number" name="bundle_items[<?= $bIndex ?>][qty]" class="form-control" value="<?= h($bi['qty'] ?? 1) ?>" min="1" required>
+                            </td>
+                            <td style="padding: 0.5rem 0;">
+                                <button type="button" class="btn btn-outline btn-sm" onclick="this.closest('tr').remove()" style="color: var(--accent); border-color: transparent;">×</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-outline btn-sm mt-1" id="add-bundle-item">
+                + Add Component
+            </button>
+          </div>
         </div>
 
         <div class="span-2 mt-2">
@@ -372,6 +422,49 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     updateAttrCounts();
+
+    // ── Bundle Items Logic ────────────────────────────────────────────────
+    const isBundleToggle = document.getElementById('is-bundle-toggle');
+    const bundleSection = document.getElementById('bundle-items-section');
+    const addBundleItemBtn = document.getElementById('add-bundle-item');
+    const bundleItemsTbody = document.querySelector('#bundle-items-table tbody');
+    let bundleItemIndex = <?= count($bundle_items ?? []) ?>;
+
+    if (isBundleToggle) {
+        isBundleToggle.addEventListener('change', function() {
+            bundleSection.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+
+    if (addBundleItemBtn) {
+        const productOptions = `
+            <option value="">— Select Product —</option>
+            <?php foreach ($all_products as $ap): ?>
+                <?php if ($ap->id != $product_id): ?>
+                    <option value="<?= $ap->id ?>"><?= h($ap->name) ?> (SKU: <?= h($ap->sku) ?>)</option>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        `;
+
+        addBundleItemBtn.addEventListener('click', function() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 0.5rem 0; padding-right: 1rem;">
+                    <select name="bundle_items[${bundleItemIndex}][product_id]" class="form-control" required>
+                        ${productOptions}
+                    </select>
+                </td>
+                <td style="padding: 0.5rem 0; padding-right: 1rem;">
+                    <input type="number" name="bundle_items[${bundleItemIndex}][qty]" class="form-control" value="1" min="1" required>
+                </td>
+                <td style="padding: 0.5rem 0;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="this.closest('tr').remove()" style="color: var(--accent); border-color: transparent;">×</button>
+                </td>
+            `;
+            bundleItemsTbody.appendChild(tr);
+            bundleItemIndex++;
+        });
+    }
 
     // ── Tiers Table Logic ──────────────────────────────────────────────────
     const addTierBtn = document.getElementById('add-tier');

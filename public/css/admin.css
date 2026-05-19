@@ -490,3 +490,47 @@ tr.drag-over { border-top: 2px solid var(--accent); }
 .ms-auto { margin-left: auto; }
 .p-0 { padding: 0 !important; }
 .overflow-hidden { overflow: hidden; }
+
+/* ── Analytics Charts ────────────────────────────────────────────────────── */
+.analytics-chart {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+.analytics-chart text {
+    font-family: var(--font-body);
+}
+.line-chart .chart-point {
+    cursor: pointer;
+}
+.line-chart .tooltip {
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+.line-chart .chart-point:hover .tooltip {
+    opacity: 1;
+}
+.line-chart .chart-point:hover circle {
+    r: 6;
+    fill: var(--accent);
+}
+.bar-chart rect {
+    transition: fill 0.2s;
+}
+.bar-chart rect:hover {
+    fill: var(--accent);
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+}

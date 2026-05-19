@@ -34,6 +34,21 @@
     </div>
   </div>
 
+  <div class="charts-section grid-2 mb-3">
+    <div class="card">
+        <h3 class="section-title text-sm border-bottom">Sales (Last 30 Days)</h3>
+        <div class="chart-container" style="padding: 1.5rem 0;">
+            <?= $sales_chart ?>
+        </div>
+    </div>
+    <div class="card">
+        <h3 class="section-title text-sm border-bottom">Top Categories</h3>
+        <div class="chart-container" style="padding: 1.5rem 0;">
+            <?= $category_chart ?>
+        </div>
+    </div>
+  </div>
+
   <div class="grid-sidebar">
     <div>
       <div class="page-actions mb-2">
