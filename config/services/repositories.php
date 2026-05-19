@@ -37,6 +37,8 @@ use App\Repositories\ImageRepositoryInterface;
 use App\Repositories\ImageRepository;
 use App\Repositories\MigrationRepositoryInterface;
 use App\Repositories\MigrationRepository;
+use App\Repositories\CurrencyRepositoryInterface;
+use App\Repositories\CurrencyRepository;
 
 return function($c, array $config) {
     return [
@@ -96,6 +98,9 @@ return function($c, array $config) {
         },
         \App\Repositories\AuditLogRepositoryInterface::class => function($c) {
             return new \App\Repositories\AuditLogRepository($c->get(\PDO::class));
+        },
+        CurrencyRepositoryInterface::class => function($c) {
+            return new CurrencyRepository($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
     ];
 };

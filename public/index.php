@@ -104,6 +104,10 @@ use App\Core\Router;
 
 try {
     $container = new Container();
+    
+    // Instantiate and register Request early so it can be injected
+    $request = \App\Core\Request::createFromGlobals();
+    $container->set(\App\Core\Request::class, fn() => $request);
 
     // Register services
     $servicesFactory = require __DIR__ . '/../config/services.php';
@@ -142,7 +146,6 @@ try {
 
     // Maintenance Mode Check
     if ($settings->get('maintenance_mode') === '1') {
-        $request = \App\Core\Request::createFromGlobals();
         $path = parse_url($request->getUri(), PHP_URL_PATH);
         
         // Normalize path by stripping BASE_URL (similar to Router logic)
@@ -198,8 +201,6 @@ foreach ($routes as $route) {
 }
 
 // Handle request
-$request = \App\Core\Request::createFromGlobals();
-
 // Serve static files via built-in server correctly
 if (php_sapi_name() === 'cli-server') {
     $path = parse_url($request->getUri(), PHP_URL_PATH);

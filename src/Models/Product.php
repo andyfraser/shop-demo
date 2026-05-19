@@ -16,12 +16,18 @@ class Product extends Model {
     public int|bool $active;
     public int|bool $featured;
     public int|bool $force_variant;
+    public int|bool $is_bundle;
     public string $created_at;
 
     /**
      * @var \App\Models\ProductVariant[]
      */
     public array $variants = [];
+
+    /**
+     * @var array List of bundle components [{product, qty}]
+     */
+    public array $bundle_items = [];
 
     /**
      * @var int[] IDs of attributes that define variants for this product.
@@ -91,6 +97,6 @@ class Product extends Model {
      * Format price for display.
      */
     public function formattedPrice(): string {
-        return '£' . number_format($this->price, 2);
+        return money($this->price);
     }
 }

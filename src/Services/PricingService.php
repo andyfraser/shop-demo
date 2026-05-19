@@ -9,7 +9,8 @@ class PricingService implements PricingServiceInterface {
     public function __construct(
         private VatServiceInterface $vatService,
         private PromotionEvaluatorInterface $promotionEvaluator,
-        private SettingsServiceInterface $settings
+        private SettingsServiceInterface $settings,
+        private CurrencyServiceInterface $currencyService
     ) {}
 
     public function calculateItemUnitPrice(CartItem $item): float {
@@ -79,8 +80,9 @@ class PricingService implements PricingServiceInterface {
     }
 
     public function format(float $amount): string {
-        $currency = $this->settings->get('currency_symbol', '$');
-        return $currency . number_format($amount, 2);
+        $currency = $this->currencyService->getCurrentCurrency();
+        $converted = $currency->convertFromBase($amount);
+        return $currency->symbol . number_format($converted, 2);
     }
 
     private function round(float $amount): float {

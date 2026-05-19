@@ -61,6 +61,9 @@
     <a href="/admin/settings"   class="<?= $active === 'settings'   ? 'active' : '' ?>">
       <span class="ico">⚙️</span> Settings
     </a>
+    <a href="/admin/currencies" class="<?= $active === 'currencies' ? 'active' : '' ?>">
+      <span class="ico">💰</span> Currencies
+    </a>
     <a href="/admin/backup"     class="<?= $active === 'backup'     ? 'active' : '' ?>">
       <span class="ico">💾</span> Database
     </a>

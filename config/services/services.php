@@ -75,6 +75,8 @@ use App\Services\PromotionServiceInterface;
 use App\Services\PromotionService;
 use App\Services\PromotionEvaluatorInterface;
 use App\Services\PromotionEvaluator;
+use App\Services\CurrencyServiceInterface;
+use App\Services\CurrencyService;
 
 return function($c, array $config) {
     return [
@@ -92,7 +94,8 @@ return function($c, array $config) {
             return new PricingService(
                 $c->get(VatServiceInterface::class),
                 $c->get(PromotionEvaluatorInterface::class),
-                $c->get(SettingsServiceInterface::class)
+                $c->get(SettingsServiceInterface::class),
+                $c->get(CurrencyServiceInterface::class)
             );
         },
         AuthServiceInterface::class => function($c) {
@@ -229,6 +232,13 @@ return function($c, array $config) {
             return new \App\Services\AuditLogService(
                 $c->get(\App\Repositories\AuditLogRepositoryInterface::class),
                 $c->get(AuthServiceInterface::class)
+            );
+        },
+        CurrencyServiceInterface::class => function($c) {
+            return new CurrencyService(
+                $c->get(\App\Repositories\CurrencyRepositoryInterface::class),
+                $c->get(\App\Core\Request::class),
+                $c->get(\App\Core\Cache\CacheInterface::class)
             );
         },
     ];

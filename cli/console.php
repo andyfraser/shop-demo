@@ -26,6 +26,10 @@ if (!defined('DB_CONFIG')) {
 
 $container = new Container();
 
+// Register Request so services depending on it can be resolved in CLI
+$request = \App\Core\Request::createFromGlobals();
+$container->set(\App\Core\Request::class, fn() => $request);
+
 // Register services from config/services.php
 $servicesFactory = require __DIR__ . '/../config/services.php';
 $services = $servicesFactory($config);

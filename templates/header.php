@@ -66,6 +66,21 @@ $mobile_nav_expanded = (
         </a>
       </nav>
 
+      <?php if (!empty($currencies)): ?>
+        <div class="currency-switcher">
+          <form action="<?= BASE_URL ?>/currency/switch" method="POST" id="currency-form">
+            <?= csrf_field() ?>
+            <select name="currency_code" onchange="this.form.submit()" aria-label="Switch Currency">
+              <?php foreach ($currencies as $currency): ?>
+                <option value="<?= h($currency->code) ?>" <?= $current_currency->code === $currency->code ? 'selected' : '' ?>>
+                  <?= h($currency->code) ?> (<?= h($currency->symbol) ?>)
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </form>
+        </div>
+      <?php endif; ?>
+
       <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-label="Toggle navigation" data-tooltip="Menu">
         <span></span><span></span><span></span>
       </button>

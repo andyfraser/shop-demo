@@ -2,6 +2,8 @@
 
 namespace App\Core\Cache;
 
+use App\Core\DebugCollector;
+
 class FileCache implements CacheInterface {
     private string $cachePath;
 
@@ -15,6 +17,7 @@ class FileCache implements CacheInterface {
     public function get(string $key, mixed $default = null): mixed {
         $file = $this->getFileName($key);
         if (!file_exists($file)) {
+            DebugCollector::getInstance()->logCacheMiss();
             return $default;
         }
 
@@ -23,9 +26,11 @@ class FileCache implements CacheInterface {
 
         if ($data['expires'] !== 0 && time() > $data['expires']) {
             $this->delete($key);
+            DebugCollector::getInstance()->logCacheMiss();
             return $default;
         }
 
+        DebugCollector::getInstance()->logCacheHit();
         return $data['value'];
     }
 

@@ -44,6 +44,6 @@ class ProductVariant extends Model {
      * Format price for display.
      */
     public function formattedPrice(float $productPrice): string {
-        return '£' . number_format($this->getEffectivePrice($productPrice), 2);
+        return money($this->getEffectivePrice($productPrice));
     }
 }

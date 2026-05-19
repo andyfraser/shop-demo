@@ -88,7 +88,15 @@ class OrderRepository implements OrderRepositoryInterface {
             if ($variant) {
                 $variantStockStmt->execute([$qty, $variant->id]);
             } else {
-                $stockStmt->execute([$qty, $product->id]);
+                if ($product->is_bundle) {
+                    $bundleItems = $this->db->prepare("SELECT product_id, qty FROM product_bundle_items WHERE bundle_id = ?");
+                    $bundleItems->execute([$product->id]);
+                    foreach ($bundleItems->fetchAll(\PDO::FETCH_ASSOC) as $bi) {
+                        $stockStmt->execute([$qty * $bi['qty'], $bi['product_id']]);
+                    }
+                } else {
+                    $stockStmt->execute([$qty, $product->id]);
+                }
             }
         }
 
@@ -298,12 +306,22 @@ class OrderRepository implements OrderRepositoryInterface {
     public function replenishStock(array $items): void {
         $stockStmt = $this->db->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
         $variantStockStmt = $this->db->prepare("UPDATE product_variants SET stock = stock + ? WHERE id = ?");
+        $isBundleStmt = $this->db->prepare("SELECT is_bundle FROM products WHERE id = ?");
 
         foreach ($items as $item) {
             if ($item->variant_id) {
                 $variantStockStmt->execute([$item->quantity, $item->variant_id]);
             } else {
-                $stockStmt->execute([$item->quantity, $item->product_id]);
+                $isBundleStmt->execute([$item->product_id]);
+                if ((int)$isBundleStmt->fetchColumn() === 1) {
+                    $bundleItems = $this->db->prepare("SELECT product_id, qty FROM product_bundle_items WHERE bundle_id = ?");
+                    $bundleItems->execute([$item->product_id]);
+                    foreach ($bundleItems->fetchAll(\PDO::FETCH_ASSOC) as $bi) {
+                        $stockStmt->execute([$item->quantity * $bi['qty'], $bi['product_id']]);
+                    }
+                } else {
+                    $stockStmt->execute([$item->quantity, $item->product_id]);
+                }
             }
         }
     }

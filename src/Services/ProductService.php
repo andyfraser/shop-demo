@@ -172,9 +172,17 @@ class ProductService implements ProductServiceInterface {
         $this->repository->syncTiers($productId, $tiers);
     }
 
+    public function syncBundleItems(int $bundleId, array $items): void {
+        $this->repository->syncBundleItems($bundleId, $items);
+    }
+
     private function hydrateProduct(Product $product): void {
         $product->variants = $this->variantService->getVariants($product->id);
         $product->variant_attribute_ids = $this->attributeService->getVariantAttributes($product->id);
         $product->tiers = $this->repository->getTiers($product->id);
+        
+        if ($product->is_bundle) {
+            $product->bundle_items = $this->repository->getBundleItems($product->id);
+        }
     }
 }

@@ -23,55 +23,7 @@
   <div class="storefront-layout-container">
     <form id="filters-form" method="get" action="/category/<?= h($category->slug) ?>">
       <div class="storefront-layout">
-        <aside class="filters-sidebar">
-          <div class="filter-group">
-            <h4>Price Range</h4>
-            <div class="price-inputs">
-              <input type="number" name="price_min" placeholder="Min" value="<?= h($active_filters['price_min'] ?? '') ?>" step="0.01">
-              <span>-</span>
-              <input type="number" name="price_max" placeholder="Max" value="<?= h($active_filters['price_max'] ?? '') ?>" step="0.01">
-            </div>
-          </div>
-
-          <?php foreach ($available_filters['attributes'] as $attr): ?>
-            <div class="filter-group">
-              <h4><?= h($attr['name']) ?></h4>
-              <div class="filter-options">
-                <?php 
-                  $total_vals = count($attr['values']);
-                  $initial_vals = array_slice($attr['values'], 0, 4);
-                  $extra_vals = array_slice($attr['values'], 4);
-                ?>
-
-                <?php foreach ($initial_vals as $val): ?>
-                  <label>
-                    <input type="checkbox" name="attr[]" value="<?= $val['id'] ?>" 
-                      <?= in_array($val['id'], $active_filters['attributes']) ? 'checked' : '' ?>>
-                    <?= h($val['name']) ?> <span class="count">(<?= $val['count'] ?>)</span>
-                  </label>
-                <?php endforeach; ?>
-
-                <?php if ($extra_vals): ?>
-                  <div class="filter-extra">
-                    <?php foreach ($extra_vals as $val): ?>
-                      <label>
-                        <input type="checkbox" name="attr[]" value="<?= $val['id'] ?>" 
-                          <?= in_array($val['id'], $active_filters['attributes']) ? 'checked' : '' ?>>
-                        <?= h($val['name']) ?> <span class="count">(<?= $val['count'] ?>)</span>
-                      </label>
-                    <?php endforeach; ?>
-                  </div>
-                  <button type="button" class="btn-toggle-filters">Show more</button>
-                <?php endif; ?>
-              </div>
-            </div>
-          <?php endforeach; ?>
-          
-          <noscript>
-              <button type="submit" class="btn btn-primary btn-block btn-sm">Apply Filters</button>
-          </noscript>
-          <a href="/category/<?= h($category->slug) ?>" class="btn btn-outline btn-block btn-sm" style="margin-top:.5rem;text-align:center;display:block;">Clear All</a>
-        </aside>
+        <?php require __DIR__ . '/partials/filters.php'; ?>
 
         <div class="products-column" id="products-list">
           <?php require __DIR__ . '/partials/product_list.php'; ?>

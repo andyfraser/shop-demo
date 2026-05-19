@@ -61,11 +61,11 @@ class ProductRepository implements ProductRepositoryInterface {
         $params = is_array($data) ? [
             $data['name'], $slug, $data['sku'] ?? null, $data['description'] ?? null, (float)$data['price'], (float)$data['vat_rate'],
             (int)$data['stock'], $data['category_id'] ?? null, $data['image'] ?? null,
-            (int)($data['active'] ?? 1), (int)($data['featured'] ?? 0), (int)($data['force_variant'] ?? 0)
+            (int)($data['active'] ?? 1), (int)($data['featured'] ?? 0), (int)($data['force_variant'] ?? 0), (int)($data['is_bundle'] ?? 0)
         ] : [
             $data->name, $slug, $data->sku, $data->description, $data->price, $data->vat_rate,
             $data->stock, $data->category_id, $data->image,
-            (int)$data->active, (int)$data->featured, (int)$data->force_variant
+            (int)$data->active, (int)$data->featured, (int)$data->force_variant, (int)$data->is_bundle
         ];
 
         if ($id) {
@@ -81,13 +81,13 @@ class ProductRepository implements ProductRepositoryInterface {
             if ($exists) {
                 $this->db->prepare(
                     "UPDATE products
-                     SET name=?, slug=?, sku=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?, force_variant=?
+                     SET name=?, slug=?, sku=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?, force_variant=?, is_bundle=?
                      WHERE id=?"
                 )->execute([...$params, $id]);
             } else {
                 $this->db->prepare(
-                    "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant, id)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant, is_bundle, id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 )->execute([...$params, $id]);
             }
             return $id;
@@ -98,8 +98,8 @@ class ProductRepository implements ProductRepositoryInterface {
             $params[1] = $slug;
 
             $this->db->prepare(
-                "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant, is_bundle)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             )->execute($params);
             return (int)$this->db->lastInsertId();
         }
@@ -494,6 +494,30 @@ class ProductRepository implements ProductRepositoryInterface {
         foreach ($tiers as $tier) {
             if (empty($tier['min_qty']) || empty($tier['discount'])) continue;
             $stmt->execute([$productId, (int)$tier['min_qty'], (float)$tier['discount']]);
+        }
+    }
+
+    public function getBundleItems(int $bundleId): array {
+        $stmt = $this->db->prepare(
+            "SELECT p.*, pbi.qty as bundle_qty
+             FROM product_bundle_items pbi
+             JOIN products p ON pbi.product_id = p.id
+             WHERE pbi.bundle_id = ?
+             ORDER BY p.name ASC"
+        );
+        $stmt->execute([$bundleId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function syncBundleItems(int $bundleId, array $items): void {
+        $this->db->prepare("DELETE FROM product_bundle_items WHERE bundle_id = ?")->execute([$bundleId]);
+        if (empty($items)) return;
+
+        $sql = "INSERT INTO product_bundle_items (bundle_id, product_id, qty) VALUES (?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        foreach ($items as $item) {
+            if (empty($item['product_id']) || empty($item['qty'])) continue;
+            $stmt->execute([$bundleId, (int)$item['product_id'], (int)$item['qty']]);
         }
     }
 

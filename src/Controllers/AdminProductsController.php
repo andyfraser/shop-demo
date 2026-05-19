@@ -141,6 +141,7 @@ class AdminProductsController {
             'active'      => isset($post['active']) ? 1 : 0,
             'featured'    => isset($post['featured']) ? 1 : 0,
             'force_variant' => isset($post['force_variant']) ? 1 : 0,
+            'is_bundle'   => isset($post['is_bundle']) ? 1 : 0,
         ];
         $product_id = (int)($post['id'] ?? 0);
 

@@ -5,13 +5,15 @@ use App\Services\CartServiceInterface;
 use App\Services\AuthServiceInterface;
 use App\Services\CategoryServiceInterface;
 use App\Services\ImageServiceInterface;
+use App\Services\CurrencyServiceInterface;
 
 class ViewComposer {
     public function __construct(
         private CartServiceInterface $cart,
         private AuthServiceInterface $auth,
         private CategoryServiceInterface $categoryService,
-        private ImageServiceInterface $imageService
+        private ImageServiceInterface $imageService,
+        private CurrencyServiceInterface $currencyService
     ) {}
 
     /**
@@ -23,6 +25,8 @@ class ViewComposer {
             'current_user' => $this->auth->currentUser(),
             'nav_tree' => $this->categoryService->getTree(),
             'imageService' => $this->imageService,
+            'currencies' => $this->currencyService->getAllActive(),
+            'current_currency' => $this->currencyService->getCurrentCurrency(),
         ];
     }
 

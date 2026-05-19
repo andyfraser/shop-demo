@@ -6,6 +6,8 @@ class DebugCollector {
     private float $startTime;
     private int $queryCount = 0;
     private array $queries = [];
+    private int $cacheHits = 0;
+    private int $cacheMisses = 0;
     private static ?DebugCollector $instance = null;
 
     public function __construct() {
@@ -27,6 +29,22 @@ class DebugCollector {
             'params' => $params,
             'duration' => $duration
         ];
+    }
+
+    public function logCacheHit(): void {
+        $this->cacheHits++;
+    }
+
+    public function logCacheMiss(): void {
+        $this->cacheMisses++;
+    }
+
+    public function getCacheHits(): int {
+        return $this->cacheHits;
+    }
+
+    public function getCacheMisses(): int {
+        return $this->cacheMisses;
     }
 
     public function getQueryCount(): int {

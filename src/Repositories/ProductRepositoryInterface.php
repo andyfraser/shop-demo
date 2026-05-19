@@ -32,4 +32,6 @@ interface ProductRepositoryInterface {
     public function searchSuggestions(string $query, int $limit = 5): array;
     public function getTiers(int $productId): array;
     public function syncTiers(int $productId, array $tiers): void;
+    public function getBundleItems(int $bundleId): array;
+    public function syncBundleItems(int $bundleId, array $items): void;
 }

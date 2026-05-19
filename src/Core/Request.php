@@ -48,6 +48,10 @@ class Request {
         return $this->getServer('REQUEST_URI', '/');
     }
 
+    public function getPath(): string {
+        return parse_url($this->getUri(), PHP_URL_PATH) ?: '/';
+    }
+
     public function isAjax(): bool {
         return (isset($this->server['HTTP_X_REQUESTED_WITH']) && strtolower($this->server['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($this->query['ajax']);
     }

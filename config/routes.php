@@ -15,8 +15,10 @@ use App\Controllers\AdminSettingsController;
 use App\Controllers\AdminAttributesController;
 use App\Controllers\AdminReturnsController;
 use App\Controllers\AdminReviewsController;
+use App\Controllers\AdminCurrencyController;
 use App\Controllers\AccountController;
 use App\Controllers\WishlistController;
+use App\Controllers\CurrencyController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
 use App\Middleware\CsrfMiddleware;
@@ -42,6 +44,7 @@ return [
     ['method' => 'GET', 'path' => '/search/suggestions', 'handler' => [StorefrontController::class, 'suggestions']],
     ['method' => 'GET', 'path' => '/category/:slug', 'handler' => [StorefrontController::class, 'category']],
     ['method' => 'GET', 'path' => '/promotion/:code', 'handler' => [StorefrontController::class, 'promotion']],
+    ['method' => 'POST', 'path' => '/currency/switch', 'handler' => [CurrencyController::class, 'switch']],
     ['method' => 'GET', 'path' => '/product/:slug', 'handler' => [StorefrontController::class, 'product']],
     ['method' => 'POST', 'path' => '/product/:slug', 'handler' => [CartController::class, 'add'], 'middlewares' => $csrfMiddleware],
     ['method' => 'POST', 'path' => '/product/:slug/review', 'handler' => [StorefrontController::class, 'submitReview'], 'middlewares' => $authPostMiddleware],
@@ -153,6 +156,11 @@ return [
 
     ['method' => 'GET', 'path' => '/admin/settings', 'handler' => [AdminSettingsController::class, 'show'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/settings', 'handler' => [AdminSettingsController::class, 'save'], 'middlewares' => $adminPostMiddleware],
+
+    ['method' => 'GET', 'path' => '/admin/currencies', 'handler' => [AdminCurrencyController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/currencies/new', 'handler' => [AdminCurrencyController::class, 'create'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/currencies/edit', 'handler' => [AdminCurrencyController::class, 'edit'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/currencies/save', 'handler' => [AdminCurrencyController::class, 'save'], 'middlewares' => $adminPostMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/backup', 'handler' => [\App\Controllers\AdminBackupController::class, 'index'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/backup/download', 'handler' => [\App\Controllers\AdminBackupController::class, 'download'], 'middlewares' => $adminPostMiddleware],

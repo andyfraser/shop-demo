@@ -212,14 +212,26 @@ select.form-control   { cursor: pointer; }
 
 /* ── Toggle Switch ────────────────────────────────────────────────────────── */
 .toggle-label {
-    display: flex; align-items: center; gap: .65rem;
-    cursor: pointer; font-size: .85rem; font-weight: 500; color: var(--ink-2);
+    display: flex !important;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--ink-2);
     user-select: none;
+    margin: 0;
 }
-.toggle-label input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.toggle-label input[type="checkbox"] {
+    display: none;
+}
 .toggle-track {
-    position: relative; width: 36px; height: 20px; flex-shrink: 0;
-    background: var(--line); border-radius: 999px;
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+    background: var(--line);
+    border-radius: 20px;
     transition: background var(--trans);
     border: 1.5px solid rgba(26,20,16,.15);
 }

@@ -23,8 +23,8 @@ function h(string $s): string {
 }
 
 function money(float $v): string {
-    $s = settings();
-    return $s->currency_symbol . number_format($v, 2);
+    $pricing = Container::getInstance()->get(\App\Services\PricingServiceInterface::class);
+    return $pricing->format($v);
 }
 
 function setting(string $key): mixed {

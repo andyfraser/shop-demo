@@ -135,6 +135,12 @@
             <span class="toggle-track"></span>
             Force Variant
           </label>
+          <label class="toggle-label">
+            <input type="checkbox" name="is_bundle" value="1"
+                   <?= ($get('is_bundle') ?? 0) ? 'checked' : '' ?>>
+            <span class="toggle-track"></span>
+            Product Bundle
+          </label>
         </div>
 
         <div class="span-2 mt-2">

@@ -31,4 +31,5 @@ interface ProductServiceInterface {
     public function attachActivePromotions(array $products, ?\App\Models\User $user = null): void;
     public function searchSuggestions(string $query, int $limit = 5): array;
     public function syncTiers(int $productId, array $tiers): void;
+    public function syncBundleItems(int $bundleId, array $items): void;
 }
