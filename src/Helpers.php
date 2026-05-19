@@ -4,6 +4,20 @@ use App\Services\AuthService;
 use App\Services\SettingsService;
 use App\Core\Container;
 
+/**
+ * Format a UTC timestamp into the locally configured timezone for display.
+ */
+function format_local_time(string $utcTime, string $format = 'Y-m-d H:i:s'): string {
+    try {
+        $tzName = setting('timezone') ?: 'Europe/London';
+        $date = new DateTime($utcTime, new DateTimeZone('UTC'));
+        $date->setTimezone(new DateTimeZone($tzName));
+        return $date->format($format);
+    } catch (\Exception $e) {
+        return $utcTime;
+    }
+}
+
 function h(string $s): string {
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 }

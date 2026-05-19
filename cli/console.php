@@ -1,5 +1,8 @@
 <?php
 
+// Force UTC for all internal operations
+date_default_timezone_set('UTC');
+
 require_once __DIR__ . '/../src/Core/Autoloader.php';
 \App\Core\Autoloader::register();
 require_once __DIR__ . '/../src/Helpers.php';

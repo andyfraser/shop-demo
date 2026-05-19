@@ -16,8 +16,8 @@ class SecurityRepository implements SecurityRepositoryInterface {
     }
 
     public function recordRateLimit(string $action, string $ip): void {
-        $this->db->prepare("INSERT INTO rate_limits (action, ip_address) VALUES (?, ?)")
-            ->execute([$action, $ip]);
+        $this->db->prepare("INSERT INTO rate_limits (action, ip_address, created_at) VALUES (?, ?, ?)")
+            ->execute([$action, $ip, date('Y-m-d H:i:s')]);
     }
 
     public function clearRateLimit(string $action, string $ip): void {

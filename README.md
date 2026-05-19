@@ -30,6 +30,7 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - **PSR-3 compliant logging** with file-based output and conditional debug mode.
 - Privacy-compliant cookie consent banner with persistence logic.
 - **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery, log rotation, image cleanup) with a single crontab entry and database-backed state tracking.
+- **Timezone Management:** The application strictly uses **UTC** for all internal operations and database storage. Display timezones are configurable via the Admin panel, with a built-in `format_local_time()` helper for localized rendering.
 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts.

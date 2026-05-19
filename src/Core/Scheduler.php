@@ -134,7 +134,7 @@ class Scheduler {
     }
 
     private function updateLastRun(string $name): void {
-        $stmt = $this->db->prepare("UPDATE scheduled_tasks SET last_run_at = CURRENT_TIMESTAMP WHERE name = ?");
-        $stmt->execute([$name]);
+        $stmt = $this->db->prepare("UPDATE scheduled_tasks SET last_run_at = ? WHERE name = ?");
+        $stmt->execute([date('Y-m-d H:i:s'), $name]);
     }
 }

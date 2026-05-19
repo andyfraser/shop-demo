@@ -70,8 +70,8 @@ class SchedulerTest extends TestCase {
         $command->schedule = 'daily';
         
         // Insert a record that says it ran just now
-        $stmt = $this->db->prepare("INSERT INTO scheduled_tasks (name, last_run_at) VALUES (?, CURRENT_TIMESTAMP)");
-        $stmt->execute([$command->name]);
+        $stmt = $this->db->prepare("INSERT INTO scheduled_tasks (name, last_run_at) VALUES (?, ?)");
+        $stmt->execute([$command->name, date('Y-m-d H:i:s')]);
         
         $settings = new SchedulerMockSettingsService();
         $scheduler = new Scheduler($this->db, $settings, [$command]);

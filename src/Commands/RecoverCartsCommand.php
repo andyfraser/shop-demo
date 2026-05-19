@@ -26,29 +26,19 @@ class RecoverCartsCommand implements CommandInterface {
     }
 
     public function execute(): int {
-        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $threshold = date('Y-m-d H:i:s', strtotime('-24 hours'));
 
-        if ($driver === 'mysql') {
-            $sql = "
-                SELECT c.id, u.email, u.name 
-                FROM carts c
-                JOIN users u ON c.user_id = u.id
-                WHERE c.last_activity < DATE_SUB(NOW(), INTERVAL 24 HOUR)
-                  AND c.recovery_email_sent_at IS NULL
-                  AND EXISTS (SELECT 1 FROM cart_items ci WHERE ci.cart_id = c.id)
-            ";
-        } else {
-            $sql = "
-                SELECT c.id, u.email, u.name 
-                FROM carts c
-                JOIN users u ON c.user_id = u.id
-                WHERE c.last_activity < datetime('now', '-24 hours')
-                  AND c.recovery_email_sent_at IS NULL
-                  AND EXISTS (SELECT 1 FROM cart_items ci WHERE ci.cart_id = c.id)
-            ";
-        }
+        $sql = "
+            SELECT c.id, u.email, u.name 
+            FROM carts c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.last_activity < ?
+                AND c.recovery_email_sent_at IS NULL
+                AND EXISTS (SELECT 1 FROM cart_items ci WHERE ci.cart_id = c.id)
+        ";
 
-        $stmt = $this->db->query($sql);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$threshold]);
         $abandonedCarts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $count = count($abandonedCarts);
@@ -64,8 +54,8 @@ class RecoverCartsCommand implements CommandInterface {
                 $success = $this->emailService->sendAbandonedCartEmail($cart['email'], $cart['name']);
                 
                 if ($success) {
-                    $update = $this->db->prepare("UPDATE carts SET recovery_email_sent_at = CURRENT_TIMESTAMP WHERE id = ?");
-                    $update->execute([$cart['id']]);
+                    $update = $this->db->prepare("UPDATE carts SET recovery_email_sent_at = ? WHERE id = ?");
+                    $update->execute([date('Y-m-d H:i:s'), $cart['id']]);
                     echo "Done.\n";
                     if ($this->logger) {
                         $this->logger->info("RecoverCartsCommand: Recovery email sent to {email}", ['email' => $cart['email']]);

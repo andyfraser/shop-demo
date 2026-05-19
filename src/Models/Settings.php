@@ -18,6 +18,7 @@ class Settings extends Model {
     public string $email_from = 'noreply@shop.local';
     public string $site_url = 'http://localhost';
     public string $base_url = '';
+    public string $timezone = 'Europe/London';
     public string $maintenance_mode = '0';
     public string $scheduler_paused = '0';
 

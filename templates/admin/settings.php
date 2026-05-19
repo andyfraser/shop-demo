@@ -55,6 +55,27 @@
       </div>
 
       <div class="form-group">
+        <label>Timezone</label>
+        <select name="timezone" class="form-control">
+          <?php 
+            $timezones = [
+                'UTC' => 'UTC',
+                'Europe/London' => 'London (GMT/BST)',
+                'Europe/Paris' => 'Paris (CET/CEST)',
+                'America/New_York' => 'New York (EST/EDT)',
+                'America/Los_Angeles' => 'Los Angeles (PST/PDT)',
+                'Asia/Tokyo' => 'Tokyo (JST)',
+                'Australia/Sydney' => 'Sydney (AEST/AEDT)'
+            ];
+            foreach ($timezones as $tz => $label): 
+          ?>
+            <option value="<?= h($tz) ?>" <?= $settings->timezone === $tz ? 'selected' : '' ?>><?= h($label) ?></option>
+          <?php endforeach; ?>
+        </select>
+        <small style="color:var(--ink-2);">The timezone used for displaying dates and times in the storefront and admin panel.</small>
+      </div>
+
+      <div class="form-group">
         <label>Low Stock Threshold</label>
         <input type="number" name="low_stock_threshold" class="form-control"
                value="<?= h($settings->low_stock_threshold) ?>" min="0" required style="max-width:6rem;">
