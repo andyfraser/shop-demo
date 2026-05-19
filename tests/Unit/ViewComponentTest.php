@@ -22,7 +22,7 @@ class ViewComponentTest extends TestCase {
 
         $container->set(SettingsService::class, function() use ($db, $logger) {
             $repo = new SettingsRepository($db, $logger);
-            return new SettingsService($repo, $logger);
+            return new SettingsService($repo, $logger, new \Tests\NullCache());
         });
 
         $container->set(ImageServiceInterface::class, function() {

@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Repositories\AuthRepositoryInterface;
 use Psr\Log\LoggerInterface;
+use App\Core\Events\EventDispatcherInterface;
 
 class AuthService implements AuthServiceInterface {
     private const COOKIE_NAME = 'remember_token';
@@ -12,7 +13,8 @@ class AuthService implements AuthServiceInterface {
     public function __construct(
         private AuthRepositoryInterface $repository,
         private SettingsServiceInterface $settings,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private EventDispatcherInterface $eventDispatcher
     ) {}
 
     public function sessionStart(): void {

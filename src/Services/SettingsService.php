@@ -4,13 +4,15 @@ namespace App\Services;
 use App\Models\Settings;
 use App\Repositories\SettingsRepositoryInterface;
 use Psr\Log\LoggerInterface;
+use App\Core\Cache\CacheInterface;
 
 class SettingsService implements SettingsServiceInterface {
     private ?Settings $settings = null;
 
     public function __construct(
         private SettingsRepositoryInterface $repository,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private CacheInterface $cache
     ) {}
 
     /**
@@ -18,8 +20,18 @@ class SettingsService implements SettingsServiceInterface {
      */
     public function getSettings(): Settings {
         if ($this->settings === null) {
+            $cached = $this->cache->get('app_settings');
+            if ($cached !== null) {
+                $this->settings = new Settings($this->logger);
+                $this->settings->fill($cached);
+                return $this->settings;
+            }
+
+            $all = $this->repository->getAll();
             $this->settings = new Settings($this->logger);
-            $this->settings->fill($this->repository->getAll());
+            $this->settings->fill($all);
+            
+            $this->cache->set('app_settings', $all, 86400); // Cache for 24h
         }
         return $this->settings;
     }
@@ -45,6 +57,7 @@ class SettingsService implements SettingsServiceInterface {
     public function set(string $key, mixed $value): void {
         $this->repository->set($key, $value);
         $this->logger->info("Setting {key} was updated to value {value}", ['key' => $key, 'value' => $value]);
-        $this->settings = null; // Clear cache
+        $this->settings = null; 
+        $this->cache->delete('app_settings');
     }
 }

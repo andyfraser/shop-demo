@@ -21,16 +21,19 @@ class FirstTimePromotionTest extends TestCase {
         $this->db->exec("DELETE FROM orders");
         
         $logger = new NullLogger();
+        $cache = new \Tests\NullCache();
+        $eventDispatcher = new \Tests\NullEventDispatcher();
+        
         $vatService = new \App\Services\VatService();
         $settingsRepo = new \App\Repositories\SettingsRepository($this->db, $logger);
-        $settings = new \App\Services\SettingsService($settingsRepo, $logger);
+        $settings = new \App\Services\SettingsService($settingsRepo, $logger, $cache);
         $emailService = new \App\Services\EmailService($settings, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
-        $this->orderService = new OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        $this->orderService = new OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService, $eventDispatcher);
         
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, $cache);
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);

@@ -16,10 +16,11 @@ class WishlistServiceTest extends TestCase {
     public function setUp() {
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
+        $cache = new \Tests\NullCache();
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, $cache);
         $evaluator = new \App\Services\PromotionEvaluator($categoryService);
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
         $promoService = new \App\Services\PromotionService($promotionRepository, $evaluator, $logger);

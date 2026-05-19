@@ -5,6 +5,9 @@ date_default_timezone_set('UTC');
 
 require_once __DIR__ . '/../src/Core/Autoloader.php';
 \App\Core\Autoloader::register();
+// Initialize DebugCollector for metrics
+\App\Core\DebugCollector::getInstance();
+
 require_once __DIR__ . '/../src/Helpers.php';
 
 // Load configuration
@@ -14,6 +17,7 @@ if (file_exists(__DIR__ . '/../config/config.php')) {
 }
 
 $isDebug = $config['app']['debug'] ?? false;
+define('DEBUG_MODE', $isDebug);
 
 if (!$isDebug) {
     ini_set('display_errors', 0);

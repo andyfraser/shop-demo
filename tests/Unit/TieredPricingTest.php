@@ -17,15 +17,16 @@ class TieredPricingTest extends TestCase {
     public function setUp(): void {
         $db = \App\Core\Database::getConnection();
         $this->logger = new \Tests\NullLogger();
+        $cache = new \Tests\NullCache();
         
         $categoryRepo = new \App\Repositories\CategoryRepository($db, $this->logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $this->logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $this->logger, $cache);
         
         $this->vatService = new \App\Services\VatService();
         $this->promotionEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         
         $settingsRepo = new \App\Repositories\SettingsRepository($db, $this->logger);
-        $this->settings = new \App\Services\SettingsService($settingsRepo, $this->logger);
+        $this->settings = new \App\Services\SettingsService($settingsRepo, $this->logger, $cache);
         
         $this->pricingService = new PricingService(
             $this->vatService,

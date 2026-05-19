@@ -32,7 +32,7 @@ class ReturnServiceTest extends TestCase {
         $container->set(\Psr\Log\LoggerInterface::class, fn() => $logger);
         
         $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
-        $settingsService = new SettingsService($settingsRepository, $logger);
+        $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache());
         $container->set(\App\Services\SettingsService::class, fn() => $settingsService);
         $container->set(\App\Services\SettingsServiceInterface::class, fn() => $settingsService);
         
@@ -42,11 +42,11 @@ class ReturnServiceTest extends TestCase {
         
         $vatService = new VatService();
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
-        $this->orderService = new OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        $this->orderService = new OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService, new \Tests\NullEventDispatcher());
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, new \Tests\NullCache());
         $evaluator = new \App\Services\PromotionEvaluator($categoryService);
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
         $promoService = new \App\Services\PromotionService($promotionRepository, $evaluator, $logger);

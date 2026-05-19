@@ -17,8 +17,9 @@ class SettingsServiceTest extends TestCase {
         // Clear settings table for isolation
         $this->db->exec("DELETE FROM settings");
         $logger = new \Tests\NullLogger();
+        $cache = new \Tests\NullCache();
         $repository = new \App\Repositories\SettingsRepository($this->db, $logger);
-        $this->service = new SettingsService($repository, $logger);
+        $this->service = new SettingsService($repository, $logger, $cache);
     }
 
     public function testGetSettingsModel() {
@@ -41,8 +42,9 @@ class SettingsServiceTest extends TestCase {
         
         // New service instance should load from DB
         $logger = new \Tests\NullLogger();
+        $cache = new \Tests\NullCache();
         $repository = new \App\Repositories\SettingsRepository($this->db, $logger);
-        $newService = new SettingsService($repository, $logger);
+        $newService = new SettingsService($repository, $logger, $cache);
         $this->assertEquals('My Store', $newService->getSettings()->site_name);
     }
 
@@ -59,8 +61,9 @@ class SettingsServiceTest extends TestCase {
         $emptyDb = new \PDO('sqlite::memory:');
         $emptyDb->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $logger = new \Tests\NullLogger();
+        $cache = new \Tests\NullCache();
         $repository = new \App\Repositories\SettingsRepository($emptyDb, $logger);
-        $service = new SettingsService($repository, $logger);
+        $service = new SettingsService($repository, $logger, $cache);
         
         $settings = $service->getSettings();
         $this->assertInstanceOf(Settings::class, $settings);

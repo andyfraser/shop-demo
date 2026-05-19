@@ -19,7 +19,7 @@ class CustomRolePromotionTest extends TestCase {
         $this->db = \App\Core\Database::getConnection();
         $this->logger = new NullLogger();
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $this->logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $this->logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $this->logger, new \Tests\NullCache());
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $this->logger);
         $this->promoService = new PromotionService($promotionRepository, $promoEvaluator, $this->logger);

@@ -28,18 +28,18 @@ class OrderServiceTest extends TestCase {
         $logger = new \Tests\NullLogger();
         
         $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
-        $settingsService = new SettingsService($settingsRepository, $logger);
+        $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache());
         $emailService = new EmailService($settingsService, $logger);
         $paymentService = new PaymentService($logger);
         $paymentService->registerGateway(new ManualGateway());
 
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
-        $this->orderService = new OrderService($orderRepository, $logger, new VatService(), $paymentService, $emailService);
+        $this->orderService = new OrderService($orderRepository, $logger, new VatService(), $paymentService, $emailService, new \Tests\NullEventDispatcher());
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
         
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, new \Tests\NullCache());
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
@@ -205,5 +205,46 @@ class OrderServiceTest extends TestCase {
         $this->assertEquals('Confirmed by admin', $history[1]['notes']);
         $this->assertEquals(1, $history[1]['created_by_user_id']);
         $this->assertEquals(Order::STATUS_PENDING, $history[2]['status']);
+    }
+
+    public function testCreateOrderDispatchesEvent() {
+        $dispatcher = new \App\Core\Events\EventDispatcher();
+        $dispatched = false;
+        $dispatchedOrder = null;
+
+        $dispatcher->addListener(\App\Events\OrderPlaced::class, function($event) use (&$dispatched, &$dispatchedOrder) {
+            $dispatched = true;
+            $dispatchedOrder = $event->order;
+        });
+
+        // Re-instantiate service with real dispatcher
+        $orderRepository = new \App\Repositories\OrderRepository($this->db, new \Tests\NullLogger());
+        $service = new OrderService(
+            $orderRepository, 
+            new \Tests\NullLogger(), 
+            new VatService(), 
+            new \App\Services\Payment\PaymentService(new \Tests\NullLogger()), 
+            new \App\Services\EmailService(new SettingsService(new \App\Repositories\SettingsRepository($this->db), new \Tests\NullLogger(), new \Tests\NullCache()), new \Tests\NullLogger()),
+            $dispatcher
+        );
+
+        $product = $this->productService->findById(1);
+        $orderData = [
+            'user_id'          => 1,
+            'customer_name'    => 'Event Test',
+            'customer_email'   => 'event@example.com',
+            'total'            => 100.00,
+            'total_vat_amount' => 16.67,
+            'shipping_address' => '123 Event St',
+            'notes'            => '',
+            'delivery_method'  => 'Standard',
+            'delivery_cost'    => 0.00
+        ];
+        $items = [['product' => $product, 'qty' => 1, 'unit_price' => 100.00, 'vat_amount' => 16.67]];
+        
+        $orderId = $service->create($orderData, $items);
+
+        $this->assertTrue($dispatched, "OrderPlaced event should have been dispatched.");
+        $this->assertEquals($orderId, $dispatchedOrder->id);
     }
 }

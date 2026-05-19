@@ -94,5 +94,8 @@ return function($c, array $config) {
         MigrationRepositoryInterface::class => function($c) {
             return new MigrationRepository($c->get(\PDO::class));
         },
+        \App\Repositories\AuditLogRepositoryInterface::class => function($c) {
+            return new \App\Repositories\AuditLogRepository($c->get(\PDO::class));
+        },
     ];
 };

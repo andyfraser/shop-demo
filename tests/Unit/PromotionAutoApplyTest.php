@@ -25,19 +25,19 @@ class PromotionAutoApplyTest extends TestCase {
         $logger = new \Tests\NullLogger();
         
         $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
-        $settingsService = new SettingsService($settingsRepository, $logger);
+        $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache());
         $authRepository = new \App\Repositories\AuthRepository($this->db, $logger);
-        $authService = new AuthService($authRepository, $settingsService, $logger);
+        $authService = new AuthService($authRepository, $settingsService, $logger, new \Tests\NullEventDispatcher());
         $vatService = new VatService();
         $emailService = new \App\Services\EmailService($settingsService, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
-        $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService, new \Tests\NullEventDispatcher());
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
         
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, new \Tests\NullCache());
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         $pricingService = new \App\Services\PricingService($vatService, $promoEvaluator, $settingsService);
         

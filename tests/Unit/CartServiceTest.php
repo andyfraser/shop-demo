@@ -22,19 +22,19 @@ class CartServiceTest extends TestCase {
         $_SESSION = [];
         $logger = new \Tests\NullLogger();
         $settingsRepository = new \App\Repositories\SettingsRepository($db);
-        $settings = new SettingsService($settingsRepository, $logger);
+        $settings = new SettingsService($settingsRepository, $logger, new \Tests\NullCache());
         $authRepository = new \App\Repositories\AuthRepository($db, $logger);
-        $auth = new AuthService($authRepository, $settings, $logger);
+        $auth = new AuthService($authRepository, $settings, $logger, new \Tests\NullEventDispatcher());
         $vatService = new \App\Services\VatService();
         $emailService = new \App\Services\EmailService($settings, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
         $orderRepository = new \App\Repositories\OrderRepository($db, $logger);
-        $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService, new \Tests\NullEventDispatcher());
         $attrRepository = new \App\Repositories\AttributeRepository($db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
         
         $categoryRepo = new \App\Repositories\CategoryRepository($db, $logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, new \Tests\NullCache());
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         $pricingService = new \App\Services\PricingService($vatService, $promoEvaluator, $settings);
 

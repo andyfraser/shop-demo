@@ -8,6 +8,8 @@ use Psr\Log\LoggerInterface;
 use App\Services\VatServiceInterface;
 use App\Services\Payment\PaymentServiceInterface;
 use App\Services\EmailServiceInterface;
+use App\Core\Events\EventDispatcherInterface;
+use App\Events\OrderPlaced;
 
 class OrderService implements OrderServiceInterface {
     public function __construct(
@@ -15,7 +17,8 @@ class OrderService implements OrderServiceInterface {
         private LoggerInterface $logger,
         private VatServiceInterface $vatService,
         private PaymentServiceInterface $paymentService,
-        private EmailServiceInterface $emailService
+        private EmailServiceInterface $emailService,
+        private EventDispatcherInterface $eventDispatcher
     ) {}
 
     /**
@@ -31,6 +34,13 @@ class OrderService implements OrderServiceInterface {
             $this->repository->addHistoryEntry($orderId, Order::STATUS_PENDING, 'Order created', $orderData['user_id'] ?? null);
 
             $this->repository->commit();
+
+            // Dispatch OrderPlaced event
+            $order = $this->findById($orderId);
+            if ($order) {
+                $this->eventDispatcher->dispatch(new OrderPlaced($order, $order->items));
+            }
+
             return $orderId;
         } catch (\Exception $e) {
             $this->repository->rollBack();

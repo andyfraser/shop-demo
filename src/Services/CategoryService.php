@@ -5,11 +5,13 @@ namespace App\Services;
 use App\Models\Category;
 use App\Repositories\CategoryRepositoryInterface;
 use Psr\Log\LoggerInterface;
+use App\Core\Cache\CacheInterface;
 
 class CategoryService implements CategoryServiceInterface {
     public function __construct(
         private CategoryRepositoryInterface $repository,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private CacheInterface $cache
     ) {}
 
     public function getAllForAdmin(): array {
@@ -29,6 +31,13 @@ class CategoryService implements CategoryServiceInterface {
     }
 
     public function getTree(): array {
+        $cacheKey = 'category_tree';
+        $tree = $this->cache->get($cacheKey);
+
+        if ($tree !== null) {
+            return $tree;
+        }
+
         $all = $this->getAll();
         $tree = [];
         $map = [];
@@ -40,6 +49,8 @@ class CategoryService implements CategoryServiceInterface {
             if ($c->parent_id) $map[$c->parent_id]->children[] = $c;
             else $tree[] = $c;
         }
+
+        $this->cache->set($cacheKey, $tree, 86400); // Cache for 24h
         return $tree;
     }
 
@@ -66,10 +77,13 @@ class CategoryService implements CategoryServiceInterface {
     }
 
     public function save(array|Category $data, int $id = 0): int {
-        return $this->repository->save($data, $id);
+        $result = $this->repository->save($data, $id);
+        $this->cache->delete('category_tree');
+        return $result;
     }
 
     public function delete(int $id): void {
         $this->repository->delete($id);
+        $this->cache->delete('category_tree');
     }
 }

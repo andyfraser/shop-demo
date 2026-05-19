@@ -21,21 +21,23 @@ class DiscountIsolationTest extends TestCase {
     public function setUp() {
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
+        $cache = new \Tests\NullCache();
+        $eventDispatcher = new \Tests\NullEventDispatcher();
         
         $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
-        $settingsService = new SettingsService($settingsRepository, $logger);
+        $settingsService = new SettingsService($settingsRepository, $logger, $cache);
         $authRepository = new \App\Repositories\AuthRepository($this->db, $logger);
-        $authService = new AuthService($authRepository, $settingsService, $logger);
+        $authService = new AuthService($authRepository, $settingsService, $logger, $eventDispatcher);
         $vatService = new VatService();
         $emailService = new \App\Services\EmailService($settingsService, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
-        $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService);
+        $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService, $eventDispatcher);
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new AttributeService($attrRepository, $logger);
         
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, $cache);
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         $pricingService = new \App\Services\PricingService($vatService, $promoEvaluator, $settingsService);
         

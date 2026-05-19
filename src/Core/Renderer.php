@@ -25,7 +25,15 @@ class Renderer {
         require $layoutDir . '/header.php';
         echo $content;
         require $layoutDir . '/footer.php';
-        return ob_get_clean();
+        $output = ob_get_clean();
+
+        // Append Debug Toolbar if in debug mode
+        if (defined('DEBUG_MODE') && DEBUG_MODE) {
+            $toolbar = new \App\Core\View\DebugToolbarComponent();
+            $output .= $toolbar->render();
+        }
+
+        return $output;
     }
 
     /**

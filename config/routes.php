@@ -22,9 +22,10 @@ use App\Middleware\AdminMiddleware;
 use App\Middleware\CsrfMiddleware;
 use App\Middleware\GuestMiddleware;
 use App\Middleware\VerifiedMiddleware;
+use App\Middleware\AuditLogMiddleware;
 
 $adminMiddleware = [AdminMiddleware::class];
-$adminPostMiddleware = [AdminMiddleware::class, CsrfMiddleware::class];
+$adminPostMiddleware = [AdminMiddleware::class, CsrfMiddleware::class, AuditLogMiddleware::class];
 $authMiddleware = [AuthMiddleware::class];
 $authPostMiddleware = [AuthMiddleware::class, CsrfMiddleware::class];
 $guestMiddleware = [GuestMiddleware::class];

@@ -13,6 +13,9 @@ use App\Services\SettingsServiceInterface;
 use App\Services\EmailServiceInterface;
 use App\Services\UserServiceInterface;
 use App\Services\CartServiceInterface;
+use App\Core\Events\EventDispatcherInterface;
+use App\Events\UserLoggedIn;
+use App\Events\UserLoginFailed;
 
 class AuthController {
     public function __construct(
@@ -25,7 +28,8 @@ class AuthController {
         private UserServiceInterface $userService,
         private CartServiceInterface $cartService,
         private Validator $validator,
-        private \Psr\Log\LoggerInterface $logger
+        private \Psr\Log\LoggerInterface $logger,
+        private EventDispatcherInterface $eventDispatcher
     ) {}
 
     public function showLogin(Request $request): Response {
@@ -52,7 +56,7 @@ class AuthController {
         $user = $this->userService->findByEmail($email);
 
         if (!$user || !password_verify($pass, $user->password_hash)) {
-            $this->logger->warning("Failed login attempt for {email}", ['email' => $email]);
+            $this->eventDispatcher->dispatch(new UserLoginFailed($email, $ip));
             $this->securityService->recordRateLimit('login', $ip);
             $errors[] = 'Invalid email or password.';
             
@@ -62,7 +66,7 @@ class AuthController {
                 'email'      => $email,
             ]));
         } else {
-            $this->logger->info("User logged in: {email}", ['email' => $email]);
+            $this->eventDispatcher->dispatch(new UserLoggedIn($user));
             $this->securityService->clearRateLimit('login', $ip);
             $remember = !empty($request->getPost('remember_me'));
             $this->authService->login($user, $remember);

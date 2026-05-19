@@ -9,6 +9,8 @@ require_once __DIR__ . '/../src/Helpers.php';
 
 require_once __DIR__ . '/TestCase.php';
 require_once __DIR__ . '/NullLogger.php';
+require_once __DIR__ . '/NullCache.php';
+require_once __DIR__ . '/NullEventDispatcher.php';
 
 use Tests\AssertionFailedException;
 

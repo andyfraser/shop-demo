@@ -79,7 +79,11 @@ use App\Services\PromotionEvaluator;
 return function($c, array $config) {
     return [
         SettingsServiceInterface::class => function($c) {
-            return new SettingsService($c->get(SettingsRepositoryInterface::class), $c->get(LoggerInterface::class));
+            return new SettingsService(
+                $c->get(SettingsRepositoryInterface::class), 
+                $c->get(LoggerInterface::class),
+                $c->get(\App\Core\Cache\CacheInterface::class)
+            );
         },
         VatServiceInterface::class => function($c) {
             return new VatService();
@@ -92,7 +96,12 @@ return function($c, array $config) {
             );
         },
         AuthServiceInterface::class => function($c) {
-            return new AuthService($c->get(AuthRepositoryInterface::class), $c->get(SettingsServiceInterface::class), $c->get(LoggerInterface::class));
+            return new AuthService(
+                $c->get(AuthRepositoryInterface::class), 
+                $c->get(SettingsServiceInterface::class), 
+                $c->get(LoggerInterface::class),
+                $c->get(\App\Core\Events\EventDispatcherInterface::class)
+            );
         },
         ProductServiceInterface::class => function($c) {
             return new ProductService(
@@ -121,7 +130,11 @@ return function($c, array $config) {
             );
         },
         CategoryServiceInterface::class => function($c) {
-            return new CategoryService($c->get(CategoryRepositoryInterface::class), $c->get(LoggerInterface::class));
+            return new CategoryService(
+                $c->get(CategoryRepositoryInterface::class), 
+                $c->get(LoggerInterface::class),
+                $c->get(\App\Core\Cache\CacheInterface::class)
+            );
         },
         OrderServiceInterface::class => function($c) {
             return new OrderService(
@@ -129,7 +142,8 @@ return function($c, array $config) {
                 $c->get(LoggerInterface::class), 
                 $c->get(VatServiceInterface::class),
                 $c->get(PaymentServiceInterface::class),
-                $c->get(EmailServiceInterface::class)
+                $c->get(EmailServiceInterface::class),
+                $c->get(\App\Core\Events\EventDispatcherInterface::class)
             );
         },
 
@@ -210,6 +224,12 @@ return function($c, array $config) {
         },
         UserRoleServiceInterface::class => function($c) {
             return new UserRoleService($c->get(UserRoleRepositoryInterface::class), $c->get(LoggerInterface::class));
+        },
+        \App\Services\AuditLogService::class => function($c) {
+            return new \App\Services\AuditLogService(
+                $c->get(\App\Repositories\AuditLogRepositoryInterface::class),
+                $c->get(AuthServiceInterface::class)
+            );
         },
     ];
 };

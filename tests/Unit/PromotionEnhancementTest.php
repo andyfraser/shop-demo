@@ -20,7 +20,7 @@ class PromotionEnhancementTest extends TestCase {
         $this->logger = new NullLogger();
         
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $this->logger);
-        $categoryService = new \App\Services\CategoryService($categoryRepo, $this->logger);
+        $categoryService = new \App\Services\CategoryService($categoryRepo, $this->logger, new \Tests\NullCache());
         $evaluator = new \App\Services\PromotionEvaluator($categoryService);
         
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $this->logger);

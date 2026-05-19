@@ -14,7 +14,12 @@ class Database {
 
             if ($driver === 'sqlite') {
                 $dbPath = self::getSqlitePath($config);
-                self::$pdo = new PDO('sqlite:' . $dbPath);
+                $dsn = 'sqlite:' . $dbPath;
+                if (defined('DEBUG_MODE') && DEBUG_MODE) {
+                    self::$pdo = new LoggedPDO($dsn);
+                } else {
+                    self::$pdo = new PDO($dsn);
+                }
                 self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
                 self::$pdo->exec('PRAGMA foreign_keys = ON');
@@ -27,7 +32,11 @@ class Database {
 
                 try {
                     $dsn = "mysql:host={$host};dbname={$dbname};charset={$charset}";
-                    self::$pdo = new PDO($dsn, $user, $pass);
+                    if (defined('DEBUG_MODE') && DEBUG_MODE) {
+                        self::$pdo = new LoggedPDO($dsn, $user, $pass);
+                    } else {
+                        self::$pdo = new PDO($dsn, $user, $pass);
+                    }
                 } catch (PDOException $e) {
                     // If database doesn't exist (Error code 1049)
                     if ($e->getCode() == 1049) {
@@ -70,6 +79,10 @@ class Database {
         $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbname}` CHARACTER SET {$charset}");
         
         $dsnWithDb = "mysql:host={$host};dbname={$dbname};charset={$charset}";
-        self::$pdo = new PDO($dsnWithDb, $user, $pass);
+        if (defined('DEBUG_MODE') && DEBUG_MODE) {
+            self::$pdo = new LoggedPDO($dsnWithDb, $user, $pass);
+        } else {
+            self::$pdo = new PDO($dsnWithDb, $user, $pass);
+        }
     }
 }
