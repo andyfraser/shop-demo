@@ -1,0 +1,1 @@
+This file ensures the storage/cache directory is tracked by git while the actual cache files are ignored.
