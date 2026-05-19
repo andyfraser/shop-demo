@@ -43,7 +43,7 @@ class PromotionServiceTest extends TestCase {
         $attrService = new \App\Services\AttributeService($attrRepo, $logger, new \Tests\NullCache());
         $productRepo = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($productRepo, $attrService, $eventDispatcher);
-        $this->productService = new \App\Services\ProductService($productRepo, $attrService, $this->service, $variantService, $logger, new \Tests\NullCache());
+        $this->productService = new \App\Services\ProductService($productRepo, $attrService, $this->service, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
     }
 
     public function testSubcategoryProductQualifiesForParentCategoryPromotion() {

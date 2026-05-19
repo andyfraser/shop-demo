@@ -25,7 +25,7 @@ class ProductServiceTest extends TestCase {
         $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache());
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
-        $this->service = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache());
+        $this->service = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
     }
 
     public function testFindById() {

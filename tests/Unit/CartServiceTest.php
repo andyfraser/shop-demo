@@ -42,7 +42,7 @@ class CartServiceTest extends TestCase {
         $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache(), $categoryService, $orderService);
         $repository = new \App\Repositories\ProductRepository($db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
-        $productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache());
+        $productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
         $cartRepository = new \App\Repositories\CartRepository($db);
         $this->cart = new CartService($cartRepository, $productService, $auth, $pricingService, $promoService, $orderService, $logger);
     }

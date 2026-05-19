@@ -67,6 +67,10 @@ return function($c, array $config) {
                 StockUpdated::class,
                 fn($e) => $c->get(InventoryListener::class)->handle($e)
             );
+            $dispatcher->addListener(
+                OrderPlaced::class,
+                fn($e) => $c->get(InventoryListener::class)->handle($e)
+            );
 
             // Review Listeners
             $dispatcher->addListener(

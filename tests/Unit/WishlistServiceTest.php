@@ -27,7 +27,7 @@ class WishlistServiceTest extends TestCase {
         $promoService = new \App\Services\PromotionService($promotionRepository, $evaluator, $logger, new \Tests\NullCache());
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService, $eventDispatcher);
-        $productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache());
+        $productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
         $wishlistRepo = new \App\Repositories\WishlistRepository($this->db, $logger);
         $this->service = new WishlistService($wishlistRepo, $productService, $logger);
 

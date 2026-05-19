@@ -45,7 +45,7 @@ class PromotionAutoApplyTest extends TestCase {
         $this->promotionService = new PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache(), null, $orderService);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
-        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
 
         $cartRepository = new \App\Repositories\CartRepository($this->db);
         $this->cartService = new CartService(
@@ -98,7 +98,7 @@ class PromotionAutoApplyTest extends TestCase {
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
-        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
         $productId = $productService->save([
             'name' => 'Test Product',
             'price' => 200,

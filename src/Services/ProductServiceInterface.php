@@ -32,4 +32,5 @@ interface ProductServiceInterface {
     public function searchSuggestions(string $query, int $limit = 5): array;
     public function syncTiers(int $productId, array $tiers): void;
     public function syncBundleItems(int $bundleId, array $items): void;
+    public function clearCache(int $productId): void;
 }

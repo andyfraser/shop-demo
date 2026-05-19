@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Repositories\ProductRepositoryInterface;
+use App\Core\Events\EventDispatcherInterface;
+use App\Events\StockUpdated;
 use Psr\Log\LoggerInterface;
 
 class ProductService implements ProductServiceInterface {
@@ -14,7 +16,8 @@ class ProductService implements ProductServiceInterface {
         private PromotionServiceInterface $promotionService,
         private ProductVariantServiceInterface $variantService,
         private LoggerInterface $logger,
-        private \App\Core\Cache\CacheInterface $cache
+        private \App\Core\Cache\CacheInterface $cache,
+        private EventDispatcherInterface $eventDispatcher
     ) {}
 
     public function attachActivePromotions(array $products, ?\App\Models\User $user = null): void {
@@ -65,19 +68,24 @@ class ProductService implements ProductServiceInterface {
 
     public function save(array|Product $data, int $id = 0): int {
         $resultId = $this->repository->save($data, $id);
-        $this->clearProductCache($resultId ?: $id);
+        $this->clearCache($resultId ?: $id);
         $this->cache->delete('featured_products');
         return $resultId;
     }
 
     public function updateStock(int $id, int $newStock): void {
+        $product = $this->findById($id);
+        $oldStock = $product ? $product->stock : 0;
+
         $this->repository->updateStock($id, $newStock);
-        $this->clearProductCache($id);
+        $this->clearCache($id);
+
+        $this->eventDispatcher->dispatch(new StockUpdated($id, $oldStock, $newStock, false));
     }
 
     public function deactivate(int $id): void {
         $this->repository->deactivate($id);
-        $this->clearProductCache($id);
+        $this->clearCache($id);
         $this->cache->delete('featured_products');
     }
 
@@ -178,21 +186,21 @@ class ProductService implements ProductServiceInterface {
     public function saveVariant(array $data, int $id = 0): int {
         $variantId = $this->variantService->save($data, $id);
         $v = $this->findVariantById($variantId ?: $id);
-        if ($v) $this->clearProductCache($v->product_id);
+        if ($v) $this->clearCache($v->product_id);
         return $variantId;
     }
 
     public function updateVariantStock(int $id, int $newStock): void {
         $this->variantService->updateStock($id, $newStock);
         $v = $this->findVariantById($id);
-        if ($v) $this->clearProductCache($v->product_id);
+        if ($v) $this->clearCache($v->product_id);
     }
 
     public function deleteVariant(int $id): void {
         $v = $this->findVariantById($id);
         $productId = $v ? $v->product_id : 0;
         $this->variantService->delete($id);
-        if ($productId) $this->clearProductCache($productId);
+        if ($productId) $this->clearCache($productId);
     }
 
     public function getRelatedProducts(int $productId, int $limit = 4): array {
@@ -214,15 +222,15 @@ class ProductService implements ProductServiceInterface {
 
     public function syncTiers(int $productId, array $tiers): void {
         $this->repository->syncTiers($productId, $tiers);
-        $this->clearProductCache($productId);
+        $this->clearCache($productId);
     }
 
     public function syncBundleItems(int $bundleId, array $items): void {
         $this->repository->syncBundleItems($bundleId, $items);
-        $this->clearProductCache($bundleId);
+        $this->clearCache($bundleId);
     }
 
-    private function clearProductCache(int $productId): void {
+    public function clearCache(int $productId): void {
         if (!$productId) return;
         $this->cache->delete("product_hydrated_$productId");
         // Related products cache might also be affected if this product was in a related list
