@@ -14,7 +14,7 @@ class AttributeServiceTest extends TestCase {
         $this->db = Database::getConnection();
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\AttributeRepository($this->db, $logger);
-        $this->service = new AttributeService($repository, $logger);
+        $this->service = new AttributeService($repository, $logger, new \Tests\NullCache());
     }
 
     public function testGetValuesReturnsValueKey() {

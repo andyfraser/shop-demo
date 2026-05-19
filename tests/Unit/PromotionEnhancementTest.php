@@ -24,7 +24,7 @@ class PromotionEnhancementTest extends TestCase {
         $evaluator = new \App\Services\PromotionEvaluator($categoryService);
         
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $this->logger);
-        $this->promotionService = new PromotionService($promotionRepository, $evaluator, $this->logger);
+        $this->promotionService = new PromotionService($promotionRepository, $evaluator, $this->logger, new \Tests\NullCache());
 
         // Clear tables
         $this->db->exec("DELETE FROM promotion_tiers");

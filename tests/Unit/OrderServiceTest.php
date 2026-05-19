@@ -36,17 +36,17 @@ class OrderServiceTest extends TestCase {
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
         $this->orderService = new OrderService($orderRepository, $logger, new VatService(), $paymentService, $emailService, new \Tests\NullEventDispatcher());
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
-        $attrService = new AttributeService($attrRepository, $logger);
+        $attrService = new AttributeService($attrRepository, $logger, new \Tests\NullCache());
         
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
         $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, new \Tests\NullCache());
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
-        $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache());
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService);
-        $this->productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger);
+        $this->productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache());
     }
 
     public function testCreateOrder() {

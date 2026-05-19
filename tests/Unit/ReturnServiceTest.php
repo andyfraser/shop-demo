@@ -35,6 +35,23 @@ class ReturnServiceTest extends TestCase {
         $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache());
         $container->set(\App\Services\SettingsService::class, fn() => $settingsService);
         $container->set(\App\Services\SettingsServiceInterface::class, fn() => $settingsService);
+
+        $container->set(\App\Services\CurrencyServiceInterface::class, function() {
+            return new \Tests\NullCurrencyService();
+        });
+
+        $container->set(\App\Services\PricingServiceInterface::class, function($c) {
+            return new \App\Services\PricingService(
+                new \App\Services\VatService(),
+                new \App\Services\PromotionEvaluator(new \App\Services\CategoryService(
+                    new \App\Repositories\CategoryRepository(\App\Core\Database::getConnection(), new \Tests\NullLogger()),
+                    new \Tests\NullLogger(),
+                    new \Tests\NullCache()
+                )),
+                $c->get(\App\Services\SettingsServiceInterface::class),
+                $c->get(\App\Services\CurrencyServiceInterface::class)
+            );
+        });
         
         $emailService = new EmailService($settingsService, $logger);
         $paymentService = new PaymentService($logger);
@@ -44,15 +61,15 @@ class ReturnServiceTest extends TestCase {
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
         $this->orderService = new OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService, new \Tests\NullEventDispatcher());
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
-        $attrService = new AttributeService($attrRepository, $logger);
+        $attrService = new AttributeService($attrRepository, $logger, new \Tests\NullCache());
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
         $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, new \Tests\NullCache());
         $evaluator = new \App\Services\PromotionEvaluator($categoryService);
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
-        $promoService = new \App\Services\PromotionService($promotionRepository, $evaluator, $logger);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $evaluator, $logger, new \Tests\NullCache());
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService);
-        $this->productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger);
+        $this->productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache());
         
         $returnRepository = new \App\Repositories\ReturnRepository($this->db, $logger);
         $this->returnService = new ReturnService(

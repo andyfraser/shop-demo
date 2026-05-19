@@ -34,18 +34,18 @@ class DiscountIsolationTest extends TestCase {
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
         $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService, $eventDispatcher);
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $logger);
-        $attrService = new AttributeService($attrRepository, $logger);
+        $attrService = new AttributeService($attrRepository, $logger, new \Tests\NullCache());
         
         $categoryRepo = new \App\Repositories\CategoryRepository($this->db, $logger);
         $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, $cache);
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
-        $pricingService = new \App\Services\PricingService($vatService, $promoEvaluator, $settingsService);
+        $pricingService = new \App\Services\PricingService($vatService, $promoEvaluator, $settingsService, new \Tests\NullCurrencyService());
         
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
-        $this->promotionService = new PromotionService($promotionRepository, $promoEvaluator, $logger, null, $orderService);
+        $this->promotionService = new PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache(), null, $orderService);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService);
-        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
         
         $cartRepository = new \App\Repositories\CartRepository($this->db);
         $this->cart = new CartService(
@@ -80,11 +80,11 @@ class DiscountIsolationTest extends TestCase {
         // 2. Add a product worth 100
         $nullLogger = new \Tests\NullLogger();
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $nullLogger);
-        $attrService = new AttributeService($attrRepository, $nullLogger);
+        $attrService = new AttributeService($attrRepository, $nullLogger, new \Tests\NullCache());
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService);
-        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
         $productId = $productService->save([
             'name' => 'Product 100',
             'price' => 100,
@@ -122,11 +122,11 @@ class DiscountIsolationTest extends TestCase {
         // 2. Add a product worth 100
         $nullLogger = new \Tests\NullLogger();
         $attrRepository = new \App\Repositories\AttributeRepository($this->db, $nullLogger);
-        $attrService = new AttributeService($attrRepository, $nullLogger);
+        $attrService = new AttributeService($attrRepository, $nullLogger, new \Tests\NullCache());
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService);
-        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger);
+        $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
         $productId = $productService->save([
             'name' => 'Product 100',
             'price' => 100,

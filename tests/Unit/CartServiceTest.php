@@ -31,18 +31,18 @@ class CartServiceTest extends TestCase {
         $orderRepository = new \App\Repositories\OrderRepository($db, $logger);
         $orderService = new \App\Services\OrderService($orderRepository, $logger, $vatService, $paymentService, $emailService, new \Tests\NullEventDispatcher());
         $attrRepository = new \App\Repositories\AttributeRepository($db, $logger);
-        $attrService = new AttributeService($attrRepository, $logger);
-        
+        $attrService = new AttributeService($attrRepository, $logger, new \Tests\NullCache());
+
         $categoryRepo = new \App\Repositories\CategoryRepository($db, $logger);
         $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, new \Tests\NullCache());
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
-        $pricingService = new \App\Services\PricingService($vatService, $promoEvaluator, $settings);
+        $pricingService = new \App\Services\PricingService($vatService, $promoEvaluator, $settings, new \Tests\NullCurrencyService());
 
         $promotionRepository = new \App\Repositories\PromotionRepository($db, $logger);
-        $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger, null, $orderService);
+        $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache(), $categoryService, $orderService);
         $repository = new \App\Repositories\ProductRepository($db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService);
-        $productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger);
+        $productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache());
         $cartRepository = new \App\Repositories\CartRepository($db);
         $this->cart = new CartService($cartRepository, $productService, $auth, $pricingService, $promoService, $orderService, $logger);
     }

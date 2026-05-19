@@ -31,7 +31,8 @@ class TieredPricingTest extends TestCase {
         $this->pricingService = new PricingService(
             $this->vatService,
             $this->promotionEvaluator,
-            $this->settings
+            $this->settings,
+            new \Tests\NullCurrencyService()
         );
     }
 

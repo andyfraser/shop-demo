@@ -25,6 +25,23 @@ class ViewComponentTest extends TestCase {
             return new SettingsService($repo, $logger, new \Tests\NullCache());
         });
 
+        $container->set(\App\Services\CurrencyServiceInterface::class, function() {
+            return new \Tests\NullCurrencyService();
+        });
+
+        $container->set(\App\Services\PricingServiceInterface::class, function($c) {
+            return new \App\Services\PricingService(
+                new \App\Services\VatService(),
+                new \App\Services\PromotionEvaluator(new \App\Services\CategoryService(
+                    new \App\Repositories\CategoryRepository(\App\Core\Database::getConnection(), new \Tests\NullLogger()),
+                    new \Tests\NullLogger(),
+                    new \Tests\NullCache()
+                )),
+                $c->get(\App\Services\SettingsServiceInterface::class),
+                $c->get(\App\Services\CurrencyServiceInterface::class)
+            );
+        });
+
         $container->set(ImageServiceInterface::class, function() {
             return new class implements ImageServiceInterface {
                 public function getUrl($filename, $size = 'original'): string { return "/uploads/$filename"; }

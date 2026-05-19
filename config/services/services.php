@@ -112,7 +112,8 @@ return function($c, array $config) {
                 $c->get(AttributeServiceInterface::class), 
                 $c->get(PromotionServiceInterface::class),
                 $c->get(ProductVariantServiceInterface::class),
-                $c->get(LoggerInterface::class)
+                $c->get(LoggerInterface::class),
+                $c->get(\App\Core\Cache\CacheInterface::class)
             );
         },
         ProductVariantServiceInterface::class => function($c) {
@@ -169,7 +170,11 @@ return function($c, array $config) {
             return new DeliveryService($c->get(DeliveryRepositoryInterface::class), $c->get(LoggerInterface::class));
         },
         AttributeServiceInterface::class => function($c) {
-            return new AttributeService($c->get(AttributeRepositoryInterface::class), $c->get(LoggerInterface::class));
+            return new AttributeService(
+                $c->get(AttributeRepositoryInterface::class), 
+                $c->get(LoggerInterface::class),
+                $c->get(\App\Core\Cache\CacheInterface::class)
+            );
         },
         PaymentServiceInterface::class => function($c) {
             $service = new PaymentService($c->get(LoggerInterface::class));
@@ -209,6 +214,7 @@ return function($c, array $config) {
                 $c->get(PromotionRepositoryInterface::class), 
                 $c->get(PromotionEvaluatorInterface::class),
                 $c->get(LoggerInterface::class),
+                $c->get(\App\Core\Cache\CacheInterface::class),
                 $c->get(CategoryServiceInterface::class),
                 $c->get(OrderServiceInterface::class)
             );

@@ -22,7 +22,7 @@ class CustomRolePromotionTest extends TestCase {
         $categoryService = new \App\Services\CategoryService($categoryRepo, $this->logger, new \Tests\NullCache());
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $this->logger);
-        $this->promoService = new PromotionService($promotionRepository, $promoEvaluator, $this->logger);
+        $this->promoService = new PromotionService($promotionRepository, $promoEvaluator, $this->logger, new \Tests\NullCache());
     }
 
     public function testPromotionAppliesToCustomRole() {

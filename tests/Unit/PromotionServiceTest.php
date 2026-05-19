@@ -37,13 +37,13 @@ class PromotionServiceTest extends TestCase {
         $categoryService = new \App\Services\CategoryService($categoryRepo, $logger, $cache);
         $promoEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
-        $this->service = new PromotionService($promotionRepository, $promoEvaluator, $logger, $categoryService, $this->orderService);
+        $this->service = new PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache(), $categoryService, $this->orderService);
         
         $attrRepo = new \App\Repositories\AttributeRepository($this->db, $logger);
-        $attrService = new \App\Services\AttributeService($attrRepo, $logger);
+        $attrService = new \App\Services\AttributeService($attrRepo, $logger, new \Tests\NullCache());
         $productRepo = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($productRepo, $attrService);
-        $this->productService = new \App\Services\ProductService($productRepo, $attrService, $this->service, $variantService, $logger);
+        $this->productService = new \App\Services\ProductService($productRepo, $attrService, $this->service, $variantService, $logger, new \Tests\NullCache());
     }
 
     public function testSubcategoryProductQualifiesForParentCategoryPromotion() {

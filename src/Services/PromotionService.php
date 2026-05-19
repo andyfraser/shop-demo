@@ -6,12 +6,14 @@ use App\Models\Promotion;
 use App\Repositories\PromotionRepositoryInterface;
 use App\Services\PromotionEvaluatorInterface;
 use Psr\Log\LoggerInterface;
+use App\Core\Cache\CacheInterface;
 
 class PromotionService implements PromotionServiceInterface {
     public function __construct(
         private PromotionRepositoryInterface $repository,
         private PromotionEvaluatorInterface $evaluator,
         private LoggerInterface $logger,
+        private CacheInterface $cache,
         private ?CategoryServiceInterface $categoryService = null,
         private ?OrderServiceInterface $orderService = null
     ) {}
@@ -119,6 +121,8 @@ class PromotionService implements PromotionServiceInterface {
 
             $this->repository->commit();
 
+            $this->clearCache();
+
             if ($this->logger) {
                 $action = $id > 0 ? 'updated' : 'created';
                 $this->logger->info("Promotion {name} (ID: {id}) was {action}.", [
@@ -141,6 +145,7 @@ class PromotionService implements PromotionServiceInterface {
     public function delete(int $id): void {
         $promotion = $this->findById($id);
         $this->repository->delete($id);
+        $this->clearCache();
         if ($this->logger && $promotion) {
             $this->logger->info("Promotion {name} (ID: {id}) was deleted.", [
                 'name' => $promotion->name,
@@ -154,15 +159,23 @@ class PromotionService implements PromotionServiceInterface {
     }
 
     public function getActivePromotions(bool $onlyAutomatic = false, ?\App\Models\User $user = null): array {
-        $now = date('Y-m-d H:i:s');
-        $promotions = $this->repository->getActivePromotions($now, $onlyAutomatic);
+        $cacheKey = 'active_promotions_' . ($onlyAutomatic ? 'auto' : 'all');
+        $promotions = $this->cache->get($cacheKey);
+
+        if ($promotions === null) {
+            $now = date('Y-m-d H:i:s');
+            $promotions = $this->repository->getActivePromotions($now, $onlyAutomatic);
+
+            foreach ($promotions as $promo) {
+                $promo->target_ids = $this->repository->getTargetIds($promo->id);
+                $promo->excluded_ids = $this->repository->getTargetIds($promo->id, true);
+                $promo->tiers = $this->repository->getTiers($promo->id);
+                $promo->additional_codes = $this->repository->getAdditionalCodes($promo->id);
+            }
+            $this->cache->set($cacheKey, $promotions, 600); // Cache for 10 minutes
+        }
 
         foreach ($promotions as $promo) {
-            $promo->target_ids = $this->repository->getTargetIds($promo->id);
-            $promo->excluded_ids = $this->repository->getTargetIds($promo->id, true);
-            $promo->tiers = $this->repository->getTiers($promo->id);
-            $promo->additional_codes = $this->repository->getAdditionalCodes($promo->id);
-            
             if ($user && isset($user->id)) {
                 $promo->user_usage_count = $this->repository->getUserUsageCount($promo->id, $user->id);
             }
@@ -170,6 +183,11 @@ class PromotionService implements PromotionServiceInterface {
 
         $isFirstOrder = $this->isFirstOrder($user);
         return array_values(array_filter($promotions, fn($p) => $p->isActive($user, $isFirstOrder)));
+    }
+
+    public function clearCache(): void {
+        $this->cache->delete('active_promotions_auto');
+        $this->cache->delete('active_promotions_all');
     }
 
     public function validateCode(string $code, array $cartItems, float $subtotal, ?\App\Models\User $user = null): ?Promotion {
