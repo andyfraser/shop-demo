@@ -19,7 +19,7 @@ class AuthServiceTest extends TestCase {
         $cache = new \Tests\NullCache();
         $eventDispatcher = new \Tests\NullEventDispatcher();
         $settingsRepo = new \App\Repositories\SettingsRepository($this->db, $logger);
-        $settings = new SettingsService($settingsRepo, $logger, $cache);
+        $settings = new SettingsService($settingsRepo, $logger, $cache, $eventDispatcher);
         $authRepo = new \App\Repositories\AuthRepository($this->db, $logger);
         $this->auth = new AuthService($authRepo, $settings, $logger, $eventDispatcher);
     }

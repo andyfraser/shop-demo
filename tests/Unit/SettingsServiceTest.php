@@ -19,7 +19,7 @@ class SettingsServiceTest extends TestCase {
         $logger = new \Tests\NullLogger();
         $cache = new \Tests\NullCache();
         $repository = new \App\Repositories\SettingsRepository($this->db, $logger);
-        $this->service = new SettingsService($repository, $logger, $cache);
+        $this->service = new SettingsService($repository, $logger, $cache, new \Tests\NullEventDispatcher());
     }
 
     public function testGetSettingsModel() {
@@ -44,7 +44,7 @@ class SettingsServiceTest extends TestCase {
         $logger = new \Tests\NullLogger();
         $cache = new \Tests\NullCache();
         $repository = new \App\Repositories\SettingsRepository($this->db, $logger);
-        $newService = new SettingsService($repository, $logger, $cache);
+        $newService = new SettingsService($repository, $logger, $cache, new \Tests\NullEventDispatcher());
         $this->assertEquals('My Store', $newService->getSettings()->site_name);
     }
 
@@ -63,7 +63,7 @@ class SettingsServiceTest extends TestCase {
         $logger = new \Tests\NullLogger();
         $cache = new \Tests\NullCache();
         $repository = new \App\Repositories\SettingsRepository($emptyDb, $logger);
-        $service = new SettingsService($repository, $logger, $cache);
+        $service = new SettingsService($repository, $logger, $cache, new \Tests\NullEventDispatcher());
         
         $settings = $service->getSettings();
         $this->assertInstanceOf(Settings::class, $settings);

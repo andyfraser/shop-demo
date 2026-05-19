@@ -98,13 +98,6 @@ class AdminOrdersController {
                     'status' => $status
                 ]);
 
-                if ($status === \App\Models\Order::STATUS_SHIPPED) {
-                    $order = $this->orderService->findById($order_id);
-                    if ($order && $order->customer_email) {
-                        $this->email->sendStatusUpdateEmail($order->customer_email, $order_id, $status);
-                    }
-                }
-
                 flash('msg', 'Order status updated.');
             }
         }

@@ -22,7 +22,7 @@ class CartServiceTest extends TestCase {
         $_SESSION = [];
         $logger = new \Tests\NullLogger();
         $settingsRepository = new \App\Repositories\SettingsRepository($db);
-        $settings = new SettingsService($settingsRepository, $logger, new \Tests\NullCache());
+        $settings = new SettingsService($settingsRepository, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
         $authRepository = new \App\Repositories\AuthRepository($db, $logger);
         $auth = new AuthService($authRepository, $settings, $logger, new \Tests\NullEventDispatcher());
         $vatService = new \App\Services\VatService();
@@ -41,7 +41,7 @@ class CartServiceTest extends TestCase {
         $promotionRepository = new \App\Repositories\PromotionRepository($db, $logger);
         $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache(), $categoryService, $orderService);
         $repository = new \App\Repositories\ProductRepository($db, $logger);
-        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
         $productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache());
         $cartRepository = new \App\Repositories\CartRepository($db);
         $this->cart = new CartService($cartRepository, $productService, $auth, $pricingService, $promoService, $orderService, $logger);

@@ -12,7 +12,8 @@ class SettingsService implements SettingsServiceInterface {
     public function __construct(
         private SettingsRepositoryInterface $repository,
         private LoggerInterface $logger,
-        private CacheInterface $cache
+        private CacheInterface $cache,
+        private \App\Core\Events\EventDispatcherInterface $eventDispatcher
     ) {}
 
     /**
@@ -55,8 +56,11 @@ class SettingsService implements SettingsServiceInterface {
      * Persist a setting value.
      */
     public function set(string $key, mixed $value): void {
+        $oldValue = $this->get($key);
         $this->repository->set($key, $value);
-        $this->logger->info("Setting {key} was updated to value {value}", ['key' => $key, 'value' => $value]);
+        
+        $this->eventDispatcher->dispatch(new \App\Events\SettingUpdated($key, $oldValue, $value));
+        
         $this->settings = null; 
         $this->cache->delete('app_settings');
     }

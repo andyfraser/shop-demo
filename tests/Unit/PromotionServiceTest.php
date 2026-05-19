@@ -26,7 +26,7 @@ class PromotionServiceTest extends TestCase {
         
         $vatService = new \App\Services\VatService();
         $settingsRepo = new \App\Repositories\SettingsRepository($this->db, $logger);
-        $settings = new \App\Services\SettingsService($settingsRepo, $logger, $cache);
+        $settings = new \App\Services\SettingsService($settingsRepo, $logger, $cache, $eventDispatcher);
         $emailService = new \App\Services\EmailService($settings, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);
@@ -42,7 +42,7 @@ class PromotionServiceTest extends TestCase {
         $attrRepo = new \App\Repositories\AttributeRepository($this->db, $logger);
         $attrService = new \App\Services\AttributeService($attrRepo, $logger, new \Tests\NullCache());
         $productRepo = new \App\Repositories\ProductRepository($this->db, $logger);
-        $variantService = new \App\Services\ProductVariantService($productRepo, $attrService);
+        $variantService = new \App\Services\ProductVariantService($productRepo, $attrService, $eventDispatcher);
         $this->productService = new \App\Services\ProductService($productRepo, $attrService, $this->service, $variantService, $logger, new \Tests\NullCache());
     }
 

@@ -25,7 +25,7 @@ class DiscountIsolationTest extends TestCase {
         $eventDispatcher = new \Tests\NullEventDispatcher();
         
         $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
-        $settingsService = new SettingsService($settingsRepository, $logger, $cache);
+        $settingsService = new SettingsService($settingsRepository, $logger, $cache, $eventDispatcher);
         $authRepository = new \App\Repositories\AuthRepository($this->db, $logger);
         $authService = new AuthService($authRepository, $settingsService, $logger, $eventDispatcher);
         $vatService = new VatService();
@@ -44,7 +44,7 @@ class DiscountIsolationTest extends TestCase {
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
         $this->promotionService = new PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache(), null, $orderService);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService, $eventDispatcher);
         $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
         
         $cartRepository = new \App\Repositories\CartRepository($this->db);
@@ -83,7 +83,7 @@ class DiscountIsolationTest extends TestCase {
         $attrService = new AttributeService($attrRepository, $nullLogger, new \Tests\NullCache());
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
         $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
         $productId = $productService->save([
             'name' => 'Product 100',
@@ -125,7 +125,7 @@ class DiscountIsolationTest extends TestCase {
         $attrService = new AttributeService($attrRepository, $nullLogger, new \Tests\NullCache());
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
         $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
         $productId = $productService->save([
             'name' => 'Product 100',

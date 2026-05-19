@@ -129,10 +129,9 @@ class AuthController {
 
                 $this->userService->save($userData);
 
-                $this->logger->info("New user registered: {email}", ['email' => $email]);
-                $this->emailService->sendVerificationEmail($email, $name, $token);
-
                 $user = $this->userService->findByEmail($email);
+                $this->eventDispatcher->dispatch(new \App\Events\UserRegistered($user));
+
                 $this->authService->login($user);
                 $this->cartService->syncOnLogin($user->id);
                 return new RedirectResponse('/?msg=verify_sent');
@@ -165,7 +164,7 @@ class AuthController {
             $user->verification_token = null;
             $this->userService->save($user, $user->id);
             
-            $this->logger->info("Email verified for user: {email}", ['email' => $user->email]);
+            $this->eventDispatcher->dispatch(new \App\Events\EmailVerified($user));
             
             // If logged in as this user, update session
             $current = $this->authService->currentUser();

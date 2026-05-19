@@ -7,7 +7,8 @@ use Psr\Log\LoggerInterface;
 class ReviewService implements ReviewServiceInterface {
     public function __construct(
         private ReviewRepositoryInterface $repository,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private \App\Core\Events\EventDispatcherInterface $eventDispatcher
     ) {}
 
     public function getByProductId(int $productId, bool $onlyApproved = true): array {
@@ -17,11 +18,12 @@ class ReviewService implements ReviewServiceInterface {
     public function submit(int $productId, int $userId, int $rating, ?string $comment): bool {
         $result = $this->repository->submit($productId, $userId, $rating, $comment);
         if ($result) {
-            $this->logger->info("User {userId} submitted a {rating}-star review for product {productId}", [
+            $this->eventDispatcher->dispatch(new \App\Events\ReviewSubmitted([
+                'productId' => $productId,
                 'userId' => $userId,
                 'rating' => $rating,
-                'productId' => $productId
-            ]);
+                'comment' => $comment
+            ]));
         }
         return $result;
     }
@@ -33,10 +35,14 @@ class ReviewService implements ReviewServiceInterface {
     public function updateStatus(int $reviewId, string $status): bool {
         $result = $this->repository->updateStatus($reviewId, $status);
         if ($result) {
-            $this->logger->info("Review {id} status updated to {status}", [
-                'id' => $reviewId,
-                'status' => $status
-            ]);
+            if ($status === 'approved') {
+                $this->eventDispatcher->dispatch(new \App\Events\ReviewApproved($reviewId));
+            } else {
+                $this->logger->info("Review {id} status updated to {status}", [
+                    'id' => $reviewId,
+                    'status' => $status
+                ]);
+            }
         }
         return $result;
     }

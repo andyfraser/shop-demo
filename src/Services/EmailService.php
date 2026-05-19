@@ -45,11 +45,12 @@ class EmailService implements EmailServiceInterface {
         return $this->sendHtmlEmail($order->customer_email, $subject, $message);
     }
 
-    public function sendStatusUpdateEmail(string $toEmail, int $orderId, string $status): bool {
-        $subject = "Order Status Updated #" . $orderId . " - " . $this->getCleanSiteName();
+    public function sendStatusUpdateEmail(string $toEmail, \App\Models\Order $order, string $status): bool {
+        $formattedId = $order->getFormattedId();
+        $subject = "Order Status Updated " . $formattedId . " - " . $this->getCleanSiteName();
         
         $message = $this->renderTemplate('order_status', [
-            'orderId' => $orderId,
+            'order' => $order,
             'status' => $status,
             'subject' => $subject
         ]);
@@ -58,7 +59,8 @@ class EmailService implements EmailServiceInterface {
     }
 
     public function sendReturnRequestedEmail(\App\Models\ReturnOrder $return, string $toEmail): bool {
-        $subject = "Return Request Received #" . $return->id . " - " . $this->getCleanSiteName();
+        $formattedId = '#' . str_pad((string)$return->id, 6, '0', STR_PAD_LEFT);
+        $subject = "Return Request Received " . $formattedId . " - " . $this->getCleanSiteName();
         
         $message = $this->renderTemplate('return_requested', [
             'return' => $return,
@@ -69,7 +71,8 @@ class EmailService implements EmailServiceInterface {
     }
 
     public function sendReturnUpdateEmail(\App\Models\ReturnOrder $return, string $toEmail): bool {
-        $subject = "Return Request #" . $return->id . " Updated - " . $this->getCleanSiteName();
+        $formattedId = '#' . str_pad((string)$return->id, 6, '0', STR_PAD_LEFT);
+        $subject = "Return Request " . $formattedId . " Updated - " . $this->getCleanSiteName();
         
         $message = $this->renderTemplate('return_status', [
             'return' => $return,

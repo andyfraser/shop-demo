@@ -25,7 +25,7 @@ class PromotionAutoApplyTest extends TestCase {
         $logger = new \Tests\NullLogger();
         
         $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
-        $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache());
+        $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
         $authRepository = new \App\Repositories\AuthRepository($this->db, $logger);
         $authService = new AuthService($authRepository, $settingsService, $logger, new \Tests\NullEventDispatcher());
         $vatService = new VatService();
@@ -44,7 +44,7 @@ class PromotionAutoApplyTest extends TestCase {
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
         $this->promotionService = new PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache(), null, $orderService);
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
         $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
 
         $cartRepository = new \App\Repositories\CartRepository($this->db);
@@ -97,7 +97,7 @@ class PromotionAutoApplyTest extends TestCase {
         $attrService = new AttributeService($attrRepository, $nullLogger, new \Tests\NullCache());
         $logger = new \Tests\NullLogger();
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
         $productService = new ProductService($repository, $attrService, $this->promotionService, $variantService, $logger, new \Tests\NullCache());
         $productId = $productService->save([
             'name' => 'Test Product',

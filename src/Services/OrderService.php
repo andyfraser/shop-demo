@@ -121,6 +121,9 @@ class OrderService implements OrderServiceInterface {
      * Update order status.
      */
     public function updateStatus(int $id, string $status, ?int $userId = null, string $notes = ''): void {
+        $order = $this->findById($id);
+        $oldStatus = $order ? $order->status : '';
+        
         $startedTransaction = false;
         try {
             if (!$this->repository->inTransaction()) {
@@ -134,6 +137,10 @@ class OrderService implements OrderServiceInterface {
 
             if ($startedTransaction) {
                 $this->repository->commit();
+            }
+
+            if ($order) {
+                $this->eventDispatcher->dispatch(new \App\Events\OrderStatusUpdated($order, $oldStatus, $status));
             }
         } catch (\Exception $e) {
             if ($startedTransaction) {
@@ -182,6 +189,7 @@ class OrderService implements OrderServiceInterface {
                 $result = $this->paymentService->refund($order->payment_method, $order);
                 if ($result->success) {
                     $this->repository->updateRefundInfo($id, $result->status, $order->total);
+                    $this->eventDispatcher->dispatch(new \App\Events\RefundProcessed($order, $order->total));
                 } else {
                     $this->logger->warning("Refund failed for order {id}: {message}", ['id' => $id, 'message' => $result->message]);
                 }
@@ -196,9 +204,6 @@ class OrderService implements OrderServiceInterface {
             $this->repository->commit();
 
             $this->logger->info("Order {id} successfully cancelled and items returned to stock.", ['id' => $id]);
-
-            // 4. Send Email
-            $this->emailService->sendStatusUpdateEmail($order->customer_email, $id, Order::STATUS_CANCELLED);
 
             return true;
         } catch (\Exception $e) {

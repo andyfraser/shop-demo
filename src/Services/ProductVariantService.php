@@ -8,7 +8,8 @@ use App\Repositories\ProductRepositoryInterface;
 class ProductVariantService implements ProductVariantServiceInterface {
     public function __construct(
         private ProductRepositoryInterface $repository,
-        private AttributeServiceInterface $attributeService
+        private AttributeServiceInterface $attributeService,
+        private \App\Core\Events\EventDispatcherInterface $eventDispatcher
     ) {}
 
     public function getVariants(int $productId): array {
@@ -32,7 +33,12 @@ class ProductVariantService implements ProductVariantServiceInterface {
     }
 
     public function updateStock(int $id, int $newStock): void {
+        $variant = $this->findById($id);
+        $oldStock = $variant ? $variant->stock : 0;
+        
         $this->repository->updateVariantStock($id, $newStock);
+        
+        $this->eventDispatcher->dispatch(new \App\Events\StockUpdated($id, $oldStock, $newStock));
     }
 
     public function delete(int $id): void {

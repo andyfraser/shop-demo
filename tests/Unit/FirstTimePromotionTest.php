@@ -26,7 +26,7 @@ class FirstTimePromotionTest extends TestCase {
         
         $vatService = new \App\Services\VatService();
         $settingsRepo = new \App\Repositories\SettingsRepository($this->db, $logger);
-        $settings = new \App\Services\SettingsService($settingsRepo, $logger, $cache);
+        $settings = new \App\Services\SettingsService($settingsRepo, $logger, $cache, $eventDispatcher);
         $emailService = new \App\Services\EmailService($settings, $logger);
         $paymentService = new \App\Services\Payment\PaymentService($logger);
         $orderRepository = new \App\Repositories\OrderRepository($this->db, $logger);

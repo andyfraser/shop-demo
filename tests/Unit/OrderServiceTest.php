@@ -28,7 +28,7 @@ class OrderServiceTest extends TestCase {
         $logger = new \Tests\NullLogger();
         
         $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
-        $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache());
+        $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
         $emailService = new EmailService($settingsService, $logger);
         $paymentService = new PaymentService($logger);
         $paymentService->registerGateway(new ManualGateway());
@@ -45,7 +45,7 @@ class OrderServiceTest extends TestCase {
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
         $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache());
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
         $this->productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache());
     }
 
@@ -224,7 +224,7 @@ class OrderServiceTest extends TestCase {
             new \Tests\NullLogger(), 
             new VatService(), 
             new \App\Services\Payment\PaymentService(new \Tests\NullLogger()), 
-            new \App\Services\EmailService(new SettingsService(new \App\Repositories\SettingsRepository($this->db), new \Tests\NullLogger(), new \Tests\NullCache()), new \Tests\NullLogger()),
+            new \App\Services\EmailService(new SettingsService(new \App\Repositories\SettingsRepository($this->db), new \Tests\NullLogger(), new \Tests\NullCache(), new \Tests\NullEventDispatcher()), new \Tests\NullLogger()),
             $dispatcher
         );
 

@@ -2,8 +2,14 @@
 
 namespace App\Core\Events;
 
+use Psr\Log\LoggerInterface;
+
 class EventDispatcher implements EventDispatcherInterface {
     private array $listeners = [];
+
+    public function __construct(
+        private ?LoggerInterface $logger = null
+    ) {}
 
     public function dispatch(Event $event): Event {
         $eventName = $event->getName();
@@ -21,10 +27,20 @@ class EventDispatcher implements EventDispatcherInterface {
                     break 2;
                 }
 
-                if ($listener instanceof ListenerInterface) {
-                    $listener->handle($event);
-                } else {
-                    $listener($event);
+                try {
+                    if ($listener instanceof ListenerInterface) {
+                        $listener->handle($event);
+                    } else {
+                        $listener($event);
+                    }
+                } catch (\Throwable $e) {
+                    if ($this->logger) {
+                        $this->logger->error("Listener failed for event {event}: {message}", [
+                            'event' => $eventName,
+                            'message' => $e->getMessage(),
+                            'exception' => $e
+                        ]);
+                    }
                 }
             }
         }

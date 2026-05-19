@@ -32,7 +32,7 @@ class ReturnServiceTest extends TestCase {
         $container->set(\Psr\Log\LoggerInterface::class, fn() => $logger);
         
         $settingsRepository = new \App\Repositories\SettingsRepository($this->db);
-        $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache());
+        $settingsService = new SettingsService($settingsRepository, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
         $container->set(\App\Services\SettingsService::class, fn() => $settingsService);
         $container->set(\App\Services\SettingsServiceInterface::class, fn() => $settingsService);
 
@@ -68,7 +68,7 @@ class ReturnServiceTest extends TestCase {
         $promotionRepository = new \App\Repositories\PromotionRepository($this->db, $logger);
         $promoService = new \App\Services\PromotionService($promotionRepository, $evaluator, $logger, new \Tests\NullCache());
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
-        $variantService = new \App\Services\ProductVariantService($repository, $attrService);
+        $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
         $this->productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache());
         
         $returnRepository = new \App\Repositories\ReturnRepository($this->db, $logger);

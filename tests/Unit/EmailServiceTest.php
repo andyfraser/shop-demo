@@ -59,11 +59,16 @@ class EmailServiceTest extends TestCase {
     public function testSendStatusUpdateEmail() {
         global $mock_emails;
         
-        $this->service->sendStatusUpdateEmail('user@example.com', 123, 'Shipped');
+        $order = new \App\Models\Order(new NullLogger());
+        $order->id = 123;
+        $order->customer_email = 'user@example.com';
+        
+        $this->service->sendStatusUpdateEmail('user@example.com', $order, 'Shipped');
         
         $this->assertCount(1, $mock_emails);
-        $this->assertStringContainsString('Order Status Updated #123', $mock_emails[0]['subject']);
+        $this->assertStringContainsString('Order Status Updated #000123', $mock_emails[0]['subject']);
         $this->assertStringContainsString('Shipped', $mock_emails[0]['message']);
+        $this->assertStringContainsString('#000123', $mock_emails[0]['message']);
     }
 
     public function testSendAbandonedCartEmailWithBaseUrl() {

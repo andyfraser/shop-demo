@@ -16,7 +16,7 @@ class MaintenanceCommandTest extends TestCase {
     public function setUp(): void {
         $this->db = \App\Core\Database::getConnection();
         $repo = new SettingsRepository($this->db);
-        $this->settingsService = new SettingsService($repo, new NullLogger(), new \Tests\NullCache());
+        $this->settingsService = new SettingsService($repo, new NullLogger(), new \Tests\NullCache(), new \Tests\NullEventDispatcher());
     }
 
     public function testDownCommand() {

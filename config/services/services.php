@@ -84,7 +84,8 @@ return function($c, array $config) {
             return new SettingsService(
                 $c->get(SettingsRepositoryInterface::class), 
                 $c->get(LoggerInterface::class),
-                $c->get(\App\Core\Cache\CacheInterface::class)
+                $c->get(\App\Core\Cache\CacheInterface::class),
+                $c->get(\App\Core\Events\EventDispatcherInterface::class)
             );
         },
         VatServiceInterface::class => function($c) {
@@ -119,7 +120,8 @@ return function($c, array $config) {
         ProductVariantServiceInterface::class => function($c) {
             return new ProductVariantService(
                 $c->get(ProductRepositoryInterface::class),
-                $c->get(AttributeServiceInterface::class)
+                $c->get(AttributeServiceInterface::class),
+                $c->get(\App\Core\Events\EventDispatcherInterface::class)
             );
         },
         CartServiceInterface::class => function($c) {
@@ -198,7 +200,11 @@ return function($c, array $config) {
             );
         },
         ReviewServiceInterface::class => function($c) {
-            return new ReviewService($c->get(ReviewRepositoryInterface::class), $c->get(LoggerInterface::class));
+            return new ReviewService(
+                $c->get(ReviewRepositoryInterface::class), 
+                $c->get(LoggerInterface::class),
+                $c->get(\App\Core\Events\EventDispatcherInterface::class)
+            );
         },
         AddressServiceInterface::class => function($c) {
             return new AddressService($c->get(AddressRepositoryInterface::class), $c->get(LoggerInterface::class));

@@ -26,7 +26,7 @@ class TieredPricingTest extends TestCase {
         $this->promotionEvaluator = new \App\Services\PromotionEvaluator($categoryService);
         
         $settingsRepo = new \App\Repositories\SettingsRepository($db, $this->logger);
-        $this->settings = new \App\Services\SettingsService($settingsRepo, $this->logger, $cache);
+        $this->settings = new \App\Services\SettingsService($settingsRepo, $this->logger, $cache, new \Tests\NullEventDispatcher());
         
         $this->pricingService = new PricingService(
             $this->vatService,
