@@ -13,25 +13,24 @@ class AnalyticsService implements AnalyticsServiceInterface {
 
     public function getDailySales(int $days = 30): array {
         $driver = $this->db->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $threshold = date('Y-m-d H:i:s', strtotime("-$days days"));
         
         if ($driver === 'sqlite') {
             $sql = "SELECT date(created_at) as date, SUM(total) as revenue 
                     FROM orders 
-                    WHERE status != ? AND created_at >= date('now', ?)
+                    WHERE status != ? AND created_at >= ?
                     GROUP BY date(created_at)
                     ORDER BY date(created_at) ASC";
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([Order::STATUS_CANCELLED, "-$days days"]);
+            $stmt->execute([Order::STATUS_CANCELLED, $threshold]);
         } else {
             $sql = "SELECT DATE(created_at) as date, SUM(total) as revenue 
                     FROM orders 
-                    WHERE status != ? AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                    WHERE status != ? AND created_at >= ?
                     GROUP BY DATE(created_at)
                     ORDER BY DATE(created_at) ASC";
             $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(1, Order::STATUS_CANCELLED);
-            $stmt->bindValue(2, $days, \PDO::PARAM_INT);
-            $stmt->execute();
+            $stmt->execute([Order::STATUS_CANCELLED, $threshold]);
         }
 
         $results = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);

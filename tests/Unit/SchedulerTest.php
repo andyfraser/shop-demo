@@ -175,4 +175,25 @@ class SchedulerTest extends TestCase {
         $this->assertFalse($command->executed);
         $this->assertStringContainsString('Scheduler is currently PAUSED', $output);
     }
+
+    public function testSchedulerUpdatesLastRunEvenOnFailure(): void {
+        $command = new class implements CommandInterface {
+            public function execute(): int { throw new \Exception("Command failed!"); }
+            public function getName(): string { return 'failing:command'; }
+            public function getDescription(): string { return 'Fails'; }
+            public function getSchedule(): ?string { return 'everyMinute'; }
+        };
+
+        $settings = new SchedulerMockSettingsService();
+        $scheduler = new Scheduler($this->db, $settings, [$command]);
+
+        ob_start();
+        $scheduler->run();
+        ob_end_clean();
+
+        // Verify last_run_at was updated despite failure
+        $stmt = $this->db->query("SELECT last_run_at FROM scheduled_tasks WHERE name = 'failing:command'");
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $this->assertNotNull($row['last_run_at']);
+    }
 }

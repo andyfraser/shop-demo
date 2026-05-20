@@ -55,9 +55,9 @@ class CurrencyRepository implements CurrencyRepositoryInterface {
 
         if ($id) {
             $stmt = $this->db->prepare(
-                "UPDATE currencies SET code = ?, name = ?, symbol = ?, exchange_rate = ?, is_base = ?, active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+                "UPDATE currencies SET code = ?, name = ?, symbol = ?, exchange_rate = ?, is_base = ?, active = ?, updated_at = ? WHERE id = ?"
             );
-            $stmt->execute([$code, $name, $symbol, $rate, $is_base, $active, $id]);
+            $stmt->execute([$code, $name, $symbol, $rate, $is_base, $active, date('Y-m-d H:i:s'), $id]);
             return $id;
         } else {
             $stmt = $this->db->prepare(

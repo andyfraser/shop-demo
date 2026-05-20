@@ -64,7 +64,6 @@ class Scheduler {
 
                 try {
                     $exitCode = $command->execute();
-                    $this->updateLastRun($name);
                     echo "Finished with exit code {$exitCode}.\n";
                     
                     if ($this->logger) {
@@ -81,6 +80,8 @@ class Scheduler {
                             'error' => $e->getMessage()
                         ]);
                     }
+                } finally {
+                    $this->updateLastRun($name);
                 }
             } else {
                 echo "Command {$name} is not due yet.\n";

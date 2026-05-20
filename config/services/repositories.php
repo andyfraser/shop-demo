@@ -39,6 +39,8 @@ use App\Repositories\MigrationRepositoryInterface;
 use App\Repositories\MigrationRepository;
 use App\Repositories\CurrencyRepositoryInterface;
 use App\Repositories\CurrencyRepository;
+use App\Repositories\JobRepositoryInterface;
+use App\Repositories\JobRepository;
 
 return function($c, array $config) {
     return [
@@ -101,6 +103,9 @@ return function($c, array $config) {
         },
         CurrencyRepositoryInterface::class => function($c) {
             return new CurrencyRepository($c->get(\PDO::class), $c->get(LoggerInterface::class));
+        },
+        JobRepositoryInterface::class => function($c) {
+            return new JobRepository($c->get(\PDO::class));
         },
     ];
 };

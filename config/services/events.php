@@ -13,6 +13,7 @@ use App\Events\StockUpdated;
 use App\Events\ReviewSubmitted;
 use App\Events\ReviewApproved;
 use App\Events\SettingUpdated;
+use App\Listeners\AsyncDemoListener;
 use App\Listeners\OrderListener;
 use App\Listeners\AuthListener;
 use App\Listeners\UserListener;
@@ -26,12 +27,19 @@ return function($c, array $config) {
     return [
         // Central Event Dispatcher
         EventDispatcherInterface::class => function($c) {
-            $dispatcher = new EventDispatcher($c->get(LoggerInterface::class));
+            $dispatcher = new EventDispatcher(
+                $c->get(LoggerInterface::class),
+                $c->get(\App\Services\QueueServiceInterface::class)
+            );
             
             // Order Listeners
             $dispatcher->addListener(
                 OrderPlaced::class, 
                 fn($e) => $c->get(OrderListener::class)->handle($e)
+            );
+            $dispatcher->addListener(
+                OrderPlaced::class,
+                AsyncDemoListener::class
             );
             $dispatcher->addListener(
                 OrderStatusUpdated::class, 

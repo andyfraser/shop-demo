@@ -79,6 +79,8 @@ use App\Services\CurrencyServiceInterface;
 use App\Services\CurrencyService;
 use App\Services\CsvServiceInterface;
 use App\Services\CsvService;
+use App\Services\QueueServiceInterface;
+use App\Services\QueueService;
 
 use App\Services\AnalyticsServiceInterface;
 use App\Services\AnalyticsService;
@@ -269,6 +271,9 @@ return function($c, array $config) {
         },
         CsvServiceInterface::class => function($c) {
             return new CsvService();
+        },
+        QueueServiceInterface::class => function($c) {
+            return new QueueService($c->get(\App\Repositories\JobRepositoryInterface::class));
         },
     ];
 };
