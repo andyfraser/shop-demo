@@ -43,12 +43,45 @@ function product_img_url(string $filename = '', string $size = 'original'): stri
     return (defined('BASE_URL') ? BASE_URL : '') . $url;
 }
 
-function product_img(string $filename = '', string $alt = '', string $class = '', string $style = '', string $size = 'original'): void {
-    $src   = product_img_url($filename, $size);
+function product_img(string $filename = '', string $alt = '', string $class = '', string $style = '', string $size = 'original', string $sizes = ''): void {
     $alt   = h($alt);
     $class = $class ? ' class="' . h($class) . '"' : '';
     $style = $style ? ' style="' . h($style) . '"' : '';
-    echo "<img src=\"{$src}\" alt=\"{$alt}\"{$class}{$style}>";
+
+    if (!$filename) {
+        $src = product_img_url('', $size);
+        echo "<img src=\"{$src}\" alt=\"{$alt}\"{$class}{$style} loading=\"lazy\">";
+        return;
+    }
+
+    $src = product_img_url($filename, $size);
+    
+    // Generate srcset for responsive delivery
+    $srcset = [];
+    $placeholder = (defined('BASE_URL') ? BASE_URL : '') . '/images/placeholder.svg';
+    
+    $thumb  = product_img_url($filename, 'thumb');
+    $medium = product_img_url($filename, 'medium');
+    $large  = product_img_url($filename, 'large');
+
+    if ($thumb !== $placeholder) $srcset[] = "{$thumb} 400w";
+    if ($medium !== $placeholder) $srcset[] = "{$medium} 800w";
+    if ($large !== $placeholder) $srcset[] = "{$large} 1200w";
+
+    $srcsetAttr = '';
+    $sizesAttr = '';
+
+    if (!empty($srcset)) {
+        $srcsetAttr = ' srcset="' . implode(', ', $srcset) . '"';
+        if ($sizes) {
+            $sizesAttr = ' sizes="' . h($sizes) . '"';
+        } else {
+            // Default sizes: roughly matches the grid/detail layouts
+            $sizesAttr = ' sizes="(max-width: 800px) 100vw, 800px"';
+        }
+    }
+
+    echo "<img src=\"{$src}\" alt=\"{$alt}\"{$srcsetAttr}{$sizesAttr}{$class}{$style} loading=\"lazy\">";
 }
 
 function flash(string $key, ?string $msg = null): ?string {

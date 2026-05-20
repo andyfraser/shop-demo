@@ -24,7 +24,7 @@
                             <?php elseif ($p->isNew()): ?>
                                 <span class="product-badge badge-new">New</span>
                             <?php endif; endif; ?>
-                            <?php product_img($p->image ?? '', $p->name, '', '', 'thumb') ?>
+                            <?php product_img($p->image ?? '', $p->name, '', '', 'thumb', '(max-width: 480px) 100vw, (max-width: 800px) 50vw, 300px') ?>
                         </div>
                         <div class="card-body">
                             <div class="card-name"><?= h($p->name) ?></div>

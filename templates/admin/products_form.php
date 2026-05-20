@@ -95,8 +95,7 @@
             <div class="flex gap-3 flex-start">
                 <?php if ($img_url): ?>
                 <div style="flex-shrink: 0;">
-                    <img src="<?= $img_url ?>" alt=""
-                        style="height:140px;width:140px;object-fit:cover;border-radius:var(--radius);display:block;border:1px solid var(--line);">
+                    <?php product_img($img_file, '', '', 'height:140px;width:140px;object-fit:cover;border-radius:var(--radius);display:block;border:1px solid var(--line);', 'thumb', '140px') ?>
                     <label class="flex-center gap-1 mt-1 text-sm" style="font-weight:400;cursor:pointer;">
                     <input type="checkbox" name="remove_image" value="1">
                     Remove image

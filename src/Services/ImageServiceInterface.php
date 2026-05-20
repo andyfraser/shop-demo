@@ -10,7 +10,7 @@ interface ImageServiceInterface {
 
     /**
      * Get the URL for a specific size of an image.
-     * Sizes: 'thumb', 'large', 'original'
+     * Sizes: 'thumb', 'medium', 'large', 'original'
      */
     public function getUrl(?string $filename, string $size = 'original'): string;
 

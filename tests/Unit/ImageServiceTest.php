@@ -101,5 +101,11 @@ class ImageServiceTest extends TestCase {
         touch($this->testDir . $filename);
         $url = $this->service->getUrl($filename);
         $this->assertEquals('/uploads_test/img_123.jpg', $url);
+
+        // Test medium size
+        $mediumFile = 'img_123_medium.webp';
+        touch($this->testDir . $mediumFile);
+        $url = $this->service->getUrl($filename, 'medium');
+        $this->assertEquals('/uploads_test/' . $mediumFile, $url);
     }
 }

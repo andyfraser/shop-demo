@@ -33,27 +33,7 @@
     <h2 class="section-title">Featured Products</h2>
     <div class="product-grid">
       <?php foreach ($featured_products as $p): ?>
-        <a href="/product/<?= h($p->slug) ?>" class="product-card">
-          <div class="img-wrap">
-            <?php 
-              if (!promotion_badge($p)):
-                if ($p->featured): 
-            ?>
-              <span class="product-badge badge-featured">Featured</span>
-            <?php elseif ($p->isNew()): ?>
-              <span class="product-badge badge-new">New</span>
-            <?php endif; endif; ?>
-            <?php product_img($p->image ?? '', $p->name, '', 'loading:lazy', 'thumb') ?>
-          </div>
-          <div class="card-body">
-            <div class="card-cat"><?= h($p->cat_name ?? 'Uncategorised') ?></div>
-            <div class="card-name"><?= h($p->name) ?></div>
-            <div class="card-price"><?= money($p->price) ?></div>
-            <div class="card-actions">
-              <span class="btn btn-primary btn-sm">View Product</span>
-            </div>
-          </div>
-        </a>
+        <?= (new \App\View\Components\ProductCard($p, true))->render() ?>
       <?php endforeach; ?>
     </div>
   </section>

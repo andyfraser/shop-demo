@@ -55,6 +55,7 @@ class ImageService implements ImageServiceInterface {
         }
 
         $this->generateResized($originalName, $baseName . '_thumb.webp', 400, 400);
+        $this->generateResized($originalName, $baseName . '_medium.webp', 800, 800);
         $this->generateResized($originalName, $baseName . '_large.webp', 1200, 1200);
 
         return $baseName . '.' . $ext;
@@ -69,6 +70,9 @@ class ImageService implements ImageServiceInterface {
         if ($size === 'thumb') {
             $thumbFile = $base . '_thumb.webp';
             if (file_exists($this->uploadDir . $thumbFile)) return $this->baseUrl . $thumbFile;
+        } elseif ($size === 'medium') {
+            $mediumFile = $base . '_medium.webp';
+            if (file_exists($this->uploadDir . $mediumFile)) return $this->baseUrl . $mediumFile;
         } elseif ($size === 'large') {
             $largeFile = $base . '_large.webp';
             if (file_exists($this->uploadDir . $largeFile)) return $this->baseUrl . $largeFile;
@@ -97,6 +101,7 @@ class ImageService implements ImageServiceInterface {
         $filesToDelete = [
             $filename,
             $base . '_thumb.webp',
+            $base . '_medium.webp',
             $base . '_large.webp'
         ];
 
