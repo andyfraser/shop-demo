@@ -119,6 +119,23 @@ class RotateLogsCommandTest extends TestCase {
         $this->assertTrue(file_exists($logFile), 'Original empty log file should remain');
     }
 
+    public function testCompressesOrphanedLogs() {
+        $rotatedFile = $this->testLogDir . '/orphaned-2026-05-20.log';
+        file_put_contents($rotatedFile, 'Some content');
+        
+        $command = new RotateLogsCommand($this->testLogDir, 30);
+        
+        ob_start();
+        $command->execute();
+        ob_end_clean();
+        
+        $this->assertTrue(file_exists($rotatedFile . '.gz'), 'Orphaned log should be compressed');
+        $this->assertFalse(file_exists($rotatedFile), 'Original orphaned log should be removed');
+        
+        $decompressed = gzdecode(file_get_contents($rotatedFile . '.gz'));
+        $this->assertStringContainsString('Some content', $decompressed);
+    }
+
     public function tearDown(): void {
         $this->cleanDir();
         if (is_dir($this->testLogDir)) {

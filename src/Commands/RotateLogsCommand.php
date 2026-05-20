@@ -73,9 +73,9 @@ class RotateLogsCommand implements CommandInterface {
                 // We first rename to the rotated name, then compress it.
                 // This minimizes the time the original log file is "gone".
                 if (rename($file, $rotatedFile)) {
-                    $content = file_get_contents($rotatedFile);
-                    $gzdata = gzencode($content, 9);
-                    if ($gzdata !== false && file_put_contents($compressedFile, $gzdata) !== false) {
+                    $success = $this->compressFile($rotatedFile, $compressedFile);
+
+                    if ($success) {
                         unlink($rotatedFile);
                         echo "Rotated and compressed: {$filename} -> " . basename($compressedFile) . "\n";
                         if ($this->logger) {
@@ -96,7 +96,22 @@ class RotateLogsCommand implements CommandInterface {
             }
         }
 
-        // 2. Cleanup old rotated files
+        // 2. Compress orphaned rotated files (e.g., if a previous run failed during compression)
+        $allFiles = glob($this->logDir . '/*.log');
+        foreach ($allFiles as $file) {
+            $filename = basename($file);
+            if (preg_match('/-\d{4}-\d{2}-\d{2}\.log$/', $filename)) {
+                $compressedFile = $file . '.gz';
+                if (!file_exists($compressedFile)) {
+                    echo "Compressing orphaned log: " . $filename . "\n";
+                    if ($this->compressFile($file, $compressedFile)) {
+                        unlink($file);
+                    }
+                }
+            }
+        }
+
+        // 3. Cleanup old rotated files
         $allRotatedFiles = glob($this->logDir . '/*-*-*-*.log*');
         $threshold = strtotime("-{$this->retentionDays} days");
 
@@ -121,5 +136,30 @@ class RotateLogsCommand implements CommandInterface {
         }
 
         return 0;
+    }
+
+    private function compressFile(string $sourceFile, string $destinationFile): bool {
+        $source = fopen($sourceFile, 'rb');
+        $destination = gzopen($destinationFile, 'wb9');
+        
+        $success = false;
+        if ($source !== false && $destination !== false) {
+            while (!feof($source)) {
+                $chunk = fread($source, 1024 * 1024);
+                if ($chunk !== false) {
+                    gzwrite($destination, $chunk);
+                }
+            }
+            $success = true;
+        }
+
+        if ($source !== false) {
+            fclose($source);
+        }
+        if ($destination !== false) {
+            gzclose($destination);
+        }
+        
+        return $success;
     }
 }
