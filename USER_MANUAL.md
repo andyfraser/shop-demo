@@ -14,6 +14,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 7. [Security & Privacy](#7-security--privacy)
 8. [Running Tests](#8-running-tests)
 9. [Task Scheduling](#9-task-scheduling)
+10. [Asynchronous Queue System](#10-asynchronous-queue-system)
 
 ---
 
@@ -148,6 +149,8 @@ Demoshop stores its core settings in the database, manageable via **Admin > Sett
 | `low_stock_threshold` | When to trigger alerts/badges. | `10` |
 | `password_min_length` | Minimum characters for user passwords. | `6` |
 | `login_max_attempts` | Rate limiting for login security. | `5` |
+| `queue_cleanup_completed_hours` | Hours to retain completed background jobs in history. | `24` |
+| `queue_cleanup_failed_days` | Days to retain failed background jobs in history before pruning. | `7` |
 
 ---
 
@@ -277,6 +280,8 @@ php cli/console.php maintenance:up          # Bring the store back online
 php cli/console.php recover-carts
 php cli/console.php images:cleanup
 php cli/console.php logs:rotate
+php cli/console.php queue:work              # Process pending background jobs
+php cli/console.php queue:cleanup           # Clean up completed/failed jobs from queue
 ```
 
 ### How it Works
@@ -288,13 +293,47 @@ If the scheduler is paused via `schedule:pause`, it will skip all tasks and log 
 
 Common tasks include:
 *   **`recover-carts`**: Sends email reminders for abandoned carts (Daily).
-*   **`logs:rotate`**: Rotates and compresses application logs (Daily).
+*   **`logs:rotate`**: Rotates and compresses application logs daily using a memory-efficient chunked stream reader (Daily).
 *   **`images:cleanup`**: Removes orphaned images that are no longer referenced by any product (Weekly).
+*   **`queue:work`**: Processes pending background jobs in the database queue (Every Minute).
+*   **`queue:cleanup`**: Purges completed and failed background jobs based on Admin retention settings (Daily).
 
 Supported frequencies include:
 *   **High-Frequency:** `everyMinute`, `everyFiveMinutes`, `everyFifteenMinutes`, `everyThirtyMinutes`
 *   **Standard:** `hourly`, `twiceDaily` (every 12 hours), `daily`, `weekdays` (Mon-Fri)
 *   **Long-Term:** `weekly`, `monthly`, `yearly`
+
+---
+
+## 10. Asynchronous Queue System
+
+Demoshop features a database-backed asynchronous background job queue. This architecture decouples slow, resource-heavy operations (e.g. sending transactional emails, synchronizing external APIs, or complex data updates) from the main web request cycle, resulting in maximum storefront responsiveness.
+
+### Decoupled Events & Queueing
+The asynchronous queue is fully integrated with Demoshop's event system:
+- **`ShouldQueue` Interface:** Any event listener can implement the `App\Core\Events\ShouldQueue` interface.
+- **Automatic Serialization:** When an event is dispatched, the `EventDispatcher` inspects the listener. If it implements `ShouldQueue`, the dispatcher serializes the event payload and writes it directly to the `jobs` database table as a pending job, instead of executing it synchronously.
+- **Performance Benefits:** Users experience zero delay. For example, order completion completes instantly, while emails are queued and dispatched in the background.
+
+### Queue Worker (`queue:work`)
+Pending background jobs are processed by the console command:
+```bash
+php cli/console.php queue:work
+```
+This command runs automatically every minute under the central scheduler. It picks up pending jobs, deserializes the event payloads, resolves the listener via constructor autowiring (Dependency Injection), and executes them.
+
+### Automatic Retries & Backoff
+If a background job fails (e.g., due to a temporary network issue or database lock), the queue system has built-in resilience:
+- **Configurable Retries:** Listeners specify their maximum attempt limit via the `getTries()` method.
+- **Retry Delays:** The retry delay is customizable via the `getRetryDelay()` method.
+- **Exponential Backoff:** If `useExponentialBackoff()` returns `true`, the wait duration doubles after every failed attempt (e.g., 1 min -> 2 min -> 4 min), minimizing system load during outages.
+
+### Queue Cleanup & Retention
+Completed and failed background jobs are stored in history for logging and debugging. To prevent infinite database growth:
+- **`queue:cleanup` Command:** Runs daily to purge old job records from the database.
+- **Retention Settings:** Managed dynamically in **Admin > Settings > Background Jobs**:
+  - *Cleanup Completed (hours):* Keep completed jobs in history (Default: `24` hours).
+  - *Cleanup Failed (days):* Keep failed jobs in history for troubleshooting (Default: `7` days).
 
 ---
 *For developer support or feature requests, please consult the `README.md`.*

@@ -32,8 +32,10 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - **PSR-3 compliant logging** with file-based output and conditional debug mode.
 - Privacy-compliant cookie consent banner with persistence logic.
 - **Maintenance Mode:** Quickly take the store offline for updates using CLI commands, displaying a dedicated maintenance page to visitors while allowing admin access.
-- **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery, log rotation, image cleanup) with a single crontab entry and database-backed state tracking.
+- **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery, log rotation, image cleanup, background queue processing) with a single crontab entry and database-backed state tracking.
+- **Asynchronous Background Queue:** A database-backed job queue for deferred event processing. Event listeners can implement `ShouldQueue` to run asynchronously with support for retries, delays, exponential backoff, and daily CLI-based database cleanup.
 - **Timezone Management:** The application strictly uses **UTC** for all internal operations and database storage. Display timezones are configurable via the Admin panel, with a built-in `format_local_time()` helper for localized rendering.
+
 
 **Admin panel** (`/admin/`)
 - Dashboard with live stats (products, customers, orders, revenue) and low-stock alerts.
@@ -132,6 +134,7 @@ shop-demo/
 │   │   ├── Autoloader.php  # PSR-4 style class autoloader
 │   │   ├── Container.php   # DI container with autowiring and interface mapping
 │   │   ├── Database.php    # Multi-driver PDO connection factory
+│   │   ├── Events/         # Event dispatcher core and ShouldQueue interface
 │   │   ├── Request.php     # HTTP request abstraction
 │   │   ├── Response.php    # HTTP response abstraction (HTML, JSON, Redirect)
 │   │   ├── Router.php      # HTTP router with middleware and DI support
@@ -190,6 +193,7 @@ shop-demo/
 **Event System:** A decoupled, event-driven architecture using a central `EventDispatcher`.
 - **Decoupled Logic:** Cross-cutting concerns like sending emails, updating stock, or logging audits are handled by Listeners reacting to dispatched Events (e.g., `OrderPlaced`, `UserRegistered`).
 - **Extensibility:** New functionality can be added by creating new Listeners without modifying the core business logic.
+- **Asynchronous Event Processing:** Listeners can implement the `ShouldQueue` interface to offload time-consuming tasks (like `AsyncDemoListener` or email notifications) from the main request/response cycle. The event is automatically serialized into a database-backed job queue and executed asynchronously by a command-line background worker, with support for automatic retries, retry delays, and exponential backoff.
 
 **Front Controller:** All requests enter through `public/index.php`, which bootstraps the application and dispatches to the router. The application uses a custom `Request` and `Response` system to handle HTTP communication cleanly.
 
