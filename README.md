@@ -20,15 +20,18 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - Full-text product search with sorting and configurable pagination (12 / 24 / 48 / all)
 - **Persistent Shopping Cart:** Database-backed cart that persists across sessions and devices, with automatic merging upon login.
 - **Quantity-Based Tiered Pricing:** Bulk discounts (fixed amount off) that apply automatically as quantities increase. Tier prices update dynamically on the product page when different variants are selected.
-- **Wishlist:** Authenticated users can save products to a personal wishlist for later viewing.
+- **Wishlist:** Authenticated users can save products to a personal wishlist for later viewing. **Wishlist Sharing:** Users can toggle their wishlist to public and share a unique link with others.
+- **Product Bundles:** Create product packages that combine multiple items into a single SKU. Inventory is automatically tracked and subtracted from the individual component products when a bundle is sold.
 - **Advanced Promotions:** Automatic and code-based discounts (percentage, fixed, free shipping, and BOGO) with real-time AJAX cart updates.
 - Checkout with saved shipping address pre-fill and dynamic delivery options.
 - **Secure Payment Integration:** Pluggable payment gateway system with a demo manual payment gateway for checkout processing.
+- **Multi-Currency Support:** Customers can switch between different currencies with real-time price conversion based on admin-defined rates.
 - **Enhanced Address Book:** Customer management of multiple shipping addresses with labels and default selection.
 - Customer accounts with order history and **order cancellation for pending orders**.
 - User registration with email verification, **resend verification functionality**, and login.
 - **PSR-3 compliant logging** with file-based output and conditional debug mode.
 - Privacy-compliant cookie consent banner with persistence logic.
+- **Maintenance Mode:** Quickly take the store offline for updates using CLI commands, displaying a dedicated maintenance page to visitors while allowing admin access.
 - **Task Scheduling:** Centralized system for background jobs (e.g., abandoned cart recovery, log rotation, image cleanup) with a single crontab entry and database-backed state tracking.
 - **Timezone Management:** The application strictly uses **UTC** for all internal operations and database storage. Display timezones are configurable via the Admin panel, with a built-in `format_local_time()` helper for localized rendering.
 
@@ -38,7 +41,9 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - **Attributes Management:** Define custom product attributes (e.g., Brand, Color, Material) and manage their values.
 - **Database Backup & Restore:** Export the entire database (SQLite or MySQL) and restore from a backup file directly through the interface.
 - **Promotions Management:** Create complex discount rules targeting specific products, categories, or entire orders (percentage, fixed, or Buy X Get Y) with date and usage limits.
+- **Currency Management:** Manage multiple currencies, set exchange rates, and define the base store currency.
 - **Review Moderation:** Approve or reject customer product reviews.
+- **Audit Logs:** Comprehensive tracking of all administrative actions (POST requests) and system events, allowing for easy troubleshooting and accountability.
 - Order management with status workflow (pending → confirmed → shipped → delivered / cancelled).
 - **Detailed Order History:** Comprehensive tracking of all status changes, return requests, and refunds, with clear attribution to the customer or admin who performed the action.
 - **Return & Refund Tracking:** Admin visibility into return requests, item-level return details, and automated refund status updates.
@@ -119,7 +124,8 @@ shop-demo/
 ├── config/                 # Application configuration files
 │   ├── config.php          # Local configuration (ignored by Git)
 │   ├── routes.php          # Route definitions
-│   └── services.php        # DI service registrations (Interface to Implementation)
+│   ├── services.php        # DI service registrations (Interface to Implementation)
+│   └── services/           # Granular service registration files (commands, core, events, etc.)
 │
 ├── src/
 │   ├── Core/
@@ -135,6 +141,10 @@ shop-demo/
 │   │
 │   ├── Controllers/        # Request handlers (Account, Admin*, Auth, Cart, Checkout, etc.)
 │   │
+│   ├── Events/             # Event DTOs (OrderPlaced, UserRegistered, etc.)
+│   │
+│   ├── Listeners/          # Event listeners (OrderListener, AuthListener, etc.)
+│   │
 │   ├── Models/             # Data models (Product, Order, Category, Review, Attribute, etc.)
 │   │
 │   ├── Repositories/       # Data access layer (Interfaces and PDO-based implementations)
@@ -144,6 +154,10 @@ shop-demo/
 │   ├── Middleware/         # Request filters (Auth, Admin, Csrf, Guest, Verified)
 │   │
 │   └── Psr/                # PSR-3 standard logging interfaces
+│
+├── migrations/             # Database schema migrations
+│
+├── tests/                  # Custom vanilla PHP testing framework
 │
 ├── templates/              # HTML templates (Storefront, Admin, Emails, Partials)
 │
@@ -165,11 +179,17 @@ shop-demo/
 
 **Service Layer:** Business logic is encapsulated in Service classes. 
 - Services coordinate between Repositories, other Services (e.g., `EmailService`, `PaymentService`), and external interfaces.
+- **Specialized Domain Services:** To maintain SRP, complex calculations are isolated in dedicated services like `PricingService` (multi-currency and tier-aware pricing) and `VatService` (tax calculation logic).
 
 **Middleware System:** Decouples security and cross-cutting concerns from business logic.
 - **`CsrfMiddleware`**: Automatically validates CSRF tokens for all protected POST routes.
 - **`AuthMiddleware` / `AdminMiddleware`**: Enforce authentication and role-based access.
 - **`VerifiedMiddleware`**: Enforces email verification for sensitive actions.
+- **`AuditLogMiddleware`**: Automatically records administrative actions (POST requests) for the audit trail.
+
+**Event System:** A decoupled, event-driven architecture using a central `EventDispatcher`.
+- **Decoupled Logic:** Cross-cutting concerns like sending emails, updating stock, or logging audits are handled by Listeners reacting to dispatched Events (e.g., `OrderPlaced`, `UserRegistered`).
+- **Extensibility:** New functionality can be added by creating new Listeners without modifying the core business logic.
 
 **Front Controller:** All requests enter through `public/index.php`, which bootstraps the application and dispatches to the router. The application uses a custom `Request` and `Response` system to handle HTTP communication cleanly.
 

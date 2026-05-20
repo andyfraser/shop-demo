@@ -65,6 +65,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 *   **Smart Related Products:** Discovers items using a weighted relevance algorithm (prioritizing shared attributes like Brand/Color and same-category items).
 *   **Recently Viewed:** Automatically tracks your last 7 viewed items in a dedicated section at the bottom of the page, sorted with the most recent items on the left.
 *   **Inventory Logic:** Out-of-stock products are automatically hidden from the "Featured" homepage list but remain accessible via direct links or category pages.
+*   **Multi-Currency Switcher:** Toggle between available currencies via the dropdown in the header. Prices across the store, including cart and checkout, will automatically convert based on current exchange rates.
 *   **Promotions & Discounts:** Real-time visibility of active deals via badges on listings and callouts on product pages. Supports both automatic application and manual promo codes. 
     *   **Promotion Stacking:** Benefit from multiple offers at once (e.g., Free Shipping + 10% OFF coupon).
     *   **Tiered Rewards:** Dynamic "Spend more, save more" discounts (e.g., 10% off over $50, 20% off over $100).
@@ -74,7 +75,9 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 ### Shopping Experience
 *   **Dynamic Cart:** Add, update, or remove items without page reloads using the AJAX-powered cart.
 *   **Persistent Cart:** Your items stay in your cart even if you close your browser or switch devices. Cart contents are automatically merged when you log in.
-*   **Wishlist:** Save products you're interested in for later. Authenticated users can manage their wishlist from a dedicated page or directly from product listings.
+*   **Wishlist & Sharing:** Save products you're interested in for later. Authenticated users can manage their wishlist from a dedicated page.
+    *   **Privacy Control:** Toggle your wishlist between "Private" and "Public".
+    *   **Social Sharing:** When public, a unique sharing URL is generated, allowing you to share your wishlist with friends and family.
 *   **Seamless Checkout:** Logged-in users can choose from their saved address book. Choose from multiple delivery tiers based on order total.
 *   **Secure Payment Integration:** Pluggable payment gateway system with a demo manual payment gateway for checkout processing.
 *   **Order Tracking:** Registered customers can view their complete order history and track status (Pending, Confirmed, Shipped, Delivered).
@@ -95,18 +98,18 @@ The dashboard provides an immediate overview of your business:
 *   **Live Metrics:** Total products, active customers, order count, and total revenue.
 *   **Low-Stock Alerts:** Automatically identifies products below the configured threshold.
 *   **Recent Orders:** A quick-view list of the latest customer activity.
+*   **Audit Trail:** A preview of the most recent administrative actions logged by the system.
 
 ### Inventory & Reviews
-*   **Products:** CRUD operations for items, including image uploads (JPEG, PNG, GIF, WebP up to 5MB), pricing, and "Featured" status. Admins can also enable **"Force Variant"** mode, which restricts customers to purchasing only specific variants (e.g., Size/Color) instead of the base product.
+*   **Products:** CRUD operations for items, including image uploads (JPEG, PNG, GIF, WebP up to 5MB), pricing, and "Featured" status. 
+    *   **Force Variant Mode:** Restricts customers to purchasing only specific variants (e.g., Size/Color) instead of the base product.
+    *   **Product Bundles:** Create composite products by selecting multiple individual items. When a bundle is purchased, the system automatically deducts stock from each component product.
 *   **Attributes Management:** Define custom product attributes (e.g., Brand, Color, Material) and manage their values. These are used for smart recommendations and product details.
 *   **Quantity Tiers:** Implement bulk quantity discounts (e.g., "Buy 10, save £1.00 each"). 
     *   **Logic:** Tiers are defined as a fixed discount amount subtracted from the base or variant price.
     *   **Variant Support:** Tier prices update dynamically on the storefront based on the selected product variant.
-    *   **Example Setup:** To achieve "1-5 units = £10, 6-10 units = £9, 11+ units = £8":
-        1. Set **Base Price** to `10.00`.
-        2. Add **Tier 1**: Min Qty `6`, Discount `1.00` (results in £9 price).
-        3. Add **Tier 2**: Min Qty `11`, Discount `2.00` (results in £8 price).
 *   **Categories:** Create complex parent-child relationships with custom icons.
+*   **Currencies:** Manage the store's supported currencies. Define exchange rates relative to the base currency and toggle visibility for customers.
 *   **Promotions Management:** Design complex marketing campaigns with ease:
     *   **Types:** Percentage, fixed amount, free shipping, or "Buy X Get Y" (BOGO) discounts.
     *   **Advanced Targeting:** Support for specific products, categories, or entire orders with granular **exclusion rules** (e.g., "All Categories except Electronics").
@@ -117,9 +120,10 @@ The dashboard provides an immediate overview of your business:
     *   **Stackability:** Explicitly control whether a promotion can be used in conjunction with other offers.
 *   **Review Moderation:** Review, approve, or reject customer product ratings and comments.
 
-### Order Fulfillment
+### Order Fulfillment & Accountability
 *   **Status Workflow:** Transition orders through `Pending` → `Confirmed` → `Shipped` → `Delivered`.
 *   **Enhanced History:** View a detailed timeline of all order events, including status updates, return requests, and refund processing. Includes a full breakdown of every applied promotion and its individual discount amount.
+*   **Audit Logs:** A dedicated section to review all administrative actions (POST requests). Each log entry includes the timestamp, user, action performed, and relevant entity IDs.
 *   **Action Attribution:** Every status change is logged with the name of the user or administrator who authorized it.
 *   **Abandoned Carts:** Automated transactional emails reach out to users who leave items in their carts without completing checkout.
 *   **Return Management:** Review and approve or reject customer return requests with optional notes.
@@ -188,15 +192,17 @@ The logging system follows the PHP Standard Recommendation for logging (PSR-3). 
 *   **Dependency Inversion:** Use of Interfaces for all service and repository logic to ensure decoupling and follow the SOLID principles.
 *   **Repository Pattern:** A dedicated data access layer that decouples business logic from SQL queries. Every entity has a Repository that implements a corresponding interface.
 *   **DI Container:** Custom container (`App\Core\Container`) with autowiring and interface mapping support. Service registrations are centralized in `config/services.php`.
+*   **Event-Driven Architecture:** Decouples core business logic from side effects. For example, when an order is placed, an `OrderPlaced` event is dispatched, which triggers the `OrderListener` to send emails and the `InventoryListener` to update stock levels.
 *   **MVC Pattern:** Strict separation of Controllers, Services, Repositories, Models, and Views.
 *   **Front Controller:** All traffic routes through `public/index.php`, which initializes the DI system and sets up global error handling.
 
 ### Directory Structure Highlights
 *   `src/Core/`: Foundation classes including the `Container`, `Router`, `Database`, `Request`, `Response`, and `Renderer`.
+*   `src/Events/` & `src/Listeners/`: Decoupled event-driven system components.
 *   `src/Models/`: Data objects (User, Product, Order, etc.) that represent core business entities.
 *   `src/Repositories/`: Data access layer with interface-driven PDO implementations.
 *   `src/Services/`: Interface-driven business logic layer.
-*   `config/`: Route and Service (Interface to Implementation) definitions.
+*   `config/`: Route and Service definitions, including granular configuration in the `services/` subdirectory.
 *   `templates/`: Pure PHP/HTML view files, utilizing Model objects for data representation.
 
 ### Database Migrations
@@ -263,6 +269,10 @@ php cli/console.php
 php cli/console.php schedule:pause
 php cli/console.php schedule:resume
 
+# Maintenance Mode
+php cli/console.php maintenance:down        # Take the store offline
+php cli/console.php maintenance:up          # Bring the store back online
+
 # Run a specific command immediately
 php cli/console.php recover-carts
 php cli/console.php images:cleanup
@@ -273,6 +283,8 @@ php cli/console.php logs:rotate
 The scheduler tracks the execution of each task in the `scheduled_tasks` database table. It ensures that tasks registered with a specific frequency only run once during their respective periods, even if the `schedule:run` command is executed every minute.
 
 If the scheduler is paused via `schedule:pause`, it will skip all tasks and log a notification until `schedule:resume` is called.
+
+**Maintenance Mode:** When the store is "down", all non-admin visitors are redirected to a maintenance page. Admins can still access the site to perform updates or tests. This state is tracked via a `storage/framework/down` file (or similar, depending on implementation).
 
 Common tasks include:
 *   **`recover-carts`**: Sends email reminders for abandoned carts (Daily).
