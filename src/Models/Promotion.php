@@ -92,7 +92,7 @@ class Promotion extends Model {
 
         if ($this->target_role) {
             if ($this->target_role === self::ROLE_FIRST_TIME) {
-                if (!$isFirstOrder) {
+                if (!$user || !$isFirstOrder) {
                     return false;
                 }
             } elseif (!$user || $user->role !== $this->target_role) {

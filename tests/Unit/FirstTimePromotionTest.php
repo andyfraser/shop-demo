@@ -100,11 +100,12 @@ class FirstTimePromotionTest extends TestCase {
     }
 
     public function testFirstTimePromotionForGuest() {
-        // Guests are considered first-time customers
+        // Guests are NOT considered first-time customers anymore (must be logged in)
         $promo = new Promotion(new NullLogger());
         $promo->active = 1;
         $promo->target_role = Promotion::ROLE_FIRST_TIME;
 
-        $this->assertTrue($promo->isActive(null, true), "Promo should be active for guests (they are first-timers)");
+        $this->assertFalse($promo->isActive(null, false), "Promo should NOT be active for guests");
+        $this->assertFalse($promo->isActive(null, true), "Promo should NOT be active for guests even if isFirstOrder is true");
     }
 }

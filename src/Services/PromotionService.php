@@ -19,7 +19,7 @@ class PromotionService implements PromotionServiceInterface {
     ) {}
 
     private function isFirstOrder(?\App\Models\User $user): bool {
-        if (!$user) return true;
+        if (!$user) return false;
         if (!$this->orderService) return false;
         return !$this->orderService->hasOrders($user->id);
     }

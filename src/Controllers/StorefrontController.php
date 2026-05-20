@@ -163,7 +163,7 @@ class StorefrontController {
         }
 
         $user = $this->authService->currentUser();
-        $isFirstOrder = $user ? !$this->orderService->hasOrders($user->id) : true;
+        $isFirstOrder = $user ? !$this->orderService->hasOrders($user->id) : false;
 
         if (!$promo->isActive($user, $isFirstOrder)) {
             $now = time();
