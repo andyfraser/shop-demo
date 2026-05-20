@@ -22,10 +22,48 @@ class WishlistController {
     public function index(Request $request): Response {
         $user = $this->authService->currentUser();
         $wishlist = $this->wishlistService->getUserWishlist($user->id);
+        $settings = $this->wishlistService->getSettings($user->id);
 
         return new HtmlResponse($this->renderer->render('wishlist', [
             'page_title' => 'My Wishlist',
             'wishlist' => $wishlist,
+            'settings' => $settings,
+            'share_url' => $settings['share_hash'] ? $request->getFullBaseUrl() . '/wishlist/shared/' . $settings['share_hash'] : null
+        ]));
+    }
+
+    public function togglePrivacy(Request $request): Response {
+        if (!$this->securityService->validateCsrf($request->getPost('csrf_token'))) {
+            return new JsonResponse(['error' => 'Invalid CSRF token.'], 403);
+        }
+
+        $user = $this->authService->currentUser();
+        $isPublic = (bool)$request->getPost('is_public');
+        
+        $settings = $this->wishlistService->togglePrivacy($user->id, $isPublic);
+        $settings['share_url'] = $settings['share_hash'] ? $request->getFullBaseUrl() . '/wishlist/shared/' . $settings['share_hash'] : null;
+
+        return new JsonResponse([
+            'ok' => true,
+            'is_public' => $settings['is_public'],
+            'share_url' => $settings['share_url']
+        ]);
+    }
+
+    public function viewShared(Request $request, $hash): Response {
+        $data = $this->wishlistService->getSharedWishlist($hash);
+        
+        if (!$data) {
+            return new HtmlResponse($this->renderer->render('404', [
+                'page_title' => 'Wishlist Not Found',
+                'message' => 'This wishlist does not exist or is no longer public.'
+            ]), 404);
+        }
+
+        return new HtmlResponse($this->renderer->render('wishlist_shared', [
+            'page_title' => $data['user']->name . "'s Wishlist",
+            'wishlist' => $data['products'],
+            'owner_name' => $data['user']->name
         ]));
     }
 

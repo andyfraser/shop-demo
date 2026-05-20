@@ -1,7 +1,28 @@
 <?php // templates/wishlist.php ?>
 
 <div class="container">
-    <h1 class="page-title">My Wishlist</h1>
+    <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+        <h1 class="page-title" style="margin-bottom: 0;">My Wishlist</h1>
+        
+        <?php if (!empty($wishlist)): ?>
+        <div class="wishlist-settings" style="background: var(--bg-soft); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--line); display: flex; flex-direction: row-reverse; align-items: center; gap: 1.5rem; min-height: 56px;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+                <span id="privacy-label" style="font-weight: 500; font-size: 0.9rem; min-width: 60px; text-align: right;">
+                    <?= $settings['is_public'] ? 'Public' : 'Private' ?>
+                </span>
+                <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px; margin-bottom: 0;">
+                    <input type="checkbox" id="privacy-toggle" <?= $settings['is_public'] ? 'checked' : '' ?> style="opacity: 0; width: 0; height: 0;">
+                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+                </label>
+            </div>
+            
+            <div id="share-link-section" style="display: <?= $settings['is_public'] ? 'flex' : 'none' ?>; align-items: center; gap: 0.5rem;">
+                <input type="text" id="share-url" value="<?= h($share_url ?? '') ?>" readonly style="background: white; border: 1px solid var(--line); padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.85rem; width: 250px;">
+                <button type="button" onclick="copyShareUrl()" class="btn btn-primary btn-sm">Copy</button>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
 
     <?php if (empty($wishlist)): ?>
         <div class="empty-state">

@@ -59,4 +59,22 @@ class Request {
     public function isPost(): bool {
         return $this->getMethod() === 'POST';
     }
+
+    public function getBaseUrl(): string {
+        return defined('BASE_URL') ? BASE_URL : '';
+    }
+
+    public function getOrigin(): string {
+        $protocol = isset($this->server['HTTPS']) && $this->server['HTTPS'] !== 'off' ? 'https' : 'http';
+        $host = $this->server['HTTP_HOST'] ?? 'localhost';
+        return $protocol . '://' . $host;
+    }
+
+    public function getFullBaseUrl(): string {
+        $baseUrl = $this->getBaseUrl();
+        if (str_starts_with($baseUrl, 'http')) {
+            return rtrim($baseUrl, '/');
+        }
+        return $this->getOrigin() . rtrim($baseUrl, '/');
+    }
 }

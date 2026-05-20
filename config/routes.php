@@ -72,6 +72,8 @@ return [
     ['method' => 'GET', 'path' => '/wishlist', 'handler' => [WishlistController::class, 'index'], 'middlewares' => $authMiddleware],
     ['method' => 'POST', 'path' => '/wishlist/add/:productId', 'handler' => [WishlistController::class, 'add'], 'middlewares' => $authPostMiddleware],
     ['method' => 'POST', 'path' => '/wishlist/remove/:productId', 'handler' => [WishlistController::class, 'remove'], 'middlewares' => $authPostMiddleware],
+    ['method' => 'POST', 'path' => '/wishlist/toggle-privacy', 'handler' => [WishlistController::class, 'togglePrivacy'], 'middlewares' => $authPostMiddleware],
+    ['method' => 'GET', 'path' => '/wishlist/shared/:hash', 'handler' => [WishlistController::class, 'viewShared'], 'middlewares' => []],
 
     // Common icon routes to prevent 404 errors
     ['method' => 'GET', 'path' => '/favicon.ico', 'handler' => [StorefrontController::class, 'handleIcon']],

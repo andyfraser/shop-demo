@@ -43,4 +43,43 @@ class WishlistRepository implements WishlistRepositoryInterface {
         $stmt->execute([$userId, $productId]);
         return (bool)$stmt->fetchColumn();
     }
+
+    public function getSettings(int $userId): ?array {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM wishlist_settings WHERE user_id = ?"
+        );
+        $stmt->execute([$userId]);
+        $settings = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $settings ?: null;
+    }
+
+    public function updateSettings(int $userId, bool $isPublic, string $shareHash): bool {
+        $stmt = $this->db->prepare(
+            "INSERT INTO wishlist_settings (user_id, is_public, share_hash) 
+             VALUES (?, ?, ?)
+             ON CONFLICT(user_id) DO UPDATE SET is_public = EXCLUDED.is_public, share_hash = EXCLUDED.share_hash"
+        );
+        
+        // Handle MySQL vs SQLite for ON CONFLICT/DUPLICATE KEY
+        try {
+            return $stmt->execute([$userId, (int)$isPublic, $shareHash]);
+        } catch (\PDOException $e) {
+            // If SQLite version is too old for ON CONFLICT or if we are on MySQL
+            $stmt = $this->db->prepare(
+                "INSERT INTO wishlist_settings (user_id, is_public, share_hash) 
+                 VALUES (?, ?, ?)
+                 ON DUPLICATE KEY UPDATE is_public = VALUES(is_public), share_hash = VALUES(share_hash)"
+            );
+            return $stmt->execute([$userId, (int)$isPublic, $shareHash]);
+        }
+    }
+
+    public function getUserIdByShareHash(string $shareHash): ?int {
+        $stmt = $this->db->prepare(
+            "SELECT user_id FROM wishlist_settings WHERE share_hash = ? AND is_public = 1"
+        );
+        $stmt->execute([$shareHash]);
+        $userId = $stmt->fetchColumn();
+        return $userId ? (int)$userId : null;
+    }
 }

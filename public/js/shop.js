@@ -578,3 +578,56 @@ document.addEventListener('click', (e) => {
         }, { once: true });
     }
 });
+
+// ── Wishlist Sharing ─────────────────────────────────────────────────────────
+
+const privacyToggle = document.getElementById('privacy-toggle');
+if (privacyToggle) {
+    privacyToggle.addEventListener('change', async () => {
+        const isPublic = privacyToggle.checked;
+        const label = document.getElementById('privacy-label');
+        const shareSection = document.getElementById('share-link-section');
+        const shareUrlInput = document.getElementById('share-url');
+
+        try {
+            const data = await postAjax('/wishlist/toggle-privacy', {
+                is_public: isPublic ? '1' : '0'
+            });
+
+            if (data.ok) {
+                label.textContent = data.is_public ? 'Public' : 'Private';
+                if (data.is_public) {
+                    shareSection.style.display = 'flex';
+                    shareUrlInput.value = data.share_url;
+                    showToast('Wishlist is now public.');
+                } else {
+                    shareSection.style.display = 'none';
+                    showToast('Wishlist is now private.');
+                }
+            } else {
+                privacyToggle.checked = !isPublic;
+                showToast(data.error || 'Failed to update privacy.', 'error');
+            }
+        } catch (err) {
+            privacyToggle.checked = !isPublic;
+            showToast('Request failed.', 'error');
+        }
+    });
+}
+
+function copyShareUrl() {
+    const input = document.getElementById('share-url');
+    input.select();
+    input.setSelectionRange(0, 99999);
+    
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(input.value);
+        } else {
+            document.execCommand('copy');
+        }
+        showToast('Link copied to clipboard!');
+    } catch (err) {
+        showToast('Failed to copy link.', 'error');
+    }
+}

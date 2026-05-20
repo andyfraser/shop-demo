@@ -29,10 +29,12 @@ class WishlistServiceTest extends TestCase {
         $variantService = new \App\Services\ProductVariantService($repository, $attrService, $eventDispatcher);
         $productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
         $wishlistRepo = new \App\Repositories\WishlistRepository($this->db, $logger);
-        $this->service = new WishlistService($wishlistRepo, $productService, $logger);
+        $userRepo = new \App\Repositories\UserRepository($this->db, $logger);
+        $this->service = new WishlistService($wishlistRepo, $productService, $userRepo, $logger);
 
         // Clean up wishlist for test
         $this->db->exec("DELETE FROM wishlists");
+        $this->db->exec("DELETE FROM wishlist_settings");
     }
 
     public function testAddToWishlist() {
@@ -42,7 +44,7 @@ class WishlistServiceTest extends TestCase {
 
         $this->assertTrue($this->service->isInWishlist(1, 1));
         
-        // Try adding again (should return false due to unique constraint, or be handled gracefully)
+        // Try adding again (should return false due to unique constraint)
         $result = $this->service->addToWishlist(1, 1);
         $this->assertFalse($result);
     }
@@ -66,5 +68,50 @@ class WishlistServiceTest extends TestCase {
         $result = $this->service->removeFromWishlist(1, 1);
         $this->assertTrue($result);
         $this->assertFalse($this->service->isInWishlist(1, 1));
+    }
+
+    public function testGetSettings() {
+        $settings = $this->service->getSettings(1);
+        $this->assertEquals(0, $settings['is_public']);
+        $this->assertNull($settings['share_hash']);
+    }
+
+    public function testTogglePrivacy() {
+        // Toggle to public
+        $settings = $this->service->togglePrivacy(1, true);
+        $this->assertEquals(1, $settings['is_public']);
+        $this->assertNotNull($settings['share_hash']);
+        $hash = $settings['share_hash'];
+
+        // Check if settings persisted
+        $settings = $this->service->getSettings(1);
+        $this->assertEquals(1, $settings['is_public']);
+        $this->assertEquals($hash, $settings['share_hash']);
+
+        // Toggle back to private
+        $settings = $this->service->togglePrivacy(1, false);
+        $this->assertEquals(0, $settings['is_public']);
+        $this->assertEquals($hash, $settings['share_hash']); // Hash remains but is_public is 0
+    }
+
+    public function testGetSharedWishlist() {
+        // Make public
+        $settings = $this->service->togglePrivacy(1, true);
+        $hash = $settings['share_hash'];
+
+        // Add some items
+        $this->service->addToWishlist(1, 1);
+
+        $shared = $this->service->getSharedWishlist($hash);
+        $this->assertNotNull($shared);
+        $this->assertEquals(1, $shared['user']->id);
+        $this->assertCount(1, $shared['products']);
+
+        // Test with invalid hash
+        $this->assertNull($this->service->getSharedWishlist('invalid_hash'));
+
+        // Test when private
+        $this->service->togglePrivacy(1, false);
+        $this->assertNull($this->service->getSharedWishlist($hash));
     }
 }

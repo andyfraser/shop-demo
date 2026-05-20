@@ -207,6 +207,7 @@ return function($c, array $config) {
             return new WishlistService(
                 $c->get(WishlistRepositoryInterface::class),
                 $c->get(ProductServiceInterface::class),
+                $c->get(UserRepositoryInterface::class),
                 $c->get(LoggerInterface::class)
             );
         },
