@@ -162,6 +162,29 @@
       </div>
     </div>
 
+    <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
+      <h3 style="margin:0 0 1rem;font-size:1rem;">Background Jobs</h3>
+
+      <p style="font-size:.85rem;color:var(--ink-2);margin:0 0 1rem;">
+        Controls the retention of background job history. These are processed daily via the scheduler.
+      </p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="form-group">
+          <label>Cleanup Completed (hours)</label>
+          <input type="number" name="queue_cleanup_completed_hours" class="form-control"
+                 value="<?= h($settings->queue_cleanup_completed_hours) ?>" min="1" required>
+          <small style="color:var(--ink-2);">Default: 24</small>
+        </div>
+        <div class="form-group">
+          <label>Cleanup Failed (days)</label>
+          <input type="number" name="queue_cleanup_failed_days" class="form-control"
+                 value="<?= h($settings->queue_cleanup_failed_days) ?>" min="1" required>
+          <small style="color:var(--ink-2);">Default: 7</small>
+        </div>
+      </div>
+    </div>
+
     <button type="submit" class="btn btn-primary">Save Settings</button>
   </form>
 </div>

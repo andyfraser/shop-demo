@@ -21,6 +21,8 @@ class Settings extends Model {
     public string $timezone = 'Europe/London';
     public string $maintenance_mode = '0';
     public string $scheduler_paused = '0';
+    public int $queue_cleanup_completed_hours = 24;
+    public int $queue_cleanup_failed_days = 7;
 
     /**
      * Fill settings from an associative array of key => value pairs.

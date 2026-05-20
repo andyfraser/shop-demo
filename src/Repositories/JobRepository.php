@@ -57,4 +57,21 @@ class JobRepository implements JobRepositoryInterface {
         
         return $stmt->execute($data);
     }
+
+    public function deleteByStatusAndAge(string $status, int $hours): int {
+        $stmt = $this->db->prepare("
+            DELETE FROM jobs 
+            WHERE status = :status 
+              AND finished_at <= :cutoff
+        ");
+        
+        $cutoff = date('Y-m-d H:i:s', strtotime("-{$hours} hours"));
+        
+        $stmt->execute([
+            'status' => $status,
+            'cutoff' => $cutoff
+        ]);
+        
+        return $stmt->rowCount();
+    }
 }

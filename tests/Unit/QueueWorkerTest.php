@@ -30,12 +30,15 @@ class QueueWorkerTest extends TestCase {
                 }
                 return true;
             }
+            public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
         };
 
         $container = new Container();
         $command = new QueueWorkCommand($repo, $container);
         
+        ob_start();
         $command->execute();
+        ob_end_clean();
 
         $this->assertEquals('pending', $repo->updatedData['status']);
         $this->assertNotNull($repo->updatedData['available_at']);
@@ -61,12 +64,15 @@ class QueueWorkerTest extends TestCase {
                 }
                 return true;
             }
+            public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
         };
 
         $container = new Container();
         $command = new QueueWorkCommand($repo, $container);
         
+        ob_start();
         $command->execute();
+        ob_end_clean();
 
         $this->assertEquals('failed', $repo->updatedData['status']);
         // available_at should be "now"
