@@ -19,7 +19,11 @@ class AuthService implements AuthServiceInterface {
 
     public function sessionStart(): void {
         if (session_status() === PHP_SESSION_NONE) {
-            @session_start();
+            if (!headers_sent()) {
+                session_start();
+            } elseif (!isset($_SESSION)) {
+                $_SESSION = [];
+            }
         }
     }
 

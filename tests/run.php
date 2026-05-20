@@ -5,9 +5,16 @@ require_once __DIR__ . '/../src/Core/Autoloader.php';
 
 require_once __DIR__ . '/../src/Helpers.php';
 
-@session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    if (!headers_sent()) {
+        session_start();
+    } elseif (!isset($_SESSION)) {
+        $_SESSION = [];
+    }
+}
 
 require_once __DIR__ . '/TestCase.php';
+require_once __DIR__ . '/RequestSimulation.php';
 require_once __DIR__ . '/NullLogger.php';
 require_once __DIR__ . '/NullCache.php';
 require_once __DIR__ . '/NullCurrencyService.php';
@@ -15,9 +22,19 @@ require_once __DIR__ . '/NullEventDispatcher.php';
 
 use Tests\AssertionFailedException;
 
-$testDir = __DIR__ . '/Unit';
-$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($testDir));
-$testFiles = new RegexIterator($files, '/Test\.php$/');
+$testDirs = [__DIR__ . '/Unit', __DIR__ . '/Integration'];
+$testFiles = [];
+
+foreach ($testDirs as $dir) {
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+        continue;
+    }
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+    foreach (new RegexIterator($files, '/Test\.php$/') as $file) {
+        $testFiles[] = $file;
+    }
+}
 
 $passed = 0;
 $failed = 0;

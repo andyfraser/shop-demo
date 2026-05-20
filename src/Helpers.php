@@ -85,7 +85,13 @@ function product_img(string $filename = '', string $alt = '', string $class = ''
 }
 
 function flash(string $key, ?string $msg = null): ?string {
-    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (session_status() === PHP_SESSION_NONE) {
+        if (!headers_sent()) {
+            session_start();
+        } elseif (!isset($_SESSION)) {
+            $_SESSION = [];
+        }
+    }
     if ($msg !== null) {
         $_SESSION['flash'][$key] = $msg;
         return null;

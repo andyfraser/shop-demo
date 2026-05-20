@@ -29,6 +29,10 @@ class Container {
      * Get a service instance.
      */
     public function get(string $name) {
+        if ($name === self::class || $name === 'App\Core\Container') {
+            return $this;
+        }
+
         if (isset($this->instances[$name])) {
             return $this->instances[$name];
         }
@@ -45,8 +49,8 @@ class Container {
      * Automatically resolve a class and its dependencies using Reflection.
      */
     private function resolve(string $className) {
-        if (!class_exists($className)) {
-            throw new Exception("Class {$className} does not exist");
+        if (!class_exists($className) && !interface_exists($className)) {
+            throw new Exception("Class or Interface {$className} does not exist");
         }
 
         $reflectionClass = new ReflectionClass($className);

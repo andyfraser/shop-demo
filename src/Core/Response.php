@@ -28,6 +28,14 @@ abstract class Response {
         echo $this->content;
     }
 
+    public function getStatusCode(): int {
+        return $this->statusCode;
+    }
+
+    public function getHeaders(): array {
+        return $this->headers;
+    }
+
     public function getContent(): string {
         return $this->content;
     }
