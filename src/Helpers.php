@@ -7,7 +7,10 @@ use App\Core\Container;
 /**
  * Format a UTC timestamp into the locally configured timezone for display.
  */
-function format_local_time(string $utcTime, string $format = 'Y-m-d H:i:s'): string {
+function format_local_time(?string $utcTime, string $format = 'Y-m-d H:i:s'): string {
+    if (!$utcTime) {
+        return '';
+    }
     try {
         $tzName = setting('timezone') ?: 'Europe/London';
         $date = new DateTime($utcTime, new DateTimeZone('UTC'));
@@ -18,13 +21,13 @@ function format_local_time(string $utcTime, string $format = 'Y-m-d H:i:s'): str
     }
 }
 
-function h(string $s): string {
-    return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+function h(?string $s): string {
+    return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-function money(float $v): string {
+function money(?float $v): string {
     $pricing = Container::getInstance()->get(\App\Services\PricingServiceInterface::class);
-    return $pricing->format($v);
+    return $pricing->format((float)($v ?? 0.0));
 }
 
 function setting(string $key): mixed {
