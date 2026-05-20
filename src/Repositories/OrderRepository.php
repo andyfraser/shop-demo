@@ -163,6 +163,14 @@ class OrderRepository implements OrderRepositoryInterface {
             $where[] = "o.status = ?";
             $params[] = $criteria->getFilter('status');
         }
+        if ($criteria->hasFilter('ids') && is_array($criteria->getFilter('ids'))) {
+            $ids = $criteria->getFilter('ids');
+            if (!empty($ids)) {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $where[] = "o.id IN ($placeholders)";
+                $params = array_merge($params, $ids);
+            }
+        }
         if ($criteria->hasFilter('user_id')) {
             $where[] = "o.user_id = ?";
             $params[] = $criteria->getFilter('user_id');
@@ -206,6 +214,14 @@ class OrderRepository implements OrderRepositoryInterface {
         if ($criteria->hasFilter('status')) {
             $where[] = "o.status = ?";
             $params[] = $criteria->getFilter('status');
+        }
+        if ($criteria->hasFilter('ids') && is_array($criteria->getFilter('ids'))) {
+            $ids = $criteria->getFilter('ids');
+            if (!empty($ids)) {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $where[] = "o.id IN ($placeholders)";
+                $params = array_merge($params, $ids);
+            }
         }
         if ($criteria->hasFilter('user_id')) {
             $where[] = "o.user_id = ?";

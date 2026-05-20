@@ -108,10 +108,14 @@ return [
     ['method' => 'POST', 'path' => '/admin/products/new', 'handler' => [AdminProductsController::class, 'save'], 'middlewares' => $adminPostMiddleware],
     ['method' => 'POST', 'path' => '/admin/products/edit', 'handler' => [AdminProductsController::class, 'save'], 'middlewares' => $adminPostMiddleware],
     ['method' => 'POST', 'path' => '/admin/products/delete', 'handler' => [AdminProductsController::class, 'delete'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'POST', 'path' => '/admin/products/batch', 'handler' => [AdminProductsController::class, 'batchUpdate'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'POST', 'path' => '/admin/products/import', 'handler' => [AdminProductsController::class, 'import'], 'middlewares' => $adminPostMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/orders', 'handler' => [AdminOrdersController::class, 'list'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/orders/export', 'handler' => [AdminOrdersController::class, 'export'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/orders/detail', 'handler' => [AdminOrdersController::class, 'detail'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/orders/update-status', 'handler' => [AdminOrdersController::class, 'updateStatus'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'POST', 'path' => '/admin/orders/batch', 'handler' => [AdminOrdersController::class, 'batchUpdate'], 'middlewares' => $adminPostMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/returns', 'handler' => [AdminReturnsController::class, 'list'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/returns/detail', 'handler' => [AdminReturnsController::class, 'detail'], 'middlewares' => $adminMiddleware],

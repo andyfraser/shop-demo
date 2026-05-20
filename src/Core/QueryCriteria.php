@@ -35,7 +35,10 @@ class QueryCriteria {
         if (isset($get['attr']) && is_array($get['attr'])) {
             $filters['attributes'] = array_map('intval', $get['attr']);
         }
-        if (isset($get['status'])) $filters['status'] = (string)$get['status'];
+        if (!empty($get['status'])) $filters['status'] = (string)$get['status'];
+        if (isset($get['ids']) && is_array($get['ids'])) {
+            $filters['ids'] = array_map('intval', $get['ids']);
+        }
         if (isset($get['category_id'])) $filters['category_id'] = (int)$get['category_id'];
         if (isset($get['product_ids']) && is_array($get['product_ids'])) {
             $filters['product_ids'] = array_map('intval', $get['product_ids']);

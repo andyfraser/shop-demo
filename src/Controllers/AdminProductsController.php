@@ -27,6 +27,7 @@ class AdminProductsController {
         private SecurityServiceInterface $security,
         private SettingsServiceInterface $settings,
         private ImageServiceInterface $imageService,
+        private \App\Services\CsvServiceInterface $csvService,
         private \Psr\Log\LoggerInterface $logger
     ) {}
     
@@ -275,6 +276,76 @@ class AdminProductsController {
             ]);
             flash('msg', 'Product deactivated.');
         }
+        return new RedirectResponse('/admin/products');
+    }
+
+    public function batchUpdate(Request $request): Response {
+        $post = $request->getPost();
+        $ids = $post['ids'] ?? [];
+        $action = $post['action'] ?? '';
+
+        if (empty($ids) || empty($action)) {
+            flash('msg_error', 'No products or action selected.');
+            return new RedirectResponse('/admin/products');
+        }
+
+        $count = 0;
+        foreach ($ids as $id) {
+            $id = (int)$id;
+            if ($action === 'activate') {
+                $this->productService->save(['active' => 1], $id);
+                $count++;
+            } elseif ($action === 'deactivate') {
+                $this->productService->deactivate($id);
+                $count++;
+            }
+        }
+
+        $this->logger->info("Admin performed batch action {action} on {count} products", [
+            'action' => $action,
+            'count' => $count,
+            'ids' => $ids
+        ]);
+
+        flash('msg', "Batch action '{$action}' completed for {$count} products.");
+        return new RedirectResponse('/admin/products');
+    }
+
+    public function import(Request $request): Response {
+        $file = $_FILES['csv_file'] ?? null;
+        if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+            flash('msg_error', 'Please upload a valid CSV file.');
+            return new RedirectResponse('/admin/products');
+        }
+
+        try {
+            $rows = $this->csvService->import($file['tmp_name']);
+            $count = 0;
+            foreach ($rows as $row) {
+                if (empty($row['name'])) continue;
+
+                $data = [
+                    'name'        => trim($row['name']),
+                    'sku'         => trim($row['sku'] ?? ''),
+                    'price'       => (float)($row['price'] ?? 0),
+                    'stock'       => (int)($row['stock'] ?? 0),
+                    'category_id' => !empty($row['category_id']) ? (int)$row['category_id'] : null,
+                    'active'      => 1,
+                    'vat_rate'    => (float)($this->settings->get('default_vat_rate') ?? 20)
+                ];
+
+                $this->productService->save($data);
+                $count++;
+            }
+
+            $this->logger->info("Admin imported products from CSV. Count: {count}", ['count' => $count]);
+            flash('msg', "Successfully imported {$count} products.");
+
+        } catch (\Exception $e) {
+            $this->logger->error("Product import failed: " . $e->getMessage());
+            flash('msg_error', 'Import failed: ' . $e->getMessage());
+        }
+
         return new RedirectResponse('/admin/products');
     }
 }

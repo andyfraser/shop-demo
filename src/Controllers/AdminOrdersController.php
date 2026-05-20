@@ -20,6 +20,7 @@ class AdminOrdersController {
         private Renderer $renderer,
         private SecurityServiceInterface $security,
         private EmailServiceInterface $email,
+        private \App\Services\CsvServiceInterface $csvService,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
@@ -103,5 +104,81 @@ class AdminOrdersController {
         }
 
         return new RedirectResponse('/admin/orders/detail?id=' . $order_id);
+    }
+
+    public function batchUpdate(Request $request): Response {
+        $post = $request->getPost();
+        $ids = $post['ids'] ?? [];
+        $status = $post['status'] ?? '';
+        $user = $this->auth->currentUser();
+
+        if (empty($ids) || empty($status)) {
+            flash('msg_error', 'No orders or status selected.');
+            return new RedirectResponse('/admin/orders');
+        }
+
+        $allowed = [
+            \App\Models\Order::STATUS_CONFIRMED,
+            \App\Models\Order::STATUS_SHIPPED,
+            \App\Models\Order::STATUS_DELIVERED,
+            \App\Models\Order::STATUS_CANCELLED
+        ];
+
+        if (!in_array($status, $allowed)) {
+            flash('msg_error', 'Invalid status selected.');
+            return new RedirectResponse('/admin/orders');
+        }
+
+        $count = 0;
+        foreach ($ids as $id) {
+            $id = (int)$id;
+            if ($status === \App\Models\Order::STATUS_CANCELLED) {
+                if ($this->orderService->cancelOrder($id, 'Batch cancellation', $user?->id)) {
+                    $count++;
+                }
+            } else {
+                $this->orderService->updateStatus($id, $status, $user?->id, 'Batch status update');
+                $count++;
+            }
+        }
+
+        $this->logger->info("Admin {admin_email} performed batch status update to {status} on {count} orders", [
+            'admin_email' => $user?->email,
+            'status' => $status,
+            'count' => $count,
+            'ids' => $ids
+        ]);
+
+        flash('msg', "Batch status update to '{$status}' completed for {$count} orders.");
+        return new RedirectResponse('/admin/orders');
+    }
+
+    public function export(Request $request): Response {
+        $criteria = \App\Core\QueryCriteria::fromRequest($request->getQuery());
+        $criteria = $criteria->withLimit(null); 
+        $orders = $this->orderService->find($criteria);
+
+        $headers = ['ID', 'Order Number', 'Customer', 'Email', 'Total', 'Status', 'Date'];
+        $data = [];
+        foreach ($orders as $o) {
+            $data[] = [
+                $o->id,
+                $o->getFormattedId(),
+                $o->user_name ?? 'Guest',
+                $o->user_email ?? '-',
+                $o->total,
+                $o->status,
+                $o->created_at
+            ];
+        }
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'orders_export_');
+        $handle = fopen($tempFile, 'w');
+        $this->csvService->export($handle, $headers, $data);
+        fclose($handle);
+
+        $this->logger->info("Admin exported orders CSV. Count: {count}", ['count' => count($data)]);
+
+        return new \App\Core\Responses\FileResponse($tempFile, 'orders_' . date('Y-m-d') . '.csv', 'text/csv', true);
     }
 }

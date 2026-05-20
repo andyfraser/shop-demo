@@ -11,6 +11,22 @@
         <a href="/admin/products" class="btn btn-outline">Clear</a>
       <?php endif; ?>
     </form>
+
+    <div class="import-wrap" style="position:relative; display:inline-block;">
+      <button type="button" class="btn btn-outline" onclick="document.getElementById('import-form-pop').classList.toggle('active')">
+        <span>📤</span> Import
+      </button>
+      <div id="import-form-pop" class="card" style="position:absolute; top:100%; right:0; z-index:100; width:280px; margin-top:10px; display:none; padding:15px; box-shadow:var(--shadow);">
+        <h4 style="margin-bottom:10px; font-size:14px;">Import Products (CSV)</h4>
+        <form action="/admin/products/import" method="POST" enctype="multipart/form-data">
+          <?= csrf_field() ?>
+          <input type="file" name="csv_file" accept=".csv" class="form-control" required style="margin-bottom:10px;">
+          <p class="text-xs text-muted mb-2">Columns: name, sku, price, stock, category_id</p>
+          <button type="submit" class="btn btn-primary btn-sm w-100">Start Import</button>
+        </form>
+      </div>
+    </div>
+
     <a href="/admin/products/new" class="btn btn-primary">+ Add Product</a>
   </div>
 </div>
@@ -20,24 +36,28 @@
     <div class="alert alert-success"><?= h($flash_msg) ?></div>
   <?php endif; ?>
 
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th style="width:60px"></th>
-        <th>Name</th>
-        <th>Category</th>
-        <th>Price</th>
-        <th>Stock</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php foreach ($products as $p): ?>
+  <form action="/admin/products/batch" method="POST" id="batch-form">
+    <?= csrf_field() ?>
+    <table class="data-table">
+      <thead>
         <tr>
-          <td>
-            <?php product_img($p->image ?? '', $p->name, 'thumb', '', 'thumb', '60px') ?>
-          </td>
+          <th style="width:40px"><input type="checkbox" class="select-all"></th>
+          <th style="width:60px"></th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($products as $p): ?>
+          <tr>
+            <td><input type="checkbox" name="ids[]" value="<?= $p->id ?>" class="row-checkbox"></td>
+            <td>
+              <?php product_img($p->image ?? '', $p->name, 'thumb', '', 'thumb', '60px') ?>
+            </td>
           <td>
             <strong><?= h($p->name) ?></strong>
             <?php if ($p->featured): ?>
@@ -73,4 +93,19 @@
       <?php endforeach; ?>
     </tbody>
   </table>
+
+  <div class="batch-bar">
+    <div class="batch-info">
+      <span class="selected-count">0</span> products selected
+    </div>
+    <div class="batch-actions">
+      <select name="action" class="form-control" style="width:auto;">
+        <option value="">Choose action…</option>
+        <option value="activate">Activate</option>
+        <option value="deactivate">Deactivate</option>
+      </select>
+      <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+    </div>
+  </div>
+</form>
 </div>

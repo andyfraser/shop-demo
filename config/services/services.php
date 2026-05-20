@@ -77,6 +77,8 @@ use App\Services\PromotionEvaluatorInterface;
 use App\Services\PromotionEvaluator;
 use App\Services\CurrencyServiceInterface;
 use App\Services\CurrencyService;
+use App\Services\CsvServiceInterface;
+use App\Services\CsvService;
 
 use App\Services\AnalyticsServiceInterface;
 use App\Services\AnalyticsService;
@@ -264,6 +266,9 @@ return function($c, array $config) {
                 $c->get(\App\Core\Request::class),
                 $c->get(\App\Core\Cache\CacheInterface::class)
             );
+        },
+        CsvServiceInterface::class => function($c) {
+            return new CsvService();
         },
     ];
 };
