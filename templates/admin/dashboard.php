@@ -111,3 +111,10 @@
     </div>
   </div>
 </div>
+
+<div class="chart-modal" id="chartModal">
+    <div class="chart-modal-content">
+        <button class="chart-modal-close" id="closeModal">&times;</button>
+        <div class="chart-modal-body" id="modalBody"></div>
+    </div>
+</div>

@@ -47,4 +47,49 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+
+    // Chart Modal logic
+    const charts = document.querySelectorAll('.clickable-chart');
+    const modal = document.getElementById('chartModal');
+    const modalBody = document.getElementById('modalBody');
+    const closeModal = document.getElementById('closeModal');
+
+    if (modal && charts.length > 0) {
+        charts.forEach(chart => {
+            chart.addEventListener('click', function() {
+                // Clone the SVG
+                const clone = this.cloneNode(true);
+                clone.classList.remove('clickable-chart');
+                
+                // Clear and append to modal
+                modalBody.innerHTML = '';
+                modalBody.appendChild(clone);
+                
+                // Show modal
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            });
+        });
+
+        const closeFunc = function() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        closeModal?.addEventListener('click', closeFunc);
+        
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeFunc();
+            }
+        });
+
+        // Close on click outside content
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeFunc();
+            }
+        });
+    }
 });

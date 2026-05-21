@@ -9,6 +9,8 @@ html { scrollbar-gutter: stable; }
     --warm:    #e8dfd0;
     --accent:  #c8622a;
     --accent-2:#8b3e1c;
+    --primary: var(--accent);
+    --secondary:#2980b9;
     --line:    rgba(26,20,16,.12);
     --white:   #fff;
     --gold:    #f1c40f;
@@ -579,3 +581,50 @@ tr.drag-over { border-top: 2px solid var(--accent); }
 .batch-actions select option {
     background: var(--ink);
 }
+
+/* ── Chart Modal ─────────────────────────────────────────────────────────── */
+.chart-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(26,20,16,.85);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 2rem;
+    cursor: default;
+}
+.chart-modal.active { display: flex; animation: modal-fade-in .25s ease; }
+.chart-modal-content {
+    background: var(--white);
+    padding: 2.5rem;
+    border-radius: var(--radius);
+    position: relative;
+    width: 100%;
+    max-width: 1000px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    transform-origin: center;
+}
+.chart-modal.active .chart-modal-content { animation: modal-pop-in .3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.chart-modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: var(--sand);
+    border: none;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    transition: background var(--trans);
+}
+.chart-modal-close:hover { background: var(--warm); }
+.chart-modal-body { width: 100%; }
+.chart-modal-body svg { width: 100%; height: auto; display: block; }
+
+.clickable-chart { cursor: pointer; transition: transform .2s ease; }
+.clickable-chart:hover { transform: scale(1.01); }
+
+@keyframes modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-pop-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }

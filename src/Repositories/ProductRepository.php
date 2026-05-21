@@ -312,7 +312,7 @@ class ProductRepository implements ProductRepositoryInterface {
         // Query for products (only if not force_variant or total stock is low)
         $pStmt = $this->db->prepare(
             "SELECT p.* FROM products p 
-             WHERE p.active = 1 AND p.is_virtual = 0 AND p.force_variant = 0 AND p.stock <= ?
+             WHERE p.active = 1 AND p.is_virtual = 0 AND p.is_bundle = 0 AND p.force_variant = 0 AND p.stock <= ?
              ORDER BY $orderSql LIMIT ?"
         );
         $pStmt->bindValue(1, $threshold, \PDO::PARAM_INT);
@@ -325,7 +325,7 @@ class ProductRepository implements ProductRepositoryInterface {
             "SELECT pv.*, $concat as name, p.name as product_name 
              FROM product_variants pv
              JOIN products p ON pv.product_id = p.id
-             WHERE pv.active = 1 AND p.active = 1 AND p.is_virtual = 0 AND pv.stock <= ?
+             WHERE pv.active = 1 AND p.active = 1 AND p.is_virtual = 0 AND p.is_bundle = 0 AND pv.stock <= ?
              ORDER BY $vOrderSql LIMIT ?"
         );
         $vStmt->bindValue(1, $threshold, \PDO::PARAM_INT);
@@ -351,14 +351,14 @@ class ProductRepository implements ProductRepositoryInterface {
     }
 
     public function countLowStock(int $threshold): int {
-        $pStmt = $this->db->prepare("SELECT COUNT(*) FROM products WHERE active = 1 AND is_virtual = 0 AND force_variant = 0 AND stock <= ?");
+        $pStmt = $this->db->prepare("SELECT COUNT(*) FROM products WHERE active = 1 AND is_virtual = 0 AND is_bundle = 0 AND force_variant = 0 AND stock <= ?");
         $pStmt->execute([$threshold]);
         $pCount = (int)$pStmt->fetchColumn();
 
         $vStmt = $this->db->prepare(
             "SELECT COUNT(*) FROM product_variants pv
              JOIN products p ON pv.product_id = p.id
-             WHERE pv.active = 1 AND p.active = 1 AND p.is_virtual = 0 AND pv.stock <= ?"
+             WHERE pv.active = 1 AND p.active = 1 AND p.is_virtual = 0 AND p.is_bundle = 0 AND pv.stock <= ?"
         );
         $vStmt->execute([$threshold]);
         $vCount = (int)$vStmt->fetchColumn();

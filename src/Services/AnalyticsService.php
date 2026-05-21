@@ -83,8 +83,16 @@ class AnalyticsService implements AnalyticsServiceInterface {
         }
 
         $polyPoints = implode(' ', $points);
-        $svg = "<svg viewBox=\"0 0 $width $height\" class=\"analytics-chart line-chart\" preserveAspectRatio=\"xMidYMid meet\">";
+        $svg = "<svg viewBox=\"0 0 $width $height\" class=\"analytics-chart line-chart clickable-chart\" preserveAspectRatio=\"xMidYMid meet\">";
         
+        // Define Gradient
+        $svg .= "<defs>";
+        $svg .= "<linearGradient id=\"salesGradient\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\">";
+        $svg .= "<stop offset=\"0%\" stop-color=\"var(--primary)\" stop-opacity=\"0.3\" />";
+        $svg .= "<stop offset=\"100%\" stop-color=\"var(--primary)\" stop-opacity=\"0\" />";
+        $svg .= "</linearGradient>";
+        $svg .= "</defs>";
+
         // Grid lines (horizontal)
         for ($j = 0; $j <= 4; $j++) {
             $gy = ($height - $padding) - ($j / 4 * $chartHeight);
@@ -93,14 +101,14 @@ class AnalyticsService implements AnalyticsServiceInterface {
             $svg .= "<text x=\"" . ($padding - 10) . "\" y=\"" . ($gy + 4) . "\" text-anchor=\"end\" font-size=\"12\" fill=\"var(--ink-3)\">" . money($val) . "</text>";
         }
 
-        // The line
-        $svg .= "<polyline points=\"$polyPoints\" fill=\"none\" stroke=\"var(--primary)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />";
-        
         // Area under the line
         $firstX = $padding;
         $lastX = $width - $padding;
-        $svg .= "<polygon points=\"$padding," . ($height - $padding) . " $polyPoints $lastX," . ($height - $padding) . "\" fill=\"var(--primary)\" fill-opacity=\"0.1\" />";
+        $svg .= "<polygon points=\"$padding," . ($height - $padding) . " $polyPoints $lastX," . ($height - $padding) . "\" fill=\"url(#salesGradient)\" />";
 
+        // The line
+        $svg .= "<polyline points=\"$polyPoints\" fill=\"none\" stroke=\"var(--primary)\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />";
+        
         // Dots and Tooltips (invisible till hover)
         $i = 0;
         foreach ($data as $date => $value) {
@@ -134,7 +142,9 @@ class AnalyticsService implements AnalyticsServiceInterface {
         $barWidth = ($chartWidth / $count) * 0.6;
         $gap = ($chartWidth / $count) * 0.4;
         
-        $svg = "<svg viewBox=\"0 0 $width $height\" class=\"analytics-chart bar-chart\" preserveAspectRatio=\"xMidYMid meet\">";
+        $colors = ['#c8622a', '#2980b9', '#27ae60', '#8e44ad', '#f39c12', '#d35400', '#16a085'];
+        
+        $svg = "<svg viewBox=\"0 0 $width $height\" class=\"analytics-chart bar-chart clickable-chart\" preserveAspectRatio=\"xMidYMid meet\">";
         
         // Horizontal grid lines
         for ($j = 0; $j <= 4; $j++) {
@@ -149,8 +159,9 @@ class AnalyticsService implements AnalyticsServiceInterface {
             $x = $padding + ($i * ($barWidth + $gap)) + ($gap / 2);
             $h = ($value / $max) * $chartHeight;
             $y = ($height - $padding) - $h;
+            $color = $colors[$i % count($colors)];
             
-            $svg .= "<rect x=\"$x\" y=\"$y\" width=\"$barWidth\" height=\"$h\" fill=\"var(--secondary)\" rx=\"4\">";
+            $svg .= "<rect x=\"$x\" y=\"$y\" width=\"$barWidth\" height=\"$h\" fill=\"$color\" rx=\"4\">";
             $svg .= "<title>$label: " . money($value) . "</title>";
             $svg .= "</rect>";
             

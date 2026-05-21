@@ -112,7 +112,7 @@ class Product extends Model {
      * Check if product has low stock.
      */
     public function isLowStock(int $threshold): bool {
-        if ($this->is_virtual) {
+        if ($this->is_virtual || $this->is_bundle) {
             return false;
         }
         return $this->getAvailableStock() <= $threshold;

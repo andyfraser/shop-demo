@@ -23,14 +23,14 @@ class InventoryListener implements ListenerInterface {
         if ($event instanceof StockUpdated) {
             if (!$event->isVariant) {
                 $product = $this->productService->findById($event->id);
-                if ($product && $product->is_virtual) {
+                if ($product && ($product->is_virtual || $product->is_bundle)) {
                     return;
                 }
             } else {
                 $variant = $this->productService->findVariantById($event->id);
                 if ($variant) {
                     $product = $this->productService->findById($variant->product_id);
-                    if ($product && $product->is_virtual) {
+                    if ($product && ($product->is_virtual || $product->is_bundle)) {
                         return;
                     }
                 }
@@ -53,7 +53,7 @@ class InventoryListener implements ListenerInterface {
                     $variant = $this->productService->findVariantById($item->variant_id);
                     if ($variant) {
                         $product = $this->productService->findById($variant->product_id);
-                        if ($product && $product->is_virtual) {
+                        if ($product && ($product->is_virtual || $product->is_bundle)) {
                             continue;
                         }
                         if ($variant->stock <= $threshold) {
@@ -69,7 +69,7 @@ class InventoryListener implements ListenerInterface {
                 } else {
                     $product = $this->productService->findById($item->product_id);
                     if ($product) {
-                        if ($product->is_virtual) {
+                        if ($product->is_virtual || $product->is_bundle) {
                             continue;
                         }
                         if ($product->stock <= $threshold) {
