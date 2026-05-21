@@ -3,9 +3,9 @@ namespace App\Repositories;
 
 interface CartRepositoryInterface {
     public function getItems(int $cartId): array;
-    public function addItem(int $cartId, int $productId, int $qty, ?int $variantId = null): void;
-    public function removeItem(int $cartId, int $productId, ?int $variantId = null): void;
-    public function updateItemQty(int $cartId, int $productId, int $qty, ?int $variantId = null): void;
+    public function addItem(int $cartId, int $productId, int $qty, ?int $variantId = null, ?string $metadata = null): void;
+    public function removeItem(int $cartId, int $productId, ?int $variantId = null, ?string $metadata = null): void;
+    public function updateItemQty(int $cartId, int $productId, int $qty, ?int $variantId = null, ?string $metadata = null): void;
     public function clearItems(int $cartId): void;
     public function applyPromoCode(int $cartId, string $code): bool;
     public function removePromoCode(int $cartId, ?string $code = null): void;

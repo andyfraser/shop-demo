@@ -24,6 +24,9 @@ A demo e-commerce application written in PHP with support for SQLite and MySQL. 
 - **Product Bundles:** Create product packages that combine multiple items into a single SKU. Inventory is automatically tracked and subtracted from the individual component products when a bundle is sold.
 - **Advanced Promotions:** Automatic and code-based discounts (percentage, fixed, free shipping, and BOGO) with real-time AJAX cart updates.
 - Checkout with saved shipping address pre-fill and dynamic delivery options.
+- **Virtual Products Support:** Full lifecycle for digital goods including secure file downloads, automatically generated and emailable gift cards, software license keys from dynamic inventory pools, user role memberships, and downloadable event tickets.
+- **Frictionless Digital Checkout:** Automatically bypasses shipping address inputs and delivery option selection if the cart is 100% digital.
+- **Role-Based Delivery Options:** Restrict delivery options to specific customer roles (e.g. VIP-only shipping options) and unlock them dynamically.
 - **Secure Payment Integration:** Pluggable payment gateway system with a demo manual payment gateway for checkout processing.
 - **Multi-Currency Support:** Customers can switch between different currencies with real-time price conversion based on admin-defined rates.
 - **Enhanced Address Book:** Customer management of multiple shipping addresses with labels and default selection.

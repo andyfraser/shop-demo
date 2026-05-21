@@ -45,6 +45,19 @@
         <small class="form-hint">Option only shows if order subtotal is at least this much. 0 for always.</small>
       </div>
 
+      <div class="form-group">
+        <label>Restrict to User Role</label>
+        <select name="target_role" class="form-control">
+          <option value="">— Available to Everyone —</option>
+          <?php foreach ($roles ?? [] as $role): ?>
+            <option value="<?= h($role->slug) ?>" <?= ($get('target_role') === $role->slug) ? 'selected' : '' ?>>
+              <?= h($role->name) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+        <small class="form-hint">Restrict this option to users with the selected role (e.g. VIP).</small>
+      </div>
+
       <div class="mt-3">
         <label class="toggle-label">
           <input type="checkbox" name="active" value="1" <?= ($get('active') ?? 1) ? 'checked' : '' ?>>

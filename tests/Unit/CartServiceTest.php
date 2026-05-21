@@ -146,4 +146,63 @@ class CartServiceTest extends TestCase {
         $sentAt = $db->query("SELECT recovery_email_sent_at FROM carts WHERE id = $cartId")->fetchColumn();
         $this->assertNull($sentAt, "Flag should be reset after clearing the cart");
     }
+
+    public function testAddGiftCardWithMetadata() {
+        $metadata = [
+            'recipient_email' => 'friend@example.com',
+            'sender_name' => 'Me',
+            'message' => 'Enjoy!'
+        ];
+        
+        $this->cart->add(1, 1, null, $metadata);
+        
+        $items = $this->cart->items();
+        $this->assertCount(1, $items);
+        
+        $item = $items[0];
+        $this->assertNotNull($item->metadata);
+        
+        $decoded = json_decode($item->metadata, true);
+        $this->assertEquals('friend@example.com', $decoded['recipient_email']);
+        $this->assertEquals('Me', $decoded['sender_name']);
+        $this->assertEquals('Enjoy!', $decoded['message']);
+    }
+
+    public function testSyncOnLoginPreservesMetadata() {
+        $db = Database::getConnection();
+        
+        // 1. Setup session ID
+        $sessionId = 'test-session-sync-' . uniqid();
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        session_id($sessionId);
+        session_start();
+
+        // 2. Add item with metadata as guest
+        $metadata = ['recipient_email' => 'gift@example.com'];
+        $this->cart->add(1, 1, null, $metadata);
+
+        // 3. Create a user
+        $email = 'test-sync-' . uniqid() . '@example.com';
+        $db->prepare("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)")
+           ->execute(['Test User', $email, 'hash', 'customer']);
+        $userId = (int)$db->lastInsertId();
+
+        // 4. Create a user cart (empty)
+        $db->prepare("INSERT INTO carts (user_id, session_id) VALUES (?, ?)")
+           ->execute([$userId, 'user-session-' . uniqid()]);
+        $userCartId = (int)$db->lastInsertId();
+
+        // 5. Sync
+        $this->cart->syncOnLogin($userId);
+
+        // 6. Verify items in user cart
+        $stmt = $db->prepare("SELECT * FROM cart_items WHERE cart_id = ?");
+        $stmt->execute([$userCartId]);
+        $syncedItems = $stmt->fetchAll();
+
+        $this->assertCount(1, $syncedItems);
+        $this->assertEquals(json_encode($metadata), $syncedItems[0]['metadata']);
+    }
 }

@@ -32,7 +32,7 @@
                   $p = $item->product;
                   $v = $item->variant;
                   $key = $item->key;
-                  $maxStock = $v ? $v->stock : $p->getAvailableStock();
+                  $maxStock = $p->is_virtual ? 999999 : ($v ? $v->stock : $p->getAvailableStock());
                 ?>
                   <tr data-item-key="<?= h($key) ?>">
                     <td style="width:80px;">
@@ -47,6 +47,23 @@
                           Option: <?= h($v->name) ?>
                         </div>
                       <?php endif; ?>
+                      <?php if ($item->metadata): 
+                        $meta = json_decode($item->metadata, true);
+                        if (!empty($meta['recipient_email'])):
+                      ?>
+                        <div class="giftcard-details" style="font-size:0.8rem;color:var(--ink-2);margin-top:0.3rem;background:var(--bg-2);padding:0.4rem;border-radius:4px;border:1px solid var(--line);max-width:300px;">
+                          <strong>Gift Card Details:</strong><br>
+                          To: <?= h($meta['recipient_email']) ?><br>
+                          <?php if (!empty($meta['sender_name'])): ?>
+                            From: <?= h($meta['sender_name']) ?><br>
+                          <?php endif; ?>
+                          <?php if (!empty($meta['message'])): ?>
+                            Note: <em><?= h($meta['message']) ?></em>
+                          <?php endif; ?>
+                        </div>
+                      <?php 
+                        endif;
+                      endif; ?>
                     </td>
                     <td class="item-unit-price" data-item-key="<?= h($key) ?>"><?= money($item->unit_price) ?></td>
                     <td>

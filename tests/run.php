@@ -1,5 +1,8 @@
 <?php
 
+// Start output buffering to prevent early output from locking session_id() calls in tests
+ob_start();
+
 require_once __DIR__ . '/../src/Core/Autoloader.php';
 \App\Core\Autoloader::register();
 

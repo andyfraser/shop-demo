@@ -23,16 +23,44 @@ class CartService implements CartServiceInterface {
 
         $cart = [];
         foreach ($rows as $row) {
-            $key = $this->generateKey($row['product_id'], $row['variant_id']);
+            $key = $this->generateKey($row['product_id'], $row['variant_id'], $row['metadata'] ?? null);
             $cart[$key] = $row['qty'];
         }
         return $cart;
     }
 
-    public function add(int $productId, int $qty = 1, ?int $variantId = null): void {
+    public function add(int $productId, int $qty = 1, ?int $variantId = null, ?array $metadata = null): void {
         $cartId = $this->ensureCart();
-        $this->repository->addItem($cartId, $productId, $qty, $variantId);
+        $metadataJson = $metadata ? json_encode($metadata) : null;
+        $this->repository->addItem($cartId, $productId, $qty, $variantId, $metadataJson);
         $this->repository->updateLastActivity($cartId);
+    }
+
+    public function isVirtualOnly(): bool {
+        $items = $this->items();
+        if (empty($items)) return false;
+
+        foreach ($items as $item) {
+            $product = $item->product;
+            if (!$product) return false;
+
+            if ($product->is_bundle) {
+                if (empty($product->bundle_items)) return false;
+
+                foreach ($product->bundle_items as $component) {
+                    $compProduct = $this->productService->findById($component['product_id']);
+                    if (!$compProduct || !$compProduct->is_virtual) {
+                        return false;
+                    }
+                }
+            } else {
+                if (!$product->is_virtual) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     public function remove(string $key): void {
@@ -41,9 +69,13 @@ class CartService implements CartServiceInterface {
 
         $parts = explode('-', $key);
         $pid = (int)$parts[0];
-        $vid = isset($parts[1]) ? (int)$parts[1] : null;
+        $vid = isset($parts[1]) && $parts[1] !== '0' ? (int)$parts[1] : null;
+        $metadataJson = null;
+        if (isset($parts[2])) {
+            $metadataJson = base64_decode($parts[2]);
+        }
 
-        $this->repository->removeItem($cartId, $pid, $vid);
+        $this->repository->removeItem($cartId, $pid, $vid, $metadataJson);
         $this->repository->updateLastActivity($cartId);
     }
 
@@ -55,9 +87,13 @@ class CartService implements CartServiceInterface {
 
         $parts = explode('-', $key);
         $pid = (int)$parts[0];
-        $vid = isset($parts[1]) ? (int)$parts[1] : null;
+        $vid = isset($parts[1]) && $parts[1] !== '0' ? (int)$parts[1] : null;
+        $metadataJson = null;
+        if (isset($parts[2])) {
+            $metadataJson = base64_decode($parts[2]);
+        }
 
-        $this->repository->updateItemQty($cartId, $pid, $qty, $vid);
+        $this->repository->updateItemQty($cartId, $pid, $qty, $vid, $metadataJson);
         $this->repository->updateLastActivity($cartId);
     }
 
@@ -104,7 +140,8 @@ class CartService implements CartServiceInterface {
         foreach ($cart as $key => $qty) {
             $parts = explode('-', $key);
             $pid = (int)$parts[0];
-            $vid = isset($parts[1]) ? (int)$parts[1] : null;
+            $vid = isset($parts[1]) && $parts[1] !== '0' ? (int)$parts[1] : null;
+            $metadata = isset($parts[2]) ? base64_decode($parts[2]) : null;
 
             if (!isset($products[$pid])) continue;
 
@@ -116,6 +153,7 @@ class CartService implements CartServiceInterface {
             $item->product_id = $pid;
             $item->variant_id = $vid;
             $item->qty = $qty;
+            $item->metadata = $metadata;
             $item->product = $product;
             $item->variant = $variant;
             $item->unit_price = $this->pricingService->calculateItemUnitPrice($item);
@@ -267,7 +305,7 @@ class CartService implements CartServiceInterface {
             // Merge session items into user cart
             $sessionItems = $this->repository->getItems($sessionCartId);
             foreach ($sessionItems as $item) {
-                $this->repository->addItem($userCartId, $item['product_id'], $item['qty'], $item['variant_id']);
+                $this->repository->addItem($userCartId, $item['product_id'], $item['qty'], $item['variant_id'], $item['metadata'] ?? null);
             }
 
             // Delete session cart
@@ -303,7 +341,11 @@ class CartService implements CartServiceInterface {
         return $this->repository->createCart($user ? $user->id : null, $sessionId);
     }
 
-    private function generateKey(int $productId, ?int $variantId = null): string {
+    private function generateKey(int $productId, ?int $variantId = null, ?string $metadata = null): string {
+        if ($metadata && $metadata !== '' && json_decode($metadata, true)) {
+            $variantPart = $variantId ?: '0';
+            return "{$productId}-{$variantPart}-" . base64_encode($metadata);
+        }
         return $variantId ? "{$productId}-{$variantId}" : (string)$productId;
     }
 }

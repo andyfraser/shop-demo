@@ -11,6 +11,7 @@ class OrderItem extends Model {
     public float $unit_price;
     public float $vat_rate;
     public float $vat_amount;
+    public ?string $metadata = null;
 
     // Join fields
     public ?string $name = null; // product name

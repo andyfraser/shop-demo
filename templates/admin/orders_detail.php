@@ -135,6 +135,18 @@ switch($order_status) {
                       Option: <?= h($item->variant_name) ?>
                     </div>
                   <?php endif; ?>
+                  <?php if ($item->metadata): 
+                    $meta = json_decode($item->metadata, true);
+                    if (!empty($meta['recipient_email'])):
+                  ?>
+                    <div class="text-xs mt-1" style="background:var(--bg-2);padding:0.25rem 0.4rem;border-radius:4px;display:inline-block;border:1px solid var(--line);">
+                      <strong>Recipient:</strong> <?= h($meta['recipient_email']) ?>
+                      <?php if (!empty($meta['sender_name'])): ?><br><strong>Sender:</strong> <?= h($meta['sender_name']) ?><?php endif; ?>
+                      <?php if (!empty($meta['message'])): ?><br><strong>Message:</strong> <em><?= h($meta['message']) ?></em><?php endif; ?>
+                    </div>
+                  <?php 
+                    endif;
+                  endif; ?>
                 </td>
                 <td><?= money($item->unit_price) ?></td>
                 <td><?= (float)$item->vat_rate ?>%</td>
@@ -150,7 +162,7 @@ switch($order_status) {
             <tr>
               <td colspan="4" class="text-right font-bold" style="padding:.8rem 1rem;">Subtotal</td>
               <td style="padding:.8rem 1rem;">
-                <strong><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount) ?></strong>
+                <strong><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount + $order->gift_card_amount) ?></strong>
               </td>
             </tr>
             <?php if ($order->discount_amount > 0): ?>
@@ -191,6 +203,16 @@ switch($order_status) {
               <td colspan="4" class="text-right font-bold" style="padding:.8rem 1rem;">Delivery (<?= h($order->delivery_method) ?>)</td>
               <td style="padding:.8rem 1rem;">
                 <strong><?= money($order->delivery_cost) ?></strong>
+              </td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($order->gift_card_amount > 0): ?>
+            <tr>
+              <td colspan="4" class="text-right font-bold" style="padding:.8rem 1rem;color:var(--accent);">
+                Paid using gift cards
+              </td>
+              <td style="padding:.8rem 1rem;color:var(--accent);">
+                <strong>-<?= money($order->gift_card_amount) ?></strong>
               </td>
             </tr>
             <?php endif; ?>

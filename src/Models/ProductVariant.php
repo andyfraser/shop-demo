@@ -11,6 +11,8 @@ class ProductVariant extends Model {
     public int $stock;
     public int|bool $active;
     public int $sort_order = 0;
+    public ?string $file_path = null;
+    public ?string $granted_role = null;
     public string $created_at;
     public ?string $product_name = null;
 

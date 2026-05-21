@@ -19,6 +19,19 @@
                 <?php if (!empty($item['variant_name'])): ?>
                     <div style="font-size: 0.8em; color: #666; margin-top: 2px;">Option: <?= h($item['variant_name']) ?></div>
                 <?php endif; ?>
+                <?php if (!empty($item['metadata'])): 
+                    $meta = json_decode($item['metadata'], true);
+                    if (!empty($meta['recipient_email'])):
+                ?>
+                    <div style="font-size: 0.8em; color: #666; margin-top: 4px; background: #f9f9f9; padding: 6px; border-radius: 4px; border: 1px solid #eee; display: inline-block;">
+                        <strong>Gift Card Details:</strong><br>
+                        To: <?= h($meta['recipient_email']) ?>
+                        <?php if (!empty($meta['sender_name'])): ?> | From: <?= h($meta['sender_name']) ?><?php endif; ?>
+                        <?php if (!empty($meta['message'])): ?><br><em>Note: <?= h($meta['message']) ?></em><?php endif; ?>
+                    </div>
+                <?php 
+                    endif;
+                endif; ?>
             </td>
             <td style="text-align: center;"><?= $item['quantity'] ?></td>
             <td style="text-align: right;"><?= money($item['unit_price'] * $item['quantity']) ?></td>
@@ -28,7 +41,7 @@
     <tfoot>
         <tr>
             <td colspan="2" style="text-align: right; padding-top: 20px; color: #666;">Subtotal</td>
-            <td style="text-align: right; padding-top: 20px;"><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount) ?></td>
+            <td style="text-align: right; padding-top: 20px;"><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount + $order->gift_card_amount) ?></td>
         </tr>
         <?php if ($order->discount_amount > 0): ?>
           <?php if (!empty($order->applied_promotions)): ?>
@@ -49,6 +62,12 @@
         <tr>
             <td colspan="2" style="text-align: right; color: #666;">Delivery (<?= h($order->delivery_method) ?>)</td>
             <td style="text-align: right;"><?= money($order->delivery_cost) ?></td>
+        </tr>
+        <?php endif; ?>
+        <?php if ($order->gift_card_amount > 0): ?>
+        <tr>
+            <td colspan="2" style="text-align: right; color: #c8622a;">Paid using gift cards</td>
+            <td style="text-align: right; color: #c8622a;">-<?= money($order->gift_card_amount) ?></td>
         </tr>
         <?php endif; ?>
         <tr class="total-row">

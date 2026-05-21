@@ -61,11 +61,13 @@ class ProductRepository implements ProductRepositoryInterface {
         $params = is_array($data) ? [
             $data['name'], $slug, $data['sku'] ?? null, $data['description'] ?? null, (float)$data['price'], (float)$data['vat_rate'],
             (int)$data['stock'], $data['category_id'] ?? null, $data['image'] ?? null,
-            (int)($data['active'] ?? 1), (int)($data['featured'] ?? 0), (int)($data['force_variant'] ?? 0), (int)($data['is_bundle'] ?? 0)
+            (int)($data['active'] ?? 1), (int)($data['featured'] ?? 0), (int)($data['force_variant'] ?? 0), (int)($data['is_bundle'] ?? 0),
+            (int)($data['is_virtual'] ?? 0), $data['virtual_type'] ?? null, $data['file_path'] ?? null, $data['granted_role'] ?? null
         ] : [
             $data->name, $slug, $data->sku, $data->description, $data->price, $data->vat_rate,
             $data->stock, $data->category_id, $data->image,
-            (int)$data->active, (int)$data->featured, (int)$data->force_variant, (int)$data->is_bundle
+            (int)$data->active, (int)$data->featured, (int)$data->force_variant, (int)$data->is_bundle,
+            (int)($data->is_virtual ?? 0), $data->virtual_type ?? null, $data->file_path ?? null, $data->granted_role ?? null
         ];
 
         if ($id) {
@@ -81,13 +83,13 @@ class ProductRepository implements ProductRepositoryInterface {
             if ($exists) {
                 $this->db->prepare(
                     "UPDATE products
-                     SET name=?, slug=?, sku=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?, force_variant=?, is_bundle=?
+                     SET name=?, slug=?, sku=?, description=?, price=?, vat_rate=?, stock=?, category_id=?, image=?, active=?, featured=?, force_variant=?, is_bundle=?, is_virtual=?, virtual_type=?, file_path=?, granted_role=?
                      WHERE id=?"
                 )->execute([...$params, $id]);
             } else {
                 $this->db->prepare(
-                    "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant, is_bundle, id)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant, is_bundle, is_virtual, virtual_type, file_path, granted_role, id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 )->execute([...$params, $id]);
             }
             return $id;
@@ -98,8 +100,8 @@ class ProductRepository implements ProductRepositoryInterface {
             $params[1] = $slug;
 
             $this->db->prepare(
-                "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant, is_bundle)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO products (name, slug, sku, description, price, vat_rate, stock, category_id, image, active, featured, force_variant, is_bundle, is_virtual, virtual_type, file_path, granted_role)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             )->execute($params);
             return (int)$this->db->lastInsertId();
         }
@@ -310,7 +312,7 @@ class ProductRepository implements ProductRepositoryInterface {
         // Query for products (only if not force_variant or total stock is low)
         $pStmt = $this->db->prepare(
             "SELECT p.* FROM products p 
-             WHERE p.active = 1 AND p.force_variant = 0 AND p.stock <= ?
+             WHERE p.active = 1 AND p.is_virtual = 0 AND p.force_variant = 0 AND p.stock <= ?
              ORDER BY $orderSql LIMIT ?"
         );
         $pStmt->bindValue(1, $threshold, \PDO::PARAM_INT);
@@ -323,7 +325,7 @@ class ProductRepository implements ProductRepositoryInterface {
             "SELECT pv.*, $concat as name, p.name as product_name 
              FROM product_variants pv
              JOIN products p ON pv.product_id = p.id
-             WHERE pv.active = 1 AND p.active = 1 AND pv.stock <= ?
+             WHERE pv.active = 1 AND p.active = 1 AND p.is_virtual = 0 AND pv.stock <= ?
              ORDER BY $vOrderSql LIMIT ?"
         );
         $vStmt->bindValue(1, $threshold, \PDO::PARAM_INT);
@@ -349,14 +351,14 @@ class ProductRepository implements ProductRepositoryInterface {
     }
 
     public function countLowStock(int $threshold): int {
-        $pStmt = $this->db->prepare("SELECT COUNT(*) FROM products WHERE active = 1 AND force_variant = 0 AND stock <= ?");
+        $pStmt = $this->db->prepare("SELECT COUNT(*) FROM products WHERE active = 1 AND is_virtual = 0 AND force_variant = 0 AND stock <= ?");
         $pStmt->execute([$threshold]);
         $pCount = (int)$pStmt->fetchColumn();
 
         $vStmt = $this->db->prepare(
             "SELECT COUNT(*) FROM product_variants pv
              JOIN products p ON pv.product_id = p.id
-             WHERE pv.active = 1 AND p.active = 1 AND pv.stock <= ?"
+             WHERE pv.active = 1 AND p.active = 1 AND p.is_virtual = 0 AND pv.stock <= ?"
         );
         $vStmt->execute([$threshold]);
         $vCount = (int)$vStmt->fetchColumn();
@@ -369,7 +371,7 @@ class ProductRepository implements ProductRepositoryInterface {
             "SELECT p.*, c.name as cat_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.active = 1 AND (p.stock > 0 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
+             WHERE p.active = 1 AND (p.stock > 0 OR p.is_virtual = 1 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
              ORDER BY p.featured DESC, p.created_at DESC
              LIMIT ?"
         );
@@ -403,17 +405,18 @@ class ProductRepository implements ProductRepositoryInterface {
         $params = [
             (int)$data['product_id'], $data['name'], $data['sku'] ?? null,
             isset($data['price']) && $data['price'] !== '' ? (float)$data['price'] : null,
-            (int)$data['stock'], (int)($data['active'] ?? 1), (int)($data['sort_order'] ?? 0)
+            (int)$data['stock'], (int)($data['active'] ?? 1), (int)($data['sort_order'] ?? 0),
+            $data['file_path'] ?? null, $data['granted_role'] ?? null
         ];
 
         if ($id) {
             $this->db->prepare(
-                "UPDATE product_variants SET product_id=?, name=?, sku=?, price=?, stock=?, active=?, sort_order=? WHERE id=?"
+                "UPDATE product_variants SET product_id=?, name=?, sku=?, price=?, stock=?, active=?, sort_order=?, file_path=?, granted_role=? WHERE id=?"
             )->execute([...$params, $id]);
             return $id;
         } else {
             $this->db->prepare(
-                "INSERT INTO product_variants (product_id, name, sku, price, stock, active, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO product_variants (product_id, name, sku, price, stock, active, sort_order, file_path, granted_role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
             )->execute($params);
             return (int)$this->db->lastInsertId();
         }
@@ -446,7 +449,7 @@ class ProductRepository implements ProductRepositoryInterface {
                 WHERE pav1.product_id = ? AND pav2.product_id != ?
                 GROUP BY pav2.product_id
             ) shared_attrs ON p.id = shared_attrs.product_id
-            WHERE p.id != ? AND p.active = 1 AND (p.stock > 0 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
+            WHERE p.id != ? AND p.active = 1 AND (p.stock > 0 OR p.is_virtual = 1 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
             ORDER BY relevance_score DESC, p.created_at DESC
             LIMIT ?
         ";

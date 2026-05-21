@@ -36,7 +36,8 @@ class OrderListener implements ListenerInterface {
             'quantity' => $i->quantity,
             'unit_price' => $i->unit_price,
             'vat_rate' => $i->vat_rate,
-            'vat_amount' => $i->vat_amount
+            'vat_amount' => $i->vat_amount,
+            'metadata' => $i->metadata ?? null
         ], $items);
 
         $this->emailService->sendOrderConfirmation($order, $emailItems);

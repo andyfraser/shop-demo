@@ -19,6 +19,7 @@ use App\Repositories\DeliveryRepositoryInterface;
 use App\Repositories\SecurityRepositoryInterface;
 use App\Repositories\ImageRepositoryInterface;
 use App\Repositories\MigrationRepositoryInterface;
+use App\Repositories\VirtualProductRepositoryInterface;
 
 use App\Services\AuthServiceInterface;
 use App\Services\AuthService;
@@ -84,9 +85,20 @@ use App\Services\QueueService;
 
 use App\Services\AnalyticsServiceInterface;
 use App\Services\AnalyticsService;
+use App\Services\VirtualProductServiceInterface;
+use App\Services\VirtualProductService;
 
 return function($c, array $config) {
     return [
+        VirtualProductServiceInterface::class => function($c) {
+            return new VirtualProductService(
+                $c->get(VirtualProductRepositoryInterface::class),
+                $c->get(UserRepositoryInterface::class),
+                $c->get(ProductRepositoryInterface::class),
+                $c->get(EmailServiceInterface::class),
+                $c->get(LoggerInterface::class)
+            );
+        },
         AnalyticsServiceInterface::class => function($c) {
             return new AnalyticsService(
                 $c->get(\PDO::class),

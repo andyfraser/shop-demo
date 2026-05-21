@@ -109,7 +109,10 @@
       <div id="stock-status">
         <?php 
           $availableStock = $product->getAvailableStock();
-          if ($availableStock > settings()->low_stock_threshold): 
+          if ($product->is_virtual):
+        ?>
+          <?= (new \App\View\Components\StatusBadge('✓ In Stock', 'badge-success'))->render() ?>
+        <?php elseif ($availableStock > settings()->low_stock_threshold): 
         ?>
           <?= (new \App\View\Components\StatusBadge('✓ In Stock', 'badge-success'))->render() ?>
         <?php elseif ($availableStock > 0): ?>
@@ -129,14 +132,14 @@
             <?php else: ?>
               <option value="" 
                       data-price="<?= $product->price ?>" 
-                      data-stock="<?= $product->stock ?>">
+                      data-stock="<?= $product->is_virtual ? 999999 : $product->stock ?>">
                 Default (<?= money($product->price) ?>)
               </option>
             <?php endif; ?>
             <?php foreach ($product->variants as $v): ?>
               <option value="<?= $v->id ?>" 
                       data-price="<?= $v->getEffectivePrice($product->price) ?>" 
-                      data-stock="<?= $v->stock ?>">
+                      data-stock="<?= $product->is_virtual ? 999999 : $v->stock ?>">
                 <?= h($v->name) ?> (<?= $v->formattedPrice($product->price) ?>)
               </option>
             <?php endforeach; ?>
@@ -144,18 +147,48 @@
         </div>
       <?php endif; ?>
 
-      <?php if ($availableStock > 0 || !empty($product->variants)): ?>
+      <?php if ($product->is_virtual || $availableStock > 0 || !empty($product->variants)): ?>
         <div id="cart-message"></div>
         <form method="POST" id="add-to-cart-form">
             <?= csrf_field() ?>
             <input type="hidden" name="product_id" value="<?= $product->id ?>">
             <input type="hidden" name="variant_id" id="selected-variant-id" value="">
             <input type="hidden" name="slug" value="<?= h($product->slug) ?>">
+
+          <?php if ($product->is_virtual && $product->virtual_type === 'giftcard'): ?>
+            <div class="gift-card-recipient-section" style="margin: 1.5rem 0; padding: 1.25rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-card); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+              <h4 style="margin-top: 0; margin-bottom: 1rem; color: var(--accent); font-family: var(--font-display); font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                🎁 Gift Card Recipient Details
+              </h4>
+              
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="recipient_email" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">
+                  Recipient Email <span style="color: var(--accent-2);">*</span>
+                </label>
+                <input type="email" id="recipient_email" name="recipient_email" class="form-control" style="width: 100%;" placeholder="friend@example.com" required>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="sender_name" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">
+                  Sender Name (optional)
+                </label>
+                <input type="text" id="sender_name" name="sender_name" class="form-control" style="width: 100%;" placeholder="Your Name">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="message" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">
+                  Personal Message (optional)
+                </label>
+                <textarea id="message" name="message" class="form-control" style="width: 100%; height: 80px; resize: none;" placeholder="Happy Birthday! Hope you enjoy this gift card!"></textarea>
+              </div>
+            </div>
+          <?php endif; ?>
+
           <div class="qty-row">
             <div class="form-group" style="margin:0">
               <label for="qty">Quantity</label>
               <input type="number" id="qty" name="qty" class="form-control qty-input"
-                     value="1" min="1" max="<?= $availableStock ?>">
+                     value="1" min="1" max="<?= $product->is_virtual ? 999999 : $availableStock ?>">
             </div>
             <button type="submit" id="add-to-cart-btn" name="add_to_cart" class="btn btn-primary" style="padding:.65rem 1.8rem;" <?= $product->force_variant && !empty($product->variants) ? 'disabled' : '' ?>>
               Add to Cart

@@ -16,8 +16,8 @@ class DeliveryService implements DeliveryServiceInterface {
         return $this->repository->getAll();
     }
 
-    public function active(float $orderTotal = 0): array {
-        return $this->repository->getActive($orderTotal);
+    public function active(float $orderTotal = 0, ?string $userRole = null): array {
+        return $this->repository->getActive($orderTotal, $userRole);
     }
 
     public function get(int $id): ?DeliveryOption {
@@ -31,11 +31,13 @@ class DeliveryService implements DeliveryServiceInterface {
             'price'           => $data->price,
             'active'          => $data->active,
             'min_order_total' => $data->min_order_total,
+            'target_role'     => $data->target_role,
         ] : [
             'name'            => $data['name'],
             'price'           => $data['price'],
             'active'          => $data['active'] ?? 0,
             'min_order_total' => $data['min_order_total'] ?? 0,
+            'target_role'     => $data['target_role'] ?? null,
         ];
 
         return $this->repository->save($params, (int)$id);

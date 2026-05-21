@@ -9,6 +9,7 @@ use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\DeliveryServiceInterface;
 use App\Services\SecurityServiceInterface;
+use App\Services\UserRoleServiceInterface;
 
 class AdminDeliveryController {
     public function __construct(
@@ -16,7 +17,8 @@ class AdminDeliveryController {
         private Validator $validator,
         private DeliveryServiceInterface $delivery,
         private SecurityServiceInterface $security,
-        private \Psr\Log\LoggerInterface $logger
+        private \Psr\Log\LoggerInterface $logger,
+        private UserRoleServiceInterface $roleService
     ) {}
 
     public function list(Request $request): Response {
@@ -31,7 +33,8 @@ class AdminDeliveryController {
         return new HtmlResponse($this->renderer->adminRender('delivery_form', [
             'page_title' => 'New Delivery Option',
             'active'     => 'delivery',
-            'option'     => ['name' => '', 'price' => '', 'active' => 1, 'min_order_total' => 0],
+            'option'     => ['name' => '', 'price' => '', 'active' => 1, 'min_order_total' => 0, 'target_role' => null],
+            'roles'      => $this->roleService->getAll(),
             'errors'     => [],
         ]));
     }
@@ -45,6 +48,7 @@ class AdminDeliveryController {
             'page_title' => 'Edit Delivery Option',
             'active'     => 'delivery',
             'option'     => $option,
+            'roles'      => $this->roleService->getAll(),
             'errors'     => [],
         ]));
     }
@@ -58,6 +62,7 @@ class AdminDeliveryController {
             'price'           => (float)($post['price'] ?? 0),
             'active'          => isset($post['active']) ? 1 : 0,
             'min_order_total' => (float)($post['min_order_total'] ?? 0),
+            'target_role'     => !empty($post['target_role']) ? trim($post['target_role']) : null,
         ];
 
         $errors = $this->validator->check($data, [
@@ -81,6 +86,7 @@ class AdminDeliveryController {
             'page_title' => $id ? 'Edit Delivery Option' : 'New Delivery Option',
             'active'     => 'delivery',
             'option'     => $data,
+            'roles'      => $this->roleService->getAll(),
             'errors'     => $errors,
         ]));
     }

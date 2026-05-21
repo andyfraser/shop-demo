@@ -46,6 +46,10 @@ return function($c, array $config) {
                 fn($e) => $c->get(OrderListener::class)->handle($e)
             );
             $dispatcher->addListener(
+                OrderStatusUpdated::class, 
+                fn($e) => $c->get(\App\Listeners\VirtualProductListener::class)->handle($e)
+            );
+            $dispatcher->addListener(
                 RefundProcessed::class, 
                 fn($e) => $c->get(OrderListener::class)->handle($e)
             );

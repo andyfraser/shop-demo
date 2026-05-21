@@ -19,13 +19,15 @@ class DeliveryServiceTest extends TestCase {
             name TEXT NOT NULL,
             price REAL NOT NULL,
             active INTEGER DEFAULT 1,
-            min_order_total REAL DEFAULT 0
+            min_order_total REAL DEFAULT 0,
+            target_role TEXT DEFAULT NULL
         )");
         
-        $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total) VALUES ('Standard', 5.0, 1, 0)");
-        $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total) VALUES ('Express', 10.0, 1, 0)");
-        $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total) VALUES ('Free', 0.0, 1, 100)");
-        $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total) VALUES ('Disabled', 20.0, 0, 0)");
+        $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total, target_role) VALUES ('Standard', 5.0, 1, 0, NULL)");
+        $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total, target_role) VALUES ('Express', 10.0, 1, 0, NULL)");
+        $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total, target_role) VALUES ('Free', 0.0, 1, 100, NULL)");
+        $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total, target_role) VALUES ('Disabled', 20.0, 0, 0, NULL)");
+        $this->db->exec("INSERT INTO delivery_options (name, price, active, min_order_total, target_role) VALUES ('VIP Free Shipping', 0.0, 1, 0, 'vip')");
 
         $logger = new NullLogger();
         $repository = new \App\Repositories\DeliveryRepository($this->db, $logger);
@@ -34,7 +36,7 @@ class DeliveryServiceTest extends TestCase {
 
     public function testAllReturnsAllOptions() {
         $options = $this->service->all();
-        $this->assertEquals(4, count($options));
+        $this->assertEquals(5, count($options));
         $this->assertInstanceOf(DeliveryOption::class, $options[0]);
     }
 
@@ -44,6 +46,17 @@ class DeliveryServiceTest extends TestCase {
         
         $options = $this->service->active(150);
         $this->assertEquals(3, count($options), "Should return Standard, Express and Free");
+    }
+
+    public function testActiveFiltersByRole() {
+        // Without role, should only get standard/express (no VIP)
+        $options = $this->service->active(50, null);
+        $this->assertEquals(2, count($options));
+        
+        // With 'vip' role, should also get VIP Free Shipping
+        $options = $this->service->active(50, 'vip');
+        $this->assertEquals(3, count($options));
+        $this->assertEquals('VIP Free Shipping', $options[0]->name); // Price is 0.0, so sorted first
     }
 
     public function testGetById() {
@@ -56,6 +69,6 @@ class DeliveryServiceTest extends TestCase {
 
     public function testDelete() {
         $this->assertTrue($this->service->delete(1));
-        $this->assertEquals(3, count($this->service->all()));
+        $this->assertEquals(4, count($this->service->all()));
     }
 }

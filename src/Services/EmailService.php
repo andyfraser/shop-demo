@@ -94,6 +94,49 @@ class EmailService implements EmailServiceInterface {
         return $this->sendHtmlEmail($toEmail, $subject, $message);
     }
 
+    public function sendDigitalDownloadsEmail(string $toEmail, string $customerName, array $downloads): bool {
+        $subject = "Your Digital Downloads - " . $this->getCleanSiteName();
+        $message = $this->renderTemplate('digital_downloads', [
+            'name' => $customerName,
+            'downloads' => $downloads,
+            'subject' => $subject
+        ]);
+        return $this->sendHtmlEmail($toEmail, $subject, $message);
+    }
+
+    public function sendGiftCardEmail(string $toEmail, string $recipientName, string $senderName, string $code, float $amount, ?string $messageContent): bool {
+        $subject = "You've received a Gift Card! - " . $this->getCleanSiteName();
+        $message = $this->renderTemplate('gift_card', [
+            'recipientName' => $recipientName,
+            'senderName' => $senderName,
+            'code' => $code,
+            'amount' => $amount,
+            'messageContent' => $messageContent,
+            'subject' => $subject
+        ]);
+        return $this->sendHtmlEmail($toEmail, $subject, $message);
+    }
+
+    public function sendLicenseKeyEmail(string $toEmail, string $customerName, array $licenses): bool {
+        $subject = "Your Software License Keys - " . $this->getCleanSiteName();
+        $message = $this->renderTemplate('license_keys', [
+            'name' => $customerName,
+            'licenses' => $licenses,
+            'subject' => $subject
+        ]);
+        return $this->sendHtmlEmail($toEmail, $subject, $message);
+    }
+
+    public function sendEventTicketEmail(string $toEmail, string $customerName, array $tickets): bool {
+        $subject = "Your Event Tickets - " . $this->getCleanSiteName();
+        $message = $this->renderTemplate('event_tickets', [
+            'name' => $customerName,
+            'tickets' => $tickets,
+            'subject' => $subject
+        ]);
+        return $this->sendHtmlEmail($toEmail, $subject, $message);
+    }
+
     private function getBaseUrl(): string {
         if (isset($_SERVER['HTTP_HOST'])) {
             $host = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";

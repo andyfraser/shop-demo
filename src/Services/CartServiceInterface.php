@@ -3,7 +3,8 @@ namespace App\Services;
 
 interface CartServiceInterface {
     public function get(): array;
-    public function add(int $productId, int $qty = 1, ?int $variantId = null): void;
+    public function add(int $productId, int $qty = 1, ?int $variantId = null, ?array $metadata = null): void;
+    public function isVirtualOnly(): bool;
     public function remove(string $key): void;
     public function update(string $key, int $qty): void;
     public function clear(): void;

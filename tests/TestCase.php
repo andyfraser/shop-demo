@@ -128,4 +128,8 @@ abstract class TestCase {
             throw new AssertionFailedException($msg);
         }
     }
+
+    protected function fail(string $message = 'Test failed'): void {
+        throw new AssertionFailedException($message);
+    }
 }

@@ -17,9 +17,15 @@ class DeliveryRepository implements DeliveryRepositoryInterface {
             ->fetchAll(PDO::FETCH_CLASS, DeliveryOption::class, [$this->logger]);
     }
 
-    public function getActive(float $orderTotal = 0): array {
-        $stmt = $this->db->prepare("SELECT * FROM delivery_options WHERE active = 1 AND min_order_total <= ? ORDER BY price ASC");
-        $stmt->execute([$orderTotal]);
+    public function getActive(float $orderTotal = 0, ?string $userRole = null): array {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM delivery_options 
+             WHERE active = 1 
+               AND min_order_total <= ? 
+               AND (target_role IS NULL OR target_role = '' OR target_role = ?) 
+             ORDER BY price ASC"
+        );
+        $stmt->execute([$orderTotal, $userRole]);
         return $stmt->fetchAll(PDO::FETCH_CLASS, DeliveryOption::class, [$this->logger]);
     }
 
@@ -35,15 +41,15 @@ class DeliveryRepository implements DeliveryRepositoryInterface {
             $stmt = $this->db->prepare("SELECT id FROM delivery_options WHERE id = ?");
             $stmt->execute([$id]);
             if ($stmt->fetch()) {
-                $stmt = $this->db->prepare("UPDATE delivery_options SET name = ?, price = ?, active = ?, min_order_total = ? WHERE id = ?");
-                return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0, $id]);
+                $stmt = $this->db->prepare("UPDATE delivery_options SET name = ?, price = ?, active = ?, min_order_total = ?, target_role = ? WHERE id = ?");
+                return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0, $data['target_role'] ?? null, $id]);
             } else {
-                $stmt = $this->db->prepare("INSERT INTO delivery_options (name, price, active, min_order_total, id) VALUES (?, ?, ?, ?, ?)");
-                return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0, $id]);
+                $stmt = $this->db->prepare("INSERT INTO delivery_options (name, price, active, min_order_total, target_role, id) VALUES (?, ?, ?, ?, ?, ?)");
+                return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0, $data['target_role'] ?? null, $id]);
             }
         } else {
-            $stmt = $this->db->prepare("INSERT INTO delivery_options (name, price, active, min_order_total) VALUES (?, ?, ?, ?)");
-            return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0]);
+            $stmt = $this->db->prepare("INSERT INTO delivery_options (name, price, active, min_order_total, target_role) VALUES (?, ?, ?, ?, ?)");
+            return $stmt->execute([$data['name'], $data['price'], $data['active'] ?? 0, $data['min_order_total'] ?? 0, $data['target_role'] ?? null]);
         }
     }
 

@@ -79,6 +79,9 @@ if (addToCartForm) {
                 variant_id: addToCartForm.querySelector('[name=variant_id]')?.value || '',
                 slug:       addToCartForm.querySelector('[name=slug]').value,
                 qty:        addToCartForm.querySelector('[name=qty]').value,
+                recipient_email: addToCartForm.querySelector('[name=recipient_email]')?.value || '',
+                sender_name: addToCartForm.querySelector('[name=sender_name]')?.value || '',
+                message:     addToCartForm.querySelector('[name=message]')?.value || '',
             });
 
             if (data.ok) {
@@ -268,23 +271,66 @@ if (checkoutForm) {
     const baseVat = parseFloat(checkoutForm.dataset.baseVat || 0);
     const defaultVatRate = parseFloat(checkoutForm.dataset.vatRate || 0);
     const currencySymbol = checkoutForm.dataset.currencySymbol || '£';
+    const isVirtualOnly = checkoutForm.dataset.isVirtualOnly === '1';
 
     const deliveryRow = document.getElementById('delivery-row');
     const deliveryCostEl = document.getElementById('delivery-cost');
     const finalTotalEl = document.getElementById('final-total');
     const vatAmountEl = document.getElementById('vat-amount');
     const placeOrderBtn = document.getElementById('place-order-btn');
+    
+    // Gift card elements
+    const giftCardCodeInput = document.getElementById('gift-card-code');
+    const applyGiftCardBtn = document.getElementById('apply-gift-card-btn');
+    const giftCardRow = document.getElementById('gift-card-row');
+    const giftCardAmountEl = document.getElementById('gift-card-amount');
+    const giftCardMessage = document.getElementById('gift-card-message');
 
-    const updateTotal = (price) => {
-        const deliveryVat = price * (defaultVatRate / (100 + defaultVatRate));
+    let currentDeliveryPrice = 0.0;
+    let appliedGiftCardDiscount = 0.0;
+
+    const updateTotal = (deliveryPrice) => {
+        currentDeliveryPrice = parseFloat(deliveryPrice || 0);
+        const deliveryVat = currentDeliveryPrice * (defaultVatRate / (100 + defaultVatRate));
         const totalVat = baseVat + deliveryVat;
 
-        if (deliveryRow) deliveryRow.style.display = 'flex';
-        if (deliveryCostEl) deliveryCostEl.textContent = formatMoney(price, currencySymbol);
-        if (finalTotalEl) finalTotalEl.textContent = formatMoney(baseTotal + price, currencySymbol);
+        if (!isVirtualOnly) {
+            if (deliveryRow) deliveryRow.style.display = 'flex';
+            if (deliveryCostEl) deliveryCostEl.textContent = formatMoney(currentDeliveryPrice, currencySymbol);
+        }
+
+        const prospectiveTotal = baseTotal + currentDeliveryPrice;
+        
+        // Re-evaluate gift card discount against prospective total if we have one applied
+        if (appliedGiftCardDiscount > 0) {
+            appliedGiftCardDiscount = Math.min(appliedGiftCardDiscount, prospectiveTotal);
+            if (giftCardRow) giftCardRow.style.display = 'flex';
+            if (giftCardAmountEl) giftCardAmountEl.textContent = '-' + formatMoney(appliedGiftCardDiscount, currencySymbol);
+        }
+
+        const finalTotal = Math.max(0, prospectiveTotal - appliedGiftCardDiscount);
+
+        if (finalTotalEl) {
+            finalTotalEl.textContent = formatMoney(finalTotal, currencySymbol);
+            // Flash animation for visual elegance
+            finalTotalEl.style.transition = 'color 0.1s ease';
+            finalTotalEl.style.color = 'var(--accent)';
+            setTimeout(() => {
+                finalTotalEl.style.color = 'var(--accent-2)';
+            }, 300);
+        }
+
         if (vatAmountEl) vatAmountEl.textContent = formatMoney(totalVat, currencySymbol);
-        if (placeOrderBtn) placeOrderBtn.disabled = false;
+        
+        if (placeOrderBtn) {
+            const hasDelivery = isVirtualOnly || checkoutForm.querySelector('input[name="delivery_option_id"]:checked');
+            placeOrderBtn.disabled = !hasDelivery;
+        }
     };
+
+    if (isVirtualOnly) {
+        if (placeOrderBtn) placeOrderBtn.disabled = false;
+    }
 
     checkoutForm.addEventListener('change', (e) => {
         if (e.target.name === 'delivery_option_id') {
@@ -314,6 +360,65 @@ if (checkoutForm) {
                 document.getElementById('country').value = opt.dataset.country || '';
             }
         });
+    }
+
+    // Gift card AJAX validation
+    if (applyGiftCardBtn && giftCardCodeInput) {
+        applyGiftCardBtn.addEventListener('click', async () => {
+            const code = giftCardCodeInput.value.trim();
+            if (!code) {
+                showGiftCardMessage('Please enter a gift card code.', 'error');
+                return;
+            }
+
+            const csrfTokenInput = checkoutForm.querySelector('input[name="csrf_token"]');
+            const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+
+            applyGiftCardBtn.disabled = true;
+            applyGiftCardBtn.textContent = 'Verifying...';
+
+            const prospectiveTotal = baseTotal + currentDeliveryPrice;
+
+            try {
+                const response = await fetch('/checkout/apply-gift-card', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({
+                        'gift_card_code': code,
+                        'total': prospectiveTotal,
+                        'csrf_token': csrfToken
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    appliedGiftCardDiscount = parseFloat(result.discount);
+                    showGiftCardMessage(`Gift card applied! Discount: ${result.discount_formatted}`, 'success');
+                    updateTotal(currentDeliveryPrice);
+                } else {
+                    appliedGiftCardDiscount = 0.0;
+                    if (giftCardRow) giftCardRow.style.display = 'none';
+                    showGiftCardMessage(result.message || 'Failed to apply gift card.', 'error');
+                    updateTotal(currentDeliveryPrice);
+                }
+            } catch (err) {
+                console.error(err);
+                showGiftCardMessage('An error occurred. Please try again.', 'error');
+            } finally {
+                applyGiftCardBtn.disabled = false;
+                applyGiftCardBtn.textContent = 'Apply';
+            }
+        });
+    }
+
+    function showGiftCardMessage(text, type) {
+        if (!giftCardMessage) return;
+        giftCardMessage.textContent = text;
+        giftCardMessage.style.display = 'block';
+        giftCardMessage.style.color = type === 'success' ? 'var(--accent)' : 'var(--accent-2)';
     }
 }
 

@@ -59,6 +59,7 @@ return [
     ['method' => 'GET', 'path' => '/logout', 'handler' => [AuthController::class, 'logout']],
     
     ['method' => 'GET', 'path' => '/account', 'handler' => [AccountController::class, 'show'], 'middlewares' => $authMiddleware],
+    ['method' => 'GET', 'path' => '/account/downloads', 'handler' => [AccountController::class, 'downloads'], 'middlewares' => $authMiddleware],
     ['method' => 'GET', 'path' => '/account/addresses/new', 'handler' => [AccountController::class, 'newAddress'], 'middlewares' => $authMiddleware],
     ['method' => 'GET', 'path' => '/account/addresses/edit', 'handler' => [AccountController::class, 'editAddress'], 'middlewares' => $authMiddleware],
     ['method' => 'POST', 'path' => '/account/addresses/save', 'handler' => [AccountController::class, 'saveAddress'], 'middlewares' => $authPostMiddleware],
@@ -88,7 +89,9 @@ return [
     // Checkout routes
     ['method' => 'GET', 'path' => '/checkout', 'handler' => [CheckoutController::class, 'show'], 'middlewares' => $verifiedMiddleware],
     ['method' => 'POST', 'path' => '/checkout', 'handler' => [CheckoutController::class, 'process'], 'middlewares' => $verifiedPostMiddleware],
+    ['method' => 'POST', 'path' => '/checkout/apply-gift-card', 'handler' => [CheckoutController::class, 'applyGiftCardAjax'], 'middlewares' => $csrfMiddleware],
     ['method' => 'GET', 'path' => '/order/confirm', 'handler' => [CheckoutController::class, 'confirm']],
+    ['method' => 'GET', 'path' => '/download/:token', 'handler' => [\App\Controllers\DownloadController::class, 'download']],
 
     // Admin routes
     ['method' => 'GET', 'path' => '/admin', 'handler' => [AdminDashboardController::class, 'index'], 'middlewares' => $adminMiddleware],

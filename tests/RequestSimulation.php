@@ -32,6 +32,9 @@ trait RequestSimulation {
             $this->container->set($interface, $resolver);
         }
 
+        // Use NullCache to avoid stale cache leaking between tests in integration simulations
+        $this->container->set(\App\Core\Cache\CacheInterface::class, fn() => new \Tests\NullCache());
+
         // Load settings and define core constants
         $settings = $this->container->get(\App\Services\SettingsService::class);
 

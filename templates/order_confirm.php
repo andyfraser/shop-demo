@@ -43,6 +43,18 @@
           <?php if ($item->variant_name): ?>
             <div style="font-size:.75rem;color:var(--ink-2);margin-top:.1rem;">Option: <?= h($item->variant_name) ?></div>
           <?php endif; ?>
+          <?php if ($item->metadata): 
+            $meta = json_decode($item->metadata, true);
+            if (!empty($meta['recipient_email'])):
+          ?>
+            <div style="font-size:0.75rem;color:var(--ink-2);margin-top:0.2rem;background:var(--bg-2);padding:0.3rem 0.5rem;border-radius:4px;border:1px solid var(--line);max-width:300px;">
+              <strong>Gift Card:</strong> To: <?= h($meta['recipient_email']) ?>
+              <?php if (!empty($meta['sender_name'])): ?> | From: <?= h($meta['sender_name']) ?><?php endif; ?>
+              <?php if (!empty($meta['message'])): ?><br><em style="font-size:0.7rem;">Note: <?= h($meta['message']) ?></em><?php endif; ?>
+            </div>
+          <?php 
+            endif;
+          endif; ?>
           × <?= $item->quantity ?>
         </span>
         <strong><?= money($item->getSubtotal()) ?></strong>
@@ -52,7 +64,7 @@
     <div style="margin-top:1.2rem;border-top:2px solid var(--line);padding-top:1rem;">
       <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;">
         <span>Subtotal</span>
-        <strong><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount) ?></strong>
+        <strong><?= money($order->total - ($order->delivery_cost ?? 0) + $order->discount_amount + $order->gift_card_amount) ?></strong>
       </div>
       <?php if ($order->discount_amount > 0): ?>
       <div id="applied-promos" style="margin-top:.5rem; border-top:1px solid var(--line); padding-top:.5rem;">
@@ -77,6 +89,12 @@
         <strong><?= money($order->delivery_cost) ?></strong>
       </div>
       <?php endif; ?>
+      <?php if ($order->gift_card_amount > 0): ?>
+      <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;color:var(--accent);">
+        <span>Paid using gift cards</span>
+        <strong>-<?= money($order->gift_card_amount) ?></strong>
+      </div>
+      <?php endif; ?>
       <div style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.15rem;font-weight:700;margin-top:.5rem;">
         <span>Total</span>
         <span style="color:var(--accent-2)"><?= money($order->total) ?></span>
@@ -85,6 +103,29 @@
         Includes <?= money($order->total_vat_amount ?? 0) ?> VAT
       </div>
     </div>
+
+    <?php 
+      $hasDigitalItems = false;
+      foreach ($order_items as $item) {
+          // This is a bit of a heuristic since we don't have is_virtual on OrderItem directly easily here 
+          // but we can check if it's confirmed and look at the products. 
+          // For now, let's just always show the link if they are logged in as a convenience, 
+          // or we could check the order total/delivery method.
+          if ($order->delivery_method === 'Digital Delivery') {
+              $hasDigitalItems = true;
+              break;
+          }
+      }
+    ?>
+
+    <?php if ($hasDigitalItems && $current_user): ?>
+      <div style="margin-top:1.5rem;padding:1.2rem;background:var(--bg-2);border-radius:var(--radius);border:1px solid var(--accent);text-align:center;">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem;">📥</div>
+        <h4 style="margin-bottom:0.5rem;font-family:var(--font-display);">Your Digital Content is Ready</h4>
+        <p style="font-size:0.85rem;color:var(--ink-2);margin-bottom:1rem;">You can access your downloads, license keys, and tickets anytime in your Digital Library.</p>
+        <a href="/account/downloads" class="btn btn-primary btn-sm">Go to My Digital Library</a>
+      </div>
+    <?php endif; ?>
 
     <?php if ($order->canBeCancelled()): ?>
       <div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--line);display:flex;justify-content:flex-end;">

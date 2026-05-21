@@ -15,6 +15,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 8. [Running Tests](#8-running-tests)
 9. [Task Scheduling](#9-task-scheduling)
 10. [Asynchronous Queue System](#10-asynchronous-queue-system)
+11. [Virtual Products & Role-Restricted Delivery](#11-virtual-products--role-restricted-delivery)
 
 ---
 
@@ -334,6 +335,87 @@ Completed and failed background jobs are stored in history for logging and debug
 - **Retention Settings:** Managed dynamically in **Admin > Settings > Background Jobs**:
   - *Cleanup Completed (hours):* Keep completed jobs in history (Default: `24` hours).
   - *Cleanup Failed (days):* Keep failed jobs in history for troubleshooting (Default: `7` days).
+
+---
+
+## 11. Virtual Products & Role-Restricted Delivery
+
+Demoshop supports full lifecycle management for **Virtual Products**—digital-only goods requiring no physical shipping—as well as **Role-Restricted Delivery Options** that can be unlocked dynamically.
+
+### Virtual Product Types
+
+The system supports five types of virtual products, each with distinct behaviors:
+
+1.  **Digital File Downloads (`file`):**
+    *   *Description:* Securely sells digital files like PDFs, E-books, videos, or software ZIP files.
+    *   *Setup (Admin):*
+        1. Create or edit a product in the Admin Panel.
+        2. Toggle the **Is Virtual** checkbox.
+        3. Under **Virtual Type**, select `Digital File Download`.
+        4. Enter the secure file path in the **Digital File Path** input field (e.g., `ebooks/sample-guide.pdf`).
+    *   *Fulfillment (Customer):*
+        *   Upon order confirmation, the system automatically generates a unique, secure 32-character download token for each file purchased.
+        *   Customers can view and download their files from the **Downloads** tab in their account dashboard.
+        *   Downloading streams the file securely from the private storage location using the path `/download/{token}`, preventing direct access to files.
+
+2.  **Gift Cards (`giftcard`):**
+    *   *Description:* Digital store credits sent directly to recipients. Gift cards support persistent balance tracking and partial deductions.
+    *   *Setup (Admin):*
+        1. Create a product (e.g., "Digital Gift Card").
+        2. Toggle the **Is Virtual** checkbox and set the type to `Gift Card`.
+    *   *Purchase Flow (Customer):*
+        *   When adding the gift card to their cart, the customer is prompted to specify the recipient's email, sender's name, and a custom message.
+        *   These details are stored as dynamic metadata inside the cart and order items.
+    *   *Fulfillment & Usage:*
+        *   Upon confirmation, the system generates a secure code (e.g., `GIFT-A2B4-C6D8`) with the total purchased amount.
+        *   An HTML email containing the code, sender details, and message is automatically dispatched to the recipient.
+        *   The code can be applied by the recipient during checkout to decrease their order total. If the order total is lower than the gift card balance, the remaining balance is persisted for future purchases.
+
+3.  **Software License Keys (`license`):**
+    *   *Description:* Distribute serial numbers, activation codes, or license keys from a pre-allocated inventory pool.
+    *   *Setup (Admin):*
+        1. Create a product, check **Is Virtual**, and set type to `Software License Key`.
+        2. In the Admin Panel product editing view, locate the **License Keys Pool** section to manage and import keys into the product's pool.
+    *   *Fulfillment (Customer):*
+        *   When purchased, the system automatically retrieves a key marked as unassigned from the product's license pool, marks it as assigned, and attaches it to the order item.
+        *   *Fallback:* If the pre-allocated pool is completely empty, the system automatically generates a secure random serial code (`LIC-XXXX-XXXX-XXXX`) to ensure uninterrupted customer fulfillment.
+        *   The customer can instantly access their assigned license key from the **Downloads** tab in their portal.
+
+4.  **User Memberships & Role Upgrades (`membership`):**
+    *   *Description:* Upgrades a customer's role in the database to grant access to special delivery options or role-restricted promotions.
+    *   *Setup (Admin):*
+        1. Create a product (e.g., "VIP Monthly Membership").
+        2. Check **Is Virtual** and set type to `User Membership / Role Upgrade`.
+        3. Under **Granted Role**, choose the target user role (e.g., `vip`).
+    *   *Fulfillment (Customer):*
+        *   Upon successful payment, the system automatically updates the customer's role in the database to the granted role.
+        *   The change takes effect instantly, unlocking role-restricted options for all future browse and checkout cycles.
+
+5.  **Event Tickets (`event_ticket`):**
+    *   *Description:* Digital booking references or admittance passes for virtual or physical events.
+    *   *Setup (Admin):*
+        1. Create a product, check **Is Virtual**, and set type to `Event Ticket`.
+    *   *Fulfillment (Customer):*
+        *   Fulfillment automatically generates a secure unique booking ticket reference (e.g., `TKT-D9E4-F7A1`).
+        *   The customer can view and download their ticket codes directly from their dashboard's **Downloads & Tickets** page.
+
+---
+
+### Frictionless Digital Checkout
+
+To ensure the highest possible conversion rate, Demoshop implements smart checkout bypassing:
+*   **Automatic Check:** If a customer's cart contains *only* virtual products (or bundles made up entirely of virtual items), the checkout system automatically detects it.
+*   **Form Simplification:** The shipping address forms (Address, City, Postcode, Country) and delivery method selections are dynamically hidden from both the checkout template and verified out of controller inputs.
+*   **Digital Delivery Setup:** The shipping cost is instantly set to `0.00` and the delivery method is recorded as `'Digital Delivery'`, making checkout incredibly fast and friction-free.
+
+---
+
+### Role-Restricted Delivery Options
+
+Demoshop allows administrators to restrict specific shipping methods to selected customer groups (e.g., free express shipping for VIP members):
+*   **Configuration (Admin):** Go to **Admin > Delivery Options**. When creating or editing a shipping method, use the **Restrict to User Role** dropdown to select the target role (e.g., `vip`). If left empty, the method is visible to all customers.
+*   **Storefront Filtering:** During checkout, the delivery service automatically filters available delivery options. Customers who do not possess the required role will not see or be able to select that restricted delivery option.
+*   **Combination with Memberships:** Customers can buy a "VIP Membership" virtual product, checkout (shipping form bypassed), and immediately gain access to VIP-restricted delivery methods on subsequent physical orders.
 
 ---
 *For developer support or feature requests, please consult the `README.md`.*

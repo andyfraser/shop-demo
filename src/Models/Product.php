@@ -17,6 +17,10 @@ class Product extends Model {
     public int|bool $featured;
     public int|bool $force_variant;
     public int|bool $is_bundle;
+    public int|bool $is_virtual = 0;
+    public ?string $virtual_type = null;
+    public ?string $file_path = null;
+    public ?string $granted_role = null;
     public string $created_at;
 
     /**
@@ -64,6 +68,9 @@ class Product extends Model {
      * Get available stock, aggregating from variants.
      */
     public function getAvailableStock(): int {
+        if ($this->is_virtual) {
+            return 999999;
+        }
         $vStock = 0;
         if (!empty($this->variants)) {
             $vStock = array_reduce($this->variants, fn($sum, $v) => $sum + $v->stock, 0);
@@ -82,6 +89,9 @@ class Product extends Model {
      * Check if product has low stock.
      */
     public function isLowStock(int $threshold): bool {
+        if ($this->is_virtual) {
+            return false;
+        }
         return $this->getAvailableStock() <= $threshold;
     }
 

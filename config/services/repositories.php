@@ -41,6 +41,8 @@ use App\Repositories\CurrencyRepositoryInterface;
 use App\Repositories\CurrencyRepository;
 use App\Repositories\JobRepositoryInterface;
 use App\Repositories\JobRepository;
+use App\Repositories\VirtualProductRepositoryInterface;
+use App\Repositories\VirtualProductRepository;
 
 return function($c, array $config) {
     return [
@@ -106,6 +108,9 @@ return function($c, array $config) {
         },
         JobRepositoryInterface::class => function($c) {
             return new JobRepository($c->get(\PDO::class));
+        },
+        VirtualProductRepositoryInterface::class => function($c) {
+            return new VirtualProductRepository($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
     ];
 };

@@ -9,13 +9,15 @@ use App\Core\Responses\RedirectResponse;
 use App\Core\Renderer;
 use App\Services\CartServiceInterface;
 use App\Services\SecurityServiceInterface;
+use App\Services\ProductServiceInterface;
 
 class CartController
 {
     public function __construct(
         private Renderer $renderer,
         private CartServiceInterface $cartService,
-        private SecurityServiceInterface $securityService
+        private SecurityServiceInterface $securityService,
+        private ProductServiceInterface $productService
     ) {}
 
     public function show(Request $request): Response
@@ -103,7 +105,50 @@ class CartController
         $slug = $slug ?: ($request->getPost('slug', ''));
         $qty = max(1, (int) ($request->getPost('qty', 1)));
 
-        $this->cartService->add($productId, $qty, $variantId);
+        $product = $this->productService->findById($productId);
+        if (!$product) {
+            flash('error', 'Product not found.');
+            return new RedirectResponse('/');
+        }
+        $metadata = null;
+
+        if ($product->is_virtual && $product->virtual_type === 'giftcard') {
+            $recipientEmail = trim($request->getPost('recipient_email', ''));
+            $senderName = trim($request->getPost('sender_name', ''));
+            $message = trim($request->getPost('message', ''));
+
+            if ($recipientEmail === '') {
+                $errorMsg = 'Recipient email is required for gift cards.';
+                if ($request->isAjax()) {
+                    return new JsonResponse([
+                        'ok' => false,
+                        'message' => $errorMsg,
+                    ]);
+                }
+                flash('error', $errorMsg);
+                return new RedirectResponse('/product/' . urlencode($slug));
+            }
+
+            if (!filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+                $errorMsg = 'Please enter a valid recipient email address.';
+                if ($request->isAjax()) {
+                    return new JsonResponse([
+                        'ok' => false,
+                        'message' => $errorMsg,
+                    ]);
+                }
+                flash('error', $errorMsg);
+                return new RedirectResponse('/product/' . urlencode($slug));
+            }
+
+            $metadata = [
+                'recipient_email' => $recipientEmail,
+                'sender_name' => $senderName,
+                'message' => $message,
+            ];
+        }
+
+        $this->cartService->add($productId, $qty, $variantId, $metadata);
 
         if ($request->isAjax()) {
             return new JsonResponse([

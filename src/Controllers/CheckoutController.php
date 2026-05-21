@@ -5,6 +5,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Responses\HtmlResponse;
 use App\Core\Responses\RedirectResponse;
+use App\Core\Responses\JsonResponse;
 use App\Core\Renderer;
 use App\Core\Validator;
 use App\Services\CartServiceInterface;
@@ -16,6 +17,7 @@ use App\Services\OrderServiceInterface;
 use App\Services\SettingsServiceInterface;
 use App\Services\AddressServiceInterface;
 use App\Services\PricingServiceInterface;
+use App\Services\VirtualProductServiceInterface;
 use App\Services\Payment\PaymentServiceInterface;
 
 class CheckoutController {
@@ -32,6 +34,7 @@ class CheckoutController {
         private AddressServiceInterface $addressService,
         private PricingServiceInterface $pricingService,
         private Validator $validator,
+        private VirtualProductServiceInterface $virtualProductService,
         private \Psr\Log\LoggerInterface $logger
     ) {}
 
@@ -42,6 +45,7 @@ class CheckoutController {
         }
 
         $user = $this->auth->currentUser();
+        $userRole = $user?->role ?? null;
         $addresses = [];
         $defaultAddress = null;
         if ($user) {
@@ -72,9 +76,12 @@ class CheckoutController {
             'country'    => $defaultAddress?->country ?? '',
             'addresses'  => $addresses,
             'notes'      => '',
-            'delivery_options' => $this->delivery->active($this->cart->total()),
+            'delivery_options' => $this->cart->isVirtualOnly() ? [] : $this->delivery->active($this->cart->total(), $userRole),
             'delivery_id' => null,
             'is_guest'   => $user === null,
+            'is_virtual_only' => $this->cart->isVirtualOnly(),
+            'gift_card_code' => '',
+            'gift_card_discount' => 0.0,
         ]));
     }
 
@@ -93,22 +100,65 @@ class CheckoutController {
         $country    = trim($post['country'] ?? '');
         $notes      = trim($post['notes'] ?? '');
         $deliveryId = (int)($post['delivery_option_id'] ?? 0);
+        $giftCardCode = trim($post['gift_card_code'] ?? '');
 
-        $rules = [
-            'name'               => 'required',
-            'email'              => 'required|email',
-            'address'            => 'required',
-            'city'               => 'required',
-            'postcode'           => 'required',
-            'country'            => 'required',
-            'delivery_option_id' => 'required',
-        ];
+        $isVirtualOnly = $this->cart->isVirtualOnly();
+
+        if ($isVirtualOnly) {
+            $rules = [
+                'name'  => 'required',
+                'email' => 'required|email',
+            ];
+        } else {
+            $rules = [
+                'name'               => 'required',
+                'email'              => 'required|email',
+                'address'            => 'required',
+                'city'               => 'required',
+                'postcode'           => 'required',
+                'country'            => 'required',
+                'delivery_option_id' => 'required',
+            ];
+        }
 
         $errors = $this->validator->check($post, $rules);
 
-        $deliveryOption = $this->delivery->get($deliveryId);
-        if (!$deliveryOption || !$deliveryOption->active) {
-            $errors['delivery_option_id'] = 'Please select a valid delivery method.';
+        $deliveryCost = 0.0;
+        $deliveryMethod = 'Digital Delivery';
+        $fullAddress = 'Digital Delivery';
+        $deliveryOption = null;
+
+        if (!$isVirtualOnly) {
+            $deliveryOption = $this->delivery->get($deliveryId);
+            if (!$deliveryOption || !$deliveryOption->active) {
+                $errors['delivery_option_id'] = 'Please select a valid delivery method.';
+            } else {
+                $deliveryCost = $deliveryOption->price;
+                $deliveryMethod = $deliveryOption->name;
+                $fullAddress = $address . "\n" . $city . "\n" . $postcode . "\n" . $country;
+            }
+        }
+
+        $giftCardDiscount = 0.0;
+
+        if ($giftCardCode !== '' && !$errors) {
+            $discount = $this->cart->discount();
+            $defaultVatRate = (float)$this->settings->get('default_vat_rate');
+            $totals = $this->pricingService->calculateOrderTotals(
+                $this->cart->total(),
+                $this->cart->totalVat(),
+                $discount,
+                $deliveryCost,
+                $defaultVatRate
+            );
+            $prospectiveTotal = $totals['grand_total'];
+
+            $gcResult = $this->virtualProductService->applyGiftCardCode($giftCardCode, $prospectiveTotal);
+            if (!$gcResult['success']) {
+                $errors['gift_card_code'] = $gcResult['message'];
+            } else {
+                $giftCardDiscount = $gcResult['discount'];
+            }
         }
 
         if (!$errors) {
@@ -122,14 +172,12 @@ class CheckoutController {
                 $this->cart->total(),
                 $this->cart->totalVat(),
                 $discount,
-                $deliveryOption->price,
+                $deliveryCost,
                 $defaultVatRate
             );
             
-            $total = $totals['grand_total'];
+            $total = $totals['grand_total'] - $giftCardDiscount;
             $totalVat = $totals['total_vat'];
-            
-            $fullAddress = $address . "\n" . $city . "\n" . $postcode . "\n" . $country;
 
             // Map promotions for OrderService
             $orderPromos = array_map(fn($p) => [
@@ -141,6 +189,12 @@ class CheckoutController {
 
             $primaryPromo = !empty($appliedPromos) ? $appliedPromos[0] : null;
 
+            $finalNotes = $notes;
+            if ($giftCardCode !== '' && $giftCardDiscount > 0) {
+                $giftCardNote = "[Gift Card Applied: Code = {$giftCardCode}, Discount = " . money($giftCardDiscount) . "]";
+                $finalNotes = $finalNotes !== '' ? $giftCardNote . "\n" . $finalNotes : $giftCardNote;
+            }
+
             $orderData = [
                 'user_id'          => $user->id ?? null,
                 'customer_name'    => $name,
@@ -148,11 +202,12 @@ class CheckoutController {
                 'total'            => $total,
                 'total_vat_amount' => $totalVat,
                 'shipping_address' => $fullAddress,
-                'notes'            => $notes,
-                'delivery_method'  => $deliveryOption->name,
-                'delivery_cost'    => $deliveryOption->price,
+                'notes'            => $finalNotes,
+                'delivery_method'  => $deliveryMethod,
+                'delivery_cost'    => $deliveryCost,
                 'promotion_id'     => $primaryPromo?->id,
                 'discount_amount'  => $discount,
+                'gift_card_amount' => $giftCardDiscount,
                 'applied_promo_name' => $primaryPromo?->name,
                 'applied_promo_code' => $primaryPromo?->applied_code ?? $primaryPromo?->code,
                 'applied_promotions' => $orderPromos
@@ -161,6 +216,10 @@ class CheckoutController {
             try {
                 $order_id = $this->orderService->create($orderData, $items);
                 $order = $this->orderService->findById($order_id);
+
+                if ($giftCardCode !== '' && $giftCardDiscount > 0) {
+                    $this->virtualProductService->deductGiftCardBalance($giftCardCode, $giftCardDiscount);
+                }
 
                 // Process payment (currently using the default manual gateway)
                 $paymentResult = $this->payment->process('manual', $order);
@@ -189,7 +248,6 @@ class CheckoutController {
                 }
 
                 $order = $this->orderService->findById($order_id);
-                // The email is now sent via the OrderPlaced event dispatched in OrderService::create
 
                 $this->cart->clear();
                 
@@ -198,11 +256,13 @@ class CheckoutController {
                 
                 return new RedirectResponse('/order/confirm?id=' . $order_id);
             } catch (\Exception $e) {
-                $errors[] = "An error occurred while processing your order. Please try again.";
+                $errors[] = "Order creation failed: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine();
                 $this->logger->error("Order creation failed: " . $e->getMessage());
             }
         }
 
+        $user = $this->auth->currentUser();
+        $userRole = $user?->role ?? null;
         return new HtmlResponse($this->renderer->render('checkout', [
             'page_title' => 'Checkout',
             'cart'       => $this->cart,
@@ -210,17 +270,44 @@ class CheckoutController {
             'total'      => $this->cart->total(),
             'total_item_vat' => $this->cart->totalVat(),
             'discount'   => $this->cart->discount(),
-            'grand_total' => $this->cart->grandTotal(),
+            'grand_total' => $this->cart->grandTotal() - $giftCardDiscount,
             'applied_promotions' => $this->cart->getAppliedPromotions(),
             'errors'     => $errors,
             'name'       => $name,
             'email'      => $email,
             'address'    => $address,
+            'city'       => $city,
+            'postcode'   => $postcode,
+            'country'    => $country,
             'notes'      => $notes,
-            'delivery_options' => $this->delivery->active($this->cart->total()),
-            'delivery_id' => $deliveryId,
+            'delivery_options' => $isVirtualOnly ? [] : $this->delivery->active($this->cart->total(), $userRole),
+            'delivery_id' => $isVirtualOnly ? null : $deliveryId,
             'is_guest'   => $this->auth->currentUser() === null,
+            'is_virtual_only' => $isVirtualOnly,
+            'gift_card_code' => $giftCardCode,
+            'gift_card_discount' => $giftCardDiscount,
         ]));
+    }
+
+    public function applyGiftCardAjax(Request $request): Response {
+        $post = $request->getPost();
+        $code = trim($post['gift_card_code'] ?? '');
+        $prospectiveTotal = (float)($post['total'] ?? 0.0);
+
+        $gcResult = $this->virtualProductService->applyGiftCardCode($code, $prospectiveTotal);
+        if ($gcResult['success']) {
+            return new JsonResponse([
+                'success' => true,
+                'discount' => $gcResult['discount'],
+                'discount_formatted' => money($gcResult['discount']),
+                'remaining' => $gcResult['remaining'],
+            ]);
+        }
+
+        return new JsonResponse([
+            'success' => false,
+            'message' => $gcResult['message'],
+        ]);
     }
 
     public function confirm(Request $request): Response {

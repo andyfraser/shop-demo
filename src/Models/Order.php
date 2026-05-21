@@ -32,6 +32,7 @@ class Order extends Model {
     public float $refunded_amount = 0.0;
     public ?int $promotion_id = null;
     public float $discount_amount = 0.0;
+    public float $gift_card_amount = 0.0;
     public ?string $applied_promo_name = null;
     public ?string $applied_promo_code = null;
     public string $created_at;

@@ -140,6 +140,52 @@
             <span class="toggle-track"></span>
             Product Bundle
           </label>
+          <label class="toggle-label">
+            <input type="checkbox" name="is_virtual" value="1" id="is-virtual-toggle"
+                   <?= ($get('is_virtual') ?? 0) ? 'checked' : '' ?>>
+            <span class="toggle-track"></span>
+            Virtual Product
+          </label>
+        </div>
+
+        <div class="span-2 mt-2" id="virtual-product-section" style="<?= ($get('is_virtual') ?? 0) ? '' : 'display:none;' ?>">
+          <h3 class="section-title border-bottom">
+            Virtual Product Settings
+          </h3>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="virtual-type" class="form-label font-bold text-sm">Virtual Type</label>
+              <select name="virtual_type" id="virtual-type" class="form-control">
+                <option value="">— Select Type —</option>
+                <option value="file" <?= ($get('virtual_type') === 'file') ? 'selected' : '' ?>>📁 Digital Download / File</option>
+                <option value="giftcard" <?= ($get('virtual_type') === 'giftcard') ? 'selected' : '' ?>>🎁 Emailable Gift Card</option>
+                <option value="license" <?= ($get('virtual_type') === 'license') ? 'selected' : '' ?>>🔑 Software License Key</option>
+                <option value="membership" <?= ($get('virtual_type') === 'membership') ? 'selected' : '' ?>>👑 User Membership</option>
+                <option value="event_ticket" <?= ($get('virtual_type') === 'event_ticket') ? 'selected' : '' ?>>🎟️ Event Ticket / Booking</option>
+              </select>
+            </div>
+            
+            <div class="form-group" id="file-path-group" style="<?= ($get('virtual_type') === 'file') ? '' : 'display:none;' ?>">
+              <label for="file-path" class="form-label font-bold text-sm">Secure File Path</label>
+              <input type="text" name="file_path" id="file-path" class="form-control" placeholder="e.g. storage/downloads/ebook.pdf" value="<?= h($get('file_path') ?? '') ?>">
+              <div class="mt-1" style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <label for="virtual-file" class="form-label font-semibold text-xs text-muted" style="margin: 0.25rem 0 0 0;">Or Upload File Directly</label>
+                <input type="file" name="virtual_file" id="virtual-file" class="form-control" style="padding: .4rem;">
+              </div>
+              <small class="text-muted" style="font-size:0.75rem; display:block; margin-top:0.25rem;">Select an existing path relative to project root, or upload a new file directly to storage/downloads.</small>
+            </div>
+
+            <div class="form-group" id="granted-role-group" style="<?= ($get('virtual_type') === 'membership') ? '' : 'display:none;' ?>">
+              <label for="granted-role" class="form-label font-bold text-sm">Granted User Role</label>
+              <select name="granted_role" id="granted-role" class="form-control">
+                <option value="">— Select Role to Grant —</option>
+                <option value="customer" <?= ($get('granted_role') === 'customer') ? 'selected' : '' ?>>Customer</option>
+                <option value="vip" <?= ($get('granted_role') === 'vip') ? 'selected' : '' ?>>VIP User</option>
+                <option value="wholesale" <?= ($get('granted_role') === 'wholesale') ? 'selected' : '' ?>>Wholesale Client</option>
+              </select>
+              <small class="text-muted" style="font-size:0.75rem; display:block; margin-top:0.25rem;">The role assigned to the user instantly upon order confirmation.</small>
+            </div>
+          </div>
         </div>
 
         <div class="span-2 mt-2" id="bundle-items-section" style="<?= ($get('is_bundle') ?? 0) ? '' : 'display:none;' ?>">
@@ -317,6 +363,8 @@
                   <th class="text-xs text-muted font-bold" style="padding: 0.5rem 0; width: 140px;">SKU</th>
                   <th class="text-xs text-muted font-bold" style="padding: 0.5rem 0; width: 120px;">Price Override</th>
                   <th class="text-xs text-muted font-bold" style="padding: 0.5rem 0; width: 80px;">Stock</th>
+                  <th class="text-xs text-muted font-bold variant-virtual-col" style="padding: 0.5rem 0; width: 180px; <?= ($get('is_virtual') ?? 0) ? '' : 'display:none;' ?>">Digital File Path</th>
+                  <th class="text-xs text-muted font-bold variant-virtual-col" style="padding: 0.5rem 0; width: 140px; <?= ($get('is_virtual') ?? 0) ? '' : 'display:none;' ?>">Grant Role</th>
                   <th style="width: 80px;"></th>
                 </tr>
               </thead>
@@ -336,6 +384,17 @@
                     <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="text" name="variants[<?= $index ?>][sku]" class="form-control" value="<?= h($v->sku ?? '') ?>" placeholder="SKU"></td>
                     <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[<?= $index ?>][price]" step="0.01" class="form-control" value="<?= h($v->price ?? '') ?>" placeholder="<?= h($get('price')) ?>"></td>
                     <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[<?= $index ?>][stock]" class="form-control" value="<?= h($v->stock) ?>"></td>
+                    <td class="variant-virtual-col" style="padding: 0.5rem 0; padding-right: 1rem; <?= ($get('is_virtual') ?? 0) ? '' : 'display:none;' ?>">
+                      <input type="text" name="variants[<?= $index ?>][file_path]" class="form-control" value="<?= h($v->file_path ?? '') ?>" placeholder="e.g. storage/downloads/file.zip">
+                    </td>
+                    <td class="variant-virtual-col" style="padding: 0.5rem 0; padding-right: 1rem; <?= ($get('is_virtual') ?? 0) ? '' : 'display:none;' ?>">
+                      <select name="variants[<?= $index ?>][granted_role]" class="form-control">
+                        <option value="">— None —</option>
+                        <option value="customer" <?= ($v->granted_role === 'customer') ? 'selected' : '' ?>>Customer</option>
+                        <option value="vip" <?= ($v->granted_role === 'vip') ? 'selected' : '' ?>>VIP User</option>
+                        <option value="wholesale" <?= ($v->granted_role === 'wholesale') ? 'selected' : '' ?>>Wholesale Client</option>
+                      </select>
+                    </td>
                     <td style="padding: 0.5rem 0;">
                       <label class="text-sm" style="color: var(--accent); cursor: pointer;">
                         <input type="checkbox" name="variants[<?= $index ?>][delete]" value="1"> Remove
@@ -607,6 +666,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tr.dataset.index = index;
         tr.draggable = true;
         
+        const isVirtual = document.getElementById('is-virtual-toggle')?.checked;
+        const virtualStyle = isVirtual ? '' : 'display: none;';
+        
         let html = `<td class="drag-handle" title="Drag to reorder" style="padding: 0.5rem 0;">⋮⋮</td>`;
         
         // Dynamic columns will be added by updateVariantColumns() immediately after this
@@ -614,12 +676,25 @@ document.addEventListener('DOMContentLoaded', function() {
         html += `
             <td style="padding: 0.5rem 0; padding-right: 1rem;">
                 <input type="hidden" name="variants[${index}][sort_order]" class="sort-order-input" value="${index}">
-                <input type="text" name="variants[${index}][name]" class="form-control" placeholder="e.g. Large">
+                <input type="text" name="variants[${index}][name]" class="form-control" placeholder="e.g. Large" required>
             </td>
             <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="text" name="variants[${index}][sku]" class="form-control" placeholder="SKU"></td>
             <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[${index}][price]" step="0.01" class="form-control" placeholder="Override"></td>
             <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[${index}][stock]" class="form-control" value="0"></td>
-            <td style="padding: 0.5rem 0;"></td>
+            <td class="variant-virtual-col" style="padding: 0.5rem 0; padding-right: 1rem; ${virtualStyle}">
+                <input type="text" name="variants[${index}][file_path]" class="form-control" placeholder="e.g. storage/downloads/file.zip">
+            </td>
+            <td class="variant-virtual-col" style="padding: 0.5rem 0; padding-right: 1rem; ${virtualStyle}">
+                <select name="variants[${index}][granted_role]" class="form-control">
+                    <option value="">— None —</option>
+                    <option value="customer">Customer</option>
+                    <option value="vip">VIP User</option>
+                    <option value="wholesale">Wholesale Client</option>
+                </select>
+            </td>
+            <td style="padding: 0.5rem 0;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="this.closest('tr').remove()" style="color: var(--accent); border-color: transparent;">×</button>
+            </td>
         `;
         tr.innerHTML = html;
         tbody.appendChild(tr);
@@ -666,5 +741,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.querySelectorAll('.variant-row').forEach(addDragEvents);
+
+    // ── Virtual Toggle & Group Visibility Logic ──────────────────────────────
+    const isVirtualToggle = document.getElementById('is-virtual-toggle');
+    const virtualProductSection = document.getElementById('virtual-product-section');
+    
+    if (isVirtualToggle) {
+        isVirtualToggle.addEventListener('change', function() {
+            if (virtualProductSection) {
+                virtualProductSection.style.display = this.checked ? 'block' : 'none';
+            }
+            
+            const showVirtual = this.checked;
+            document.querySelectorAll('.variant-virtual-col').forEach(el => {
+                el.style.display = showVirtual ? '' : 'none';
+            });
+        });
+    }
+
+    const virtualTypeSelect = document.getElementById('virtual-type');
+    const filePathGroup = document.getElementById('file-path-group');
+    const grantedRoleGroup = document.getElementById('granted-role-group');
+
+    if (virtualTypeSelect) {
+        virtualTypeSelect.addEventListener('change', function() {
+            const val = this.value;
+            if (filePathGroup) {
+                filePathGroup.style.display = (val === 'file') ? '' : 'none';
+            }
+            if (grantedRoleGroup) {
+                grantedRoleGroup.style.display = (val === 'membership') ? '' : 'none';
+            }
+        });
+    }
 });
 </script>

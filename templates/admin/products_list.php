@@ -68,7 +68,9 @@
           <td>£<?= number_format($p->price, 2) ?></td>
           <td>
             <?php $stock = $p->getAvailableStock(); ?>
-            <?php if ($stock == 0): ?>
+            <?php if ($p->is_virtual): ?>
+              <span class="badge badge-success">Virtual</span>
+            <?php elseif ($stock == 0): ?>
               <span class="badge badge-danger"><?= $stock ?></span>
             <?php elseif ($stock <= settings()->low_stock_threshold): ?>
               <span class="badge badge-warning"><?= $stock ?></span>

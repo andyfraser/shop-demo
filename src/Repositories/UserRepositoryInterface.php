@@ -12,5 +12,6 @@ interface UserRepositoryInterface {
     public function countNonAdmins(): int;
     public function save(array|User $data, int $id = 0): int;
     public function updateAddress(int $id, string $address): void;
+    public function updateRole(int $id, string $role): void;
     public function delete(int $id): void;
 }

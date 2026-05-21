@@ -17,6 +17,7 @@
           Member since <?= date('M Y', strtotime($current_user->created_at)) ?>
         </div>
         <hr style="margin:1.2rem 0;border:none;border-top:1px solid var(--line);">
+        <a href="/account/downloads" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-bottom:0.5rem;">📥 Digital Library</a>
         <a href="/wishlist" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-bottom:0.5rem;">❤️ My Wishlist</a>
         <a href="/logout" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">Sign Out</a>
       </div>

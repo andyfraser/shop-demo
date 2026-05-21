@@ -14,8 +14,8 @@ class OrderRepository implements OrderRepositoryInterface {
 
     public function create(array $orderData, array $items): int {
         $stmt = $this->db->prepare(
-            "INSERT INTO orders (user_id, customer_name, customer_email, total, total_vat_amount, shipping_address, notes, status, delivery_method, delivery_cost, promotion_id, discount_amount, applied_promo_name, applied_promo_code)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO orders (user_id, customer_name, customer_email, total, total_vat_amount, shipping_address, notes, status, delivery_method, delivery_cost, promotion_id, discount_amount, gift_card_amount, applied_promo_name, applied_promo_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([
             $orderData['user_id'] ?? null,
@@ -30,6 +30,7 @@ class OrderRepository implements OrderRepositoryInterface {
             $orderData['delivery_cost'],
             $orderData['promotion_id'] ?? null,
             $orderData['discount_amount'] ?? 0.0,
+            $orderData['gift_card_amount'] ?? 0.0,
             $orderData['applied_promo_name'] ?? null,
             $orderData['applied_promo_code'] ?? null
         ]);
@@ -54,8 +55,8 @@ class OrderRepository implements OrderRepositoryInterface {
         }
 
         $itemStmt = $this->db->prepare(
-            "INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, vat_rate, vat_amount)
-             VALUES (?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, vat_rate, vat_amount, metadata)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         );
         $stockStmt = $this->db->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
         $variantStockStmt = $this->db->prepare("UPDATE product_variants SET stock = stock - ? WHERE id = ?");
@@ -67,12 +68,14 @@ class OrderRepository implements OrderRepositoryInterface {
                 $qty = $item->qty;
                 $unitPrice = $item->unit_price;
                 $vatAmount = $item->getVatAmount();
+                $metadata = $item->metadata;
             } else {
                 $product = $item['product'];
                 $variant = $item['variant'] ?? null;
                 $qty = $item['qty'];
                 $unitPrice = $item['unit_price'];
                 $vatAmount = $item['vat_amount'];
+                $metadata = $item['metadata'] ?? null;
             }
 
             $itemStmt->execute([
@@ -82,20 +85,32 @@ class OrderRepository implements OrderRepositoryInterface {
                 $qty,
                 $unitPrice,
                 $product->vat_rate,
-                $vatAmount
+                $vatAmount,
+                $metadata
             ]);
 
             if ($variant) {
-                $variantStockStmt->execute([$qty, $variant->id]);
+                if (!$product->is_virtual) {
+                    $variantStockStmt->execute([$qty, $variant->id]);
+                }
             } else {
                 if ($product->is_bundle) {
-                    $bundleItems = $this->db->prepare("SELECT product_id, qty FROM product_bundle_items WHERE bundle_id = ?");
+                    $bundleItems = $this->db->prepare(
+                        "SELECT bi.product_id, bi.qty, p.is_virtual 
+                         FROM product_bundle_items bi 
+                         JOIN products p ON p.id = bi.product_id 
+                         WHERE bi.bundle_id = ?"
+                    );
                     $bundleItems->execute([$product->id]);
                     foreach ($bundleItems->fetchAll(\PDO::FETCH_ASSOC) as $bi) {
-                        $stockStmt->execute([$qty * $bi['qty'], $bi['product_id']]);
+                        if (!$bi['is_virtual']) {
+                            $stockStmt->execute([$qty * $bi['qty'], $bi['product_id']]);
+                        }
                     }
                 } else {
-                    $stockStmt->execute([$qty, $product->id]);
+                    if (!$product->is_virtual) {
+                        $stockStmt->execute([$qty, $product->id]);
+                    }
                 }
             }
         }
@@ -322,18 +337,32 @@ class OrderRepository implements OrderRepositoryInterface {
     public function replenishStock(array $items): void {
         $stockStmt = $this->db->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
         $variantStockStmt = $this->db->prepare("UPDATE product_variants SET stock = stock + ? WHERE id = ?");
-        $isBundleStmt = $this->db->prepare("SELECT is_bundle FROM products WHERE id = ?");
+        $isVirtualOrBundleStmt = $this->db->prepare("SELECT is_bundle, is_virtual FROM products WHERE id = ?");
 
         foreach ($items as $item) {
+            $isVirtualOrBundleStmt->execute([$item->product_id]);
+            $prodInfo = $isVirtualOrBundleStmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$prodInfo) continue;
+            
+            if ((int)$prodInfo['is_virtual'] === 1) {
+                continue; // Do not replenish virtual product stock
+            }
+
             if ($item->variant_id) {
                 $variantStockStmt->execute([$item->quantity, $item->variant_id]);
             } else {
-                $isBundleStmt->execute([$item->product_id]);
-                if ((int)$isBundleStmt->fetchColumn() === 1) {
-                    $bundleItems = $this->db->prepare("SELECT product_id, qty FROM product_bundle_items WHERE bundle_id = ?");
+                if ((int)$prodInfo['is_bundle'] === 1) {
+                    $bundleItems = $this->db->prepare(
+                        "SELECT bi.product_id, bi.qty, p.is_virtual 
+                         FROM product_bundle_items bi 
+                         JOIN products p ON p.id = bi.product_id 
+                         WHERE bi.bundle_id = ?"
+                    );
                     $bundleItems->execute([$item->product_id]);
                     foreach ($bundleItems->fetchAll(\PDO::FETCH_ASSOC) as $bi) {
-                        $stockStmt->execute([$item->quantity * $bi['qty'], $bi['product_id']]);
+                        if ((int)$bi['is_virtual'] !== 1) {
+                            $stockStmt->execute([$item->quantity * $bi['qty'], $bi['product_id']]);
+                        }
                     }
                 } else {
                     $stockStmt->execute([$item->quantity, $item->product_id]);

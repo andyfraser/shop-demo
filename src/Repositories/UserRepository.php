@@ -102,6 +102,11 @@ class UserRepository implements UserRepositoryInterface {
         $stmt->execute([$address, $id]);
     }
 
+    public function updateRole(int $id, string $role): void {
+        $stmt = $this->db->prepare("UPDATE users SET role = ? WHERE id = ?");
+        $stmt->execute([$role, $id]);
+    }
+
     public function delete(int $id): void {
         $this->db->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
     }

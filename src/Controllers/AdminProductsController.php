@@ -145,6 +145,10 @@ class AdminProductsController {
             'featured'    => isset($post['featured']) ? 1 : 0,
             'force_variant' => isset($post['force_variant']) ? 1 : 0,
             'is_bundle'   => isset($post['is_bundle']) ? 1 : 0,
+            'is_virtual'  => isset($post['is_virtual']) ? 1 : 0,
+            'virtual_type'=> !empty($post['virtual_type']) ? trim($post['virtual_type']) : null,
+            'file_path'   => !empty($post['file_path']) ? trim($post['file_path']) : null,
+            'granted_role'=> !empty($post['granted_role']) ? trim($post['granted_role']) : null,
         ];
         $product_id = (int)($post['id'] ?? 0);
 
@@ -169,6 +173,59 @@ class AdminProductsController {
                         $this->imageService->delete($data['image']);
                     }
                     $data['image'] = null;
+                }
+
+                // Handle virtual file upload for digital downloads
+                $virtualFile = $_FILES['virtual_file'] ?? null;
+                if ($virtualFile && $virtualFile['error'] !== UPLOAD_ERR_NO_FILE) {
+                    if ($virtualFile['error'] === UPLOAD_ERR_OK) {
+                        $originalName = basename($virtualFile['name']);
+                        
+                        // Strict extension check (Defense in depth)
+                        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                        $blockedExtensions = ['php', 'phtml', 'php5', 'php7', 'phps', 'phar', 'sh', 'cgi', 'pl', 'py', 'asp', 'aspx', 'jsp', 'exe', 'bat', 'cmd'];
+                        if (in_array($ext, $blockedExtensions)) {
+                            throw new RuntimeException('Disallowed file extension for secure digital downloads.');
+                        }
+                        
+                        // Strict filename sanitization
+                        $cleanName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $originalName);
+                        $cleanName = trim($cleanName, '. ');
+                        if ($cleanName === '') {
+                            $cleanName = 'download_' . time();
+                        }
+                        
+                        // Prevent guessability and filename collisions using high-entropy random prefix
+                        $randomPrefix = bin2hex(random_bytes(16));
+                        $uniqueName = $randomPrefix . '_' . $cleanName;
+                        
+                        $downloadsDir = __DIR__ . '/../../storage/downloads/';
+                        if (!is_dir($downloadsDir)) {
+                            if (!mkdir($downloadsDir, 0755, true)) {
+                                throw new RuntimeException('Failed to create secure downloads directory.');
+                            }
+                        }
+                        
+                        $targetPath = $downloadsDir . $uniqueName;
+                        if (move_uploaded_file($virtualFile['tmp_name'], $targetPath)) {
+                            // Update file path to reference the secure upload
+                            $data['file_path'] = 'storage/downloads/' . $uniqueName;
+                        } else {
+                            throw new RuntimeException('Failed to move uploaded digital file to secure storage.');
+                        }
+                    } else {
+                        // Standard file upload error mapping
+                        $uploadErrors = [
+                            UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
+                            UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive in the HTML form.',
+                            UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded.',
+                            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.',
+                            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+                            UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the file upload.',
+                        ];
+                        $errMsg = $uploadErrors[$virtualFile['error']] ?? 'Unknown upload error.';
+                        throw new RuntimeException('Digital file upload failed: ' . $errMsg);
+                    }
                 }
             } catch (RuntimeException $e) {
                 $errors[] = $e->getMessage();
@@ -216,7 +273,9 @@ class AdminProductsController {
                         'price'      => isset($v['price']) && $v['price'] !== '' ? (float)$v['price'] : null,
                         'stock'      => (int)($v['stock'] ?? 0),
                         'active'     => 1,
-                        'sort_order' => (int)($v['sort_order'] ?? 0)
+                        'sort_order' => (int)($v['sort_order'] ?? 0),
+                        'file_path'  => !empty($v['file_path']) ? trim($v['file_path']) : null,
+                        'granted_role' => !empty($v['granted_role']) ? trim($v['granted_role']) : null,
                     ];
                     $vId = !empty($v['id']) ? (int)$v['id'] : 0;
                     $savedVId = $this->variantService->save($vData, $vId);

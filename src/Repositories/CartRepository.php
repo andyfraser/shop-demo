@@ -5,33 +5,48 @@ class CartRepository implements CartRepositoryInterface {
     public function __construct(private \PDO $db) {}
 
     public function getItems(int $cartId): array {
-        $stmt = $this->db->prepare("SELECT product_id, variant_id, qty FROM cart_items WHERE cart_id = ?");
+        $stmt = $this->db->prepare("SELECT product_id, variant_id, qty, metadata FROM cart_items WHERE cart_id = ?");
         $stmt->execute([$cartId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function addItem(int $cartId, int $productId, int $qty, ?int $variantId = null): void {
-        $stmt = $this->db->prepare("SELECT id, qty FROM cart_items WHERE cart_id = ? AND product_id = ? AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))");
-        $stmt->execute([$cartId, $productId, $variantId, $variantId]);
+    public function addItem(int $cartId, int $productId, int $qty, ?int $variantId = null, ?string $metadata = null): void {
+        $stmt = $this->db->prepare(
+            "SELECT id, qty FROM cart_items 
+             WHERE cart_id = ? AND product_id = ? 
+               AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))
+               AND (metadata = ? OR (metadata IS NULL AND ? IS NULL))"
+        );
+        $stmt->execute([$cartId, $productId, $variantId, $variantId, $metadata, $metadata]);
         $item = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if ($item) {
             $this->db->prepare("UPDATE cart_items SET qty = qty + ? WHERE id = ?")
                 ->execute([$qty, $item['id']]);
         } else {
-            $this->db->prepare("INSERT INTO cart_items (cart_id, product_id, variant_id, qty) VALUES (?, ?, ?, ?)")
-                ->execute([$cartId, $productId, $variantId, $qty]);
+            $this->db->prepare("INSERT INTO cart_items (cart_id, product_id, variant_id, qty, metadata) VALUES (?, ?, ?, ?, ?)")
+                ->execute([$cartId, $productId, $variantId, $qty, $metadata]);
         }
     }
 
-    public function removeItem(int $cartId, int $productId, ?int $variantId = null): void {
-        $this->db->prepare("DELETE FROM cart_items WHERE cart_id = ? AND product_id = ? AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))")
-            ->execute([$cartId, $productId, $variantId, $variantId]);
+    public function removeItem(int $cartId, int $productId, ?int $variantId = null, ?string $metadata = null): void {
+        $stmt = $this->db->prepare(
+            "DELETE FROM cart_items 
+             WHERE cart_id = ? AND product_id = ? 
+               AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))
+               AND (metadata = ? OR (metadata IS NULL AND ? IS NULL))"
+        );
+        $stmt->execute([$cartId, $productId, $variantId, $variantId, $metadata, $metadata]);
     }
 
-    public function updateItemQty(int $cartId, int $productId, int $qty, ?int $variantId = null): void {
-        $this->db->prepare("UPDATE cart_items SET qty = ? WHERE cart_id = ? AND product_id = ? AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))")
-            ->execute([$qty, $cartId, $productId, $variantId, $variantId]);
+    public function updateItemQty(int $cartId, int $productId, int $qty, ?int $variantId = null, ?string $metadata = null): void {
+        $stmt = $this->db->prepare(
+            "UPDATE cart_items SET qty = ? 
+             WHERE cart_id = ? AND product_id = ? 
+               AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))
+               AND (metadata = ? OR (metadata IS NULL AND ? IS NULL))"
+        );
+        $stmt->execute([$qty, $cartId, $productId, $variantId, $variantId, $metadata, $metadata]);
     }
 
     public function clearItems(int $cartId): void {

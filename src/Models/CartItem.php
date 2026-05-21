@@ -8,6 +8,7 @@ class CartItem extends Model {
     public int $product_id;
     public ?int $variant_id = null;
     public int $qty;
+    public ?string $metadata = null;
     public string $created_at;
 
     // Computed / Joined properties

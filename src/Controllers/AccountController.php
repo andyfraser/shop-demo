@@ -13,6 +13,7 @@ use App\Services\OrderServiceInterface;
 use App\Services\UserServiceInterface;
 use App\Services\AddressServiceInterface;
 use App\Services\ReturnServiceInterface;
+use App\Services\VirtualProductServiceInterface;
 
 class AccountController {
     public function __construct(
@@ -24,7 +25,8 @@ class AccountController {
         private EmailServiceInterface $email,
         private ReturnServiceInterface $returnService,
         private AddressServiceInterface $addressService,
-        private \Psr\Log\LoggerInterface $logger
+        private \Psr\Log\LoggerInterface $logger,
+        private VirtualProductServiceInterface $virtualProductService
     ) {}
 
     public function show(Request $request): Response {
@@ -39,6 +41,23 @@ class AccountController {
             'address_saved'   => flash('address_saved'),
             'msg'             => flash('msg'),
             'msg_error'       => flash('msg_error'),
+        ]));
+    }
+
+    public function downloads(Request $request): Response {
+        $user = $this->auth->currentUser();
+        $downloads = $this->virtualProductService->getUserDownloads($user->id);
+        $licenses = $this->virtualProductService->getUserLicenses($user->id);
+        $tickets = $this->virtualProductService->getUserTickets($user->id);
+
+        return new HtmlResponse($this->renderer->render('account_downloads', [
+            'page_title' => 'My Digital Library',
+            'user'       => $user,
+            'downloads'  => $downloads,
+            'licenses'   => $licenses,
+            'tickets'    => $tickets,
+            'msg'        => flash('msg'),
+            'msg_error'  => flash('msg_error'),
         ]));
     }
 
