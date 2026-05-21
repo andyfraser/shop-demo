@@ -135,6 +135,16 @@ switch($order_status) {
                       Option: <?= h($item->variant_name) ?>
                     </div>
                   <?php endif; ?>
+                  <?php if (!empty($item->bundle_components)): ?>
+                    <div class="text-xs mt-1" style="background:var(--bg-2);padding:0.25rem 0.4rem;border-radius:4px;display:block;border:1px solid var(--line);">
+                      <div class="text-muted fw-600 mb-1" style="text-transform:uppercase;font-size:0.6rem;letter-spacing:0.02em;">Includes:</div>
+                      <ul style="margin:0;padding:0;list-style:none;">
+                        <?php foreach ($item->bundle_components as $bc): ?>
+                          <li><?= $bc['qty'] ?> × <?= h($bc['name']) ?></li>
+                        <?php endforeach; ?>
+                      </ul>
+                    </div>
+                  <?php endif; ?>
                   <?php if ($item->metadata): 
                     $meta = json_decode($item->metadata, true);
                     if (!empty($meta['recipient_email'])):

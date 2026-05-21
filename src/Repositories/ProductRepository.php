@@ -371,7 +371,7 @@ class ProductRepository implements ProductRepositoryInterface {
             "SELECT p.*, c.name as cat_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.active = 1 AND (p.stock > 0 OR p.is_virtual = 1 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
+             WHERE p.active = 1 AND (p.stock > 0 OR p.is_virtual = 1 OR p.is_bundle = 1 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
              ORDER BY p.featured DESC, p.created_at DESC
              LIMIT ?"
         );
@@ -449,7 +449,7 @@ class ProductRepository implements ProductRepositoryInterface {
                 WHERE pav1.product_id = ? AND pav2.product_id != ?
                 GROUP BY pav2.product_id
             ) shared_attrs ON p.id = shared_attrs.product_id
-            WHERE p.id != ? AND p.active = 1 AND (p.stock > 0 OR p.is_virtual = 1 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
+            WHERE p.id != ? AND p.active = 1 AND (p.stock > 0 OR p.is_virtual = 1 OR p.is_bundle = 1 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
             ORDER BY relevance_score DESC, p.created_at DESC
             LIMIT ?
         ";
@@ -502,7 +502,8 @@ class ProductRepository implements ProductRepositoryInterface {
 
     public function getBundleItems(int $bundleId): array {
         $stmt = $this->db->prepare(
-            "SELECT p.*, pbi.qty as bundle_qty
+            "SELECT p.*, pbi.qty as bundle_qty,
+                    (SELECT SUM(stock) FROM product_variants WHERE product_id = p.id) as variant_stock
              FROM product_bundle_items pbi
              JOIN products p ON pbi.product_id = p.id
              WHERE pbi.bundle_id = ?

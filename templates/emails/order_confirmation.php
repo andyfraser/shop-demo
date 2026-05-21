@@ -14,10 +14,20 @@
     <tbody>
         <?php foreach ($items as $item): ?>
         <tr>
-            <td>
-                <?= h($item['name']) ?>
+            <td style="vertical-align: top;">
+                <div style="font-weight: bold;"><?= h($item['name']) ?></div>
                 <?php if (!empty($item['variant_name'])): ?>
                     <div style="font-size: 0.8em; color: #666; margin-top: 2px;">Option: <?= h($item['variant_name']) ?></div>
+                <?php endif; ?>
+                <?php if (!empty($item['bundle_components'])): ?>
+                    <div style="font-size: 0.75em; color: #666; margin-top: 4px; padding: 4px 8px; background: #f0f0f0; border-radius: 4px; display: block;">
+                        <strong style="font-size: 0.7rem; text-transform: uppercase;">Includes:</strong>
+                        <ul style="margin: 2px 0 0 0; padding: 0; list-style: none;">
+                            <?php foreach ($item['bundle_components'] as $bc): ?>
+                                <li><?= $bc['qty'] ?> × <?= h($bc['name']) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
                 <?php endif; ?>
                 <?php if (!empty($item['metadata'])): 
                     $meta = json_decode($item['metadata'], true);
@@ -33,8 +43,8 @@
                     endif;
                 endif; ?>
             </td>
-            <td style="text-align: center;"><?= $item['quantity'] ?></td>
-            <td style="text-align: right;"><?= money($item['unit_price'] * $item['quantity']) ?></td>
+            <td style="text-align: center; vertical-align: top;"><?= $item['quantity'] ?></td>
+            <td style="text-align: right; vertical-align: top;"><?= money($item['unit_price'] * $item['quantity']) ?></td>
         </tr>
         <?php endforeach; ?>
     </tbody>

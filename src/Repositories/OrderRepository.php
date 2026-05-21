@@ -147,13 +147,28 @@ class OrderRepository implements OrderRepositoryInterface {
 
     public function getItems(int $orderId): array {
         $stmt = $this->db->prepare(
-            "SELECT oi.*, p.name as product_name, p.slug, pv.name as variant_name
+            "SELECT oi.*, p.name as product_name, p.slug, pv.name as variant_name, p.is_bundle
              FROM order_items oi
              LEFT JOIN products p ON oi.product_id = p.id
              LEFT JOIN product_variants pv ON oi.variant_id = pv.id
              WHERE oi.order_id = ?"
         );
-        return $stmt->execute([$orderId]) ? $stmt->fetchAll(\PDO::FETCH_CLASS, OrderItem::class, [$this->logger]) : [];
+        $items = $stmt->execute([$orderId]) ? $stmt->fetchAll(\PDO::FETCH_CLASS, OrderItem::class, [$this->logger]) : [];
+
+        foreach ($items as $item) {
+            if ($item->is_bundle) {
+                $compStmt = $this->db->prepare(
+                    "SELECT pbi.qty, p.name 
+                     FROM product_bundle_items pbi
+                     JOIN products p ON pbi.product_id = p.id
+                     WHERE pbi.bundle_id = ?"
+                );
+                $compStmt->execute([$item->product_id]);
+                $item->bundle_components = $compStmt->fetchAll(\PDO::FETCH_ASSOC);
+            }
+        }
+
+        return $items;
     }
 
     public function getAllForAdmin(string $status = ''): array {

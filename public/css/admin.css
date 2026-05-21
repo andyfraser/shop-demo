@@ -180,7 +180,7 @@ select.form-control   { cursor: pointer; }
 .data-table td:last-child { white-space: nowrap; }
 .data-table td {
     padding: .75rem 1rem; border-bottom: 1px solid var(--line);
-    font-size: .85rem; color: var(--ink-2); vertical-align: middle;
+    font-size: .85rem; color: var(--ink-2); vertical-align: top;
 }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover td      { background: var(--sand); }

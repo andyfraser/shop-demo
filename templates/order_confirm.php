@@ -37,11 +37,26 @@
 
     <h3 style="font-family:var(--font-display);margin-bottom:.75rem;">Items</h3>
     <?php foreach ($order_items as $i => $item): ?>
-      <div style="display:flex;justify-content:space-between;padding:.5rem 0;<?= $i < count($order_items) - 1 ? 'border-bottom:1px solid var(--line);' : '' ?>font-size:.875rem;">
-        <span>
-          <a href="/product/<?= h($item->slug) ?>"><?= h($item->name ?? $item->product_name) ?></a>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:.75rem 0;<?= $i < count($order_items) - 1 ? 'border-bottom:1px solid var(--line);' : '' ?>font-size:.875rem;">
+        <div style="flex:1;">
+          <div style="display:block; margin-bottom:0.25rem;">
+            <a href="/product/<?= h($item->slug) ?>" style="font-weight:600; text-decoration:none; color:inherit;"><?= h($item->name ?? $item->product_name) ?></a>
+            <span style="color:var(--ink-2); margin-left:0.2rem;">× <?= $item->quantity ?></span>
+          </div>
+
           <?php if ($item->variant_name): ?>
-            <div style="font-size:.75rem;color:var(--ink-2);margin-top:.1rem;">Option: <?= h($item->variant_name) ?></div>
+            <div style="font-size:.75rem;color:var(--ink-2);margin-bottom:0.25rem;">Option: <?= h($item->variant_name) ?></div>
+          <?php endif; ?>
+
+          <?php if (!empty($item->bundle_components)): ?>
+            <div style="display:block; font-size:0.7rem;color:var(--ink-2);margin-top:0.5rem;background:var(--bg-2);padding:0.4rem 0.6rem;border-radius:4px;border:1px solid var(--line);max-width:320px;">
+              <div style="font-weight:600;margin-bottom:0.2rem;text-transform:uppercase;font-size:0.65rem;letter-spacing:0.02em;">Includes:</div>
+              <ul style="margin:0;padding:0;list-style:none;">
+                <?php foreach ($item->bundle_components as $bc): ?>
+                  <li style="margin-bottom:0.1rem;"><?= $bc['qty'] ?> × <?= h($bc['name']) ?></li>
+                <?php endforeach; ?>
+              </ul>
+            </div>
           <?php endif; ?>
           <?php if ($item->metadata): 
             $meta = json_decode($item->metadata, true);
@@ -55,8 +70,7 @@
           <?php 
             endif;
           endif; ?>
-          × <?= $item->quantity ?>
-        </span>
+        </div>
         <strong><?= money($item->getSubtotal()) ?></strong>
       </div>
     <?php endforeach; ?>

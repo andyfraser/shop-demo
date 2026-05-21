@@ -122,6 +122,34 @@
         <?php endif; ?>
       </div>
 
+      <?php if ($product->is_bundle && !empty($product->bundle_items)): ?>
+        <div class="bundle-components-section" style="margin: 1.5rem 0; padding: 1.25rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-card); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+          <h4 style="margin-top: 0; margin-bottom: 1rem; color: var(--accent); font-family: var(--font-display); font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+            Included in this Bundle
+          </h4>
+          <div class="bundle-items-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <?php foreach ($product->bundle_items as $item): ?>
+              <div class="bundle-component-item" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <span style="font-weight: 600; color: var(--accent-2); background: var(--sand); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                    <?= (int)$item['bundle_qty'] ?>×
+                  </span>
+                  <a href="/product/<?= h($item['slug']) ?>" style="font-weight: 500; text-decoration: none; color: var(--ink);">
+                    <?= h($item['name']) ?>
+                  </a>
+                </div>
+                <div style="color: var(--ink-2); font-size: 0.85rem;">
+                  <?= money($item['price']) ?> each
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+          <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--ink-2); font-style: italic; text-align: right;">
+            Total bundle value: <?= money(array_reduce($product->bundle_items, fn($sum, $i) => $sum + ($i['price'] * $i['bundle_qty']), 0)) ?>
+          </div>
+        </div>
+      <?php endif; ?>
+
       <?php if (!empty($product->variants)): ?>
         <div class="form-group" style="margin: 1.5rem 0;">
           <label for="variant-select"><strong>Option</strong></label>

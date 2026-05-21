@@ -71,6 +71,29 @@ class Product extends Model {
         if ($this->is_virtual) {
             return 999999;
         }
+
+        if ($this->is_bundle && !empty($this->bundle_items)) {
+            $maxBundles = PHP_INT_MAX;
+            foreach ($this->bundle_items as $item) {
+                $qtyNeeded = $item['bundle_qty'] ?? 1;
+                if ($qtyNeeded <= 0) continue;
+
+                // If it's a virtual item, it has infinite stock
+                if (($item['is_virtual'] ?? 0)) {
+                    continue;
+                }
+
+                $itemStock = (int)($item['stock'] ?? 0);
+                $itemVStock = (int)($item['variant_stock'] ?? 0);
+                
+                $totalItemStock = ($item['force_variant'] ?? 0) ? $itemVStock : ($itemStock + $itemVStock);
+                
+                $canMake = (int)floor($totalItemStock / $qtyNeeded);
+                $maxBundles = min($maxBundles, $canMake);
+            }
+            return $maxBundles === PHP_INT_MAX ? 0 : $maxBundles;
+        }
+
         $vStock = 0;
         if (!empty($this->variants)) {
             $vStock = array_reduce($this->variants, fn($sum, $v) => $sum + $v->stock, 0);

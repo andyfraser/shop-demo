@@ -48,7 +48,8 @@ class CartService implements CartServiceInterface {
                 if (empty($product->bundle_items)) return false;
 
                 foreach ($product->bundle_items as $component) {
-                    $compProduct = $this->productService->findById($component['product_id']);
+                    $compId = $component['id'] ?? $component['product_id'] ?? null;
+                    $compProduct = $this->productService->findById($compId);
                     if (!$compProduct || !$compProduct->is_virtual) {
                         return false;
                     }
