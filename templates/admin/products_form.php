@@ -206,7 +206,7 @@
                 </thead>
                 <tbody>
                     <?php 
-                      $bundle_items = is_object($product) ? ($product->bundle_items ?? []) : ($post['bundle_items'] ?? []);
+                      $bundle_items = is_object($product) ? ($product->bundle_items ?? []) : ($product['bundle_items'] ?? []);
                       foreach ($bundle_items as $bIndex => $bi): 
                     ?>
                         <tr>
@@ -215,7 +215,7 @@
                                     <option value="">— Select Product —</option>
                                     <?php foreach ($all_products as $ap): ?>
                                         <?php if ($ap->id != $product_id): ?>
-                                            <option value="<?= $ap->id ?>" <?= $bi['product_id'] == $ap->id ? 'selected' : '' ?>>
+                                            <option value="<?= $ap->id ?>" <?= (($bi['product_id'] ?? $bi['id'] ?? 0) == $ap->id) ? 'selected' : '' ?>>
                                                 <?= h($ap->name) ?> (SKU: <?= h($ap->sku) ?>)
                                             </option>
                                         <?php endif; ?>
@@ -256,7 +256,7 @@
                 </thead>
                 <tbody>
                     <?php 
-                      $tiers = is_object($product) ? ($product->tiers ?? []) : ($post['tiers'] ?? []);
+                      $tiers = is_object($product) ? ($product->tiers ?? []) : ($product['tiers'] ?? []);
                       foreach ($tiers as $tIndex => $tier): 
                     ?>
                         <tr>
@@ -313,7 +313,7 @@
                 </div>
 
                 <?php 
-                  $variant_attr_ids = is_object($product) ? ($product->variant_attribute_ids ?? []) : ($_POST['variant_attribute_ids'] ?? []);
+                  $variant_attr_ids = is_object($product) ? ($product->variant_attribute_ids ?? []) : ($product['variant_attribute_ids'] ?? []);
                   foreach ($all_attributes as $attr): 
                 ?>
                     <div class="attr-group" id="attr-group-<?= $attr['id'] ?>" data-attr-id="<?= $attr['id'] ?>" data-attr-name="<?= h($attr['name']) ?>" style="display: none;">
@@ -370,29 +370,29 @@
               </thead>
               <tbody>
                 <?php 
-                  $variants = is_object($product) ? ($product->variants ?? []) : [];
+                  $variants = is_object($product) ? ($product->variants ?? []) : ($product['variants'] ?? []);
                   foreach ($variants as $index => $v): 
                 ?>
                   <tr draggable="true" class="variant-row" data-index="<?= $index ?>">
                     <td class="drag-handle" title="Drag to reorder" style="padding: 0.5rem 0;">⋮⋮</td>
                     <!-- Dynamic values will be inserted here by JS -->
                     <td style="padding: 0.5rem 0; padding-right: 1rem;">
-                      <input type="hidden" name="variants[<?= $index ?>][id]" value="<?= $v->id ?>">
-                      <input type="hidden" name="variants[<?= $index ?>][sort_order]" class="sort-order-input" value="<?= $v->sort_order ?>">
-                      <input type="text" name="variants[<?= $index ?>][name]" class="form-control" value="<?= h($v->name) ?>" placeholder="e.g. Blue Small">
+                      <input type="hidden" name="variants[<?= $index ?>][id]" value="<?= $v['id'] ?? '' ?>">
+                      <input type="hidden" name="variants[<?= $index ?>][sort_order]" class="sort-order-input" value="<?= $v['sort_order'] ?? 0 ?>">
+                      <input type="text" name="variants[<?= $index ?>][name]" class="form-control" value="<?= h($v['name'] ?? '') ?>" placeholder="e.g. Blue Small">
                     </td>
-                    <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="text" name="variants[<?= $index ?>][sku]" class="form-control" value="<?= h($v->sku ?? '') ?>" placeholder="SKU"></td>
-                    <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[<?= $index ?>][price]" step="0.01" class="form-control" value="<?= h($v->price ?? '') ?>" placeholder="<?= h($get('price')) ?>"></td>
-                    <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[<?= $index ?>][stock]" class="form-control" value="<?= h($v->stock) ?>"></td>
+                    <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="text" name="variants[<?= $index ?>][sku]" class="form-control" value="<?= h($v['sku'] ?? '') ?>" placeholder="SKU"></td>
+                    <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[<?= $index ?>][price]" step="0.01" class="form-control" value="<?= h($v['price'] ?? '') ?>" placeholder="<?= h($get('price')) ?>"></td>
+                    <td style="padding: 0.5rem 0; padding-right: 1rem;"><input type="number" name="variants[<?= $index ?>][stock]" class="form-control" value="<?= h($v['stock'] ?? 0) ?>"></td>
                     <td class="variant-virtual-col" style="padding: 0.5rem 0; padding-right: 1rem; <?= ($get('is_virtual') ?? 0) ? '' : 'display:none;' ?>">
-                      <input type="text" name="variants[<?= $index ?>][file_path]" class="form-control" value="<?= h($v->file_path ?? '') ?>" placeholder="e.g. storage/downloads/file.zip">
+                      <input type="text" name="variants[<?= $index ?>][file_path]" class="form-control" value="<?= h($v['file_path'] ?? '') ?>" placeholder="e.g. storage/downloads/file.zip">
                     </td>
                     <td class="variant-virtual-col" style="padding: 0.5rem 0; padding-right: 1rem; <?= ($get('is_virtual') ?? 0) ? '' : 'display:none;' ?>">
                       <select name="variants[<?= $index ?>][granted_role]" class="form-control">
                         <option value="">— None —</option>
-                        <option value="customer" <?= ($v->granted_role === 'customer') ? 'selected' : '' ?>>Customer</option>
-                        <option value="vip" <?= ($v->granted_role === 'vip') ? 'selected' : '' ?>>VIP User</option>
-                        <option value="wholesale" <?= ($v->granted_role === 'wholesale') ? 'selected' : '' ?>>Wholesale Client</option>
+                        <option value="customer" <?= (($v['granted_role'] ?? '') === 'customer') ? 'selected' : '' ?>>Customer</option>
+                        <option value="vip" <?= (($v['granted_role'] ?? '') === 'vip') ? 'selected' : '' ?>>VIP User</option>
+                        <option value="wholesale" <?= (($v['granted_role'] ?? '') === 'wholesale') ? 'selected' : '' ?>>Wholesale Client</option>
                       </select>
                     </td>
                     <td style="padding: 0.5rem 0;">
@@ -402,7 +402,8 @@
                     </td>
                     <?php 
                         // We need to output the current attribute values as hidden inputs so JS can pick them up and populate the dynamic selects
-                        foreach ($v->attribute_value_ids as $valId):
+                        $v_attr_ids = is_object($v) ? ($v->attribute_value_ids ?? []) : ($v['attr_values'] ?? []);
+                        foreach ($v_attr_ids as $valId):
                     ?>
                         <input type="hidden" class="v-hidden-attr-val" value="<?= $valId ?>">
                     <?php endforeach; ?>

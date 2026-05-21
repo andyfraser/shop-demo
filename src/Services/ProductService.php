@@ -35,7 +35,13 @@ class ProductService implements ProductServiceInterface {
     }
 
     public function getAllForAdmin(\App\Core\QueryCriteria $criteria): array {
-        return $this->repository->getAllForAdmin($criteria);
+        $products = $this->repository->getAllForAdmin($criteria);
+        foreach ($products as $product) {
+            if ($product->is_bundle) {
+                $product->bundle_items = $this->repository->getBundleItems($product->id);
+            }
+        }
+        return $products;
     }
 
     public function findById(int $id): ?Product {

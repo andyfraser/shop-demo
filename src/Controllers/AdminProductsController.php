@@ -306,6 +306,13 @@ class AdminProductsController {
             return new RedirectResponse($redirectUrl);
         }
 
+        // If we have errors, ensure we preserve all posted data in the $data array for re-rendering
+        $data['bundle_items'] = $post['bundle_items'] ?? [];
+        $data['tiers'] = $post['tiers'] ?? [];
+        $data['variants'] = $post['variants'] ?? [];
+        $data['variant_attribute_ids'] = $post['variant_attribute_ids'] ?? [];
+        $data['attribute_value_ids'] = $post['attribute_value_ids'] ?? [];
+
         $allAttributes = $this->attributeService->getAll();
         foreach ($allAttributes as &$attr) {
             $attr['values'] = $this->attributeService->getValues($attr['id']);
@@ -321,7 +328,7 @@ class AdminProductsController {
             'categories' => $this->categoryService->getFlat(),
             'all_products' => $this->productService->getAllActive(new \App\Core\QueryCriteria(['sort' => 'name'])),
             'all_attributes' => $allAttributes ?? [], 
-            'product_attribute_ids' => $post['attribute_value_ids'] ?? [],
+            'product_attribute_ids' => $data['attribute_value_ids'],
             'errors'     => $errors,
         ]));
     }

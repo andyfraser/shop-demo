@@ -502,7 +502,7 @@ class ProductRepository implements ProductRepositoryInterface {
 
     public function getBundleItems(int $bundleId): array {
         $stmt = $this->db->prepare(
-            "SELECT p.*, pbi.qty as bundle_qty,
+            "SELECT p.*, pbi.product_id, pbi.qty, pbi.qty as bundle_qty,
                     (SELECT SUM(stock) FROM product_variants WHERE product_id = p.id) as variant_stock
              FROM product_bundle_items pbi
              JOIN products p ON pbi.product_id = p.id
