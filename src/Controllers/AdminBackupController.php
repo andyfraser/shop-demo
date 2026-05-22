@@ -112,8 +112,8 @@ class AdminBackupController {
     }
 
     public function streamRestore(Request $request): Response {
-        $tempFile = $request->get('temp_file');
-        $filename = $request->get('filename', 'backup.json');
+        $tempFile = $request->getQuery('temp_file');
+        $filename = $request->getQuery('filename', 'backup.json');
 
         if (!$tempFile || !file_exists($tempFile)) {
             return new StreamResponse(function() {

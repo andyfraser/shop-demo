@@ -24,6 +24,9 @@ class Settings extends Model {
     public int $queue_cleanup_completed_hours = 24;
     public int $queue_cleanup_failed_days = 7;
     public int $server_port = 8000;
+    public bool $debug = false;
+    public string $log_path = '';
+    public int $log_retention_days = 30;
 
     /**
      * Fill settings from an associative array of key => value pairs.
@@ -37,6 +40,8 @@ class Settings extends Model {
                     $this->$key = (int)$value;
                 } elseif ($type === 'double' || $type === 'float') {
                     $this->$key = (float)$value;
+                } elseif ($type === 'boolean') {
+                    $this->$key = filter_var($value, FILTER_VALIDATE_BOOLEAN);
                 } else {
                     $this->$key = (string)$value;
                 }
