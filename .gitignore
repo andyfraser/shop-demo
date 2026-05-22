@@ -16,3 +16,5 @@ public/uploads/*
 *.log.gz
 storage/cache/*
 !storage/cache/.gitkeep
+storage/downloads/*
+!storage/downloads/.gitkeep

@@ -118,6 +118,9 @@ return new class {
                 CREATE INDEX idx_order_items_product ON order_items(product_id);
                 CREATE INDEX idx_users_role ON users(role);
                 CREATE INDEX idx_rate_limits_lookup ON rate_limits(action, ip_address, created_at);
+
+                INSERT IGNORE INTO users (id, name, email, password_hash, role, is_verified) 
+                VALUES (1, 'Admin', 'admin@shop.local', '$2y$12$/WhyIBs7A2rzo0.FPS205OWucmgQJ5TY.NXS6mUIq7cY0NW/mNW7G', 'admin', 1);
             ";
         } else {
             // SQLite schema and data
@@ -234,6 +237,9 @@ return new class {
                 CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_id);
                 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
                 CREATE INDEX IF NOT EXISTS idx_rate_limits_lookup ON rate_limits(action, ip_address, created_at);
+
+                INSERT OR IGNORE INTO users (id, name, email, password_hash, role, is_verified) 
+                VALUES (1, 'Admin', 'admin@shop.local', '$2y$12$/WhyIBs7A2rzo0.FPS205OWucmgQJ5TY.NXS6mUIq7cY0NW/mNW7G', 'admin', 1);
             ";
         }
     }
