@@ -10,7 +10,7 @@ class BackupService implements BackupServiceInterface {
         private MigrationServiceInterface $migrationService
     ) {}
 
-    public function export(): array {
+    public function export(?callable $onProgress = null): array {
         $timestamp = date('Ymd_His');
         $tables = $this->repository->getTables();
         $driver = $this->getDriver();
@@ -24,8 +24,18 @@ class BackupService implements BackupServiceInterface {
             'tables' => []
         ];
 
+        $totalTables = count($tables);
+        $currentIndex = 0;
+
         foreach ($tables as $table) {
             $backupData['tables'][$table] = $this->repository->fetchAll("SELECT * FROM `{$table}`");
+            $currentIndex++;
+            if ($onProgress) {
+                $progress = (int)(($currentIndex / $totalTables) * 100);
+                $onProgress($progress, "Backed up table: {$table}");
+            }
+            // Tiny sleep to make the progress bar visible and smooth
+            usleep(20000); // 20ms
         }
 
         $json = json_encode($backupData, JSON_PRETTY_PRINT);
@@ -40,7 +50,7 @@ class BackupService implements BackupServiceInterface {
         ];
     }
 
-    public function import(array $file): bool {
+    public function import(array $file, ?callable $onProgress = null): bool {
         if ($file['error'] !== UPLOAD_ERR_OK) {
             throw new Exception("Upload failed with error code: " . $file['error']);
         }
@@ -55,17 +65,43 @@ class BackupService implements BackupServiceInterface {
         $driver = $this->getDriver();
 
         // 1. Reset database (drop all tables)
+        if ($onProgress) {
+            $onProgress(10, "Resetting database...");
+        }
         $this->dropAllTables($driver);
+        usleep(50000);
 
         // 2. Re-run migrations
+        if ($onProgress) {
+            $onProgress(25, "Running database migrations...");
+        }
         $this->migrationService->applyMigrations();
+        usleep(50000);
 
         // Disable foreign key checks for import
         $this->repository->setForeignKeyChecks(false, $driver);
 
         try {
-            foreach ($backupData['tables'] as $table => $rows) {
-                if (empty($rows)) continue;
+            $tables = $backupData['tables'];
+            $totalTables = count($tables);
+            $currentIndex = 0;
+
+            foreach ($tables as $table => $rows) {
+                $currentIndex++;
+                
+                if ($onProgress) {
+                    // Scale progress from 30% to 100%
+                    $progress = 30 + (int)(($currentIndex / $totalTables) * 70);
+                    $onProgress($progress, "Restoring table data: {$table}");
+                }
+                
+                // Add a tiny sleep to make it smooth and visible
+                usleep(30000); // 30ms
+
+                if (empty($rows)) {
+                    $this->repository->truncateTable($table);
+                    continue;
+                }
 
                 // 3. Truncate table (migrations might have seeded it)
                 $this->repository->truncateTable($table);

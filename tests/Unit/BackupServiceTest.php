@@ -94,4 +94,47 @@ class BackupServiceTest extends TestCase {
 
         @unlink($backupFile);
     }
+
+    public function testExportCallsOnProgress() {
+        $progressCalls = [];
+        $result = $this->service->export(function($percent, $msg) use (&$progressCalls) {
+            $progressCalls[] = [$percent, $msg];
+        });
+
+        $this->assertNotEmpty($progressCalls);
+        $this->assertEquals(100, end($progressCalls)[0]);
+        $this->assertStringContainsString('test_table', end($progressCalls)[1]);
+
+        @unlink($result['path']);
+    }
+
+    public function testImportCallsOnProgress() {
+        $backupFile = tempnam(sys_get_temp_dir(), 'test_bak_');
+        $data = [
+            'metadata' => ['version' => '1.0'],
+            'tables' => [
+                'test_table' => [
+                    ['id' => 1, 'val' => 'imported']
+                ]
+            ]
+        ];
+        file_put_contents($backupFile, json_encode($data));
+
+        $file = [
+            'tmp_name' => $backupFile,
+            'name' => 'backup.json',
+            'error' => UPLOAD_ERR_OK
+        ];
+
+        $progressCalls = [];
+        $this->service->import($file, function($percent, $msg) use (&$progressCalls) {
+            $progressCalls[] = [$percent, $msg];
+        });
+
+        $this->assertNotEmpty($progressCalls);
+        $this->assertEquals(100, end($progressCalls)[0]);
+        $this->assertStringContainsString('test_table', end($progressCalls)[1]);
+
+        @unlink($backupFile);
+    }
 }

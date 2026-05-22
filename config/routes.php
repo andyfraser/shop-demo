@@ -172,6 +172,8 @@ return [
     ['method' => 'POST', 'path' => '/admin/currencies/save', 'handler' => [AdminCurrencyController::class, 'save'], 'middlewares' => $adminPostMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/backup', 'handler' => [\App\Controllers\AdminBackupController::class, 'index'], 'middlewares' => $adminMiddleware],
-    ['method' => 'POST', 'path' => '/admin/backup/download', 'handler' => [\App\Controllers\AdminBackupController::class, 'download'], 'middlewares' => $adminPostMiddleware],
-    ['method' => 'POST', 'path' => '/admin/backup/restore', 'handler' => [\App\Controllers\AdminBackupController::class, 'restore'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'GET', 'path' => '/admin/backup/stream-download', 'handler' => [\App\Controllers\AdminBackupController::class, 'streamDownload'], 'middlewares' => $adminMiddleware],
+    ['method' => 'GET', 'path' => '/admin/backup/download-file', 'handler' => [\App\Controllers\AdminBackupController::class, 'downloadFile'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/backup/upload-temp', 'handler' => [\App\Controllers\AdminBackupController::class, 'uploadTemp'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'GET', 'path' => '/admin/backup/stream-restore', 'handler' => [\App\Controllers\AdminBackupController::class, 'streamRestore'], 'middlewares' => $adminMiddleware],
 ];

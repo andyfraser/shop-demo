@@ -2,6 +2,6 @@
 namespace App\Services;
 
 interface BackupServiceInterface {
-    public function export(): array;
-    public function import(array $file): bool;
+    public function export(?callable $onProgress = null): array;
+    public function import(array $file, ?callable $onProgress = null): bool;
 }
