@@ -3,12 +3,14 @@
 namespace App\Commands;
 
 use App\Services\MigrationServiceInterface;
+use App\Core\Cache\CacheInterface;
 use Psr\Log\LoggerInterface;
 use Exception;
 
 class MigrateCommand implements CommandInterface {
     public function __construct(
         private MigrationServiceInterface $migrationService,
+        private CacheInterface $cache,
         private ?LoggerInterface $logger = null
     ) {}
 
@@ -48,6 +50,10 @@ class MigrateCommand implements CommandInterface {
                 if ($this->logger) {
                     $this->logger->info("All migrations applied successfully. Count: {count}", ['count' => count($applied)]);
                 }
+
+                // Clear cache after successful migration
+                $this->cache->clear();
+                echo "Cache cleared.\n";
             }
             return 0;
         } catch (Exception $e) {

@@ -1,11 +1,17 @@
 <?php
 
+use App\Commands\CacheClearCommand;
+use App\Commands\MigrateCommand;
+use App\Commands\MigrateRollbackCommand;
 use App\Commands\RotateLogsCommand;
 use App\Commands\ImageCleanupCommand;
 use App\Commands\SeedCommand;
 use App\Commands\RecoverCartsCommand;
 use App\Commands\MaintenanceDownCommand;
 use App\Commands\MaintenanceUpCommand;
+use App\Commands\SchedulePauseCommand;
+use App\Commands\ScheduleResumeCommand;
+use App\Core\Cache\CacheInterface;
 use App\Services\ImageCleanupServiceInterface;
 use App\Services\MigrationServiceInterface;
 use App\Services\DatabaseSeedServiceInterface;
@@ -15,6 +21,9 @@ use Psr\Log\LoggerInterface;
 
 return function($c, array $config) {
     return [
+        CacheClearCommand::class => function($c) {
+            return new CacheClearCommand($c->get(CacheInterface::class));
+        },
         RotateLogsCommand::class => function($c) use ($config) {
             $logPath = $config['app']['log_path'] ?? __DIR__ . '/../../logs/app.log';
             $logDir = dirname($logPath);
@@ -24,11 +33,19 @@ return function($c, array $config) {
         ImageCleanupCommand::class => function($c) {
             return new ImageCleanupCommand($c->get(ImageCleanupServiceInterface::class));
         },
-        App\Commands\MigrateCommand::class => function($c) {
-            return new App\Commands\MigrateCommand($c->get(MigrationServiceInterface::class), $c->get(LoggerInterface::class));
+        MigrateCommand::class => function($c) {
+            return new MigrateCommand(
+                $c->get(MigrationServiceInterface::class), 
+                $c->get(CacheInterface::class),
+                $c->get(LoggerInterface::class)
+            );
         },
-        App\Commands\MigrateRollbackCommand::class => function($c) {
-            return new App\Commands\MigrateRollbackCommand($c->get(MigrationServiceInterface::class), $c->get(LoggerInterface::class));
+        MigrateRollbackCommand::class => function($c) {
+            return new MigrateRollbackCommand(
+                $c->get(MigrationServiceInterface::class), 
+                $c->get(CacheInterface::class),
+                $c->get(LoggerInterface::class)
+            );
         },
         SeedCommand::class => function($c) {
             return new SeedCommand($c->get(DatabaseSeedServiceInterface::class), $c->get(LoggerInterface::class));

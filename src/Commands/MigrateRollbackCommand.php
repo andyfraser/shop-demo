@@ -3,12 +3,14 @@
 namespace App\Commands;
 
 use App\Services\MigrationServiceInterface;
+use App\Core\Cache\CacheInterface;
 use Psr\Log\LoggerInterface;
 use Exception;
 
 class MigrateRollbackCommand implements CommandInterface {
     public function __construct(
         private MigrationServiceInterface $migrationService,
+        private CacheInterface $cache,
         private ?LoggerInterface $logger = null
     ) {}
 
@@ -35,6 +37,10 @@ class MigrateRollbackCommand implements CommandInterface {
                 if ($this->logger) {
                     $this->logger->info("Database migration rollback successful.");
                 }
+
+                // Clear cache after successful rollback
+                $this->cache->clear();
+                echo "Cache cleared.\n";
             } else {
                 echo "No migrations found to rollback.\n";
                 if ($this->logger) {
