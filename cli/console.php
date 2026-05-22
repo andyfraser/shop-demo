@@ -37,6 +37,24 @@ foreach ($services as $id => $factory) {
     $container->set($id, $factory);
 }
 
+// Override SettingsService to include file-based config for CLI commands
+if (isset($config['app'])) {
+    $container->set(\App\Services\SettingsServiceInterface::class, function($c) use ($config) {
+        $service = new \App\Services\SettingsService(
+            $c->get(\App\Repositories\SettingsRepositoryInterface::class), 
+            $c->get(\Psr\Log\LoggerInterface::class),
+            $c->get(\App\Core\Cache\CacheInterface::class),
+            $c->get(\App\Core\Events\EventDispatcherInterface::class)
+        );
+        
+        // Feed the app config into the settings model via the service
+        $settings = $service->getSettings();
+        $settings->fill($config['app']);
+        
+        return $service;
+    });
+}
+
 if (!defined('BASE_URL')) {
     $settings = $container->get(\App\Services\SettingsService::class);
     $baseUrlSetting = $settings->get('base_url');

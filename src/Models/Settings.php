@@ -23,6 +23,7 @@ class Settings extends Model {
     public string $scheduler_paused = '0';
     public int $queue_cleanup_completed_hours = 24;
     public int $queue_cleanup_failed_days = 7;
+    public int $server_port = 8000;
 
     /**
      * Fill settings from an associative array of key => value pairs.
