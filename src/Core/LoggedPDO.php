@@ -27,14 +27,38 @@ class LoggedPDO extends PDO {
 }
 
 class LoggedPDOStatement extends PDOStatement {
+    private array $boundParams = [];
+
     protected function __construct() {
         // Required for ATTR_STATEMENT_CLASS
     }
 
+    public function bindValue($param, $value, $type = PDO::PARAM_STR): bool {
+        $this->boundParams[$param] = $value;
+        return parent::bindValue($param, $value, $type);
+    }
+
+    public function bindParam($param, &$var, $type = PDO::PARAM_STR, $maxLength = 0, $driverOptions = null): bool {
+        $this->boundParams[$param] = &$var;
+        return parent::bindParam($param, $var, $type, $maxLength, $driverOptions);
+    }
+
     public function execute(?array $params = null): bool {
         $start = microtime(true);
+
+        $mergedParams = $this->boundParams;
+        if ($params !== null) {
+            foreach ($params as $key => $val) {
+                if (is_int($key) && !isset($mergedParams[$key + 1])) {
+                    $mergedParams[$key + 1] = $val;
+                } else {
+                    $mergedParams[$key] = $val;
+                }
+            }
+        }
+
         $result = parent::execute($params);
-        DebugCollector::getInstance()->logQuery($this->queryString, $params ?? [], microtime(true) - $start);
+        DebugCollector::getInstance()->logQuery($this->queryString, $mergedParams, microtime(true) - $start);
         return $result;
     }
 }

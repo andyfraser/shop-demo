@@ -430,15 +430,41 @@ class DebugToolbarComponent implements ViewComponent {
                 }
 
                 window.copyToClipboard = function(text, btn) {
-                    navigator.clipboard.writeText(text).then(function() {
+                    var onSuccess = function() {
                         var originalHtml = btn.innerHTML;
                         btn.innerHTML = '<span style=\"color:#4ade80;\">✓ Copied!</span>';
                         setTimeout(function() {
                             btn.innerHTML = originalHtml;
                         }, 2000);
-                    }, function(err) {
+                    };
+                    var onError = function(err) {
                         alert('Could not copy text: ' + err);
-                    });
+                    };
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(onSuccess, onError);
+                    } else {
+                        try {
+                            var textArea = document.createElement(\"textarea\");
+                            textArea.value = text;
+                            textArea.style.top = \"0\";
+                            textArea.style.left = \"0\";
+                            textArea.style.position = \"fixed\";
+                            textArea.style.opacity = \"0\";
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            var successful = document.execCommand(\"copy\");
+                            document.body.removeChild(textArea);
+                            if (successful) {
+                                onSuccess();
+                            } else {
+                                onError(\"copy command failed\");
+                            }
+                        } catch (err) {
+                            onError(err);
+                        }
+                    }
                 };
             })();
         </script>
@@ -543,19 +569,19 @@ class DebugToolbarComponent implements ViewComponent {
             $paramsHtml = "";
             if (!empty($params)) {
                 $paramsList = [];
+                $isZeroIndexed = array_key_exists(0, $params);
                 foreach ($params as $key => $val) {
-                    $paramName = is_numeric($key) ? '?' . ($key + 1) : htmlspecialchars((string)$key);
+                    if (is_numeric($key)) {
+                        $paramNum = $isZeroIndexed ? ((int)$key + 1) : (int)$key;
+                        $paramName = '?' . $paramNum;
+                    } else {
+                        $paramName = htmlspecialchars((string)$key);
+                    }
                     $paramVal = is_null($val) ? '<span style="color:#f87171;">NULL</span>' : htmlspecialchars(json_encode($val));
                     $paramsList[] = "<span style='color:#a78bfa; font-weight:bold;'>{$paramName}</span> => {$paramVal}";
                 }
                 $paramsHtml = "<div class='query-params'><strong style='color:#94a3b8;'>Bindings:</strong> " . implode(', ', $paramsList) . "</div>";
             }
-
-            // Javascript escaped executable query for the copy button
-            $escapedCopySql = str_replace("`", "\\`", $executableSql);
-            $escapedCopySql = str_replace("'", "\'", $escapedCopySql);
-            $escapedCopySql = str_replace("\r", "", $escapedCopySql);
-            $escapedCopySql = str_replace("\n", "\\n", $escapedCopySql);
 
             $queriesHtml .= "
             <div class='query-card'>
@@ -565,7 +591,7 @@ class DebugToolbarComponent implements ViewComponent {
                         <span class='debug-badge {$badgeClass}' style='margin-left: 10px;'>{$durationText}</span>
                         " . ($isSlow ? "<span class='debug-badge debug-badge-warning' style='margin-left: 6px;'>Slow (>= {$slowThreshold}ms)</span>" : "") . "
                     </div>
-                    <button class='btn-copy' onclick=\"copyToClipboard('{$escapedCopySql}', this)\">
+                    <button class='btn-copy' data-sql=\"" . htmlspecialchars($executableSql, ENT_QUOTES, 'UTF-8') . "\" onclick=\"copyToClipboard(this.getAttribute('data-sql'), this)\">
                         <svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"9\" y=\"9\" width=\"13\" height=\"13\" rx=\"2\" ry=\"2\"></rect><path d=\"M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\"></path></svg>
                         Copy Clean SQL
                     </button>
@@ -869,6 +895,8 @@ class DebugToolbarComponent implements ViewComponent {
         $isPositional = array_key_exists(0, $params) || isset($params[1]);
 
         if ($isPositional) {
+            // Sort keys numerically to ensure they are replaced in correct positional order
+            ksort($params);
             foreach ($params as $val) {
                 $quoted = is_numeric($val) ? $val : "'" . addslashes((string)$val) . "'";
                 $pos = strpos($sql, '?');
