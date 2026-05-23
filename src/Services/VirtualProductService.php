@@ -21,7 +21,7 @@ class VirtualProductService implements VirtualProductServiceInterface {
     ) {}
 
     public function fulfillDigitalItems(Order $order, array $items): void {
-        $this->logger->info("Fulfilling digital items for order {orderId}", ['orderId' => $order->id]);
+        $this->logger->info("Fulfilling digital items for order {orderId} (if any)", ['orderId' => $order->id]);
 
         $downloads = [];
         $giftCards = [];

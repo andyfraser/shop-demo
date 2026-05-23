@@ -51,7 +51,7 @@ $errorHandler = function ($severity, $message, $file, $line) {
 $exceptionHandler = function ($exception) use ($isDebug, $config) {
     // Attempt to log the error
     try {
-        $logFile = $config['app']['log_path'] ?? __DIR__ . '/../logs/app.log';
+        $logFile = $config['app']['error_log_path'] ?? __DIR__ . '/../logs/error.log';
         $date = date('Y-m-d H:i:s');
         $logEntry = sprintf("[%s] CRITICAL: Uncaught Exception: %s in %s on line %d" . PHP_EOL, 
             $date, $exception->getMessage(), $exception->getFile(), $exception->getLine());

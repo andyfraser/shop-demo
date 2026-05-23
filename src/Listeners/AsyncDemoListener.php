@@ -19,7 +19,7 @@ class AsyncDemoListener implements ListenerInterface, ShouldQueue {
         $this->logger->info("AsyncDemoListener: Beginning 10-second simulation...");
         
         // Simulate a heavy task (e.g., third-party API sync)
-        sleep(100);
+        sleep(10);
         //throw new \Exception('Test exception from async listener');
         
         $this->logger->info("AsyncDemoListener: Simulation complete.");

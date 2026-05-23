@@ -26,6 +26,7 @@ class Settings extends Model {
     public int $server_port = 8000;
     public bool $debug = false;
     public string $log_path = '';
+    public string $error_log_path = '';
     public int $log_retention_days = 30;
 
     /**

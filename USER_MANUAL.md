@@ -160,12 +160,17 @@ Demoshop stores its core settings in the database, manageable via **Admin > Sett
 Demoshop features a built-in PSR-3 compliant logging system to help monitor application activity and troubleshoot issues.
 
 ### Log Files
-Logs are stored in the `logs/` directory. The primary log file is `logs/app.log`, which contains timestamped entries for system events. If enabled, `logs/recovery.log` tracks cart recovery operations. Both files are automatically rotated daily and subject to the configured retention policy.
+Logs are stored in the `logs/` directory:
+*   `logs/app.log`: Contains timestamped entries for general system events and activity (configured via `log_path`).
+*   `logs/error.log`: Contains detailed logs for PHP errors, warnings, and uncaught exceptions (configured via `error_log_path`).
+*   `logs/recovery.log`: If enabled, tracks cart recovery operations.
+
+All log files are automatically rotated daily and subject to the configured retention policy.
 
 ### Debug Mode
 You can control the verbosity of the logs and the detail of error messages via the `config.php` file. 
 
-*   **Production Mode (`'debug' => false`):** Errors are logged to `logs/app.log`, and users are shown a friendly `500 Internal Server Error` page. Detailed technical information is hidden for security.
+*   **Production Mode (`'debug' => false`):** Errors and exceptions are logged to `logs/error.log`, and users are shown a friendly `500 Internal Server Error` page. Detailed technical information is hidden for security.
 *   **Debug Mode (`'debug' => true`):** Detailed error messages, stack traces, and environment information are displayed directly in the browser to assist with development.
 
 ### Log Rotation & Retention

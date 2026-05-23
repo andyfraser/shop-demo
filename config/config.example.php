@@ -29,6 +29,7 @@ return [
     'app' => [
         'debug' => false,
         'log_path' => __DIR__ . '/../logs/app.log',
+        'error_log_path' => __DIR__ . '/../logs/error.log',
         'log_retention_days' => 30,
         'server_port' => 8000,
     ],

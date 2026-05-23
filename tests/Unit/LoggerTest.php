@@ -60,6 +60,19 @@ class LoggerTest extends TestCase {
         $this->assertStringContainsString('INFO: Info message still logged', $content);
     }
 
+    public function testConfigExampleHasLogPathsDefined() {
+        $configExampleFile = __DIR__ . '/../../config/config.example.php';
+        $this->assertTrue(file_exists($configExampleFile), 'config.example.php should exist');
+        
+        $config = require $configExampleFile;
+        $this->assertTrue(isset($config['app']), 'config.example.php must have app config');
+        $this->assertTrue(isset($config['app']['log_path']), 'config.example.php must have log_path');
+        $this->assertTrue(isset($config['app']['error_log_path']), 'config.example.php must have error_log_path');
+        
+        $this->assertStringContainsString('logs/app.log', $config['app']['log_path']);
+        $this->assertStringContainsString('logs/error.log', $config['app']['error_log_path']);
+    }
+
     public function tearDown(): void {
         if (file_exists($this->testLog)) {
             unlink($this->testLog);

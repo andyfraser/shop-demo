@@ -43,16 +43,19 @@ class SettingsServiceTest extends TestCase {
         // Assert defaults
         $this->assertFalse($settings->debug);
         $this->assertEquals('', $settings->log_path);
+        $this->assertEquals('', $settings->error_log_path);
         $this->assertEquals(30, $settings->log_retention_days);
         
         // Set new values and verify types
         $this->service->set('debug', 'true');
         $this->service->set('log_path', '/path/to/log.log');
+        $this->service->set('error_log_path', '/path/to/error.log');
         $this->service->set('log_retention_days', '15');
         
         $updatedSettings = $this->service->getSettings();
         $this->assertTrue($updatedSettings->debug);
         $this->assertEquals('/path/to/log.log', $updatedSettings->log_path);
+        $this->assertEquals('/path/to/error.log', $updatedSettings->error_log_path);
         $this->assertEquals(15, $updatedSettings->log_retention_days);
     }
 
