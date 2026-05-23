@@ -76,6 +76,9 @@ if (isset($_GET['action'])) {
             $adminEmail = $_POST['admin_email'] ?? 'admin@shop.local';
             $adminPassword = $_POST['admin_password'] ?? 'password';
             
+            $baseUrlMode = $_POST['base_url_mode'] ?? 'clean';
+            $baseUrlVal = ($baseUrlMode === 'restricted') ? '/public' : '';
+            
             $logs[] = "Initializing DemoShop Web Onboarding Installer...";
             
             if ($driver === 'sqlite') {
@@ -120,6 +123,7 @@ if (isset($_GET['action'])) {
             $mysqlDbnameEscaped = addslashes($dbConfig['dbname'] ?? 'shop_demo');
             $mysqlHostEscaped = addslashes($dbConfig['host'] ?? '127.0.0.1');
             $mysqlPortEscaped = addslashes($dbConfig['port'] ?? '3306');
+            $baseUrlEscaped = addslashes($baseUrlVal);
             
             // Write SQLite path properly
             if ($driver === 'sqlite') {
@@ -151,7 +155,7 @@ if (isset($_GET['action'])) {
                 "    \n" .
                 "    // Site settings\n" .
                 "    'site' => [\n" .
-                "        'base_url' => '',\n" .
+                "        'base_url' => '{$baseUrlEscaped}',\n" .
                 "    ],\n" .
                 "    \n" .
                 "    // Application settings\n" .
@@ -255,6 +259,12 @@ if (isset($_GET['action'])) {
             }
             
             $logs[] = "Finalizing installation configurations...";
+            
+            // Save base_url setting in database
+            $logs[] = "Configuring base URL setting in database: '{$baseUrlVal}'";
+            $stmt = $pdo->prepare("REPLACE INTO settings (`key`, value) VALUES ('base_url', ?)");
+            $stmt->execute([$baseUrlVal]);
+            
             $logs[] = "✨ DemoShop successfully installed!";
             echo json_encode(['success' => true, 'logs' => $logs]);
         } catch (Exception $e) {
@@ -1078,6 +1088,17 @@ foreach ($reqs as $r) {
             </div>
 
             <div class="form-group">
+                <label for="base_url_mode">Web Root / URL Access Mode</label>
+                <select id="base_url_mode" name="base_url_mode" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--card-bg); color: var(--text-color); font-size: 14px; margin-top: 6px; box-sizing: border-box;">
+                    <option value="clean" selected>Standard (Web server root points to /public subdirectory - clean URLs)</option>
+                    <option value="restricted">Restricted Host (Web server root points to project root - URLs start with /public)</option>
+                </select>
+                <p style="font-size:12px; color: var(--text-muted); margin-top:6px;" id="base_url_desc">
+                    <strong>Standard Option:</strong> Keeps URLs clean (e.g. <code>/products</code>). Assumes your web server root points directly to the <code>/public</code> subdirectory.
+                </p>
+            </div>
+
+            <div class="form-group">
                 <label for="admin_email">Administrator Email</label>
                 <input type="email" id="admin_email" name="admin_email" value="admin@shop.local">
             </div>
@@ -1345,6 +1366,19 @@ foreach ($reqs as $r) {
                 goToStep(2);
             });
 
+            // Base URL Mode Description toggle
+            const baseUrlModeSelect = document.getElementById('base_url_mode');
+            const baseUrlDesc = document.getElementById('base_url_desc');
+            if (baseUrlModeSelect && baseUrlDesc) {
+                baseUrlModeSelect.addEventListener('change', function() {
+                    if (this.value === 'clean') {
+                        baseUrlDesc.innerHTML = '<strong>Standard Option:</strong> Keeps URLs clean (e.g. <code>/products</code>). Assumes your web server root points directly to the <code>/public</code> subdirectory.';
+                    } else {
+                        baseUrlDesc.innerHTML = '<strong>Restricted Host Option:</strong> Assumes your host forces the project root as the web root. A secure <code>index.php</code> wrapper will intercept requests in the root and routes will start with <code>/public/...</code> (e.g. <code>/public/products</code>). Assets will load securely without symlinks.';
+                    }
+                });
+            }
+
             // --- STEP 4 INSTALLATION EXECUTION ---
             const btnStart = document.getElementById('btn-start-installation');
             btnStart.addEventListener('click', function() {
@@ -1388,6 +1422,7 @@ foreach ($reqs as $r) {
                 bodyData.append('seed', seed ? 'true' : 'false');
                 bodyData.append('admin_email', adminEmail);
                 bodyData.append('admin_password', adminPassword);
+                bodyData.append('base_url_mode', document.getElementById('base_url_mode').value);
 
                 if (driver === 'sqlite') {
                     bodyData.append('sqlite_path', document.getElementById('sqlite_path').value);
