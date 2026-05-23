@@ -16,6 +16,7 @@ class QueueCleanupCommandTest extends TestCase {
             public function create(array $data): int { return 0; }
             public function findPending(int $limit = 10): array { return []; }
             public function update(int $id, array $data): bool { return true; }
+            public function claim(int $id, string $startedAt, int $attempts): bool { return true; }
             public function deleteByStatusAndAge(string $status, int $hours): int {
                 $this->calls[] = ['status' => $status, 'hours' => $hours];
                 return $status === 'completed' ? 5 : 2;

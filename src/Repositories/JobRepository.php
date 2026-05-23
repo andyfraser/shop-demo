@@ -58,6 +58,24 @@ class JobRepository implements JobRepositoryInterface {
         return $stmt->execute($data);
     }
 
+    public function claim(int $id, string $startedAt, int $attempts): bool {
+        $stmt = $this->db->prepare("
+            UPDATE jobs 
+            SET status = 'running', 
+                started_at = :started_at, 
+                attempts = :attempts 
+            WHERE id = :id AND status = 'pending'
+        ");
+        
+        $stmt->execute([
+            'id' => $id,
+            'started_at' => $startedAt,
+            'attempts' => $attempts
+        ]);
+        
+        return $stmt->rowCount() > 0;
+    }
+
     public function deleteByStatusAndAge(string $status, int $hours): int {
         $stmt = $this->db->prepare("
             DELETE FROM jobs 

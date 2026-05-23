@@ -28,17 +28,44 @@ class QueueWorkCommand implements CommandInterface {
     }
 
     public function execute(): int {
-        $jobs = $this->jobRepository->findPending(10);
-        $count = count($jobs);
+        $lockDir = dirname(__DIR__, 2) . '/logs';
+        if (!is_dir($lockDir)) {
+            mkdir($lockDir, 0755, true);
+        }
+        $lockFilePath = $lockDir . '/queue_work.lock';
+        
+        $lockFile = @fopen($lockFilePath, 'c');
+        if (!$lockFile) {
+            echo "Error: Could not open or create lock file at {$lockFilePath}\n";
+            return 1;
+        }
 
-        if ($count === 0) {
+        $acquired = flock($lockFile, LOCK_EX | LOCK_NB);
+        if (!$acquired) {
+            echo "Another instance of queue:work is already running. Exiting.\n";
+            if ($this->logger) {
+                $this->logger->info("Another queue:work instance is active. Exiting early.");
+            }
+            fclose($lockFile);
             return 0;
         }
 
-        echo "Processing {$count} jobs...\n";
+        try {
+            $jobs = $this->jobRepository->findPending(10);
+            $count = count($jobs);
 
-        foreach ($jobs as $job) {
-            $this->processJob($job);
+            if ($count === 0) {
+                return 0;
+            }
+
+            echo "Processing {$count} jobs...\n";
+
+            foreach ($jobs as $job) {
+                $this->processJob($job);
+            }
+        } finally {
+            flock($lockFile, LOCK_UN);
+            fclose($lockFile);
         }
 
         return 0;
@@ -51,11 +78,16 @@ class QueueWorkCommand implements CommandInterface {
         echo "Processing job #{$id} ({$handlerClass})... ";
 
         try {
-            $this->jobRepository->update($id, [
-                'status' => 'running',
-                'started_at' => date('Y-m-d H:i:s'),
-                'attempts' => $job['attempts'] + 1
-            ]);
+            $claimed = $this->jobRepository->claim(
+                $id,
+                date('Y-m-d H:i:s'),
+                $job['attempts'] + 1
+            );
+
+            if (!$claimed) {
+                echo "Already processed or claimed by another worker. Skipping.\n";
+                return;
+            }
 
             /** @var Event $event */
             $event = unserialize($job['payload']);

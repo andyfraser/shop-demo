@@ -30,6 +30,9 @@ class QueueWorkerTest extends TestCase {
                 }
                 return true;
             }
+            public function claim(int $id, string $startedAt, int $attempts): bool {
+                return true;
+            }
             public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
         };
 
@@ -64,6 +67,9 @@ class QueueWorkerTest extends TestCase {
                 }
                 return true;
             }
+            public function claim(int $id, string $startedAt, int $attempts): bool {
+                return true;
+            }
             public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
         };
 
@@ -77,6 +83,41 @@ class QueueWorkerTest extends TestCase {
         $this->assertEquals('failed', $repo->updatedData['status']);
         // available_at should be "now"
         $this->assertNotNull($repo->updatedData['available_at']);
+    }
+
+    public function testJobSkippedIfClaimFails() {
+        $job = [
+            'id' => 1,
+            'handler_class' => FailingJobForTest::class,
+            'payload' => serialize(new TestEventForQueue()),
+            'attempts' => 0
+        ];
+
+        $repo = new class($job) implements JobRepositoryInterface {
+            public $updatedData = null;
+            public function __construct(private array $job) {}
+            public function create(array $data): int { return 0; }
+            public function findPending(int $limit = 10): array { return [$this->job]; }
+            public function update(int $id, array $data): bool {
+                $this->updatedData = $data;
+                return true;
+            }
+            public function claim(int $id, string $startedAt, int $attempts): bool {
+                return false; // Simulation of failed claim (another worker grabbed it)
+            }
+            public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
+        };
+
+        $container = new Container();
+        $command = new QueueWorkCommand($repo, $container);
+        
+        ob_start();
+        $command->execute();
+        $output = ob_get_clean();
+
+        // The job should be skipped and not updated or completed/failed by this worker
+        $this->assertNull($repo->updatedData);
+        $this->assertStringContainsString('Already processed or claimed by another worker. Skipping.', $output);
     }
 }
 

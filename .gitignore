@@ -14,6 +14,8 @@ public/uploads/*
 *.log
 /logs/*.log.gz
 *.log.gz
+/logs/*.lock
+*.lock
 storage/cache/*
 !storage/cache/.gitkeep
 storage/downloads/*
