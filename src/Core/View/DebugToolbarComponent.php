@@ -15,7 +15,28 @@ class DebugToolbarComponent implements ViewComponent {
         $hits = $collector->getCacheHits();
         $misses = $collector->getCacheMisses();
         $cacheOps = $collector->getCacheOperations();
+        
+        // Fetch logs for active request
         $logs = $collector->getLogs();
+        
+        // Fetch and clear redirect logs from session
+        $redirectLogs = [];
+        if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['__debug_redirect_logs'])) {
+            $redirectLogs = $_SESSION['__debug_redirect_logs'];
+            unset($_SESSION['__debug_redirect_logs']);
+        }
+
+        // Merge redirect logs into logs
+        $allLogs = [];
+        foreach ($redirectLogs as $log) {
+            $log['is_redirect'] = true;
+            $allLogs[] = $log;
+        }
+        foreach ($logs as $log) {
+            $log['is_redirect'] = false;
+            $allLogs[] = $log;
+        }
+
         $milestones = $collector->getMilestones();
         $slowThreshold = $collector->getSlowQueryThreshold();
         $matchedRoute = $collector->getMatchedRoute();
@@ -35,7 +56,7 @@ class DebugToolbarComponent implements ViewComponent {
         // Count warning/error logs
         $warningLogsCount = 0;
         $errorLogsCount = 0;
-        foreach ($logs as $log) {
+        foreach ($allLogs as $log) {
             $lvl = strtolower($log['level']);
             if ($lvl === 'warning') {
                 $warningLogsCount++;
@@ -52,7 +73,7 @@ class DebugToolbarComponent implements ViewComponent {
         $requestTabHtml = $this->renderRequestTab($matchedRoute);
         $queriesTabHtml = $this->renderQueriesTab($queries, $slowThreshold, $totalQueriesDuration);
         $cacheTabHtml = $this->renderCacheTab($cacheOps, $hits, $misses, $hitRate);
-        $logsTabHtml = $this->renderLogsTab($logs, $warningLogsCount, $errorLogsCount);
+        $logsTabHtml = $this->renderLogsTab($allLogs, $warningLogsCount, $errorLogsCount);
         $perfTabHtml = $this->renderPerformanceTab($milestones, $collector->getExecutionTime(), $memory);
 
         // UI styling & template
@@ -310,7 +331,7 @@ class DebugToolbarComponent implements ViewComponent {
                 </div>
                 
                 <div class='debug-bar-item' data-tab='tab-logs'>
-                    📋 Logs: <strong style='margin-left:4px; color:#f8fafc;'>" . count($logs) . "</strong>
+                    📋 Logs: <strong style='margin-left:4px; color:#f8fafc;'>" . count($allLogs) . "</strong>
                     " . ($errorLogsCount > 0 ? "<span class='debug-badge debug-badge-danger'>{$errorLogsCount} err</span>" : "") . "
                     " . ($warningLogsCount > 0 ? "<span class='debug-badge debug-badge-warning'>{$warningLogsCount} wrn</span>" : "") . "
                 </div>
@@ -670,43 +691,93 @@ class DebugToolbarComponent implements ViewComponent {
     private function renderLogsTab(array $logs, int $warningCount, int $errorCount): string {
         $rows = "";
         if (empty($logs)) {
-            return "
-            <h3 style='margin-top:0; margin-bottom:16px; font-size:16px; color:#ffffff;'>📋 Application System Logs</h3>
-            <p style='color:#94a3b8; font-style:italic;'>No application logs were recorded for this request context.</p>";
+            $rows = "<div style='color:#94a3b8; font-style:italic; padding: 12px; background: rgba(30, 41, 59, 0.2); border-radius: 6px; text-align: center; border: 1px dashed rgba(255,255,255,0.05);'>No application logs were recorded for this request context.</div>";
+        } else {
+            foreach ($logs as $idx => $log) {
+                $level = strtoupper($log['level']);
+                $timeFormatted = number_format($log['time'] * 1000, 1) . 'ms';
+                
+                $badgeColorClass = 'debug-badge-info';
+                $leftBorderColor = '#38bdf8';
+                if ($level === 'WARNING') {
+                    $badgeColorClass = 'debug-badge-warning';
+                    $leftBorderColor = '#f59e0b';
+                } elseif (in_array($level, ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'])) {
+                    $badgeColorClass = 'debug-badge-danger';
+                    $leftBorderColor = '#ef4444';
+                }
+
+                $isRedirect = $log['is_redirect'] ?? false;
+                $redirectBadge = $isRedirect ? "<span class='debug-badge debug-badge-info' style='margin-left: 6px; background: rgba(167, 139, 250, 0.15); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.2);'>REDIRECT</span>" : "";
+
+                $contextHtml = "";
+                if (!empty($log['context'])) {
+                    $contextHtml = "<div style='margin-top:4px; font-size:11px; color:#64748b;' class='debug-mono'>" . htmlspecialchars(json_encode($log['context'])) . "</div>";
+                }
+
+                $rows .= "
+                <div style='display:flex; align-items:flex-start; padding: 10px 14px; border-left: 3px solid {$leftBorderColor}; background: rgba(30, 41, 59, 0.3); border-bottom: 1px solid rgba(255, 255, 255, 0.03); margin-bottom:6px; border-radius: 0 4px 4px 0;'>
+                    <div style='min-width: 90px;'>
+                        <span class='debug-badge {$badgeColorClass}'>{$level}</span>
+                        {$redirectBadge}
+                    </div>
+                    <div style='flex-grow:1; word-break:break-all; font-size:12.5px;'>
+                        <div style='color:#e2e8f0;'>{$log['message']}</div>
+                        {$contextHtml}
+                    </div>
+                    <div class='debug-mono' style='color:#64748b; font-size:11px; margin-left: 15px;'>
+                        {$timeFormatted}
+                    </div>
+                </div>";
+            }
         }
 
-        foreach ($logs as $idx => $log) {
-            $level = strtoupper($log['level']);
-            $timeFormatted = number_format($log['time'] * 1000, 1) . 'ms';
-            
-            $badgeColorClass = 'debug-badge-info';
-            $leftBorderColor = '#38bdf8';
-            if ($level === 'WARNING') {
-                $badgeColorClass = 'debug-badge-warning';
-                $leftBorderColor = '#f59e0b';
-            } elseif (in_array($level, ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'])) {
-                $badgeColorClass = 'debug-badge-danger';
-                $leftBorderColor = '#ef4444';
+        // Load config file to get physical log file locations
+        $config = [];
+        $configFile = __DIR__ . '/../../../config/config.php';
+        if (file_exists($configFile)) {
+            $config = require $configFile;
+        } else {
+            $configFileExample = __DIR__ . '/../../../config/config.example.php';
+            if (file_exists($configFileExample)) {
+                $config = require $configFileExample;
             }
+        }
 
-            $contextHtml = "";
-            if (!empty($log['context'])) {
-                $contextHtml = "<div style='margin-top:4px; font-size:11px; color:#64748b;' class='debug-mono'>" . htmlspecialchars(json_encode($log['context'])) . "</div>";
+        $appLogFile = $config['app']['log_path'] ?? __DIR__ . '/../../../logs/app.log';
+        $errorLogFile = $config['app']['error_log_path'] ?? __DIR__ . '/../../../logs/error.log';
+
+        $recentAppLogs = $this->getRecentLogLines($appLogFile, 30);
+        $recentErrorLogs = $this->getRecentLogLines($errorLogFile, 30);
+
+        $formatLogLine = function(string $line) {
+            $line = htmlspecialchars($line);
+            if (strpos($line, 'ERROR') !== false || strpos($line, 'CRITICAL') !== false) {
+                return "<div style='color:#f87171; margin-bottom:4px; border-left: 2px solid #ef4444; padding-left: 6px;'>{$line}</div>";
+            } elseif (strpos($line, 'WARNING') !== false) {
+                return "<div style='color:#fbbf24; margin-bottom:4px; border-left: 2px solid #f59e0b; padding-left: 6px;'>{$line}</div>";
+            } elseif (strpos($line, 'INFO') !== false) {
+                return "<div style='color:#38bdf8; margin-bottom:4px; border-left: 2px solid #38bdf8; padding-left: 6px;'>{$line}</div>";
             }
+            return "<div style='color:#cbd5e1; margin-bottom:4px;'>{$line}</div>";
+        };
 
-            rows: $rows .= "
-            <div style='display:flex; align-items:flex-start; padding: 10px 14px; border-left: 3px solid {$leftBorderColor}; background: rgba(30, 41, 59, 0.3); border-bottom: 1px solid rgba(255, 255, 255, 0.03); margin-bottom:6px; border-radius: 0 4px 4px 0;'>
-                <div style='min-width: 90px;'>
-                    <span class='debug-badge {$badgeColorClass}'>{$level}</span>
-                </div>
-                <div style='flex-grow:1; word-break:break-all; font-size:12.5px;'>
-                    <div style='color:#e2e8f0;'>{$log['message']}</div>
-                    {$contextHtml}
-                </div>
-                <div class='debug-mono' style='color:#64748b; font-size:11px; margin-left: 15px;'>
-                    {$timeFormatted}
-                </div>
-            </div>";
+        $appLogsHtml = "";
+        if (!empty($recentAppLogs)) {
+            foreach ($recentAppLogs as $line) {
+                $appLogsHtml .= $formatLogLine($line);
+            }
+        } else {
+            $appLogsHtml = "<div style='color:#64748b; font-style:italic;'>No logs found in app.log</div>";
+        }
+
+        $errorLogsHtml = "";
+        if (!empty($recentErrorLogs)) {
+            foreach ($recentErrorLogs as $line) {
+                $errorLogsHtml .= $formatLogLine($line);
+            }
+        } else {
+            $errorLogsHtml = "<div style='color:#64748b; font-style:italic;'>No logs found in error.log</div>";
         }
 
         return "
@@ -714,8 +785,23 @@ class DebugToolbarComponent implements ViewComponent {
             <h3 style='margin:0; font-size:16px; color:#ffffff;'>📋 Application System Logs</h3>
             <span style='color:#94a3b8;'>Recorded <strong style='color:#ffffff;'>" . count($logs) . "</strong> logs on this request (" . ($errorCount > 0 ? "<span style='color:#f87171; font-weight:bold;'>{$errorCount} Errors</span>" : "0 Errors") . ", " . ($warningCount > 0 ? "<span style='color:#f59e0b; font-weight:bold;'>{$warningCount} Warnings</span>" : "0 Warnings") . ")</span>
         </div>
-        <div style='max-height: 280px; overflow-y:auto;'>
+        <div style='max-height: 200px; overflow-y:auto; margin-bottom: 20px;'>
             {$rows}
+        </div>
+        
+        <div class='debug-grid' style='margin-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px;'>
+            <div class='debug-card' style='grid-column: span 1;'>
+                <div class='debug-card-title'>Recent App Log (logs/app.log)</div>
+                <div style='max-height: 180px; overflow-y:auto; font-family: SFMono-Regular, Consolas, monospace; font-size: 11px; background: rgba(15, 23, 42, 0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: left;'>
+                    {$appLogsHtml}
+                </div>
+            </div>
+            <div class='debug-card' style='grid-column: span 1;'>
+                <div class='debug-card-title'>Recent Error Log (logs/error.log)</div>
+                <div style='max-height: 180px; overflow-y:auto; font-family: SFMono-Regular, Consolas, monospace; font-size: 11px; background: rgba(15, 23, 42, 0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: left;'>
+                    {$errorLogsHtml}
+                </div>
+            </div>
         </div>";
     }
 
@@ -918,5 +1004,43 @@ class DebugToolbarComponent implements ViewComponent {
         }
 
         return $sql;
+    }
+
+    /**
+     * Fast, memory-efficient tail implementation to read the last N lines of a log file.
+     */
+    private function getRecentLogLines(string $filePath, int $limit = 30): array {
+        if (!file_exists($filePath) || !is_readable($filePath)) {
+            return [];
+        }
+
+        $fileSize = filesize($filePath);
+        if ($fileSize === 0) {
+            return [];
+        }
+
+        $fp = fopen($filePath, 'r');
+        if (!$fp) {
+            return [];
+        }
+
+        // Read at most the last 100KB of the file
+        $readBytes = min($fileSize, 102400); // 100KB
+        fseek($fp, -$readBytes, SEEK_END);
+        $chunk = fread($fp, $readBytes);
+        fclose($fp);
+
+        if ($chunk === false) {
+            return [];
+        }
+
+        $lines = explode("\n", $chunk);
+        // Remove trailing empty line if it exists
+        if (end($lines) === '') {
+            array_pop($lines);
+        }
+
+        // Return the last N lines
+        return array_slice($lines, -$limit);
     }
 }

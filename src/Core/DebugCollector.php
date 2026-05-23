@@ -60,12 +60,21 @@ class DebugCollector {
     }
 
     public function logMessage(string $level, string $message, array $context = []): void {
-        $this->logs[] = [
+        $log = [
             'level' => $level,
             'message' => $message,
             'context' => $context,
             'time' => microtime(true) - $this->startTime
         ];
+        $this->logs[] = $log;
+
+        // Persist to session for redirect support if session is active
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            if (!isset($_SESSION['__debug_redirect_logs'])) {
+                $_SESSION['__debug_redirect_logs'] = [];
+            }
+            $_SESSION['__debug_redirect_logs'][] = $log;
+        }
     }
 
     public function addMilestone(string $name): void {
