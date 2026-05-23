@@ -42,5 +42,9 @@
       Don't have an account?
       <a href="/register" style="color:var(--accent);">Register here</a>
     </p>
+    <p style="text-align:center;margin-top:0.5rem;font-size:.875rem;color:var(--ink-2);">
+      Bought as a guest?
+      <a href="/order/lookup" style="color:var(--accent);">Track your order here</a>
+    </p>
   </div>
 </div>

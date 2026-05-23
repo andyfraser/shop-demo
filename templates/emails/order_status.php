@@ -14,10 +14,18 @@
     <p>Your order status is now: <?= ucfirst($status) ?></p>
 <?php endif; ?>
 
+<?php if ($order->user_id): ?>
 <p>You can see the details of your order and its history by logging into your account.</p>
 
 <p style="text-align: center; margin: 30px 0;">
     <a href="<?= $baseUrl ?>/account/orders/<?= $order->id ?>" class="btn">View Order Details</a>
 </p>
+<?php else: ?>
+<p>You can see the details of your order and track its history below:</p>
+
+<p style="text-align: center; margin: 30px 0;">
+    <a href="<?= $baseUrl ?>/order/lookup?id=<?= $order->id ?>&email=<?= urlencode($order->customer_email) ?>" class="btn">View Order Details</a>
+</p>
+<?php endif; ?>
 
 <p>Best regards,<br>The <?= htmlspecialchars($cleanSiteName) ?> Team</p>

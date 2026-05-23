@@ -94,6 +94,12 @@
 
 <p><strong>Status:</strong> <span class="badge badge-info"><?= ucfirst($order->status) ?></span></p>
 
-<p>We'll notify you as soon as your order status changes. You can also track your order status in your account dashboard.</p>
+<p>We'll notify you as soon as your order status changes. 
+<?php if ($order->user_id): ?>
+You can also track your order status in your account dashboard.
+<?php else: ?>
+You can also track your order status here: <a href="<?= $baseUrl ?>/order/lookup?id=<?= $order->id ?>&email=<?= urlencode($order->customer_email) ?>">Track Order</a>
+<?php endif; ?>
+</p>
 
 <p>Best regards,<br>The <?= htmlspecialchars($cleanSiteName) ?> Team</p>

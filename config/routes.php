@@ -91,6 +91,8 @@ return [
     ['method' => 'POST', 'path' => '/checkout', 'handler' => [CheckoutController::class, 'process'], 'middlewares' => $verifiedPostMiddleware],
     ['method' => 'POST', 'path' => '/checkout/apply-gift-card', 'handler' => [CheckoutController::class, 'applyGiftCardAjax'], 'middlewares' => $csrfMiddleware],
     ['method' => 'GET', 'path' => '/order/confirm', 'handler' => [CheckoutController::class, 'confirm']],
+    ['method' => 'GET', 'path' => '/order/lookup', 'handler' => [CheckoutController::class, 'showLookup']],
+    ['method' => 'POST', 'path' => '/order/lookup', 'handler' => [CheckoutController::class, 'processLookup'], 'middlewares' => $csrfMiddleware],
     ['method' => 'GET', 'path' => '/download/:token', 'handler' => [\App\Controllers\DownloadController::class, 'download']],
 
     // Admin routes

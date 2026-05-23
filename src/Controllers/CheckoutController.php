@@ -317,16 +317,77 @@ class CheckoutController {
         $user = $this->auth->currentUser();
         $this->auth->sessionStart();
         $is_owner = ($user && $order && $order->user_id === $user->id) || 
-                    (isset($_SESSION['last_order_id']) && $_SESSION['last_order_id'] === $order_id);
+                    (isset($_SESSION['last_order_id']) && $_SESSION['last_order_id'] === $order_id) ||
+                    (isset($_SESSION['viewed_guest_orders']) && isset($_SESSION['viewed_guest_orders'][$order_id]));
 
         if (!$order || !$is_owner) {
             return new RedirectResponse('/');
         }
 
         return new HtmlResponse($this->renderer->render('order_confirm', [
-            'page_title'  => 'Order Confirmed',
+            'page_title'  => 'Order Details',
             'order'       => $order,
             'order_items' => $order->items,
+        ]));
+    }
+
+    public function showLookup(Request $request): Response {
+        $id = $request->getQuery('id');
+        $email = $request->getQuery('email');
+
+        if ($id !== null && $email !== null) {
+            $orderId = (int)$id;
+            $email = trim($email);
+            $order = $this->orderService->findById($orderId);
+
+            if ($order && strcasecmp(trim($order->customer_email), $email) === 0) {
+                $this->auth->sessionStart();
+                $_SESSION['viewed_guest_orders'][$order->id] = true;
+                return new RedirectResponse('/order/confirm?id=' . $order->id);
+            }
+        }
+
+        return new HtmlResponse($this->renderer->render('order_lookup', [
+            'page_title' => 'Track Your Order',
+            'errors'     => [],
+            'order_id'   => '',
+            'email'      => '',
+        ]));
+    }
+
+    public function processLookup(Request $request): Response {
+        $post = $request->getPost();
+        $orderIdInput = trim($post['order_id'] ?? '');
+        $orderIdInputCleaned = ltrim($orderIdInput, '#');
+        $orderId = (int)$orderIdInputCleaned;
+        $email = trim($post['email'] ?? '');
+
+        $errors = [];
+        if (empty($orderIdInput)) {
+            $errors['order_id'] = 'Order ID is required.';
+        }
+        if (empty($email)) {
+            $errors['email'] = 'Email address is required.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Please enter a valid email address.';
+        }
+
+        if (!$errors) {
+            $order = $this->orderService->findById($orderId);
+            if ($order && strcasecmp(trim($order->customer_email), $email) === 0) {
+                $this->auth->sessionStart();
+                $_SESSION['viewed_guest_orders'][$order->id] = true;
+                return new RedirectResponse('/order/confirm?id=' . $order->id);
+            } else {
+                $errors['general'] = 'No order found matching the provided Order ID and Email address.';
+            }
+        }
+
+        return new HtmlResponse($this->renderer->render('order_lookup', [
+            'page_title' => 'Track Your Order',
+            'errors'     => $errors,
+            'order_id'   => $orderIdInput,
+            'email'      => $email,
         ]));
     }
 }
