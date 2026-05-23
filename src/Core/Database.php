@@ -6,6 +6,12 @@ use PDOException;
 
 class Database {
     private static ?PDO $pdo = null;
+    private static ?array $runtimeConfig = null;
+
+    public static function setRuntimeConfig(array $config): void {
+        self::$runtimeConfig = $config;
+        self::closeConnection();
+    }
 
     public static function getConnection(): PDO {
         if (self::$pdo === null) {
@@ -60,6 +66,9 @@ class Database {
     }
 
     public static function getConfig(): array {
+        if (self::$runtimeConfig !== null) {
+            return self::$runtimeConfig;
+        }
         return defined('DB_CONFIG') ? DB_CONFIG : [
             'driver' => 'sqlite',
             'path'   => __DIR__ . '/../../shop.db',

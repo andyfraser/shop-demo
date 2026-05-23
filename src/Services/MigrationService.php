@@ -81,6 +81,7 @@ class MigrationService implements MigrationServiceInterface {
     }
 
     private function getDriver(): string {
-        return DB_CONFIG['driver'] ?? 'sqlite';
+        $config = \App\Core\Database::getConfig();
+        return $config['driver'] ?? 'sqlite';
     }
 }
