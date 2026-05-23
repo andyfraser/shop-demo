@@ -119,6 +119,72 @@ class QueueWorkerTest extends TestCase {
         $this->assertNull($repo->updatedData);
         $this->assertStringContainsString('Already processed or claimed by another worker. Skipping.', $output);
     }
+
+    public function testCorruptPayloadIsMarkedAsFailed() {
+        $job = [
+            'id' => 2,
+            'handler_class' => FailingJobForTest::class,
+            'payload' => 'corrupted_serialization_string_data',
+            'attempts' => 0
+        ];
+
+        $repo = new class($job) implements JobRepositoryInterface {
+            public $updatedData = null;
+            public function __construct(private array $job) {}
+            public function create(array $data): int { return 0; }
+            public function findPending(int $limit = 10): array { return [$this->job]; }
+            public function update(int $id, array $data): bool {
+                $this->updatedData = $data;
+                return true;
+            }
+            public function claim(int $id, string $startedAt, int $attempts): bool { return true; }
+            public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
+        };
+
+        $container = new Container();
+        $command = new QueueWorkCommand($repo, $container);
+
+        ob_start();
+        $command->execute();
+        ob_end_clean();
+
+        // Since it's a corrupt payload, it should fail immediately (using default maxTries=1 because resolving might be skipped/fail or we just fail)
+        $this->assertEquals('failed', $repo->updatedData['status']);
+        $this->assertStringContainsString('Corrupt job payload', $repo->updatedData['error']);
+    }
+
+    public function testMissingHandlerClassIsMarkedAsFailed() {
+        $job = [
+            'id' => 3,
+            'handler_class' => 'NonExistentHandlerClassForTestingQueueWorker',
+            'payload' => serialize(new TestEventForQueue()),
+            'attempts' => 0
+        ];
+
+        $repo = new class($job) implements JobRepositoryInterface {
+            public $updatedData = null;
+            public function __construct(private array $job) {}
+            public function create(array $data): int { return 0; }
+            public function findPending(int $limit = 10): array { return [$this->job]; }
+            public function update(int $id, array $data): bool {
+                $this->updatedData = $data;
+                return true;
+            }
+            public function claim(int $id, string $startedAt, int $attempts): bool { return true; }
+            public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
+        };
+
+        $container = new Container();
+        $command = new QueueWorkCommand($repo, $container);
+
+        ob_start();
+        $command->execute();
+        ob_end_clean();
+
+        // Should mark the job as failed with default settings rather than throwing exception out of loop
+        $this->assertEquals('failed', $repo->updatedData['status']);
+        $this->assertStringContainsString('does not exist', $repo->updatedData['error']);
+    }
 }
 
 class TestEventForQueue extends Event {}

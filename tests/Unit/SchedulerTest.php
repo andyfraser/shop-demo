@@ -196,4 +196,28 @@ class SchedulerTest extends TestCase {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertNotNull($row['last_run_at']);
     }
+
+    public function testSchedulerSkipsWhenBackupRestoreLockFileExists(): void {
+        $lockFile = sys_get_temp_dir() . '/demoshop_backup_restore.lock';
+        file_put_contents($lockFile, 'test');
+
+        try {
+            $command = new MockCommand();
+            $command->schedule = 'everyMinute';
+            
+            $settings = new SchedulerMockSettingsService();
+            $scheduler = new Scheduler($this->db, $settings, [$command]);
+            
+            ob_start();
+            $scheduler->run();
+            $output = ob_get_clean();
+            
+            $this->assertFalse($command->executed);
+            $this->assertStringContainsString('Scheduler is currently DISABLED because a database backup or restore is in progress', $output);
+        } finally {
+            if (file_exists($lockFile)) {
+                @unlink($lockFile);
+            }
+        }
+    }
 }

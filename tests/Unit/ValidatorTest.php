@@ -123,4 +123,45 @@ class ValidatorTest extends TestCase {
         $errors = $this->validator->check($data, $rules);
         $this->assertCount(0, $errors);
     }
+
+    public function testArrayInputHandling() {
+        $rules = [
+            'name' => 'required',
+            'email' => 'required|email'
+        ];
+
+        // Pass array instead of string for name (e.g. name[]=foo)
+        $data = [
+            'name' => ['first', 'second'],
+            'email' => ['not', 'a', 'scalar']
+        ];
+
+        // Should not throw ErrorException (Array to string conversion)
+        $errors = $this->validator->check($data, $rules);
+        
+        $this->assertTrue(count($errors) > 0);
+        $this->assertTrue(in_array("Invalid Email format.", $errors, true));
+    }
+
+    public function testFieldKeyedErrors() {
+        $rules = [
+            'name' => 'required',
+            'email' => 'required|email'
+        ];
+
+        $data = [
+            'name' => '',
+            'email' => 'invalid-email'
+        ];
+
+        $errors = $this->validator->check($data, $rules);
+        
+        $this->assertTrue($this->validator->hasErrors());
+        $this->assertEquals("Name is required.", $this->validator->getFieldError('name'));
+        $this->assertEquals("Valid email required.", $this->validator->getFieldError('email'));
+        
+        $errorsForEmail = $this->validator->getFieldErrors('email');
+        $this->assertCount(1, $errorsForEmail);
+        $this->assertEquals("Valid email required.", $errorsForEmail[0]);
+    }
 }

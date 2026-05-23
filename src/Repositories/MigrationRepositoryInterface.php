@@ -14,4 +14,8 @@ interface MigrationRepositoryInterface {
     public function truncateTable(string $tableName): void;
     public function insertRow(string $table, array $data): void;
     public function fetchAll(string $query, array $params = []): array;
+    public function beginTransaction(): void;
+    public function commit(): void;
+    public function rollBack(): void;
+    public function inTransaction(): bool;
 }

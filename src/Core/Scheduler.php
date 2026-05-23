@@ -31,6 +31,15 @@ class Scheduler {
     }
 
     public function run(): void {
+        $lockFile = sys_get_temp_dir() . '/demoshop_backup_restore.lock';
+        if (file_exists($lockFile)) {
+            echo "Scheduler is currently DISABLED because a database backup or restore is in progress. Skipping execution.\n";
+            if ($this->logger) {
+                $this->logger->info("Scheduler run skipped because a backup/restore is in progress.");
+            }
+            return;
+        }
+
         if ($this->settingsService->get('scheduler_paused') === '1') {
             echo "Scheduler is currently PAUSED. Skipping execution.\n";
             if ($this->logger) {

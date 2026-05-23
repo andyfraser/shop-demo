@@ -89,11 +89,21 @@ class QueueWorkCommand implements CommandInterface {
                 return;
             }
 
-            /** @var Event $event */
-            $event = unserialize($job['payload']);
+            // Safe unserialization with error check
+            $event = @unserialize($job['payload']);
+            if (!($event instanceof Event)) {
+                throw new \App\Core\UnrecoverableJobException("Corrupt job payload: Payload is not a valid serialized Event object.");
+            }
             
+            if (!class_exists($handlerClass)) {
+                throw new \App\Core\UnrecoverableJobException("Job handler class '{$handlerClass}' does not exist.");
+            }
+
             /** @var ListenerInterface|ShouldQueue $handler */
             $handler = $this->container->get($handlerClass);
+            if (!($handler instanceof ListenerInterface)) {
+                throw new \App\Core\UnrecoverableJobException("Job handler '{$handlerClass}' must implement ListenerInterface.");
+            }
             
             $handler->handle($event);
 
@@ -110,12 +120,21 @@ class QueueWorkCommand implements CommandInterface {
             $delayMinutes = 0;
             $useBackoff = false;
 
-            // Resolve handler settings if it implements ShouldQueue (it should)
-            if (is_subclass_of($handlerClass, \App\Core\Events\ShouldQueue::class)) {
-                $handler = $this->container->get($handlerClass);
-                $maxTries = $handler->getTries();
-                $delayMinutes = $handler->getRetryDelay();
-                $useBackoff = $handler->useExponentialBackoff();
+            // Resolve handler settings if it implements ShouldQueue (it should) unless it is unrecoverable
+            if (!($e instanceof \App\Core\UnrecoverableJobException)) {
+                try {
+                    if (class_exists($handlerClass) && is_subclass_of($handlerClass, \App\Core\Events\ShouldQueue::class)) {
+                        $handler = $this->container->get($handlerClass);
+                        $maxTries = $handler->getTries();
+                        $delayMinutes = $handler->getRetryDelay();
+                        $useBackoff = $handler->useExponentialBackoff();
+                    }
+                } catch (\Throwable $handlerEx) {
+                    // Suppress handler instantiation errors in error block so worker can safely mark job as failed/pending.
+                    if ($this->logger) {
+                        $this->logger->warning("Failed to resolve handler settings during error state for job #{$id}: " . $handlerEx->getMessage());
+                    }
+                }
             }
 
             $attempts = $job['attempts'] + 1;

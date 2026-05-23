@@ -130,6 +130,22 @@ class MigrationRepository implements MigrationRepositoryInterface {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function beginTransaction(): void {
+        $this->db->beginTransaction();
+    }
+
+    public function commit(): void {
+        $this->db->commit();
+    }
+
+    public function rollBack(): void {
+        $this->db->rollBack();
+    }
+
+    public function inTransaction(): bool {
+        return $this->db->inTransaction();
+    }
+
     private function isIgnorableError(PDOException $e, string $driver): bool {
         if ($driver === 'mysql') {
             $mysqlErrorCode = $e->errorInfo[1] ?? 0;

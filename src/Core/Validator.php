@@ -23,12 +23,41 @@ namespace App\Core;
  *   in:a,b,c        — value must be one of the comma-separated options
  */
 class Validator {
+    private array $errors = [];
+
     public function check(array $data, array $rules): array {
-        $errors = [];
+        $this->errors = [];
+        $flatErrors = [];
 
         foreach ($rules as $field => $ruleStr) {
-            $value = trim((string)($data[$field] ?? ''));
+            $rawValue = $data[$field] ?? '';
             $label = ucfirst(str_replace('_', ' ', $field));
+
+            // Type check: handle arrays or other non-scalars safely
+            if (is_array($rawValue)) {
+                $rulesList = explode('|', $ruleStr);
+                foreach ($rulesList as $rule) {
+                    [$name, $param] = array_pad(explode(':', $rule, 2), 2, null);
+                    if ($name === 'required') {
+                        if (empty($rawValue)) {
+                            $err = "$label is required.";
+                            $this->errors[$field][] = $err;
+                            $flatErrors[] = $err;
+                        }
+                    } else {
+                        // Any other rule expects scalar, so arrays are invalid format
+                        $err = "Invalid $label format.";
+                        if (!in_array($err, $this->errors[$field] ?? [])) {
+                            $this->errors[$field][] = $err;
+                            $flatErrors[] = $err;
+                        }
+                    }
+                }
+                continue;
+            }
+
+            // Safe scalar string casting
+            $value = is_scalar($rawValue) ? trim((string)$rawValue) : '';
 
             foreach (explode('|', $ruleStr) as $rule) {
                 [$name, $param] = array_pad(explode(':', $rule, 2), 2, null);
@@ -36,50 +65,80 @@ class Validator {
                 switch ($name) {
                     case 'required':
                         if ($value === '') {
-                            $errors[] = "$label is required.";
+                            $err = "$label is required.";
+                            $this->errors[$field][] = $err;
+                            $flatErrors[] = $err;
                         }
                         break;
 
                     case 'email':
                         if ($value !== '' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                            $errors[] = 'Valid email required.';
+                            $err = 'Valid email required.';
+                            $this->errors[$field][] = $err;
+                            $flatErrors[] = $err;
                         }
                         break;
 
                     case 'min_length':
                         if ($value !== '' && strlen($value) < (int)$param) {
-                            $errors[] = "$label must be at least $param characters.";
+                            $err = "$label must be at least $param characters.";
+                            $this->errors[$field][] = $err;
+                            $flatErrors[] = $err;
                         }
                         break;
 
                     case 'max_length':
                         if ($value !== '' && strlen($value) > (int)$param) {
-                            $errors[] = "$label must be no more than $param characters.";
+                            $err = "$label must be no more than $param characters.";
+                            $this->errors[$field][] = $err;
+                            $flatErrors[] = $err;
                         }
                         break;
 
                     case 'positive':
                         if ($value !== '' && (float)$value <= 0) {
-                            $errors[] = "$label must be positive.";
+                            $err = "$label must be positive.";
+                            $this->errors[$field][] = $err;
+                            $flatErrors[] = $err;
                         }
                         break;
 
                     case 'min':
                         if ($value !== '' && (float)$value < (float)$param) {
-                            $errors[] = "$label must be at least $param.";
+                            $err = "$label must be at least $param.";
+                            $this->errors[$field][] = $err;
+                            $flatErrors[] = $err;
                         }
                         break;
 
                     case 'in':
                         $allowed = explode(',', (string)$param);
                         if ($value !== '' && !in_array($value, $allowed, true)) {
-                            $errors[] = "Invalid $label.";
+                            $err = "Invalid $label.";
+                            $this->errors[$field][] = $err;
+                            $flatErrors[] = $err;
                         }
                         break;
                 }
             }
         }
 
-        return $errors;
+        return $flatErrors;
+    }
+
+    public function getErrors(): array {
+        return $this->errors;
+    }
+
+    public function getFieldError(string $field): ?string {
+        return isset($this->errors[$field][0]) ? $this->errors[$field][0] : null;
+    }
+
+    public function getFieldErrors(string $field): array {
+        return $this->errors[$field] ?? [];
+    }
+
+    public function hasErrors(): bool {
+        return !empty($this->errors);
     }
 }
