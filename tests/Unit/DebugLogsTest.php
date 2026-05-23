@@ -11,6 +11,8 @@ class DebugLogsTest extends TestCase {
     private string $tempErrorLog = __DIR__ . '/../../temp_error_test.log';
 
     public function setUp(): void {
+        DebugCollector::forceEnable(true);
+
         // Clear session if any
         if (session_status() === PHP_SESSION_ACTIVE) {
             $_SESSION = [];
@@ -129,6 +131,8 @@ class DebugLogsTest extends TestCase {
     }
 
     public function tearDown(): void {
+        DebugCollector::forceEnable(null);
+
         if (file_exists($this->tempAppLog)) {
             unlink($this->tempAppLog);
         }

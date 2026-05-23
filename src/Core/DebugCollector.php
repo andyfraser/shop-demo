@@ -14,6 +14,7 @@ class DebugCollector {
     private float $slowQueryThreshold = 10.0; // in milliseconds
     private ?array $matchedRoute = null;
     private static ?DebugCollector $instance = null;
+    private static ?bool $forceEnabled = null;
 
     public function __construct() {
         $this->startTime = microtime(true);
@@ -28,7 +29,21 @@ class DebugCollector {
         return self::$instance;
     }
 
+    public static function forceEnable(?bool $enabled): void {
+        self::$forceEnabled = $enabled;
+    }
+
+    private function isDebugEnabled(): bool {
+        if (self::$forceEnabled !== null) {
+            return self::$forceEnabled;
+        }
+        return defined('DEBUG_MODE') && DEBUG_MODE;
+    }
+
     public function logQuery(string $sql, array $params = [], float $duration = 0): void {
+        if (!$this->isDebugEnabled()) {
+            return;
+        }
         $this->queryCount++;
         $this->queries[] = [
             'sql' => $sql,
@@ -38,6 +53,9 @@ class DebugCollector {
     }
 
     public function logCache(string $operation, string $key, bool $isHit): void {
+        if (!$this->isDebugEnabled()) {
+            return;
+        }
         if ($isHit) {
             $this->cacheHits++;
         } else {
@@ -60,6 +78,9 @@ class DebugCollector {
     }
 
     public function logMessage(string $level, string $message, array $context = []): void {
+        if (!$this->isDebugEnabled()) {
+            return;
+        }
         $log = [
             'level' => $level,
             'message' => $message,
@@ -78,6 +99,9 @@ class DebugCollector {
     }
 
     public function addMilestone(string $name): void {
+        if (!$this->isDebugEnabled()) {
+            return;
+        }
         $this->milestones[] = [
             'name' => $name,
             'time' => microtime(true) - $this->startTime
