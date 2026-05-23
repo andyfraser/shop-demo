@@ -29,6 +29,7 @@ class Renderer {
 
         // Append Debug Toolbar if in debug mode
         if (defined('DEBUG_MODE') && DEBUG_MODE) {
+            \App\Core\DebugCollector::getInstance()->addMilestone('Controller & Rendering');
             $toolbar = new \App\Core\View\DebugToolbarComponent();
             $output .= $toolbar->render();
         }

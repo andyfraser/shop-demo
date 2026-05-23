@@ -25,6 +25,10 @@ class FileLogger extends AbstractLogger {
         $logEntry = sprintf("[%s] %s: %s" . PHP_EOL, $date, strtoupper($level), $message);
 
         file_put_contents($this->logFile, $logEntry, FILE_APPEND);
+
+        if (defined('DEBUG_MODE') && DEBUG_MODE) {
+            DebugCollector::getInstance()->logMessage($level, $message, $context);
+        }
     }
 
     private function ensureDirectoryExists(): void {

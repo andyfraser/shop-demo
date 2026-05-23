@@ -17,7 +17,7 @@ class FileCache implements CacheInterface {
     public function get(string $key, mixed $default = null): mixed {
         $file = $this->getFileName($key);
         if (!file_exists($file)) {
-            DebugCollector::getInstance()->logCacheMiss();
+            DebugCollector::getInstance()->logCache('get', $key, false);
             return $default;
         }
 
@@ -26,11 +26,11 @@ class FileCache implements CacheInterface {
 
         if ($data['expires'] !== 0 && time() > $data['expires']) {
             $this->delete($key);
-            DebugCollector::getInstance()->logCacheMiss();
+            DebugCollector::getInstance()->logCache('get', $key, false);
             return $default;
         }
 
-        DebugCollector::getInstance()->logCacheHit();
+        DebugCollector::getInstance()->logCache('get', $key, true);
         return $data['value'];
     }
 
@@ -41,14 +41,19 @@ class FileCache implements CacheInterface {
             'value'   => $value
         ];
 
-        return file_put_contents($file, serialize($data)) !== false;
+        $success = file_put_contents($file, serialize($data)) !== false;
+        DebugCollector::getInstance()->logCache('set', $key, $success);
+        return $success;
     }
 
     public function delete(string $key): bool {
         $file = $this->getFileName($key);
         if (file_exists($file)) {
-            return unlink($file);
+            $success = unlink($file);
+            DebugCollector::getInstance()->logCache('delete', $key, $success);
+            return $success;
         }
+        DebugCollector::getInstance()->logCache('delete', $key, true);
         return true;
     }
 

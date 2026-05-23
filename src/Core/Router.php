@@ -35,6 +35,9 @@ class Router {
         $route = $this->match($uri, $method);
         
         if ($route) {
+            if (defined('DEBUG_MODE') && DEBUG_MODE) {
+                \App\Core\DebugCollector::getInstance()->setMatchedRoute($route);
+            }
             // Run middlewares
             foreach ($route['middlewares'] as $middleware) {
                 $middlewareInst = $this->container ? $this->container->get($middleware) : new $middleware();

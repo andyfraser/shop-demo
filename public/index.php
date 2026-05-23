@@ -19,6 +19,11 @@ if (file_exists(__DIR__ . '/../config/config.php')) {
 $isDebug = $config['app']['debug'] ?? false;
 define('DEBUG_MODE', $isDebug);
 
+if ($isDebug) {
+    $slowThreshold = $config['app']['slow_query_threshold'] ?? 10.0;
+    \App\Core\DebugCollector::getInstance()->setSlowQueryThreshold((float)$slowThreshold);
+}
+
 if (!$isDebug) {
     ini_set('display_errors', 0);
 } else {
@@ -187,6 +192,10 @@ try {
     throw $e;
 }
 
+if (defined('DEBUG_MODE') && DEBUG_MODE) {
+    \App\Core\DebugCollector::getInstance()->addMilestone('Bootstrap & DI');
+}
+
 $router = new Router($container);
 
 // Load and register routes
@@ -198,6 +207,10 @@ foreach ($routes as $route) {
         $route['handler'],
         $route['middlewares'] ?? []
     );
+}
+
+if (defined('DEBUG_MODE') && DEBUG_MODE) {
+    \App\Core\DebugCollector::getInstance()->addMilestone('Routing & Middleware');
 }
 
 // Handle request
