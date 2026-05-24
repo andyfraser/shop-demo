@@ -154,6 +154,7 @@
 
 .due-badge {
     animation: subtle-pulse 2s infinite alternate;
+    white-space: nowrap;
 }
 @keyframes subtle-pulse {
     0% { transform: scale(1); }
@@ -312,17 +313,43 @@ function copyCronUrl() {
     const input = document.getElementById('cron-url');
     input.select();
     input.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(input.value).then(() => {
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(input.value).then(() => {
+            showCopiedState();
+        }).catch(() => {
+            fallbackCopy();
+        });
+    } else {
+        fallbackCopy();
+    }
+
+    function fallbackCopy() {
+        try {
+            const success = document.execCommand('copy');
+            if (success) {
+                showCopiedState();
+            } else {
+                alert('Copy failed. Please manually copy the link.');
+            }
+        } catch (err) {
+            alert('Copy failed. Please manually copy the link.');
+        }
+    }
+
+    function showCopiedState() {
         const btn = document.getElementById('copy-btn');
         const originalText = btn.innerHTML;
         btn.innerHTML = '📋 Copied!';
         btn.style.background = '#27ae60';
         btn.style.borderColor = '#27ae60';
+        btn.style.color = '#ffffff';
         setTimeout(() => {
             btn.innerHTML = originalText;
             btn.style.background = '';
             btn.style.borderColor = '';
+            btn.style.color = '';
         }, 2500);
-    });
+    }
 }
 </script>
