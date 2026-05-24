@@ -98,7 +98,7 @@ class Scheduler {
         }
     }
 
-    private function isDue(string $name, string $frequency): bool {
+    public function isDue(string $name, string $frequency): bool {
         $stmt = $this->db->prepare("SELECT last_run_at FROM scheduled_tasks WHERE name = ?");
         $stmt->execute([$name]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);

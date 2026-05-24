@@ -68,6 +68,9 @@
     <a href="/admin/backup"     class="<?= $active === 'backup'     ? 'active' : '' ?>">
       <span class="ico">💾</span> Database
     </a>
+    <a href="/admin/scheduler"  class="<?= $active === 'scheduler'  ? 'active' : '' ?>">
+      <span class="ico">⏱️</span> Scheduler
+    </a>
   </nav>
 
   <div class="sidebar-foot">

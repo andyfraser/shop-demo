@@ -19,6 +19,7 @@ use App\Controllers\AdminCurrencyController;
 use App\Controllers\AccountController;
 use App\Controllers\WishlistController;
 use App\Controllers\CurrencyController;
+use App\Controllers\AdminSchedulerController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
 use App\Middleware\CsrfMiddleware;
@@ -178,4 +179,14 @@ return [
     ['method' => 'GET', 'path' => '/admin/backup/download-file', 'handler' => [\App\Controllers\AdminBackupController::class, 'downloadFile'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/backup/upload-temp', 'handler' => [\App\Controllers\AdminBackupController::class, 'uploadTemp'], 'middlewares' => $adminPostMiddleware],
     ['method' => 'GET', 'path' => '/admin/backup/stream-restore', 'handler' => [\App\Controllers\AdminBackupController::class, 'streamRestore'], 'middlewares' => $adminMiddleware],
+
+    // Admin Scheduler routes
+    ['method' => 'GET',  'path' => '/admin/scheduler',             'handler' => [AdminSchedulerController::class, 'index'], 'middlewares' => $adminMiddleware],
+    ['method' => 'POST', 'path' => '/admin/scheduler/toggle',      'handler' => [AdminSchedulerController::class, 'togglePause'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'POST', 'path' => '/admin/scheduler/run-task',    'handler' => [AdminSchedulerController::class, 'runTask'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'POST', 'path' => '/admin/scheduler/run-due',     'handler' => [AdminSchedulerController::class, 'runAllDue'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'POST', 'path' => '/admin/scheduler/regen-token', 'handler' => [AdminSchedulerController::class, 'regenToken'], 'middlewares' => $adminPostMiddleware],
+
+    // Public Web Cron route
+    ['method' => 'GET',  'path' => '/api/cron',                    'handler' => [AdminSchedulerController::class, 'runWebCron']],
 ];
