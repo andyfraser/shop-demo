@@ -7,11 +7,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= h($page_title) ?> — Admin — <?= SITE_NAME_PLAIN ?></title>
-<link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="<?= BASE_URL ?>/images/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/admin.css?v=<?= filemtime(__DIR__ . '/../../public/css/admin.css') ?>">
-<script src="/js/admin.js?v=<?= filemtime(__DIR__ . '/../../public/js/admin.js') ?>" defer></script>
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/admin.css?v=<?= filemtime(__DIR__ . '/../../public/css/admin.css') ?>">
+<script src="<?= BASE_URL ?>/js/admin.js?v=<?= filemtime(__DIR__ . '/../../public/js/admin.js') ?>" defer></script>
 </head>
 <body>
 
@@ -24,58 +24,58 @@
 
   <div class="sidebar-section">Store</div>
   <nav>
-    <a href="/admin" class="<?= $active === 'dashboard' ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin" class="<?= $active === 'dashboard' ? 'active' : '' ?>">
       <span class="ico">📊</span> Dashboard
     </a>
-    <a href="/admin/products"   class="<?= $active === 'products'   ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/products"   class="<?= $active === 'products'   ? 'active' : '' ?>">
       <span class="ico">📦</span> Products
     </a>
-    <a href="/admin/categories" class="<?= $active === 'categories' ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/categories" class="<?= $active === 'categories' ? 'active' : '' ?>">
       <span class="ico">🏷</span> Categories
     </a>
-    <a href="/admin/attributes" class="<?= $active === 'attributes' ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/attributes" class="<?= $active === 'attributes' ? 'active' : '' ?>">
       <span class="ico">🔧</span> Attributes
     </a>
-    <a href="/admin/orders"     class="<?= $active === 'orders'     ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/orders"     class="<?= $active === 'orders'     ? 'active' : '' ?>">
       <span class="ico">🧾</span> Orders
     </a>
-    <a href="/admin/returns"    class="<?= $active === 'returns'    ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/returns"    class="<?= $active === 'returns'    ? 'active' : '' ?>">
       <span class="ico">🔄</span> Returns
     </a>
-    <a href="/admin/reviews"    class="<?= $active === 'reviews'    ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/reviews"    class="<?= $active === 'reviews'    ? 'active' : '' ?>">
       <span class="ico">💬</span> Reviews
     </a>
-    <a href="/admin/delivery"   class="<?= $active === 'delivery'   ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/delivery"   class="<?= $active === 'delivery'   ? 'active' : '' ?>">
       <span class="ico">🚚</span> Delivery
     </a>
-    <a href="/admin/promotions" class="<?= $active === 'promotions' ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/promotions" class="<?= $active === 'promotions' ? 'active' : '' ?>">
       <span class="ico">🎟</span> Promotions
     </a>
     <div class="sidebar-section">Users</div>
-    <a href="/admin/users"      class="<?= $active === 'users'      ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/users"      class="<?= $active === 'users'      ? 'active' : '' ?>">
       <span class="ico">👥</span> Users
     </a>
-    <a href="/admin/user-roles" class="<?= $active === 'user-roles' ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/user-roles" class="<?= $active === 'user-roles' ? 'active' : '' ?>">
       <span class="ico">🛡</span> User Roles
     </a>
     <div class="sidebar-section">Config</div>
-    <a href="/admin/settings"   class="<?= $active === 'settings'   ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/settings"   class="<?= $active === 'settings'   ? 'active' : '' ?>">
       <span class="ico">⚙️</span> Settings
     </a>
-    <a href="/admin/currencies" class="<?= $active === 'currencies' ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/currencies" class="<?= $active === 'currencies' ? 'active' : '' ?>">
       <span class="ico">💰</span> Currencies
     </a>
-    <a href="/admin/backup"     class="<?= $active === 'backup'     ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/backup"     class="<?= $active === 'backup'     ? 'active' : '' ?>">
       <span class="ico">💾</span> Database
     </a>
-    <a href="/admin/scheduler"  class="<?= $active === 'scheduler'  ? 'active' : '' ?>">
+    <a href="<?= BASE_URL ?>/admin/scheduler"  class="<?= $active === 'scheduler'  ? 'active' : '' ?>">
       <span class="ico">⏱️</span> Scheduler
     </a>
   </nav>
 
   <div class="sidebar-foot">
-    <a href="/">← View Store</a>
-    <a href="/logout">Sign out</a>
+    <a href="<?= BASE_URL ?>/">← View Store</a>
+    <a href="<?= BASE_URL ?>/logout">Sign out</a>
   </div>
 </aside>
 
