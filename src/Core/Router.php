@@ -64,7 +64,18 @@ class Router {
             return new \App\Core\Responses\HtmlResponse((string)$response);
         }
 
-        if ($this->logger) {
+        // Avoid warning logging for common static assets to prevent log pollution
+        $path = parse_url($uri, PHP_URL_PATH) ?: '';
+        $isAsset = strpos($path, '/public/') === 0 
+            || strpos($path, '/css/') === 0 
+            || strpos($path, '/js/') === 0 
+            || strpos($path, '/images/') === 0 
+            || strpos($path, '/uploads/') === 0 
+            || strpos($path, '/favicon.ico') === 0 
+            || strpos($path, '/apple-touch-icon') === 0 
+            || preg_match('#\.(css|js|png|jpg|jpeg|gif|ico|svg|woff2?|map)$#i', $path);
+
+        if ($this->logger && !$isAsset) {
             $this->logger->warning('Route not found: {method} {uri}', [
                 'method' => $method,
                 'uri' => $uri

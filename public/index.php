@@ -214,13 +214,39 @@ if (defined('DEBUG_MODE') && DEBUG_MODE) {
 }
 
 // Handle request
-// Serve static files via built-in server correctly
+// 1. Server-agnostic static file handler for assets requested under /public/ that hit the front controller
+$path = parse_url($request->getUri(), PHP_URL_PATH) ?: '';
+if (strpos($path, '/public/') === 0) {
+    $relativePath = substr($path, 7); // Strip '/public' but keep leading slash
+    $filePath = __DIR__ . $relativePath;
+    
+    if (file_exists($filePath) && is_file($filePath)) {
+        $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+        $mimeTypes = [
+            'css'  => 'text/css',
+            'js'   => 'application/javascript',
+            'png'  => 'image/png',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif'  => 'image/gif',
+            'ico'  => 'image/x-icon',
+            'svg'  => 'image/svg+xml',
+            'webp' => 'image/webp',
+            'woff' => 'font/woff',
+            'woff2'=> 'font/woff2',
+        ];
+        $contentType = $mimeTypes[strtolower($ext)] ?? 'application/octet-stream';
+        header("Content-Type: " . $contentType);
+        header("Cache-Control: public, max-age=31536000");
+        readfile($filePath);
+        exit;
+    }
+}
+
+// 2. Serve static files via built-in server fallback for non-/public paths
 if (php_sapi_name() === 'cli-server') {
-    $path = parse_url($request->getUri(), PHP_URL_PATH);
     if ($path !== '/') {
-        // When index.php is in public/, we check directly in public/ (which is __DIR__)
         $filePath = __DIR__ . $path;
-        
         if (file_exists($filePath) && is_file($filePath) && $path !== '/index.php') {
             return false;
         }
