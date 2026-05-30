@@ -153,6 +153,12 @@ Demoshop stores its core settings in the database, manageable via **Admin > Sett
 | `queue_cleanup_completed_hours` | Hours to retain completed background jobs in history. | `24` |
 | `queue_cleanup_failed_days` | Days to retain failed background jobs in history before pruning. | `7` |
 
+### Cache Management
+You can clear the system cache directly from the **Admin > Settings** section. Clicking the **Clear Cache** button will purge all cached data including:
+*   Category trees and structures
+*   Search suggestions and cached product recommendations
+*   General settings and other temporary file caches
+
 ---
 
 ## 5. Logging & Debugging

@@ -9,22 +9,26 @@ use App\Core\Renderer;
 use App\Services\SecurityServiceInterface;
 use App\Services\SettingsServiceInterface;
 use App\Models\Settings;
+use App\Core\Cache\CacheInterface;
 
 class AdminSettingsController {
     public function __construct(
         private Renderer $renderer,
         private SecurityServiceInterface $securityService,
         private SettingsServiceInterface $settingsService,
-        private \Psr\Log\LoggerInterface $logger
+        private \Psr\Log\LoggerInterface $logger,
+        private CacheInterface $cache
     ) {}
 
     public function show(Request $request): Response {
+        $flashError = flash('error');
+        $errors = $flashError ? [$flashError] : [];
         return new HtmlResponse($this->renderer->adminRender('settings', [
             'page_title' => 'Settings',
             'active'     => 'settings',
             'settings'   => $this->settingsService->getSettings(),
             'flash_msg'  => flash('msg'),
-            'errors'     => [],
+            'errors'     => $errors,
         ]));
     }
 
@@ -61,5 +65,16 @@ class AdminSettingsController {
             'flash_msg'  => null,
             'errors'     => $errors,
         ]));
+    }
+
+    public function clearCache(Request $request): Response {
+        if ($this->cache->clear()) {
+            $this->logger->info("Admin cleared application cache");
+            flash('msg', 'Cache cleared successfully.');
+        } else {
+            $this->logger->error("Admin failed to clear application cache");
+            flash('error', 'Failed to clear cache.');
+        }
+        return new RedirectResponse('/admin/settings');
     }
 }

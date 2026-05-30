@@ -168,6 +168,7 @@ return [
 
     ['method' => 'GET', 'path' => '/admin/settings', 'handler' => [AdminSettingsController::class, 'show'], 'middlewares' => $adminMiddleware],
     ['method' => 'POST', 'path' => '/admin/settings', 'handler' => [AdminSettingsController::class, 'save'], 'middlewares' => $adminPostMiddleware],
+    ['method' => 'POST', 'path' => '/admin/settings/clear-cache', 'handler' => [AdminSettingsController::class, 'clearCache'], 'middlewares' => $adminPostMiddleware],
 
     ['method' => 'GET', 'path' => '/admin/currencies', 'handler' => [AdminCurrencyController::class, 'list'], 'middlewares' => $adminMiddleware],
     ['method' => 'GET', 'path' => '/admin/currencies/new', 'handler' => [AdminCurrencyController::class, 'create'], 'middlewares' => $adminMiddleware],

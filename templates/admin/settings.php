@@ -187,4 +187,15 @@
 
     <button type="submit" class="btn btn-primary">Save Settings</button>
   </form>
+
+  <div class="card" style="max-width:560px;margin-bottom:1.5rem;margin-top:1.5rem;">
+    <h3 style="margin:0 0 1rem;font-size:1rem;">System Cache</h3>
+    <p style="font-size:.85rem;color:var(--ink-2);margin:0 0 1rem;">
+      Clear all cached data including product suggestions, category trees, settings, and other temporary file caches.
+    </p>
+    <form method="POST" action="/admin/settings/clear-cache">
+      <?= csrf_field() ?>
+      <button type="submit" class="btn btn-danger">Clear Cache</button>
+    </form>
+  </div>
 </div>
