@@ -61,6 +61,7 @@ class ImageCleanupServiceTest extends TestCase {
         touch($this->testUploadDir . 'active.jpg'); // Active
         touch($this->testUploadDir . 'active_with_thumbs.png'); // Active
         touch($this->testUploadDir . 'active_with_thumbs_thumb.webp'); // Active (thumb)
+        touch($this->testUploadDir . 'active_with_thumbs_medium.webp'); // Active (medium)
         touch($this->testUploadDir . 'active_with_thumbs_large.webp'); // Active (large)
         touch($this->testUploadDir . 'product_large.jpg'); // Active image ending in _large
         $this->db->exec("INSERT INTO products (image) VALUES ('product_large.jpg')");
@@ -68,6 +69,7 @@ class ImageCleanupServiceTest extends TestCase {
         $this->db->exec("INSERT INTO products (image) VALUES ('CASE_MISMATCH.JPG')"); // Filename in uppercase in DB
         touch($this->testUploadDir . 'orphaned.jpg'); // Orphaned
         touch($this->testUploadDir . 'orphaned_thumb.webp'); // Orphaned (thumb)
+        touch($this->testUploadDir . 'orphaned_medium.webp'); // Orphaned (medium)
         touch($this->testUploadDir . '.gitkeep'); // Should be ignored
         
         // 3. Create files in images
@@ -80,11 +82,12 @@ class ImageCleanupServiceTest extends TestCase {
         $deleted = $this->service->cleanup();
 
         // 5. Assertions
-        $this->assertCount(3, $deleted); // orphaned.jpg, orphaned_thumb.webp, img_orphaned_in_images.jpg
+        $this->assertCount(4, $deleted); // orphaned.jpg, orphaned_thumb.webp, orphaned_medium.webp, img_orphaned_in_images.jpg
         
         $this->assertTrue(file_exists($this->testUploadDir . 'active.jpg'));
         $this->assertTrue(file_exists($this->testUploadDir . 'active_with_thumbs.png'));
         $this->assertTrue(file_exists($this->testUploadDir . 'active_with_thumbs_thumb.webp'));
+        $this->assertTrue(file_exists($this->testUploadDir . 'active_with_thumbs_medium.webp'));
         $this->assertTrue(file_exists($this->testUploadDir . 'active_with_thumbs_large.webp'));
         $this->assertTrue(file_exists($this->testUploadDir . 'product_large.jpg'));
         $this->assertTrue(file_exists($this->testUploadDir . 'case_mismatch.jpg'));
@@ -92,6 +95,7 @@ class ImageCleanupServiceTest extends TestCase {
         
         $this->assertFalse(file_exists($this->testUploadDir . 'orphaned.jpg'));
         $this->assertFalse(file_exists($this->testUploadDir . 'orphaned_thumb.webp'));
+        $this->assertFalse(file_exists($this->testUploadDir . 'orphaned_medium.webp'));
         
         $this->assertTrue(file_exists($this->testImageDir . 'img_active_in_images.jpg'));
         $this->assertTrue(file_exists($this->testImageDir . 'static_asset.svg'));

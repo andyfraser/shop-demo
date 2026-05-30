@@ -66,7 +66,7 @@ class ImageCleanupService implements ImageCleanupServiceInterface {
 
             // Handle thumbnails: img_123_thumb.webp -> base is img_123
             $isThumbnail = false;
-            if (str_ends_with($base, '_thumb') || str_ends_with($base, '_large')) {
+            if (str_ends_with($base, '_thumb') || str_ends_with($base, '_medium') || str_ends_with($base, '_large')) {
                 $actualBase = substr($base, 0, strrpos($base, '_'));
                 $isThumbnail = true;
             } else {
