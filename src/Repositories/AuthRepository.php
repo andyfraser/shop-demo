@@ -31,12 +31,19 @@ class AuthRepository implements AuthRepositoryInterface {
 
     public function setRememberToken(int $userId, string $token, int $expires, ?string $oldToken = null): void {
         if ($oldToken) {
-            $this->db->prepare("UPDATE remember_tokens SET token = ?, expires_at = ? WHERE token = ?")
-                ->execute([$token, $expires, $oldToken]);
-        } else {
-            $this->db->prepare("INSERT INTO remember_tokens (user_id, token, expires_at) VALUES (?, ?, ?)")
-                ->execute([$userId, $token, $expires]);
+            $stmt = $this->db->prepare("SELECT id FROM remember_tokens WHERE token = ?");
+            $stmt->execute([$oldToken]);
+            $id = $stmt->fetchColumn();
+
+            if ($id) {
+                $this->db->prepare("UPDATE remember_tokens SET token = ?, expires_at = ? WHERE id = ?")
+                    ->execute([$token, $expires, $id]);
+                return;
+            }
         }
+
+        $this->db->prepare("INSERT INTO remember_tokens (user_id, token, expires_at) VALUES (?, ?, ?)")
+            ->execute([$userId, $token, $expires]);
     }
 
     public function clearRememberToken(string $token): void {
