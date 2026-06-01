@@ -9,6 +9,7 @@ use Exception;
 class Container {
     private array $services = [];
     private array $instances = [];
+    private array $resolving = [];
     private static ?Container $instance = null;
 
     public function __construct() {
@@ -21,6 +22,7 @@ class Container {
         }
         return self::$instance;
     }
+
     public function set(string $name, callable $resolver): void {
         $this->services[$name] = $resolver;
     }
@@ -37,12 +39,24 @@ class Container {
             return $this->instances[$name];
         }
 
-        if (isset($this->services[$name])) {
-            $this->instances[$name] = $this->services[$name]($this);
-            return $this->instances[$name];
+        if (isset($this->resolving[$name])) {
+            $path = array_keys($this->resolving);
+            $path[] = $name;
+            throw new Exception("Circular dependency detected: " . implode(" -> ", $path));
         }
 
-        return $this->resolve($name);
+        $this->resolving[$name] = true;
+
+        try {
+            if (isset($this->services[$name])) {
+                $this->instances[$name] = $this->services[$name]($this);
+                return $this->instances[$name];
+            }
+
+            return $this->resolve($name);
+        } finally {
+            unset($this->resolving[$name]);
+        }
     }
 
     /**

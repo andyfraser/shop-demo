@@ -58,6 +58,17 @@ class ContainerTest extends TestCase {
         $this->expectException(Exception::class);
         $this->container->get('NonExistentClass');
     }
+
+    public function testCircularDependencyDetection() {
+        $thrown = false;
+        try {
+            $this->container->get(CircularClassA::class);
+        } catch (Exception $e) {
+            $thrown = true;
+            $this->assertStringContainsString("Circular dependency detected", $e->getMessage());
+        }
+        $this->assertTrue($thrown, "Expected exception was not thrown.");
+    }
 }
 
 interface DummyInterface {}
@@ -65,4 +76,10 @@ class DummyImplementation implements DummyInterface {}
 class DummyClassNoConstructor {}
 class DummyClassWithDependency {
     public function __construct(public DummyClassNoConstructor $dep) {}
+}
+class CircularClassA {
+    public function __construct(CircularClassB $b) {}
+}
+class CircularClassB {
+    public function __construct(CircularClassA $a) {}
 }
