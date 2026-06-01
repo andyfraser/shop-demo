@@ -206,7 +206,7 @@ The logging system follows the PHP Standard Recommendation for logging (PSR-3). 
 *   **Vanilla PHP 8:** Zero external dependencies (No Laravel, Symfony, or Composer).
 *   **Dependency Inversion:** Use of Interfaces for all service and repository logic to ensure decoupling and follow the SOLID principles.
 *   **Repository Pattern:** A dedicated data access layer that decouples business logic from SQL queries. Every entity has a Repository that implements a corresponding interface.
-*   **DI Container:** Custom container (`App\Core\Container`) with autowiring and interface mapping support. Service registrations are centralized in `config/services.php`.
+*   **DI Container:** Custom container (`App\Core\Container`) with autowiring, interface mapping support, and automatic circular dependency detection. Service registrations are centralized in `config/services.php`.
 *   **Event-Driven Architecture:** Decouples core business logic from side effects. For example, when an order is placed, an `OrderPlaced` event is dispatched, which triggers the `OrderListener` to send emails and the `InventoryListener` to update stock levels.
 *   **MVC Pattern:** Strict separation of Controllers, Services, Repositories, Models, and Views.
 *   **Front Controller:** All traffic routes through `public/index.php`, which initializes the DI system and sets up global error handling.

@@ -177,7 +177,7 @@ shop-demo/
 **Dependency Injection & Interfaces:** The application follows the **Dependency Inversion Principle**. 
 - **Centralized Mapping:** Service and Repository registrations are managed in `config/services.php`.
 - **Constructor Injection:** Controllers, middlewares, and services receive their dependencies via interfaces.
-- **Autowiring:** The custom DI Container automatically resolves and injects dependencies based on constructor type-hints.
+- **Autowiring:** The custom DI Container automatically resolves and injects dependencies based on constructor type-hints, with built-in circular dependency loop detection.
 
 **Repository Pattern:** A dedicated data access layer decouples business logic from SQL queries. 
 - Every entity has a Repository (e.g., `ProductRepository`) that implements a corresponding interface.
