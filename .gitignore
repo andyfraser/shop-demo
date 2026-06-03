@@ -20,3 +20,4 @@ storage/cache/*
 !storage/cache/.gitkeep
 storage/downloads/*
 !storage/downloads/.gitkeep
+storage/server.pid
