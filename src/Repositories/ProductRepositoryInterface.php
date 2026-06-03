@@ -28,7 +28,14 @@ interface ProductRepositoryInterface {
     public function saveVariant(array $data, int $id = 0): int;
     public function updateVariantStock(int $id, int $newStock): void;
     public function deleteVariant(int $id): void;
-    public function getRelatedProducts(int $productId, int $limit = 4): array;
+    public function getRelatedProducts(
+        int $productId,
+        int $limit = 4,
+        ?int $sameCategoryId = null,
+        ?int $parentCategoryId = null,
+        array $siblingCategoryIds = [],
+        array $childCategoryIds = []
+    ): array;
     public function searchSuggestions(string $query, int $limit = 5): array;
     public function getTiers(int $productId): array;
     public function syncTiers(int $productId, array $tiers): void;

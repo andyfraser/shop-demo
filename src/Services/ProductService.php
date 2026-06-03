@@ -17,7 +17,8 @@ class ProductService implements ProductServiceInterface {
         private ProductVariantServiceInterface $variantService,
         private LoggerInterface $logger,
         private \App\Core\Cache\CacheInterface $cache,
-        private EventDispatcherInterface $eventDispatcher
+        private EventDispatcherInterface $eventDispatcher,
+        private ?CategoryServiceInterface $categoryService = null
     ) {}
 
     public function attachActivePromotions(array $products, ?\App\Models\User $user = null): void {
@@ -226,12 +227,71 @@ class ProductService implements ProductServiceInterface {
         $cached = $this->cache->get($cacheKey);
         if ($cached !== null) return $cached;
 
-        $products = $this->repository->getRelatedProducts($productId, $limit);
+        $sameCategoryId = null;
+        $parentCategoryId = null;
+        $siblingCategoryIds = [];
+        $childCategoryIds = [];
+
+        $product = $this->repository->findById($productId);
+        if ($product && $product->category_id !== null && $this->categoryService !== null) {
+            $tree = $this->categoryService->getTree();
+            list($sameCategoryId, $parentCategoryId, $siblingCategoryIds, $childCategoryIds) = $this->resolveCategoryHierarchy($product->category_id, $tree);
+        }
+
+        $products = $this->repository->getRelatedProducts(
+            $productId,
+            $limit,
+            $sameCategoryId,
+            $parentCategoryId,
+            $siblingCategoryIds,
+            $childCategoryIds
+        );
+
         foreach ($products as $product) {
             $this->hydrateProduct($product);
         }
         $this->cache->set($cacheKey, $products, 3600);
         return $products;
+    }
+
+    private function resolveCategoryHierarchy(int $categoryId, array $tree): array {
+        $flat = [];
+        $this->flattenTree($tree, $flat);
+
+        $sameCategoryId = $categoryId;
+        $parentCategoryId = null;
+        $siblingCategoryIds = [];
+        $childCategoryIds = [];
+
+        if (isset($flat[$categoryId])) {
+            $cat = $flat[$categoryId];
+            $parentCategoryId = $cat->parent_id ? (int)$cat->parent_id : null;
+
+            // Gather children
+            foreach ($cat->children as $child) {
+                $childCategoryIds[] = (int)$child->id;
+            }
+
+            // Gather siblings
+            if ($parentCategoryId !== null && isset($flat[$parentCategoryId])) {
+                foreach ($flat[$parentCategoryId]->children as $sibling) {
+                    if ($sibling->id !== $categoryId) {
+                        $siblingCategoryIds[] = (int)$sibling->id;
+                    }
+                }
+            }
+        }
+
+        return [$sameCategoryId, $parentCategoryId, $siblingCategoryIds, $childCategoryIds];
+    }
+
+    private function flattenTree(array $nodes, array &$flat): void {
+        foreach ($nodes as $node) {
+            $flat[$node->id] = $node;
+            if (!empty($node->children)) {
+                $this->flattenTree($node->children, $flat);
+            }
+        }
     }
 
     public function searchSuggestions(string $query, int $limit = 5): array {

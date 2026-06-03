@@ -141,7 +141,8 @@ return function($c, array $config) {
                 $c->get(ProductVariantServiceInterface::class),
                 $c->get(LoggerInterface::class),
                 $c->get(\App\Core\Cache\CacheInterface::class),
-                $c->get(\App\Core\Events\EventDispatcherInterface::class)
+                $c->get(\App\Core\Events\EventDispatcherInterface::class),
+                $c->get(CategoryServiceInterface::class)
             );
         },
         ProductVariantServiceInterface::class => function($c) {

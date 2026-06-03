@@ -430,14 +430,83 @@ class ProductRepository implements ProductRepositoryInterface {
         $this->db->prepare("DELETE FROM product_variants WHERE id = ?")->execute([$id]);
     }
 
-    public function getRelatedProducts(int $productId, int $limit = 4): array {
+    public function getRelatedProducts(
+        int $productId,
+        int $limit = 4,
+        ?int $sameCategoryId = null,
+        ?int $parentCategoryId = null,
+        array $siblingCategoryIds = [],
+        array $childCategoryIds = []
+    ): array {
         $product = $this->findById($productId);
         if (!$product) return [];
+
+        // If no category resolution parameters are passed, try to fetch them from DB
+        if ($sameCategoryId === null && $product->category_id !== null) {
+            $sameCategoryId = $product->category_id;
+            // Get the current category
+            $stmt = $this->db->prepare("SELECT parent_id FROM categories WHERE id = ?");
+            $stmt->execute([$sameCategoryId]);
+            $cat = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($cat) {
+                $parentCategoryId = $cat['parent_id'] ? (int)$cat['parent_id'] : null;
+                
+                // Get siblings (same parent, not null, not same category)
+                if ($parentCategoryId !== null) {
+                    $stmt = $this->db->prepare("SELECT id FROM categories WHERE parent_id = ? AND id != ?");
+                    $stmt->execute([$parentCategoryId, $sameCategoryId]);
+                    $siblingCategoryIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+                }
+                
+                // Get children
+                $stmt = $this->db->prepare("SELECT id FROM categories WHERE parent_id = ?");
+                $stmt->execute([$sameCategoryId]);
+                $childCategoryIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            }
+        }
+
+        $sqlParts = [];
+        $bindValues = [];
+
+        if ($sameCategoryId !== null) {
+            // Same category (10 points)
+            $sqlParts[] = "(CASE WHEN p.category_id = ? THEN 10 ELSE 0 END)";
+            $bindValues[] = $sameCategoryId;
+
+            // Parent category (5 points)
+            if ($parentCategoryId !== null) {
+                $sqlParts[] = "(CASE WHEN p.category_id = ? THEN 5 ELSE 0 END)";
+                $bindValues[] = $parentCategoryId;
+            }
+
+            // Sibling categories (5 points)
+            if (!empty($siblingCategoryIds)) {
+                $placeholders = implode(',', array_fill(0, count($siblingCategoryIds), '?'));
+                $sqlParts[] = "(CASE WHEN p.category_id IN ($placeholders) THEN 5 ELSE 0 END)";
+                foreach ($siblingCategoryIds as $id) {
+                    $bindValues[] = (int)$id;
+                }
+            }
+
+            // Child categories (5 points)
+            if (!empty($childCategoryIds)) {
+                $placeholders = implode(',', array_fill(0, count($childCategoryIds), '?'));
+                $sqlParts[] = "(CASE WHEN p.category_id IN ($placeholders) THEN 5 ELSE 0 END)";
+                foreach ($childCategoryIds as $id) {
+                    $bindValues[] = (int)$id;
+                }
+            }
+        }
+
+        $categoryScoresSql = "0";
+        if (!empty($sqlParts)) {
+            $categoryScoresSql = implode(' + ', $sqlParts);
+        }
 
         $sql = "
             SELECT p.*, 
                    (
-                       (CASE WHEN p.category_id = ? THEN 10 ELSE 0 END) +
+                       ($categoryScoresSql) +
                        (CASE WHEN p.featured = 1 THEN 2 ELSE 0 END) +
                        COALESCE(shared_attrs.attr_count * 5, 0)
                    ) as relevance_score
@@ -455,11 +524,14 @@ class ProductRepository implements ProductRepositoryInterface {
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(1, $product->category_id, \PDO::PARAM_INT);
-        $stmt->bindValue(2, $productId, \PDO::PARAM_INT);
-        $stmt->bindValue(3, $productId, \PDO::PARAM_INT);
-        $stmt->bindValue(4, $productId, \PDO::PARAM_INT);
-        $stmt->bindValue(5, $limit, \PDO::PARAM_INT);
+        $index = 1;
+        foreach ($bindValues as $val) {
+            $stmt->bindValue($index++, $val, \PDO::PARAM_INT);
+        }
+        $stmt->bindValue($index++, $productId, \PDO::PARAM_INT);
+        $stmt->bindValue($index++, $productId, \PDO::PARAM_INT);
+        $stmt->bindValue($index++, $productId, \PDO::PARAM_INT);
+        $stmt->bindValue($index++, $limit, \PDO::PARAM_INT);
         $stmt->execute();
 
         return $stmt->fetchAll(\PDO::FETCH_CLASS, Product::class, [$this->logger]);

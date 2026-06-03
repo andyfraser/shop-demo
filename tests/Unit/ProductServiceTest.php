@@ -25,7 +25,7 @@ class ProductServiceTest extends TestCase {
         $promoService = new \App\Services\PromotionService($promotionRepository, $promoEvaluator, $logger, new \Tests\NullCache());
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
-        $this->service = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
+        $this->service = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher(), $categoryService);
     }
 
     public function testFindById() {
@@ -277,6 +277,27 @@ class ProductServiceTest extends TestCase {
             $this->assertTrue($p->id !== 1, "Current product should not be in related results");
         }
         $this->assertTrue($found8, "Product 8 (similar laptop) should be in related results");
+    }
+
+    public function testGetRelatedProductsHierarchy() {
+        // Product 9 (Bluetooth Speaker Cube) is in category 6 (Audio)
+        // Its parent category is 1 (Electronics), making categories 4 (Laptops) and 5 (Phones) its siblings.
+        $related = $this->service->getRelatedProducts(9, 10);
+
+        $this->assertNotEmpty($related);
+
+        // Product 3 (Studio Wireless Headphones) is in category 6 (same category) -> should be first or highly ranked
+        $this->assertEquals(3, $related[0]->id);
+
+        // Verify products in sibling categories (e.g. category 4 and 5) are included
+        $foundSiblingCategoryProduct = false;
+        foreach ($related as $p) {
+            if (in_array($p->category_id, [4, 5])) {
+                $foundSiblingCategoryProduct = true;
+                break;
+            }
+        }
+        $this->assertTrue($foundSiblingCategoryProduct, "Should find at least one product in a sibling category (Laptops/Phones)");
     }
 
     public function testSearchPunctuation() {
