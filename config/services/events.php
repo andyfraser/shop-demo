@@ -20,6 +20,7 @@ use App\Listeners\UserListener;
 use App\Listeners\InventoryListener;
 use App\Listeners\ReviewListener;
 use App\Listeners\AuditListener;
+use App\Listeners\ProductAvailabilityListener;
 
 use Psr\Log\LoggerInterface;
 
@@ -80,8 +81,16 @@ return function($c, array $config) {
                 fn($e) => $c->get(InventoryListener::class)->handle($e)
             );
             $dispatcher->addListener(
+                StockUpdated::class,
+                fn($e) => $c->get(ProductAvailabilityListener::class)->handle($e)
+            );
+            $dispatcher->addListener(
                 OrderPlaced::class,
                 fn($e) => $c->get(InventoryListener::class)->handle($e)
+            );
+            $dispatcher->addListener(
+                OrderPlaced::class,
+                fn($e) => $c->get(ProductAvailabilityListener::class)->handle($e)
             );
 
             // Review Listeners

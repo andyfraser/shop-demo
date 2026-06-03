@@ -12,4 +12,5 @@ class ReturnItem extends Model {
     public ?string $product_name = null;
     public ?string $variant_name = null;
     public float $unit_price = 0.0;
+    public ?int $product_id = null;
 }

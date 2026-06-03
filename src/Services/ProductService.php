@@ -74,7 +74,9 @@ class ProductService implements ProductServiceInterface {
 
     public function save(array|Product $data, int $id = 0): int {
         $resultId = $this->repository->save($data, $id);
-        $this->clearCache($resultId ?: $id);
+        $productId = $resultId ?: $id;
+        $this->syncPurchasableStatus($productId);
+        $this->clearCache($productId);
         $this->cache->delete('featured_products');
         return $resultId;
     }
@@ -84,6 +86,7 @@ class ProductService implements ProductServiceInterface {
         $oldStock = $product ? $product->stock : 0;
 
         $this->repository->updateStock($id, $newStock);
+        $this->syncPurchasableStatus($id);
         $this->clearCache($id);
 
         $this->eventDispatcher->dispatch(new StockUpdated($id, $oldStock, $newStock, false));
@@ -192,21 +195,30 @@ class ProductService implements ProductServiceInterface {
     public function saveVariant(array $data, int $id = 0): int {
         $variantId = $this->variantService->save($data, $id);
         $v = $this->findVariantById($variantId ?: $id);
-        if ($v) $this->clearCache($v->product_id);
+        if ($v) {
+            $this->syncPurchasableStatus($v->product_id);
+            $this->clearCache($v->product_id);
+        }
         return $variantId;
     }
 
     public function updateVariantStock(int $id, int $newStock): void {
         $this->variantService->updateStock($id, $newStock);
         $v = $this->findVariantById($id);
-        if ($v) $this->clearCache($v->product_id);
+        if ($v) {
+            $this->syncPurchasableStatus($v->product_id);
+            $this->clearCache($v->product_id);
+        }
     }
 
     public function deleteVariant(int $id): void {
         $v = $this->findVariantById($id);
         $productId = $v ? $v->product_id : 0;
         $this->variantService->delete($id);
-        if ($productId) $this->clearCache($productId);
+        if ($productId) {
+            $this->syncPurchasableStatus($productId);
+            $this->clearCache($productId);
+        }
     }
 
     public function getRelatedProducts(int $productId, int $limit = 4): array {
@@ -233,6 +245,7 @@ class ProductService implements ProductServiceInterface {
 
     public function syncBundleItems(int $bundleId, array $items): void {
         $this->repository->syncBundleItems($bundleId, $items);
+        $this->syncPurchasableStatus($bundleId);
         $this->clearCache($bundleId);
     }
 
@@ -251,6 +264,62 @@ class ProductService implements ProductServiceInterface {
         
         if ($product->is_bundle) {
             $product->bundle_items = $this->repository->getBundleItems($product->id);
+        }
+    }
+
+    public function syncPurchasableStatus(int $productId): void {
+        if (!$productId) return;
+
+        $product = $this->findById($productId);
+        if (!$product) return;
+
+        $isPurchasable = false;
+
+        if ($product->is_virtual) {
+            $isPurchasable = true;
+        } elseif ($product->is_bundle) {
+            $isPurchasable = true;
+            $items = $this->repository->getBundleItems($product->id);
+            if (empty($items)) {
+                $isPurchasable = false;
+            } else {
+                foreach ($items as $item) {
+                    $qtyNeeded = $item['qty'] ?? 1;
+                    if ($qtyNeeded <= 0) continue;
+
+                    if (($item['is_virtual'] ?? 0)) {
+                        continue;
+                    }
+
+                    $compStock = (int)($item['stock'] ?? 0);
+                    $compVStock = (int)($item['variant_stock'] ?? 0);
+                    
+                    $totalCompStock = ($item['force_variant'] ?? 0) ? $compVStock : ($compStock + $compVStock);
+                    if ($totalCompStock < $qtyNeeded) {
+                        $isPurchasable = false;
+                        break;
+                    }
+                }
+            }
+        } else {
+            $variants = $this->variantService->getVariants($product->id);
+            $vStock = array_reduce($variants, fn($sum, $v) => $sum + ($v->active ? $v->stock : 0), 0);
+
+            if ($product->force_variant) {
+                $isPurchasable = ($vStock > 0);
+            } else {
+                $isPurchasable = ($product->stock > 0 || $vStock > 0);
+            }
+        }
+
+        $this->repository->updatePurchasableStatus($productId, $isPurchasable);
+        $this->clearCache($productId);
+
+        $parentBundleIds = $this->repository->getParentBundleIds($productId);
+        foreach ($parentBundleIds as $bundleId) {
+            if ($bundleId !== $productId) {
+                $this->syncPurchasableStatus($bundleId);
+            }
         }
     }
 }

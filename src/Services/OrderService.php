@@ -10,6 +10,7 @@ use App\Services\Payment\PaymentServiceInterface;
 use App\Services\EmailServiceInterface;
 use App\Core\Events\EventDispatcherInterface;
 use App\Events\OrderPlaced;
+use App\Services\ProductServiceInterface;
 
 class OrderService implements OrderServiceInterface {
     public function __construct(
@@ -200,6 +201,13 @@ class OrderService implements OrderServiceInterface {
 
             // 3. Replenish Stock
             $this->repository->replenishStock($order->items);
+
+            $productService = \App\Core\Container::getInstance()->get(ProductServiceInterface::class);
+            foreach ($order->items as $item) {
+                if ($item->product_id) {
+                    $productService->syncPurchasableStatus($item->product_id);
+                }
+            }
 
             $this->repository->commit();
 

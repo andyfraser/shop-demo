@@ -33,4 +33,5 @@ interface ProductServiceInterface {
     public function syncTiers(int $productId, array $tiers): void;
     public function syncBundleItems(int $bundleId, array $items): void;
     public function clearCache(int $productId): void;
+    public function syncPurchasableStatus(int $productId): void;
 }

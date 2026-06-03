@@ -21,6 +21,7 @@ class Product extends Model {
     public ?string $virtual_type = null;
     public ?string $file_path = null;
     public ?string $granted_role = null;
+    public int|bool $is_purchasable = 1;
     public string $created_at;
 
     /**

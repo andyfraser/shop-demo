@@ -79,6 +79,7 @@ class ReturnServiceTest extends TestCase {
             $paymentService,
             $emailService
         );
+        \App\Core\Container::getInstance()->set(ProductServiceInterface::class, fn() => $this->productService);
     }
 
     public function testPartialRefundStatus() {

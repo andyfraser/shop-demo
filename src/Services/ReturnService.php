@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use App\Services\OrderServiceInterface;
 use App\Services\Payment\PaymentServiceInterface;
 use App\Services\EmailServiceInterface;
+use App\Services\ProductServiceInterface;
 
 class ReturnService implements ReturnServiceInterface {
     public function __construct(
@@ -123,6 +124,13 @@ class ReturnService implements ReturnServiceInterface {
 
             // 3. Replenish Stock
             $this->repository->replenishStock($return->items);
+
+            $productService = \App\Core\Container::getInstance()->get(ProductServiceInterface::class);
+            foreach ($return->items as $item) {
+                if ($item->product_id) {
+                    $productService->syncPurchasableStatus($item->product_id);
+                }
+            }
 
             $this->repository->commit();
 

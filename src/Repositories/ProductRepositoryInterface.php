@@ -34,4 +34,6 @@ interface ProductRepositoryInterface {
     public function syncTiers(int $productId, array $tiers): void;
     public function getBundleItems(int $bundleId): array;
     public function syncBundleItems(int $bundleId, array $items): void;
+    public function updatePurchasableStatus(int $productId, bool $isPurchasable): void;
+    public function getParentBundleIds(int $productId): array;
 }

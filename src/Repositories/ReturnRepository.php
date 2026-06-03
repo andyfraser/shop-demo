@@ -34,7 +34,7 @@ class ReturnRepository implements ReturnRepositoryInterface {
 
         if ($return) {
             $stmt = $this->db->prepare("
-                SELECT ri.*, p.name as product_name, pv.name as variant_name, oi.unit_price 
+                SELECT ri.*, p.name as product_name, pv.name as variant_name, oi.unit_price, oi.product_id 
                 FROM return_items ri
                 JOIN order_items oi ON ri.order_item_id = oi.id
                 JOIN products p ON oi.product_id = p.id
@@ -61,7 +61,7 @@ class ReturnRepository implements ReturnRepositoryInterface {
 
         foreach ($returns as $return) {
             $stmt = $this->db->prepare("
-                SELECT ri.*, p.name as product_name, pv.name as variant_name, oi.unit_price 
+                SELECT ri.*, p.name as product_name, pv.name as variant_name, oi.unit_price, oi.product_id 
                 FROM return_items ri
                 JOIN order_items oi ON ri.order_item_id = oi.id
                 JOIN products p ON oi.product_id = p.id

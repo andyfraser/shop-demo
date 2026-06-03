@@ -47,6 +47,7 @@ class OrderServiceTest extends TestCase {
         $repository = new \App\Repositories\ProductRepository($this->db, $logger);
         $variantService = new \App\Services\ProductVariantService($repository, $attrService, new \Tests\NullEventDispatcher());
         $this->productService = new ProductService($repository, $attrService, $promoService, $variantService, $logger, new \Tests\NullCache(), new \Tests\NullEventDispatcher());
+        \App\Core\Container::getInstance()->set(ProductServiceInterface::class, fn() => $this->productService);
     }
 
     public function testCreateOrder() {

@@ -371,7 +371,7 @@ class ProductRepository implements ProductRepositoryInterface {
             "SELECT p.*, c.name as cat_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.active = 1 AND (p.stock > 0 OR p.is_virtual = 1 OR p.is_bundle = 1 OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 AND pv.active = 1))
+             WHERE p.active = 1 AND p.is_purchasable = 1
              ORDER BY p.featured DESC, p.created_at DESC
              LIMIT ?"
         );
@@ -523,6 +523,17 @@ class ProductRepository implements ProductRepositoryInterface {
             if (empty($item['product_id']) || empty($item['qty'])) continue;
             $stmt->execute([$bundleId, (int)$item['product_id'], (int)$item['qty']]);
         }
+    }
+
+    public function updatePurchasableStatus(int $productId, bool $isPurchasable): void {
+        $stmt = $this->db->prepare("UPDATE products SET is_purchasable = ? WHERE id = ?");
+        $stmt->execute([(int)$isPurchasable, $productId]);
+    }
+
+    public function getParentBundleIds(int $productId): array {
+        $stmt = $this->db->prepare("SELECT DISTINCT bundle_id FROM product_bundle_items WHERE product_id = ?");
+        $stmt->execute([$productId]);
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
     }
 
     private function normalizeQuery(string $query): string {
