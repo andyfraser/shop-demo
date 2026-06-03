@@ -255,6 +255,9 @@ class CheckoutController {
                 $_SESSION['last_order_id'] = (int)$order_id;
                 
                 return new RedirectResponse('/order/confirm?id=' . $order_id);
+            } catch (\App\Exceptions\OutOfStockException $e) {
+                $errors[] = $e->getMessage();
+                $this->logger->warning("Checkout blocked due to out of stock: " . $e->getMessage());
             } catch (\Exception $e) {
                 $errors[] = "Order creation failed: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine();
                 $this->logger->error("Order creation failed: " . $e->getMessage());

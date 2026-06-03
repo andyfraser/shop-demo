@@ -61,6 +61,68 @@ class OrderRepository implements OrderRepositoryInterface {
         $stockStmt = $this->db->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
         $variantStockStmt = $this->db->prepare("UPDATE product_variants SET stock = stock - ? WHERE id = ?");
 
+        $isMysql = ($this->db->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'mysql');
+        $forUpdate = $isMysql ? " FOR UPDATE" : "";
+
+        // First pass: validate all stocks before writing/decrementing anything
+        foreach ($items as $item) {
+            if ($item instanceof \App\Models\CartItem) {
+                $product = $item->product;
+                $variant = $item->variant;
+                $qty = $item->qty;
+            } else {
+                $product = $item['product'];
+                $variant = $item['variant'] ?? null;
+                $qty = $item['qty'];
+            }
+
+            if (!$product->is_virtual) {
+                if ($variant) {
+                    $checkStmt = $this->db->prepare("SELECT stock, name FROM product_variants WHERE id = ?" . $forUpdate);
+                    $checkStmt->execute([$variant->id]);
+                    $vRow = $checkStmt->fetch(\PDO::FETCH_ASSOC);
+                    if (!$vRow) {
+                        throw new \App\Exceptions\OutOfStockException("Variant not found.");
+                    }
+                    if ($vRow['stock'] < $qty) {
+                        throw new \App\Exceptions\OutOfStockException("Insufficient stock for " . $product->name . " (" . $vRow['name'] . "). Only " . $vRow['stock'] . " left.");
+                    }
+                } elseif ($product->is_bundle) {
+                    $bundleItems = $this->db->prepare(
+                        "SELECT bi.product_id, bi.qty, p.name, p.is_virtual 
+                         FROM product_bundle_items bi 
+                         JOIN products p ON p.id = bi.product_id 
+                         WHERE bi.bundle_id = ?"
+                    );
+                    $bundleItems->execute([$product->id]);
+                    foreach ($bundleItems->fetchAll(\PDO::FETCH_ASSOC) as $bi) {
+                        if (!$bi['is_virtual']) {
+                            $compCheckStmt = $this->db->prepare("SELECT stock, name FROM products WHERE id = ?" . $forUpdate);
+                            $compCheckStmt->execute([$bi['product_id']]);
+                            $compRow = $compCheckStmt->fetch(\PDO::FETCH_ASSOC);
+                            $needed = $qty * $bi['qty'];
+                            if (!$compRow) {
+                                throw new \App\Exceptions\OutOfStockException("Bundle component not found.");
+                            }
+                            if ($compRow['stock'] < $needed) {
+                                throw new \App\Exceptions\OutOfStockException("Insufficient stock for component " . $compRow['name'] . " in bundle " . $product->name . ". Needs " . $needed . ", but only " . $compRow['stock'] . " left.");
+                            }
+                        }
+                    }
+                } else {
+                    $checkStmt = $this->db->prepare("SELECT stock, name FROM products WHERE id = ?" . $forUpdate);
+                    $checkStmt->execute([$product->id]);
+                    $pRow = $checkStmt->fetch(\PDO::FETCH_ASSOC);
+                    if (!$pRow) {
+                        throw new \App\Exceptions\OutOfStockException("Product not found.");
+                    }
+                    if ($pRow['stock'] < $qty) {
+                        throw new \App\Exceptions\OutOfStockException("Insufficient stock for " . $product->name . ". Only " . $pRow['stock'] . " left.");
+                    }
+                }
+            }
+        }
+
         foreach ($items as $item) {
             if ($item instanceof \App\Models\CartItem) {
                 $product = $item->product;

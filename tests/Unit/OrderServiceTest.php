@@ -248,4 +248,46 @@ class OrderServiceTest extends TestCase {
         $this->assertTrue($dispatched, "OrderPlaced event should have been dispatched.");
         $this->assertEquals($orderId, $dispatchedOrder->id);
     }
+
+    public function testCreateOrderWithInsufficientStock() {
+        $product = $this->productService->findById(1);
+        $initialStock = $product->stock;
+
+        $orderData = [
+            'user_id'          => 1,
+            'customer_name'    => 'Test User',
+            'customer_email'   => 'test@example.com',
+            'total'            => 120.00,
+            'total_vat_amount' => 20.00,
+            'shipping_address' => '123 Test St',
+            'notes'            => 'Test notes',
+            'delivery_method'  => 'Standard',
+            'delivery_cost'    => 5.00
+        ];
+
+        // Ordering stock + 5 to ensure it fails
+        $items = [
+            [
+                'product' => $product,
+                'qty'     => $initialStock + 5,
+                'unit_price' => $product->price,
+                'vat_amount' => 20.00
+            ]
+        ];
+
+        $exceptionThrown = false;
+        try {
+            $this->orderService->create($orderData, $items);
+        } catch (\App\Exceptions\OutOfStockException $e) {
+            $exceptionThrown = true;
+            $this->assertStringContainsString("Insufficient stock", $e->getMessage());
+        }
+
+        $this->assertTrue($exceptionThrown, "OutOfStockException should have been thrown.");
+
+        // Check stock was NOT reduced
+        $productAfter = $this->productService->findById(1);
+        $this->assertEquals($initialStock, $productAfter->stock);
+    }
 }
+
