@@ -2,6 +2,8 @@
 
 A demo e-commerce application written in PHP with support for SQLite and MySQL. No frameworks, no Composer, no build step — just PHP 8 and a browser.
 
+For developer guides and instructions, see the [DEV_MANUAL.md](file:///Users/andy/dev/shop-demo/DEV_MANUAL.md).
+
 ![PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
