@@ -53,8 +53,15 @@ class QueueWorkCommand implements CommandInterface {
         try {
             $processedCount = 0;
             $limit = 10;
+            $startTime = time();
 
             while ($processedCount < $limit) {
+                // Limit execution time to 50 seconds to prevent overlapping cron runs
+                if ((time() - $startTime) > 50) {
+                    echo "Worker timeout threshold reached. Exiting worker loop.\n";
+                    break;
+                }
+
                 $job = $this->jobRepository->claimNextPending(date('Y-m-d H:i:s'));
                 if (!$job) {
                     break;

@@ -28,6 +28,7 @@ class Database {
                 }
                 self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+                self::$pdo->setAttribute(PDO::ATTR_TIMEOUT, 5); // 5 seconds busy timeout
                 self::$pdo->exec('PRAGMA foreign_keys = ON');
             } else if ($driver === 'mysql') {
                 $host    = $config['host'] ?? 'localhost';
@@ -54,6 +55,8 @@ class Database {
 
                 self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+                self::$pdo->setAttribute(PDO::ATTR_TIMEOUT, 5); // 5 seconds connection timeout
+                self::$pdo->exec("SET session innodb_lock_wait_timeout=5"); // 5 seconds lock wait timeout
             } else {
                 throw new \Exception("Unsupported database driver: " . $driver);
             }

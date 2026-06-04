@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit {
 
 use App\Commands\QueueWorkCommand;
 use App\Core\Container;
@@ -241,6 +241,47 @@ class QueueWorkerTest extends TestCase {
         $secondClaim = $repo->claimNextPending(date('Y-m-d H:i:s'));
         $this->assertNull($secondClaim);
     }
+
+    public function testWorkerTimeoutExitsLoop() {
+        $job = [
+            'id' => 99,
+            'handler_class' => FailingJobForTest::class,
+            'payload' => serialize(new TestEventForQueue()),
+            'attempts' => 0
+        ];
+
+        $repo = new class($job) implements JobRepositoryInterface {
+            public int $claimedCount = 0;
+            public function __construct(private array $job) {}
+            public function create(array $data): int { return 0; }
+            public function findPending(int $limit = 10): array { return [$this->job]; }
+            public function update(int $id, array $data): bool { return true; }
+            public function claim(int $id, string $startedAt, int $attempts): bool { return true; }
+            public function claimNextPending(string $startedAt): ?array {
+                $this->claimedCount++;
+                return $this->job;
+            }
+            public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
+        };
+
+        // Enable mock time starting at 1000
+        $GLOBALS['mock_time'] = 1000;
+
+        try {
+            $container = new Container();
+            $command = new QueueWorkCommand($repo, $container);
+
+            ob_start();
+            $command->execute();
+            $output = ob_get_clean();
+
+            // The loop should terminate after the first job execution because time advances by 55 seconds
+            $this->assertEquals(1, $repo->claimedCount);
+            $this->assertStringContainsString('Worker timeout threshold reached. Exiting worker loop.', $output);
+        } finally {
+            unset($GLOBALS['mock_time']);
+        }
+    }
 }
 
 class TestEventForQueue extends Event {}
@@ -252,4 +293,16 @@ class FailingJobForTest implements ListenerInterface, ShouldQueue {
     public function getTries(): int { return 3; }
     public function getRetryDelay(): int { return 10; }
     public function useExponentialBackoff(): bool { return false; }
+}
+}
+
+namespace App\Commands {
+    function time() {
+        if (isset($GLOBALS['mock_time'])) {
+            $val = $GLOBALS['mock_time'];
+            $GLOBALS['mock_time'] += 30;
+            return $val;
+        }
+        return \time();
+    }
 }
