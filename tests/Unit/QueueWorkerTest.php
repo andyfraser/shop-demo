@@ -33,6 +33,13 @@ class QueueWorkerTest extends TestCase {
             public function claim(int $id, string $startedAt, int $attempts): bool {
                 return true;
             }
+            private bool $served = false;
+            public function claimNextPending(string $startedAt): ?array {
+                if ($this->served) return null;
+                $this->served = true;
+                $this->job['attempts']++;
+                return $this->job;
+            }
             public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
         };
 
@@ -70,6 +77,13 @@ class QueueWorkerTest extends TestCase {
             public function claim(int $id, string $startedAt, int $attempts): bool {
                 return true;
             }
+            private bool $served = false;
+            public function claimNextPending(string $startedAt): ?array {
+                if ($this->served) return null;
+                $this->served = true;
+                $this->job['attempts']++;
+                return $this->job;
+            }
             public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
         };
 
@@ -103,7 +117,10 @@ class QueueWorkerTest extends TestCase {
                 return true;
             }
             public function claim(int $id, string $startedAt, int $attempts): bool {
-                return false; // Simulation of failed claim (another worker grabbed it)
+                return false;
+            }
+            public function claimNextPending(string $startedAt): ?array {
+                return null; // Simulation of failed claim (another worker grabbed it)
             }
             public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
         };
@@ -117,7 +134,6 @@ class QueueWorkerTest extends TestCase {
 
         // The job should be skipped and not updated or completed/failed by this worker
         $this->assertNull($repo->updatedData);
-        $this->assertStringContainsString('Already processed or claimed by another worker. Skipping.', $output);
     }
 
     public function testCorruptPayloadIsMarkedAsFailed() {
@@ -138,6 +154,13 @@ class QueueWorkerTest extends TestCase {
                 return true;
             }
             public function claim(int $id, string $startedAt, int $attempts): bool { return true; }
+            private bool $served = false;
+            public function claimNextPending(string $startedAt): ?array {
+                if ($this->served) return null;
+                $this->served = true;
+                $this->job['attempts']++;
+                return $this->job;
+            }
             public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
         };
 
@@ -171,6 +194,13 @@ class QueueWorkerTest extends TestCase {
                 return true;
             }
             public function claim(int $id, string $startedAt, int $attempts): bool { return true; }
+            private bool $served = false;
+            public function claimNextPending(string $startedAt): ?array {
+                if ($this->served) return null;
+                $this->served = true;
+                $this->job['attempts']++;
+                return $this->job;
+            }
             public function deleteByStatusAndAge(string $status, int $hours): int { return 0; }
         };
 
@@ -184,6 +214,32 @@ class QueueWorkerTest extends TestCase {
         // Should mark the job as failed with default settings rather than throwing exception out of loop
         $this->assertEquals('failed', $repo->updatedData['status']);
         $this->assertStringContainsString('does not exist', $repo->updatedData['error']);
+    }
+
+    public function testClaimNextPendingConcreteRepository() {
+        $db = \App\Core\Database::getConnection();
+        $db->exec("DELETE FROM jobs");
+        
+        $repo = new \App\Repositories\JobRepository($db);
+        
+        $jobId = $repo->create([
+            'handler_class' => FailingJobForTest::class,
+            'payload' => serialize(new TestEventForQueue()),
+            'status' => 'pending',
+            'attempts' => 0
+        ]);
+        
+        $this->assertGreaterThan(0, $jobId);
+        
+        $claimedJob = $repo->claimNextPending(date('Y-m-d H:i:s'));
+        $this->assertNotNull($claimedJob);
+        $this->assertEquals($jobId, $claimedJob['id']);
+        $this->assertEquals('running', $claimedJob['status']);
+        $this->assertEquals(1, $claimedJob['attempts']);
+        
+        // Trying to claim again should return null
+        $secondClaim = $repo->claimNextPending(date('Y-m-d H:i:s'));
+        $this->assertNull($secondClaim);
     }
 }
 

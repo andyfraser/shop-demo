@@ -51,17 +51,21 @@ class QueueWorkCommand implements CommandInterface {
         }
 
         try {
-            $jobs = $this->jobRepository->findPending(10);
-            $count = count($jobs);
+            $processedCount = 0;
+            $limit = 10;
 
-            if ($count === 0) {
-                return 0;
-            }
+            while ($processedCount < $limit) {
+                $job = $this->jobRepository->claimNextPending(date('Y-m-d H:i:s'));
+                if (!$job) {
+                    break;
+                }
 
-            echo "Processing {$count} jobs...\n";
+                if ($processedCount === 0) {
+                    echo "Processing jobs...\n";
+                }
 
-            foreach ($jobs as $job) {
                 $this->processJob($job);
+                $processedCount++;
             }
         } finally {
             flock($lockFile, LOCK_UN);
@@ -78,17 +82,6 @@ class QueueWorkCommand implements CommandInterface {
         echo "Processing job #{$id} ({$handlerClass})... ";
 
         try {
-            $claimed = $this->jobRepository->claim(
-                $id,
-                date('Y-m-d H:i:s'),
-                $job['attempts'] + 1
-            );
-
-            if (!$claimed) {
-                echo "Already processed or claimed by another worker. Skipping.\n";
-                return;
-            }
-
             // Safe unserialization with error check
             $event = @unserialize($job['payload']);
             if (!($event instanceof Event)) {

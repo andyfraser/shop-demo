@@ -76,6 +76,106 @@ class JobRepository implements JobRepositoryInterface {
         return $stmt->rowCount() > 0;
     }
 
+    public function claimNextPending(string $startedAt): ?array {
+        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $now = date('Y-m-d H:i:s');
+        
+        if ($driver === 'mysql') {
+            try {
+                $this->db->beginTransaction();
+                
+                $stmt = $this->db->prepare("
+                    SELECT id, attempts FROM jobs 
+                    WHERE status = 'pending'
+                        AND available_at <= :now
+                    ORDER BY created_at ASC 
+                    LIMIT 1
+                    FOR UPDATE SKIP LOCKED
+                ");
+                $stmt->execute(['now' => $now]);
+                $job = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($job) {
+                    $nextAttempt = $job['attempts'] + 1;
+                    $update = $this->db->prepare("
+                        UPDATE jobs 
+                        SET status = 'running', 
+                            started_at = :started_at, 
+                            attempts = :attempts 
+                        WHERE id = :id
+                    ");
+                    $update->execute([
+                        'id' => $job['id'],
+                        'started_at' => $startedAt,
+                        'attempts' => $nextAttempt
+                    ]);
+                    
+                    $stmtFull = $this->db->prepare("SELECT * FROM jobs WHERE id = ?");
+                    $stmtFull->execute([$job['id']]);
+                    $fullJob = $stmtFull->fetch(PDO::FETCH_ASSOC);
+                    
+                    $this->db->commit();
+                    return $fullJob;
+                }
+                
+                $this->db->commit();
+            } catch (\Throwable $e) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+                throw $e;
+            }
+        } else {
+            try {
+                $this->db->beginTransaction();
+                
+                $stmt = $this->db->prepare("
+                    SELECT id, attempts FROM jobs 
+                    WHERE status = 'pending'
+                        AND available_at <= :now
+                    ORDER BY created_at ASC 
+                    LIMIT 1
+                ");
+                $stmt->execute(['now' => $now]);
+                $job = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($job) {
+                    $nextAttempt = $job['attempts'] + 1;
+                    $update = $this->db->prepare("
+                        UPDATE jobs 
+                        SET status = 'running', 
+                            started_at = :started_at, 
+                            attempts = :attempts 
+                        WHERE id = :id AND status = 'pending'
+                    ");
+                    $success = $update->execute([
+                        'id' => $job['id'],
+                        'started_at' => $startedAt,
+                        'attempts' => $nextAttempt
+                    ]);
+                    
+                    if ($success && $update->rowCount() > 0) {
+                        $stmtFull = $this->db->prepare("SELECT * FROM jobs WHERE id = ?");
+                        $stmtFull->execute([$job['id']]);
+                        $fullJob = $stmtFull->fetch(PDO::FETCH_ASSOC);
+                        
+                        $this->db->commit();
+                        return $fullJob;
+                    }
+                }
+                
+                $this->db->commit();
+            } catch (\Throwable $e) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+                throw $e;
+            }
+        }
+        
+        return null;
+    }
+
     public function deleteByStatusAndAge(string $status, int $hours): int {
         $stmt = $this->db->prepare("
             DELETE FROM jobs 
