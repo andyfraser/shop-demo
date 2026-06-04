@@ -220,4 +220,39 @@ class SchedulerTest extends TestCase {
             }
         }
     }
+
+    public function testSchedulerSkipsWhenCommandIsLocked(): void {
+        $command = new MockCommand();
+        $command->name = 'locked:command';
+        $command->schedule = 'everyMinute';
+        
+        $lockDir = dirname(__DIR__, 2) . '/logs';
+        if (!is_dir($lockDir)) {
+            mkdir($lockDir, 0755, true);
+        }
+        $lockFilePath = $lockDir . '/scheduler_task_locked_command.lock';
+        
+        $fp = fopen($lockFilePath, 'c');
+        $this->assertTrue($fp !== false);
+        $locked = flock($fp, LOCK_EX | LOCK_NB);
+        $this->assertTrue($locked);
+
+        try {
+            $settings = new SchedulerMockSettingsService();
+            $scheduler = new Scheduler($this->db, $settings, [$command]);
+            
+            ob_start();
+            $scheduler->run();
+            $output = ob_get_clean();
+            
+            $this->assertFalse($command->executed);
+            $this->assertStringContainsString('Command locked:command is already running. Skipping', $output);
+        } finally {
+            flock($fp, LOCK_UN);
+            fclose($fp);
+            if (file_exists($lockFilePath)) {
+                @unlink($lockFilePath);
+            }
+        }
+    }
 }

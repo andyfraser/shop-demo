@@ -63,6 +63,33 @@ class Scheduler {
             $name = $command->getName();
 
             if ($this->isDue($name, $frequency)) {
+                $lockDir = dirname(__DIR__, 2) . '/logs';
+                if (!is_dir($lockDir)) {
+                    mkdir($lockDir, 0755, true);
+                }
+                
+                $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $name);
+                $lockFilePath = $lockDir . '/scheduler_task_' . $safeName . '.lock';
+                
+                $lockFile = @fopen($lockFilePath, 'c');
+                if (!$lockFile) {
+                    echo "Executing command: {$name} ({$frequency})... Error: Could not open or create lock file at {$lockFilePath}\n";
+                    if ($this->logger) {
+                        $this->logger->error("Could not open/create lock file for task {name}", ['name' => $name]);
+                    }
+                    continue;
+                }
+
+                $acquired = flock($lockFile, LOCK_EX | LOCK_NB);
+                if (!$acquired) {
+                    echo "Command {$name} is already running. Skipping.\n";
+                    if ($this->logger) {
+                        $this->logger->info("Scheduled command {name} execution skipped because another instance holds the lock.", ['name' => $name]);
+                    }
+                    fclose($lockFile);
+                    continue;
+                }
+
                 echo "Executing command: {$name} ({$frequency})... ";
                 if ($this->logger) {
                     $this->logger->info("Executing scheduled command: {name} ({frequency})", [
@@ -91,6 +118,8 @@ class Scheduler {
                     }
                 } finally {
                     $this->updateLastRun($name);
+                    flock($lockFile, LOCK_UN);
+                    fclose($lockFile);
                 }
             } else {
                 echo "Command {$name} is not due yet.\n";
