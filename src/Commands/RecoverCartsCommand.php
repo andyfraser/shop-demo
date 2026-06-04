@@ -2,14 +2,15 @@
 
 namespace App\Commands;
 
-use App\Services\EmailServiceInterface;
+use App\Core\Events\EventDispatcherInterface;
+use App\Events\AbandonCartDetected;
 use Psr\Log\LoggerInterface;
 use PDO;
 
 class RecoverCartsCommand implements CommandInterface {
     public function __construct(
         private PDO $db,
-        private EmailServiceInterface $emailService,
+        private EventDispatcherInterface $eventDispatcher,
         private ?LoggerInterface $logger = null
     ) {}
 
@@ -48,28 +49,25 @@ class RecoverCartsCommand implements CommandInterface {
         }
 
         foreach ($abandonedCarts as $cart) {
-            echo "Sending recovery email to {$cart['email']}... ";
+            echo "Queueing recovery email to {$cart['email']}... ";
             
             try {
-                $success = $this->emailService->sendAbandonedCartEmail($cart['email'], $cart['name']);
+                // Update timestamp first to prevent double queueing
+                $update = $this->db->prepare("UPDATE carts SET recovery_email_sent_at = ? WHERE id = ?");
+                $update->execute([date('Y-m-d H:i:s'), $cart['id']]);
+
+                // Dispatch event (which will be queued via RecoverCartListener implementing ShouldQueue)
+                $event = new AbandonCartDetected($cart['id'], $cart['email'], $cart['name']);
+                $this->eventDispatcher->dispatch($event);
                 
-                if ($success) {
-                    $update = $this->db->prepare("UPDATE carts SET recovery_email_sent_at = ? WHERE id = ?");
-                    $update->execute([date('Y-m-d H:i:s'), $cart['id']]);
-                    echo "Done.\n";
-                    if ($this->logger) {
-                        $this->logger->info("RecoverCartsCommand: Recovery email sent to {email}", ['email' => $cart['email']]);
-                    }
-                } else {
-                    echo "Failed (mail() returned false).\n";
-                    if ($this->logger) {
-                        $this->logger->warning("RecoverCartsCommand: Failed to send recovery email to {email}", ['email' => $cart['email']]);
-                    }
+                echo "Done.\n";
+                if ($this->logger) {
+                    $this->logger->info("RecoverCartsCommand: Queued recovery email for {email}", ['email' => $cart['email']]);
                 }
             } catch (\Exception $e) {
                 echo "Error: " . $e->getMessage() . "\n";
                 if ($this->logger) {
-                    $this->logger->error("RecoverCartsCommand: Error processing cart {id} for {email}: {error}", [
+                    $this->logger->error("RecoverCartsCommand: Error queueing cart {id} for {email}: {error}", [
                         'id' => $cart['id'],
                         'email' => $cart['email'],
                         'error' => $e->getMessage()

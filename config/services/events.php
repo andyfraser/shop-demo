@@ -21,6 +21,8 @@ use App\Listeners\InventoryListener;
 use App\Listeners\ReviewListener;
 use App\Listeners\AuditListener;
 use App\Listeners\ProductAvailabilityListener;
+use App\Events\AbandonCartDetected;
+use App\Listeners\RecoverCartListener;
 
 use Psr\Log\LoggerInterface;
 
@@ -107,6 +109,12 @@ return function($c, array $config) {
             $dispatcher->addListener(
                 SettingUpdated::class,
                 fn($e) => $c->get(AuditListener::class)->handle($e)
+            );
+
+            // Recover Cart Listener (Asynchronous via string reference)
+            $dispatcher->addListener(
+                AbandonCartDetected::class,
+                RecoverCartListener::class
             );
             
             return $dispatcher;
