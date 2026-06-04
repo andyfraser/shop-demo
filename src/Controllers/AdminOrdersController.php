@@ -73,6 +73,7 @@ class AdminOrdersController {
 
         $allowed = [
             \App\Models\Order::STATUS_PENDING,
+            \App\Models\Order::STATUS_PAID,
             \App\Models\Order::STATUS_CONFIRMED,
             \App\Models\Order::STATUS_SHIPPED,
             \App\Models\Order::STATUS_DELIVERED,

@@ -221,40 +221,52 @@ class CheckoutController {
                     $this->virtualProductService->deductGiftCardBalance($giftCardCode, $giftCardDiscount);
                 }
 
-                // Process payment (currently using the default manual gateway)
-                $paymentResult = $this->payment->process('manual', $order);
+                // Process payment using the configured gateway from settings
+                $activeGateway = $this->settings->get('payment_gateway') ?: 'mock_card';
+                try {
+                    $paymentResult = $this->payment->process($activeGateway, $order, [
+                        'card_number' => trim($post['card_number'] ?? ''),
+                        'card_expiry' => trim($post['card_expiry'] ?? ''),
+                        'card_cvc'    => trim($post['card_cvc'] ?? '')
+                    ]);
+                } catch (\RuntimeException $e) {
+                    $paymentResult = \App\Services\Payment\PaymentResult::failure($e->getMessage(), 'error');
+                }
                 
                 if ($paymentResult->success) {
                     $this->orderService->updatePaymentInfo(
                         $order_id, 
-                        'manual', 
+                        $activeGateway, 
                         $paymentResult->status, 
                         $paymentResult->transactionId
                     );
                     
-                    // If payment is successful, we can also confirm the order
-                    $this->orderService->updateStatus($order_id, \App\Models\Order::STATUS_CONFIRMED, $user?->id, 'Paid via ' . $paymentResult->transactionId);
+                    // If payment is successful, transition status to PAID
+                    $this->orderService->updateStatus($order_id, \App\Models\Order::STATUS_PAID, $user?->id, 'Paid via transaction ' . $paymentResult->transactionId);
                     
                     $this->logger->info("New order placed and paid: ID {id}, Total {total}, Email {email}", [
                         'id' => $order_id,
                         'total' => $total,
                         'email' => $email
                     ]);
+
+                    $this->cart->clear();
+                    
+                    $this->auth->sessionStart();
+                    $_SESSION['last_order_id'] = (int)$order_id;
+                    
+                    return new RedirectResponse('/order/confirm?id=' . $order_id);
                 } else {
+                    // Payment failed or timed out: update order status, replenish reserved stock, retain cart items for retry, and show alert error
+                    $this->orderService->updatePaymentInfo($order_id, $activeGateway, 'failed', null);
+                    $this->orderService->cancelOrder($order_id, 'Payment failed: ' . $paymentResult->message);
+                    
+                    $errors[] = 'Payment declined: ' . $paymentResult->message;
                     $this->logger->warning("Order created but payment failed: ID {id}, Reason: {reason}", [
                         'id' => $order_id,
                         'reason' => $paymentResult->message
                     ]);
                 }
-
-                $order = $this->orderService->findById($order_id);
-
-                $this->cart->clear();
-                
-                $this->auth->sessionStart();
-                $_SESSION['last_order_id'] = (int)$order_id;
-                
-                return new RedirectResponse('/order/confirm?id=' . $order_id);
             } catch (\App\Exceptions\OutOfStockException $e) {
                 $errors[] = $e->getMessage();
                 $this->logger->warning("Checkout blocked due to out of stock: " . $e->getMessage());

@@ -139,6 +139,18 @@
     </div>
 
     <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
+      <h3 style="margin:0 0 1rem;font-size:1rem;">Payment Gateway</h3>
+      <div class="form-group">
+        <label>Active Payment Gateway</label>
+        <select name="payment_gateway" class="form-control">
+          <option value="mock_card" <?= ($settings->payment_gateway ?? 'mock_card') === 'mock_card' ? 'selected' : '' ?>>Credit / Debit Card (Mock)</option>
+          <option value="manual" <?= ($settings->payment_gateway ?? '') === 'manual' ? 'selected' : '' ?>>Manual / Bypass Payment</option>
+        </select>
+        <small style="color:var(--ink-2);">Choose the default gateway used on storefront checkout. If "Manual / Bypass Payment" is selected, the card details entry form is bypassed.</small>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
       <h3 style="margin:0 0 1rem;font-size:1rem;">Mobile Navigation</h3>
 
       <p style="font-size:.85rem;color:var(--ink-2);margin:0 0 1rem;">

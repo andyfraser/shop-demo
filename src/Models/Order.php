@@ -4,6 +4,7 @@ namespace App\Models;
 
 class Order extends Model {
     public const STATUS_PENDING        = 'pending';
+    public const STATUS_PAID           = 'paid';
     public const STATUS_CONFIRMED      = 'confirmed';
     public const STATUS_SHIPPED        = 'shipped';
     public const STATUS_DELIVERED      = 'delivered';
@@ -42,6 +43,7 @@ class Order extends Model {
     public ?string $user_email = null;
     public ?string $promotion_name = null;
     public ?int $item_count = 0;
+    public ?string $cancel_reason = null;
 
     /** @var OrderItem[] */
     public array $items = [];
@@ -50,7 +52,7 @@ class Order extends Model {
     public array $applied_promotions = [];
 
     public function canBeCancelled(): bool {
-        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_CONFIRMED]);
+        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_PAID, self::STATUS_CONFIRMED]);
     }
 
     public function canBeReturned(): bool {
@@ -69,6 +71,7 @@ class Order extends Model {
     public function getStatusBadgeClass(): string {
         return match($this->status) {
             self::STATUS_PENDING        => 'badge-warning',
+            self::STATUS_PAID           => 'badge-success',
             self::STATUS_CONFIRMED      => 'badge-info',
             self::STATUS_SHIPPED        => 'badge-info',
             self::STATUS_DELIVERED      => 'badge-success',

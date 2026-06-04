@@ -76,4 +76,70 @@ class PaymentServiceTest extends TestCase {
         $this->assertFalse($result->success);
         $this->assertStringContainsString('An error occurred', $result->message);
     }
+
+    public function testMockCardGatewaySuccess() {
+        $gateway = new \App\Services\Payment\MockCardGateway();
+        $this->paymentService->registerGateway($gateway);
+
+        $order = new Order($this->logger);
+        $order->id = 123;
+        $order->total = 100.0;
+
+        $result = $this->paymentService->process('mock_card', $order, ['card_cvc' => '123']);
+        $this->assertTrue($result->success);
+        $this->assertEquals('paid', $result->status);
+        $this->assertStringContainsString('MOCK-ST-SUCCESS-', $result->transactionId);
+    }
+
+    public function testMockCardGatewayDeclinedInsufficientFunds() {
+        $gateway = new \App\Services\Payment\MockCardGateway();
+        $this->paymentService->registerGateway($gateway);
+
+        $order = new Order($this->logger);
+        $order->id = 123;
+        $order->total = 100.0;
+
+        $result = $this->paymentService->process('mock_card', $order, ['card_cvc' => '999']);
+        $this->assertFalse($result->success);
+        $this->assertStringContainsString('Insufficient funds', $result->message);
+    }
+
+    public function testMockCardGatewayTimeoutException() {
+        $gateway = new \App\Services\Payment\MockCardGateway();
+        $this->paymentService->registerGateway($gateway);
+
+        $order = new Order($this->logger);
+        $order->id = 123;
+        $order->total = 100.0;
+
+        $result = $this->paymentService->process('mock_card', $order, ['card_cvc' => '998']);
+        $this->assertFalse($result->success);
+        $this->assertStringContainsString('An error occurred', $result->message);
+    }
+
+    public function testMockCardGatewayExpired() {
+        $gateway = new \App\Services\Payment\MockCardGateway();
+        $this->paymentService->registerGateway($gateway);
+
+        $order = new Order($this->logger);
+        $order->id = 123;
+        $order->total = 100.0;
+
+        $result = $this->paymentService->process('mock_card', $order, ['card_cvc' => '997']);
+        $this->assertFalse($result->success);
+        $this->assertStringContainsString('expired', $result->message);
+    }
+
+    public function testMockCardGatewayFraud() {
+        $gateway = new \App\Services\Payment\MockCardGateway();
+        $this->paymentService->registerGateway($gateway);
+
+        $order = new Order($this->logger);
+        $order->id = 123;
+        $order->total = 100.0;
+
+        $result = $this->paymentService->process('mock_card', $order, ['card_cvc' => '996']);
+        $this->assertFalse($result->success);
+        $this->assertStringContainsString('fraud', $result->message);
+    }
 }

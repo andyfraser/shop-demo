@@ -6,7 +6,7 @@
     <a href="/admin/orders/export<?= !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '' ?>" class="btn btn-outline btn-sm">
       <span>📥</span> Export CSV
     </a>
-    <?php foreach ([''=>'All','pending'=>'Pending','confirmed'=>'Confirmed','shipped'=>'Shipped','delivered'=>'Delivered','cancelled'=>'Cancelled'] as $s => $label): ?>
+    <?php foreach ([''=>'All','pending'=>'Pending','paid'=>'Paid','confirmed'=>'Confirmed','shipped'=>'Shipped','delivered'=>'Delivered','cancelled'=>'Cancelled'] as $s => $label): ?>
       <a href="?status=<?= $s ?>"
          class="btn <?= $filter === $s ? 'btn-primary' : 'btn-outline' ?> btn-sm">
         <?= $label ?>
@@ -37,6 +37,11 @@
               <span class="badge <?= $o->getStatusBadgeClass() ?>">
                 <?= ucfirst($o->status) ?>
               </span>
+              <?php if ($o->status === 'cancelled' && $o->cancel_reason): ?>
+                <div class="text-xs text-muted mt-1" style="max-width:180px; white-space:normal; line-height:1.2;">
+                  <?= h($o->cancel_reason) ?>
+                </div>
+              <?php endif; ?>
             </td>
             <td><?= date('d M Y, H:i', strtotime($o->created_at)) ?></td>
             <td><a href="/admin/orders/detail?id=<?= $o->id ?>" class="btn btn-outline btn-sm">View</a></td>
@@ -58,6 +63,7 @@
     <div class="batch-actions">
       <select name="status" class="form-control" style="width:auto;">
         <option value="">Set status to…</option>
+        <option value="paid">Paid</option>
         <option value="confirmed">Confirmed</option>
         <option value="shipped">Shipped</option>
         <option value="delivered">Delivered</option>

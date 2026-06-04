@@ -244,7 +244,8 @@ class OrderRepository implements OrderRepositoryInterface {
     public function find(\App\Core\QueryCriteria $criteria): array {
         $sql = "SELECT o.*, 
                        COALESCE(u.name, o.customer_name) as user_name,
-                       COALESCE(u.email, o.customer_email) as user_email
+                       COALESCE(u.email, o.customer_email) as user_email,
+                       (SELECT notes FROM order_status_history WHERE order_id = o.id AND status = 'cancelled' ORDER BY id DESC LIMIT 1) as cancel_reason
                 FROM orders o
                 LEFT JOIN users u ON o.user_id = u.id";
         

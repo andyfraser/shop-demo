@@ -52,6 +52,7 @@ use App\Services\AttributeService;
 use App\Services\Payment\PaymentServiceInterface;
 use App\Services\Payment\PaymentService;
 use App\Services\Payment\ManualGateway;
+use App\Services\Payment\MockCardGateway;
 use App\Services\ReturnServiceInterface;
 use App\Services\ReturnService;
 use App\Services\WishlistServiceInterface;
@@ -209,6 +210,7 @@ return function($c, array $config) {
         PaymentServiceInterface::class => function($c) {
             $service = new PaymentService($c->get(LoggerInterface::class));
             $service->registerGateway(new ManualGateway());
+            $service->registerGateway(new MockCardGateway());
             return $service;
         },
         ReturnServiceInterface::class => function($c) {

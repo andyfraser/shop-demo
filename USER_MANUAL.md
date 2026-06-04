@@ -412,6 +412,22 @@ The system supports five types of virtual products, each with distinct behaviors
 
 ---
 
+### Sandbox Payment Gateway Simulator
+
+Demoshop features an offline **Mock Credit Card Gateway** (`mock_card`) to test payments without any external internet connection or API keys. During checkout, an interactive simulated hosted widget will capture credit card inputs and allow you to mock various processor behaviors based on the **CVC code** entered:
+
+*   **Test Card Number:** `4242 4242 4242 4242` (Auto-detects as Visa)
+*   **Expiry Date:** Any future date (e.g. `12/30`)
+*   **Simulated Latency:** Every card submission is processed with a randomized network latency (400ms to 1200ms) to test loading states and client-side responsiveness.
+*   **CVC Trigger Codes:**
+    *   `999` &rarr; **Decline: Insufficient Funds** (Displays card declined warning, retains cart items)
+    *   `998` &rarr; **Timeout Error** (Throws a gateway connection timeout exception, retains cart items)
+    *   `997` &rarr; **Decline: Expired Card**
+    *   `996` &rarr; **Decline: Suspected Fraud**
+    *   *Any other CVC* &rarr; **Successful Transaction** (Changes order status to **Paid** and redirects to confirmation)
+
+---
+
 ### Frictionless Digital Checkout
 
 To ensure the highest possible conversion rate, Demoshop implements smart checkout bypassing:

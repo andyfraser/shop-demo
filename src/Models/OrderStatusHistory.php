@@ -16,6 +16,7 @@ class OrderStatusHistory extends Model {
     public function getStatusBadgeClass(): string {
         return match ($this->status) {
             Order::STATUS_PENDING        => 'badge-warning',
+            Order::STATUS_PAID           => 'badge-success',
             Order::STATUS_CONFIRMED      => 'badge-info',
             Order::STATUS_SHIPPED        => 'badge-primary',
             Order::STATUS_DELIVERED      => 'badge-success',

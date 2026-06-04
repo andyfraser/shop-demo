@@ -29,6 +29,7 @@ class Settings extends Model {
     public string $log_path = '';
     public string $error_log_path = '';
     public int $log_retention_days = 30;
+    public string $payment_gateway = 'mock_card';
 
     /**
      * Fill settings from an associative array of key => value pairs.

@@ -6,6 +6,7 @@ $available_actions = [];
 $getStatusBadgeClass = function($status) {
     return match($status) {
         'pending'        => 'badge-warning',
+        'paid'           => 'badge-success',
         'confirmed'      => 'badge-info',
         'shipped'        => 'badge-info',
         'delivered'      => 'badge-success',
@@ -20,6 +21,13 @@ $getStatusBadgeClass = function($status) {
 
 switch($order_status) {
     case 'pending':
+        $available_actions = [
+            ['status' => 'paid', 'label' => 'Mark as Paid', 'class' => 'btn-primary'],
+            ['status' => 'confirmed', 'label' => 'Confirm Order', 'class' => 'btn-outline'],
+            ['status' => 'cancelled', 'label' => 'Cancel Order', 'class' => 'btn-outline', 'danger' => true]
+        ];
+        break;
+    case 'paid':
         $available_actions = [
             ['status' => 'confirmed', 'label' => 'Confirm Order', 'class' => 'btn-primary'],
             ['status' => 'cancelled', 'label' => 'Cancel Order', 'class' => 'btn-outline', 'danger' => true]
@@ -344,7 +352,7 @@ switch($order_status) {
             <input type="hidden" name="id" value="<?= (int)$order->id ?>">
           <div class="form-group mb-1">
             <select name="status" class="form-control text-sm" style="min-height:32px;padding:.3rem .6rem;">
-              <?php foreach (['pending','confirmed','shipped','delivered','cancelled','returning','not refunded','fully refunded', 'partial refund'] as $s): ?>
+              <?php foreach (['pending','paid','confirmed','shipped','delivered','cancelled','returning','not refunded','fully refunded', 'partial refund'] as $s): ?>
                 <option value="<?= $s ?>" <?= $order->status === $s ? 'selected' : '' ?>>
                   <?= ucfirst($s) ?>
                 </option>

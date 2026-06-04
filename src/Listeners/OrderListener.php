@@ -17,34 +17,33 @@ class OrderListener implements ListenerInterface {
     ) {}
 
     public function handle(Event $event): void {
-        if ($event instanceof OrderPlaced) {
-            $this->handleOrderPlaced($event);
-        } elseif ($event instanceof OrderStatusUpdated) {
+        if ($event instanceof OrderStatusUpdated) {
             $this->handleOrderStatusUpdated($event);
         } elseif ($event instanceof RefundProcessed) {
             $this->handleRefundProcessed($event);
         }
     }
 
-    private function handleOrderPlaced(OrderPlaced $event): void {
-        $order = $event->order;
-        $items = $event->items;
-
-        $emailItems = array_map(fn($i) => [
-            'name' => property_exists($i, 'product_name') ? $i->product_name : ($i->name ?? ''),
-            'variant_name' => $i->variant_name ?? '',
-            'quantity' => $i->quantity,
-            'unit_price' => $i->unit_price,
-            'vat_rate' => $i->vat_rate,
-            'vat_amount' => $i->vat_amount,
-            'metadata' => $i->metadata ?? null,
-            'bundle_components' => $i->bundle_components ?? []
-        ], $items);
-
-        $this->emailService->sendOrderConfirmation($order, $emailItems);
-    }
-
     private function handleOrderStatusUpdated(OrderStatusUpdated $event): void {
+        $order = $event->order;
+
+        // Send order confirmation email upon transition to Paid status
+        if ($event->newStatus === \App\Models\Order::STATUS_PAID) {
+            $emailItems = array_map(fn($i) => [
+                'name' => property_exists($i, 'product_name') ? $i->product_name : ($i->name ?? ''),
+                'variant_name' => $i->variant_name ?? '',
+                'quantity' => $i->quantity,
+                'unit_price' => $i->unit_price,
+                'vat_rate' => $i->vat_rate,
+                'vat_amount' => $i->vat_amount,
+                'metadata' => $i->metadata ?? null,
+                'bundle_components' => $i->bundle_components ?? []
+            ], $order->items);
+
+            $this->emailService->sendOrderConfirmation($order, $emailItems);
+            return;
+        }
+
         // Only send emails for specific status transitions
         $notifyStatuses = [
             \App\Models\Order::STATUS_SHIPPED,

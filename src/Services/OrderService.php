@@ -141,6 +141,7 @@ class OrderService implements OrderServiceInterface {
             }
 
             if ($order) {
+                $order->status = $status;
                 $this->eventDispatcher->dispatch(new \App\Events\OrderStatusUpdated($order, $oldStatus, $status));
             }
         } catch (\Exception $e) {
@@ -186,7 +187,7 @@ class OrderService implements OrderServiceInterface {
             $this->repository->beginTransaction();
 
             // 1. Process Refund if confirmed/paid
-            if ($order->status === Order::STATUS_CONFIRMED && $order->payment_method) {
+            if (($order->status === Order::STATUS_PAID || $order->status === Order::STATUS_CONFIRMED) && $order->payment_method) {
                 $result = $this->paymentService->refund($order->payment_method, $order);
                 if ($result->success) {
                     $this->repository->updateRefundInfo($id, $result->status, $order->total);

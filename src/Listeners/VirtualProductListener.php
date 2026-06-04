@@ -23,9 +23,9 @@ class VirtualProductListener implements ListenerInterface {
 
     private function handleOrderStatusUpdated(OrderStatusUpdated $event): void {
         $order = $event->order;
-        // Fulfill digital items when status updates to confirmed
-        if ($event->newStatus === Order::STATUS_CONFIRMED) {
-            $this->logger->info("Order #{$order->id} confirmed, triggering virtual product fulfillment.");
+        // Fulfill digital items when status updates to paid or confirmed
+        if ($event->newStatus === Order::STATUS_PAID || $event->newStatus === Order::STATUS_CONFIRMED) {
+            $this->logger->info("Order #{$order->id} paid or confirmed, triggering virtual product fulfillment.");
             $this->virtualProductService->fulfillDigitalItems($order, $order->items);
         }
     }

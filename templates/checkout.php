@@ -208,9 +208,118 @@
             <div id="gift-card-message" style="font-size: 0.75rem; margin-top: 0.4rem; display: none;"></div>
           </div>
 
+          <!-- Secure Payment Simulated Hosted Element -->
+          <?php if ((settings()->payment_gateway ?? 'mock_card') === 'mock_card'): ?>
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--line);" id="payment-gateway-container">
+            <label style="font-size: 0.85rem; font-weight: 600; color: var(--ink); display: block; margin-bottom: 0.5rem;">
+              Secure Card Payment (Simulated)
+            </label>
+            <div id="secure-payment-element" style="border: 1px solid var(--line); border-radius: var(--radius); padding: 0.75rem 1rem; background: var(--bg); transition: border-color 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; gap: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;">
+                <span style="font-size: 1.1rem; filter: grayscale(1);">💳</span>
+                <input type="text" id="card_number" name="card_number" placeholder="4242 4242 4242 4242" required maxlength="19" autocomplete="cc-number"
+                       style="border: none; background: transparent; outline: none; width: 100%; font-family: monospace; font-size: 0.95rem; color: var(--ink);">
+                <span id="card-brand-logo" style="font-weight: 600; font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em;"></span>
+              </div>
+              <div style="display: flex; gap: 1rem;">
+                <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-size: 0.8rem; color: var(--ink-2); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Exp</span>
+                  <input type="text" id="card_expiry" name="card_expiry" placeholder="MM/YY" required maxlength="5" autocomplete="cc-exp"
+                         style="border: none; background: transparent; outline: none; width: 100%; font-family: monospace; font-size: 0.95rem; color: var(--ink);">
+                </div>
+                <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem; border-left: 1px solid var(--line); padding-left: 1rem;">
+                  <span style="font-size: 0.8rem; color: var(--ink-2); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">CVC</span>
+                  <input type="text" id="card_cvc" name="card_cvc" placeholder="123" required maxlength="4" autocomplete="cc-csc"
+                         style="border: none; background: transparent; outline: none; width: 100%; font-family: monospace; font-size: 0.95rem; color: var(--ink);">
+                </div>
+              </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.7rem; color: var(--ink-2);">
+              <span>🔒 Encrypted Sandboxed Gateway</span>
+              <span style="font-weight: 600; color: var(--accent);">Mock Mode</span>
+            </div>
+
+            <!-- Simulated Card Controls Guide -->
+            <div style="margin-top: 1rem; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.75rem; font-size: 0.75rem; line-height: 1.4;">
+              <strong style="color: var(--accent); display: block; margin-bottom: 0.25rem;">💡 Sandbox Testing Codes:</strong>
+              Use card <code style="background: var(--bg-hover); padding: 1px 4px; border-radius: 3px; font-family: monospace;">4242 4242 4242 4242</code>.
+              <div style="margin-top: 0.25rem;">Enter one of these CVC numbers to test responses:</div>
+              <ul style="margin: 0.25rem 0 0 1rem; padding: 0; list-style-type: none;">
+                <li>• <code style="font-family: monospace; font-weight: 600;">999</code>: Insufficient Funds (Decline)</li>
+                <li>• <code style="font-family: monospace; font-weight: 600;">998</code>: Gateway Timeout</li>
+                <li>• <code style="font-family: monospace; font-weight: 600;">997</code>: Expired Card</li>
+                <li>• <code style="font-family: monospace; font-weight: 600;">996</code>: Suspected Fraud</li>
+                <li>• Any other CVC: Payment success &rarr; Order status: <strong>Paid</strong></li>
+              </ul>
+            </div>
+          </div>
+          <?php endif; ?>
+
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const widget = document.getElementById('secure-payment-element');
+              if (!widget) return; // Exit if gateway widget is not active/rendered (e.g. manual bypass)
+              
+              const cardNum = document.getElementById('card_number');
+              const cardExp = document.getElementById('card_expiry');
+              const cardCvc = document.getElementById('card_cvc');
+              const brandLogo = document.getElementById('card-brand-logo');
+
+              // Highlight/focus container wrapper to mimic Hosted Fields iframe focus
+              [cardNum, cardExp, cardCvc].forEach(input => {
+                input.addEventListener('focus', () => {
+                  widget.style.borderColor = 'var(--accent)';
+                  widget.style.boxShadow = '0 0 0 2px rgba(var(--accent-rgb), 0.15)';
+                });
+                input.addEventListener('blur', () => {
+                  widget.style.borderColor = 'var(--line)';
+                  widget.style.boxShadow = 'none';
+                });
+              });
+
+              // Format card number to groups of 4 digits
+              cardNum.addEventListener('input', function(e) {
+                let val = e.target.value.replace(/\D/g, '');
+                if (val.length > 0) {
+                  // Detect Brand
+                  if (val.startsWith('4')) {
+                    brandLogo.textContent = 'Visa';
+                  } else if (val.startsWith('5')) {
+                    brandLogo.textContent = 'Mastercard';
+                  } else if (val.startsWith('3')) {
+                    brandLogo.textContent = 'Amex';
+                  } else {
+                    brandLogo.textContent = '';
+                  }
+                } else {
+                  brandLogo.textContent = '';
+                }
+
+                let formatted = val.match(/.{1,4}/g);
+                e.target.value = formatted ? formatted.join(' ') : '';
+              });
+
+              // Format expiry input: MM/YY
+              cardExp.addEventListener('input', function(e) {
+                let val = e.target.value.replace(/\D/g, '');
+                if (val.length >= 2) {
+                  e.target.value = val.substring(0, 2) + '/' + val.substring(2, 4);
+                } else {
+                  e.target.value = val;
+                }
+              });
+
+              // Only allow digits in CVC
+              cardCvc.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+              });
+            });
+          </script>
+
           <!-- Security Alert Info -->
           <div class="alert alert-info" style="margin-top:1rem;font-size:.8rem;">
-            🔒 No payment required — this is a demo store.
+            🔒 Safe payment processing simulator — no actual funds are charged.
           </div>
           <button type="submit" id="place-order-btn" class="btn btn-primary"
                   style="width:100%;justify-content:center;padding:.8rem;font-size:1rem;margin-top:.75rem;" 
