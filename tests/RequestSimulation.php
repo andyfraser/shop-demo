@@ -42,8 +42,8 @@ trait RequestSimulation {
             $baseUrlSetting = $settings->get('base_url');
             $baseUrl = $baseUrlSetting !== null ? (string)$baseUrlSetting : ($config['site']['base_url'] ?? '');
             
-            $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
-            if ($baseUrl === '/public' && str_ends_with(rtrim($docRoot, '/\\'), 'public')) {
+            $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+            if ($baseUrl === '/public' && !str_starts_with($scriptName, '/public')) {
                 $baseUrl = '';
             }
             define('BASE_URL', $baseUrl);

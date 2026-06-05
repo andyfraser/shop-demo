@@ -147,8 +147,8 @@ try {
         
         // Server-agnostic normalization: if the web server document root points to the public directory,
         // then '/public' is redundant and shouldn't be prefixed on storefront URLs.
-        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
-        if ($baseUrl === '/public' && str_ends_with(rtrim($docRoot, '/\\'), 'public')) {
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        if ($baseUrl === '/public' && !str_starts_with($scriptName, '/public')) {
             $baseUrl = '';
         }
         define('BASE_URL', $baseUrl);
