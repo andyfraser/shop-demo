@@ -40,7 +40,13 @@ trait RequestSimulation {
 
         if (!defined('BASE_URL')) {
             $baseUrlSetting = $settings->get('base_url');
-            define('BASE_URL', $baseUrlSetting !== null ? (string)$baseUrlSetting : ($config['site']['base_url'] ?? ''));
+            $baseUrl = $baseUrlSetting !== null ? (string)$baseUrlSetting : ($config['site']['base_url'] ?? '');
+            
+            $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+            if ($baseUrl === '/public' && str_ends_with(rtrim($docRoot, '/\\'), 'public')) {
+                $baseUrl = '';
+            }
+            define('BASE_URL', $baseUrl);
         }
 
         if (!defined('SITE_NAME')) {

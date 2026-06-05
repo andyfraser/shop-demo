@@ -143,7 +143,15 @@ try {
 
     if (!defined('BASE_URL')) {
         $baseUrlSetting = $settings->get('base_url');
-        define('BASE_URL', $baseUrlSetting !== null ? (string)$baseUrlSetting : ($config['site']['base_url'] ?? ''));
+        $baseUrl = $baseUrlSetting !== null ? (string)$baseUrlSetting : ($config['site']['base_url'] ?? '');
+        
+        // Server-agnostic normalization: if the web server document root points to the public directory,
+        // then '/public' is redundant and shouldn't be prefixed on storefront URLs.
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+        if ($baseUrl === '/public' && str_ends_with(rtrim($docRoot, '/\\'), 'public')) {
+            $baseUrl = '';
+        }
+        define('BASE_URL', $baseUrl);
     }
 
     define('SITE_NAME', $settings->get('site_name'));
