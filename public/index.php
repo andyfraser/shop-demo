@@ -222,33 +222,36 @@ if (defined('DEBUG_MODE') && DEBUG_MODE) {
 }
 
 // Handle request
-// 1. Server-agnostic static file handler for assets requested under /public/ that hit the front controller
+// 1. Server-agnostic static file handler for assets that hit the front controller
 $path = parse_url($request->getUri(), PHP_URL_PATH) ?: '';
+$filePath = null;
 if (strpos($path, '/public/') === 0) {
     $relativePath = substr($path, 7); // Strip '/public' but keep leading slash
     $filePath = __DIR__ . $relativePath;
-    
-    if (file_exists($filePath) && is_file($filePath)) {
-        $ext = pathinfo($filePath, PATHINFO_EXTENSION);
-        $mimeTypes = [
-            'css'  => 'text/css',
-            'js'   => 'application/javascript',
-            'png'  => 'image/png',
-            'jpg'  => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'gif'  => 'image/gif',
-            'ico'  => 'image/x-icon',
-            'svg'  => 'image/svg+xml',
-            'webp' => 'image/webp',
-            'woff' => 'font/woff',
-            'woff2'=> 'font/woff2',
-        ];
-        $contentType = $mimeTypes[strtolower($ext)] ?? 'application/octet-stream';
-        header("Content-Type: " . $contentType);
-        header("Cache-Control: public, max-age=31536000");
-        readfile($filePath);
-        exit;
-    }
+} elseif (preg_match('#^/(css|js|images|uploads)/#', $path) || in_array($path, ['/favicon.ico', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png'])) {
+    $filePath = __DIR__ . $path;
+}
+
+if ($filePath && file_exists($filePath) && is_file($filePath)) {
+    $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+    $mimeTypes = [
+        'css'  => 'text/css',
+        'js'   => 'application/javascript',
+        'png'  => 'image/png',
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif'  => 'image/gif',
+        'ico'  => 'image/x-icon',
+        'svg'  => 'image/svg+xml',
+        'webp' => 'image/webp',
+        'woff' => 'font/woff',
+        'woff2'=> 'font/woff2',
+    ];
+    $contentType = $mimeTypes[strtolower($ext)] ?? 'application/octet-stream';
+    header("Content-Type: " . $contentType);
+    header("Cache-Control: public, max-age=31536000");
+    readfile($filePath);
+    exit;
 }
 
 // 2. Serve static files via built-in server fallback for non-/public paths
