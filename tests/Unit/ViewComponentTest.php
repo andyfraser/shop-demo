@@ -82,5 +82,7 @@ class ViewComponentTest extends TestCase {
         
         $this->assertStringContainsString('Test Product', $html);
         $this->assertStringContainsString('/product/test-product', $html);
+        $this->assertStringContainsString('class="quickview-btn"', $html);
+        $this->assertStringContainsString('data-slug="test-product"', $html);
     }
 }

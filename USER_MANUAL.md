@@ -63,6 +63,7 @@ Welcome to **Demoshop**, a lightweight, high-performance e-commerce demonstratio
 *   **Hierarchical Navigation:** Explore products through a multi-tier category menu.
 *   **Advanced Search:** Use the search bar to find products. Sort results by price, name, or date.
 *   **Product Details:** View high-quality images, descriptions, inventory status, and related products.
+*   **Product Quick View:** Preview product images, pricing, promotion info, stock levels, select options/variants, and add items directly to your cart via an AJAX-powered pop-up modal, without leaving the catalog page.
 *   **Customer Reviews:** Read and submit ratings (1-5 stars) and comments. New reviews are moderated by admins before appearing publicly.
 *   **Smart Related Products:** Discovers items using a weighted relevance algorithm (prioritizing shared attributes like Brand/Color and same-category items).
 *   **Recently Viewed:** Automatically tracks your last 7 viewed items in a dedicated section at the bottom of the page, sorted with the most recent items on the left.

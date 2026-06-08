@@ -323,6 +323,22 @@ class StorefrontController {
 
         $this->productService->attachActivePromotions([$product], $this->authService->currentUser());
 
+        if ($request->getQuery('quickview') || ($request->isAjax() && $request->getQuery('quickview'))) {
+            $user = $this->authService->currentUser();
+            $is_in_wishlist = false;
+            if ($user) {
+                $is_in_wishlist = $this->wishlistService->isInWishlist($user->id, $product->id);
+            }
+            $avg_rating = $this->reviewService->getAverageRating($product->id);
+
+            return new HtmlResponse($this->renderer->renderPartial('partials/product_quickview', [
+                'product'         => $product,
+                'is_logged_in'    => (bool)$user,
+                'is_in_wishlist'   => $is_in_wishlist,
+                'avg_rating'      => $avg_rating,
+            ]));
+        }
+
         $breadcrumb = $product->category_id ? $this->categoryService->getBreadcrumb($product->category_id) : [];
 
         // Track Recently Viewed

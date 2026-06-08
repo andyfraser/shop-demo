@@ -736,3 +736,179 @@ function copyShareUrl() {
         showToast('Failed to copy link.', 'error');
     }
 }
+
+// ── Product Quick View ───────────────────────────────────────────────────────
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.quickview-btn');
+    if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        openQuickView(btn.dataset.slug);
+    }
+});
+
+async function openQuickView(slug) {
+    let modal = document.getElementById('quickview-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'quickview-modal';
+        modal.className = 'quickview-modal';
+        modal.innerHTML = `
+            <div class="quickview-modal-backdrop"></div>
+            <div class="quickview-modal-content">
+                <button type="button" class="quickview-modal-close" aria-label="Close modal">&times;</button>
+                <div class="quickview-modal-body">
+                    <div style="display:flex; justify-content:center; align-items:center; min-height:350px;">
+                        <span style="font-size:1.2rem; color:var(--ink-2);">Loading product...</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        const backdrop = modal.querySelector('.quickview-modal-backdrop');
+        const closeBtn = modal.querySelector('.quickview-modal-close');
+        
+        const closeFunc = () => {
+            modal.classList.remove('active');
+            document.removeEventListener('keydown', handleEsc);
+        };
+
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') closeFunc();
+        };
+
+        backdrop.addEventListener('click', closeFunc);
+        closeBtn.addEventListener('click', closeFunc);
+        
+        modal.closeQuickView = closeFunc;
+        modal.handleEsc = handleEsc;
+    }
+
+    const body = modal.querySelector('.quickview-modal-body');
+    body.innerHTML = `
+        <div style="display:flex; justify-content:center; align-items:center; min-height:350px;">
+            <div class="spinner" style="border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: qv-spin 0.8s linear infinite;"></div>
+        </div>
+    `;
+
+    modal.classList.add('active');
+    document.addEventListener('keydown', modal.handleEsc);
+
+    try {
+        const res = await fetch('/product/' + encodeURIComponent(slug) + '?quickview=1', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!res.ok) throw new Error('Failed to load product');
+        
+        const html = await res.text();
+        body.innerHTML = html;
+
+        initQuickViewModalFeatures(modal);
+    } catch (err) {
+        body.innerHTML = `
+            <div style="padding: 3rem 1.5rem; text-align: center;">
+                <p style="color: var(--accent-2); font-weight: 600; margin-bottom: 1rem;">Failed to load product details.</p>
+                <button type="button" class="btn btn-primary btn-sm" onclick="this.closest('.quickview-modal').closeQuickView()">Close</button>
+            </div>
+        `;
+    }
+}
+
+function initQuickViewModalFeatures(modal) {
+    const variantSelect = modal.querySelector('#qv-variant-select');
+    const displayPrice = modal.querySelector('#qv-display-price');
+    const stockStatus = modal.querySelector('#qv-stock-status');
+    const variantIdInput = modal.querySelector('#qv-selected-variant-id');
+    const qtyInput = modal.querySelector('#qv-qty');
+    const addToCartBtn = modal.querySelector('#qv-add-to-cart-btn');
+    const lowStockThreshold = variantSelect ? parseInt(variantSelect.dataset.lowStockThreshold || 0) : 0;
+
+    if (variantSelect) {
+        variantSelect.addEventListener('change', function() {
+            const option = variantSelect.options[variantSelect.selectedIndex];
+            const price = parseFloat(option.dataset.price);
+            const stock = parseInt(option.dataset.stock);
+            const vid = option.value;
+
+            // Update price
+            displayPrice.textContent = formatMoney(price);
+
+            // Update hidden variant ID
+            if (variantIdInput) variantIdInput.value = vid;
+
+            // Update stock status
+            let badgeHtml = '';
+            if (stock > lowStockThreshold) {
+                badgeHtml = '<span class="badge badge-success">✓ In Stock</span>';
+                if (addToCartBtn) addToCartBtn.disabled = false;
+            } else if (stock > 0) {
+                badgeHtml = `<span class="badge badge-warning">⚠ Only ${stock} left</span>`;
+                if (addToCartBtn) addToCartBtn.disabled = false;
+            } else {
+                badgeHtml = '<span class="badge badge-danger">✗ Out of Stock</span>';
+                if (addToCartBtn) addToCartBtn.disabled = true;
+            }
+            if (stockStatus) stockStatus.innerHTML = badgeHtml;
+
+            // Update quantity max
+            if (qtyInput) {
+                qtyInput.max = stock;
+                if (parseInt(qtyInput.value) > stock) {
+                    qtyInput.value = stock || 1;
+                }
+            }
+        });
+    }
+
+    const form = modal.querySelector('#qv-add-to-cart-form');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = form.querySelector('[type=submit]');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Adding…';
+
+            const msgEl = modal.querySelector('#qv-cart-message');
+
+            try {
+                const slug = form.querySelector('[name=slug]').value;
+                const data = await postAjax('/product/' + encodeURIComponent(slug), {
+                    product_id: form.querySelector('[name=product_id]').value,
+                    variant_id: form.querySelector('[name=variant_id]')?.value || '',
+                    slug:       form.querySelector('[name=slug]').value,
+                    qty:        form.querySelector('[name=qty]').value,
+                    recipient_email: form.querySelector('[name=recipient_email]')?.value || '',
+                    sender_name: form.querySelector('[name=sender_name]')?.value || '',
+                    message:     form.querySelector('[name=message]')?.value || '',
+                });
+
+                if (data.ok) {
+                    updateCartBadge(data.cart_count);
+                    if (msgEl) {
+                        msgEl.innerHTML = `<div class="alert alert-success" style="margin-bottom:0.75rem; padding:0.5rem 0.75rem; font-size:0.85rem; border-radius:var(--radius);">${data.message}</div>`;
+                    }
+                    showToast(data.message, 'success');
+                    
+                    setTimeout(() => {
+                        modal.closeQuickView();
+                    }, 1200);
+                } else {
+                    showToast(data.message || 'Something went wrong.', 'error');
+                }
+            } catch {
+                showToast('Request failed. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    }
+}
+
