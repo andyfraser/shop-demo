@@ -3,9 +3,10 @@
 // Variables expected: $page_title (string), $search_query (string, optional)
 // Shared via Renderer: $current_user, $cart_count, $nav_tree
 // Uses: h(), csrf_token(), BASE_URL, SITE_NAME, SITE_NAME_PLAIN
+$s = settings();
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="<?= h($s->theme ?? 'default') ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,7 +19,6 @@
 <?php
 $_top      = count($nav_tree);
 $_children = array_sum(array_map(fn($c) => count($c->children), $nav_tree));
-$s = settings();
 $mobile_nav_expanded = (
     $_top      <= $s->mobile_nav_max_top &&
     ($_top + $_children) <= $s->mobile_nav_max_combined

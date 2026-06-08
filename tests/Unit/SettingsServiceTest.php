@@ -79,6 +79,21 @@ class SettingsServiceTest extends TestCase {
         $this->assertEquals('£', $all['currency_symbol']);
     }
 
+    public function testThemeSettings() {
+        $settings = $this->service->getSettings();
+        $this->assertEquals('default', $settings->theme);
+
+        // Save a valid theme
+        $this->service->set('theme', 'midnight');
+        $settings = $this->service->getSettings();
+        $this->assertEquals('midnight', $settings->theme);
+
+        // Save an invalid theme (should fallback to default)
+        $this->service->set('theme', 'invalid-theme-name');
+        $settings = $this->service->getSettings();
+        $this->assertEquals('default', $settings->theme);
+    }
+
     public function testHandlesMissingTableGracefully() {
         $emptyDb = new \PDO('sqlite::memory:');
         $emptyDb->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);

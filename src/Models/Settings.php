@@ -30,6 +30,27 @@ class Settings extends Model {
     public string $error_log_path = '';
     public int $log_retention_days = 30;
     public string $payment_gateway = 'mock_card';
+    public string $theme = 'default';
+
+    /**
+     * Get list of available storefront themes.
+     */
+    public static function getAvailableThemes(): array {
+        return [
+            'default' => [
+                'name' => 'Default (Warm Sand)',
+                'colors' => ['#c8622a', '#e8dfd0', '#f5f0e8', '#1a1410'] // Accent, Warm, Sand, Ink
+            ],
+            'midnight' => [
+                'name' => 'Midnight Dark',
+                'colors' => ['#ff7a22', '#1d212a', '#0f1115', '#ffffff'] // Accent, Warm, Sand, Ink
+            ],
+            'forest' => [
+                'name' => 'Forest Moss',
+                'colors' => ['#2d8a54', '#dbe7e1', '#edf3f0', '#111d16'] // Accent, Warm, Sand, Ink
+            ]
+        ];
+    }
 
     /**
      * Fill settings from an associative array of key => value pairs.
@@ -46,7 +67,11 @@ class Settings extends Model {
                 } elseif ($type === 'boolean') {
                     $this->$key = filter_var($value, FILTER_VALIDATE_BOOLEAN);
                 } else {
-                    $this->$key = (string)$value;
+                    $valStr = (string)$value;
+                    if ($key === 'theme' && !array_key_exists($valStr, self::getAvailableThemes())) {
+                        $valStr = 'default';
+                    }
+                    $this->$key = $valStr;
                 }
             } else {
                 // Trigger __set and the warning

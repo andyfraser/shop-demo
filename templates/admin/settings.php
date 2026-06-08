@@ -18,6 +18,81 @@
     <?= csrf_field() ?>
 
     <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
+      <h3 style="margin:0 0 1rem;font-size:1rem;">Appearance</h3>
+      <p style="font-size:.85rem;color:var(--ink-2);margin:0 0 1rem;">
+        Choose the storefront design theme. This applies to storefront pages only.
+      </p>
+
+      <div class="theme-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:1rem;">
+        <?php 
+          $availableThemes = \App\Models\Settings::getAvailableThemes();
+          $currentTheme = $settings->theme ?? 'default';
+          foreach ($availableThemes as $themeId => $themeData): 
+        ?>
+          <div class="theme-card<?= $currentTheme === $themeId ? ' active' : '' ?>" 
+               onclick="selectTheme('<?= h($themeId) ?>')"
+               style="border: 2px solid <?= $currentTheme === $themeId ? 'var(--accent)' : 'var(--line)' ?>; border-radius: 4px; padding: 1rem; cursor: pointer; transition: all .15s ease; position: relative;">
+            <div style="font-weight: 600; font-size: .875rem; margin-bottom: .75rem; color: var(--ink);"><?= h($themeData['name']) ?></div>
+            
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <?php foreach ($themeData['colors'] as $color): ?>
+                <span style="width: 16px; height: 16px; border-radius: 50%; background-color: <?= h($color) ?>; border: 1px solid var(--line); display: inline-block;" title="<?= h($color) ?>"></span>
+              <?php endforeach; ?>
+            </div>
+            
+            <?php if ($currentTheme === $themeId): ?>
+              <span class="theme-check" style="position: absolute; top: 8px; right: 8px; background: var(--accent); color: var(--white); border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 10px;">✓</span>
+            <?php endif; ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+
+      <input type="hidden" name="theme" id="selected-theme" value="<?= h($currentTheme) ?>">
+
+      <script>
+        function selectTheme(themeId) {
+          // Set hidden input
+          document.getElementById('selected-theme').value = themeId;
+          
+          // Toggle active visual states
+          const cards = document.querySelectorAll('.theme-card');
+          cards.forEach(card => {
+            card.style.borderColor = 'var(--line)';
+            // Remove checkmark
+            const check = card.querySelector('.theme-check');
+            if (check) {
+              check.remove();
+            }
+          });
+          
+          // Set active card border
+          const activeCard = window.event.currentTarget;
+          activeCard.style.borderColor = 'var(--accent)';
+          
+          // Add checkmark
+          if (!activeCard.querySelector('.theme-check')) {
+            const check = document.createElement('span');
+            check.className = 'theme-check';
+            check.style.position = 'absolute';
+            check.style.top = '8px';
+            check.style.right = '8px';
+            check.style.background = 'var(--accent)';
+            check.style.color = 'var(--white)';
+            check.style.borderRadius = '50%';
+            check.style.width = '16px';
+            check.style.height = '16px';
+            check.style.display = 'flex';
+            check.style.alignItems = 'center';
+            check.style.justifyContent = 'center';
+            check.style.fontSize = '10px';
+            check.innerText = '✓';
+            activeCard.appendChild(check);
+          }
+        }
+      </script>
+    </div>
+
+    <div class="card" style="max-width:560px;margin-bottom:1.5rem;">
       <h3 style="margin:0 0 1rem;font-size:1rem;">Store</h3>
 
       <div class="form-group">

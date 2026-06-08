@@ -24,6 +24,48 @@
     --danger-ink:  #922b21;
     --warning-ink: #b7770d;
     --warning-bg:  #fef9e7;
+
+    /* Dynamic Theme Mappings */
+    --nav-bg:      #1a1410;
+    --footer-bg:   #1a1410;
+}
+
+/* ── Midnight Dark Theme ────────────────────────────────────────────────── */
+html[data-theme="midnight"] {
+    --ink:        #ffffff;
+    --ink-2:      #beb5ab;
+    --ink-3:      #8c8277;
+    --sand:       #0f1115;
+    --warm:       #1d212a;
+    --accent:     #ff7a22;
+    --accent-2:   #e65c00;
+    --line:       rgba(255,255,255,.12);
+    --white:      #161920;
+    --nav-bg:     #161920;
+    --footer-bg:  #0a0b0d;
+    --shadow:     0 2px 20px rgba(0,0,0,.5);
+    --shadow-lg:  0 8px 40px rgba(0,0,0,.7);
+    
+    /* Dark Mode Status Adjustments */
+    --warning-bg: #2c2512;
+    --warning-ink:#f39c12;
+    --danger-ink: #f9bcbc;
+}
+
+/* ── Forest Moss Theme ──────────────────────────────────────────────────── */
+html[data-theme="forest"] {
+    --ink:        #111d16;
+    --ink-2:      #385243;
+    --ink-3:      #597364;
+    --sand:       #edf3f0;
+    --warm:       #dbe7e1;
+    --accent:     #2d8a54;
+    --accent-2:   #1b5934;
+    --line:       rgba(17,29,22,.12);
+    --white:      #ffffff;
+    --nav-bg:     #111d16;
+    --footer-bg:  #111d16;
+    --shadow:     0 2px 20px rgba(17,29,22,.06);
 }
 
 .btn-delete {
@@ -196,7 +238,7 @@ button, input, select, textarea { font: inherit; }
 }
 
 /* ── Nav ──────────────────────────────────────────────────────────────────── */
-.site-nav { background: var(--ink); }
+.site-nav { background: var(--nav-bg); }
 .nav-inner {
     max-width: 1280px; margin: 0 auto;
     padding: 0 2rem;
@@ -685,7 +727,7 @@ label.toggle-row input:checked + .toggle-track::after { transform: translateX(18
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .site-footer {
-    background: var(--ink); color: rgba(255,255,255,.5);
+    background: var(--footer-bg); color: rgba(255,255,255,.5);
     text-align: center; padding: 2rem; font-size: .8rem; margin-top: auto;
 }
 .site-footer a { color: rgba(255,255,255,.7); }
