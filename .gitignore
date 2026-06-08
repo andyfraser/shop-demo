@@ -21,3 +21,4 @@ storage/cache/*
 storage/downloads/*
 !storage/downloads/.gitkeep
 storage/server.pid
+.obsidian/

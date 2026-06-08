@@ -1,4 +1,15 @@
 <?php // templates/account.php ?>
+<style>
+.btn-cancel-order {
+  color: var(--danger-ink);
+  border-color: var(--danger-ink);
+}
+.btn-cancel-order:hover {
+  background: var(--danger-ink) !important;
+  color: var(--white) !important;
+  border-color: var(--danger-ink) !important;
+}
+</style>
 <div class="container">
   <h1 class="page-title">My Account</h1>
 
@@ -110,7 +121,7 @@
                         <form method="POST" action="/account/cancel-order" onsubmit="return confirm('Are you sure you want to cancel this order?');">
                           <?= csrf_field() ?>
                           <input type="hidden" name="id" value="<?= $o->id ?>">
-                          <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger-ink);border-color:var(--danger-ink);">Cancel</button>
+                          <button type="submit" class="btn btn-outline btn-sm btn-cancel-order">Cancel</button>
                         </form>
                       <?php endif; ?>
                     </td>
