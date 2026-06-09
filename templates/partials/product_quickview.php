@@ -21,14 +21,8 @@
     </h2>
 
     <?php if ($avg_rating > 0): ?>
-      <div class="qv-rating" style="color:var(--gold); font-size: 0.95rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
-        <?php
-          $full_stars = floor($avg_rating);
-          $half_star = ($avg_rating - $full_stars) >= 0.5 ? 1 : 0;
-          $empty_stars = 5 - $full_stars - $half_star;
-          echo str_repeat('★', $full_stars) . ($half_star ? '½' : '') . str_repeat('☆', $empty_stars);
-        ?>
-        <span style="color:var(--ink-2); font-size:0.8rem; margin-left:0.25rem;">(<?= number_format($avg_rating, 1) ?>/5)</span>
+      <div class="qv-rating" style="font-size: 0.95rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
+        <?= new \App\View\Components\StarRating($avg_rating, true) ?>
       </div>
     <?php endif; ?>
 

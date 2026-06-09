@@ -2,15 +2,17 @@
 
 <div class="container">
 
-  <div class="breadcrumb">
-    <a href="<?= BASE_URL ?>/">Home</a>
-    <?php foreach ($breadcrumb as $c): ?>
-      <span class="sep">›</span>
-      <a href="/category/<?= h($c->slug) ?>"><?= h($c->name) ?></a>
-    <?php endforeach; ?>
-    <span class="sep">›</span>
-    <span><?= h($product->name) ?></span>
-  </div>
+  <?php
+    $crumbs = ['Home' => BASE_URL . '/'];
+    foreach ($breadcrumb as $c) {
+        $crumbs[] = [
+            'label' => $c->name,
+            'url' => "/category/{$c->slug}"
+        ];
+    }
+    $crumbs[] = $product->name;
+  ?>
+  <?= new \App\View\Components\Breadcrumbs($crumbs) ?>
 
   <?php if ($flash_success): ?>
     <?= (new \App\View\Components\Alert($flash_success))->render() ?>
@@ -260,8 +262,8 @@
                 <div style="font-weight: 600;"><?= h($r->user_name) ?></div>
                 <div style="font-size: 0.85rem; color: var(--ink-2);"><?= date('d M Y', strtotime($r->created_at)) ?></div>
               </div>
-              <div style="color:var(--gold); font-size: 0.85rem; margin-bottom: 0.75rem;">
-                <?= $r->getStarRating() ?>
+              <div style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+                <?= new \App\View\Components\StarRating((float)$r->rating) ?>
               </div>
               <div style="line-height: 1.6;"><?= nl2br(h($r->comment)) ?></div>
             </div>

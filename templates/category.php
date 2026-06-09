@@ -2,17 +2,16 @@
 
 <div class="container">
 
-  <div class="breadcrumb">
-    <a href="<?= BASE_URL ?>/">Home</a>
-    <?php foreach ($breadcrumb as $c): ?>
-      <span class="sep">›</span>
-      <?php if ($c->id === $category->id): ?>
-        <span><?= h($c->name) ?></span>
-      <?php else: ?>
-        <a href="/category/<?= h($c->slug) ?>"><?= h($c->name) ?></a>
-      <?php endif; ?>
-    <?php endforeach; ?>
-  </div>
+  <?php
+    $crumbs = ['Home' => BASE_URL . '/'];
+    foreach ($breadcrumb as $c) {
+        $crumbs[] = [
+            'label' => $c->name,
+            'url' => $c->id === $category->id ? null : "/category/{$c->slug}"
+        ];
+    }
+  ?>
+  <?= new \App\View\Components\Breadcrumbs($crumbs) ?>
 
   <h1 class="page-title"><?= h($category->name) ?></h1>
 

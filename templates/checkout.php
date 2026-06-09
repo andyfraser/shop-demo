@@ -123,74 +123,7 @@
 
       <div>
         <div class="card" style="position:sticky;top:84px;">
-          <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem;">Order Summary</h2>
-          <?php foreach ($items as $item): 
-             $p = $item->product;
-             $v = $item->variant;
-          ?>
-            <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--line);font-size:.875rem;">
-              <span>
-                <?= h($p->name) ?>
-                <?php if ($v): ?>
-                  <div style="font-size:0.75rem;color:var(--ink-2);margin-top:0.1rem;">Option: <?= h($v->name) ?></div>
-                <?php endif; ?>
-                <?php if ($item->metadata): 
-                  $meta = json_decode($item->metadata, true);
-                  if (!empty($meta['recipient_email'])):
-                ?>
-                  <div style="font-size:0.75rem;color:var(--ink-2);margin-top:0.2rem;background:var(--bg-2);padding:0.3rem 0.5rem;border-radius:4px;border:1px solid var(--line);max-width:220px;">
-                    <div style="font-weight:600;color:var(--accent);">Gift Card:</div>
-                    To: <?= h($meta['recipient_email']) ?>
-                    <?php if (!empty($meta['sender_name'])): ?><br>From: <?= h($meta['sender_name']) ?><?php endif; ?>
-                    <?php if (!empty($meta['message'])): ?><br><em style="font-size:0.7rem;">"<?= h($meta['message']) ?>"</em><?php endif; ?>
-                  </div>
-                <?php 
-                  endif;
-                endif; ?>
-                × <?= $item->qty ?>
-              </span>
-              <strong><?= money($item->getSubtotal()) ?></strong>
-            </div>
-          <?php endforeach; ?>
-          <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;margin-top:.5rem;">
-            <span>Subtotal</span>
-            <strong><?= money($total) ?></strong>
-          </div>
-          
-          <!-- Promo Code Row -->
-          <?php if ($discount > 0): ?>
-            <div id="applied-promos" style="margin-top:.5rem; border-top:1px solid var(--line); padding-top:.5rem;">
-              <?php foreach ($applied_promotions as $promo): ?>
-                <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.875rem;color:var(--accent);">
-                  <span>Discount (<?= h($promo->name) ?>)</span>
-                  <strong>-<?= money($cart->getPromotionDiscount($promo)) ?></strong>
-                </div>
-              <?php endforeach; ?>
-            </div>
-          <?php endif; ?>
-          
-          <!-- Delivery Cost Row -->
-          <div id="delivery-row" style="display:none;justify-content:space-between;padding:.4rem 0;font-size:.875rem;">
-            <span>Delivery</span>
-            <strong id="delivery-cost"></strong>
-          </div>
-
-          <!-- Gift Card Applied Row -->
-          <div id="gift-card-row" style="display: <?= ($gift_card_discount > 0) ? 'flex' : 'none' ?>; justify-content: space-between; padding: 0.4rem 0; font-size: 0.875rem; color: var(--accent-2); border-top: 1px solid var(--line); margin-top: 0.5rem; padding-top: 0.5rem;">
-            <span>Gift Card Applied</span>
-            <strong id="gift-card-amount">-<?= money($gift_card_discount ?? 0.0) ?></strong>
-          </div>
-
-          <!-- Final Total Row -->
-          <div style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.15rem;font-weight:700;margin-top:.5rem;border-top:2px solid var(--line);">
-            <span>Total</span>
-            <span id="final-total" style="color:var(--accent-2)"><?= money($grand_total) ?></span>
-          </div>
-
-          <!-- VAT Inclusion Row -->
-          <div id="vat-row" style="font-size:.85rem;color:var(--ink-2);text-align:right;margin-top:.25rem;">
-            Includes <span id="vat-amount"><?= money($total_item_vat * ($total > 0 ? (1 - ($discount / $total)) : 1)) ?></span> VAT
-          </div>
+          <?= new \App\View\Components\OrderSummary($cart, true, $items, $gift_card_discount ?? 0.0) ?>
 
           <!-- Gift Card Input Card Section -->
           <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--line);">

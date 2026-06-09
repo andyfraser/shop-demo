@@ -36,14 +36,7 @@ $mobile_nav_expanded = (
     ?>
     <a href="<?= BASE_URL ?>/" class="logo"><?= h($logo_prefix) ?><?php if ($logo_suffix !== ''): ?><span><?= h($logo_suffix) ?></span><?php endif ?></a>
 
-    <form class="header-search" action="<?= BASE_URL ?>/search" method="GET">
-      <div class="search-input-wrapper">
-        <input type="text" name="q" placeholder="Search products…"
-               value="<?= h($search_query ?? '') ?>" autocomplete="off">
-        <div class="search-suggestions" style="display: none;"></div>
-      </div>
-      <button type="submit">Search</button>
-    </form>
+    <?= new \App\View\Components\SearchBar($search_query ?? '', false) ?>
 
     <div class="header-right">
       <nav class="header-actions">
@@ -89,15 +82,7 @@ $mobile_nav_expanded = (
   </div>
 </header>
 
-<div class="mobile-search-bar">
-  <form action="<?= BASE_URL ?>/search" method="GET">
-    <div class="search-input-wrapper">
-      <input type="text" name="q" placeholder="Search products…" value="<?= h($search_query ?? '') ?>" autocomplete="off">
-      <div class="search-suggestions" style="display: none;"></div>
-    </div>
-    <button type="submit">Search</button>
-  </form>
-</div>
+<?= new \App\View\Components\SearchBar($search_query ?? '', true) ?>
 
 <nav class="site-nav<?= $mobile_nav_expanded ? '' : ' nav-collapsed' ?>" id="site-nav">
   <div class="nav-inner">
@@ -141,7 +126,7 @@ $mobile_nav_expanded = (
           $type = (strpos($key, 'error') !== false || $key === 'err') ? 'error' : 
                   ((strpos($key, 'success') !== false || $key === 'msg') ? 'success' : $key);
         ?>
-        <div class="alert alert-<?= $type ?>" onclick="this.remove()"><?= h($f) ?></div>
+        <?= new \App\View\Components\Alert($f, $type) ?>
       <?php endif; ?>
     <?php endforeach; ?>
   </div>

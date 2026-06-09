@@ -125,9 +125,7 @@ switch($order_status) {
       <div class="card mb-3">
         <div class="flex-between flex-start mb-2">
           <h2 class="section-title">Order Items</h2>
-          <span class="badge <?= $order->getStatusBadgeClass() ?>" style="font-size:.8rem;">
-            <?= ucfirst($order->status) ?>
-          </span>
+          <?= new \App\View\Components\StatusBadge(ucfirst($order->status), $order->getStatusBadgeClass(), 'font-size:.8rem;') ?>
         </div>
         <table class="data-table no-shadow">
           <thead>
@@ -274,7 +272,7 @@ switch($order_status) {
                 <tr>
                   <td><a href="/admin/returns/detail?id=<?= $r->id ?>"><strong>#<?= str_pad($r->id, 4, '0', STR_PAD_LEFT) ?></strong></a></td>
                   <td class="text-sm"><?= date('d M Y', strtotime($r->created_at)) ?></td>
-                  <td><span class="badge <?= $r->getStatusBadgeClass() ?>"><?= ucfirst($r->status) ?></span></td>
+                  <td><?= new \App\View\Components\StatusBadge(ucfirst($r->status), $r->getStatusBadgeClass()) ?></td>
                   <td><?= $r->refund_amount > 0 ? money($r->refund_amount) : '-' ?></td>
                   <td class="text-sm text-muted nowrap" style="max-width:200px;"><?= h($r->reason) ?></td>
                 </tr>
@@ -378,9 +376,7 @@ switch($order_status) {
               <div class="timeline-dot"></div>
               <div class="timeline-content">
                 <div class="timeline-header">
-                  <span class="timeline-status badge <?= $h->getStatusBadgeClass() ?>" style="font-size:.7rem;">
-                    <?= h(ucfirst($h->status)) ?>
-                  </span>
+                  <?= new \App\View\Components\StatusBadge(ucfirst($h->status), $h->getStatusBadgeClass(), 'font-size:.7rem;', 'timeline-status badge ' . $h->getStatusBadgeClass()) ?>
                   <span class="timeline-date"><?= date('d M, H:i', strtotime($h->created_at)) ?></span>
                 </div>
                 <?php if ($h->notes): ?>

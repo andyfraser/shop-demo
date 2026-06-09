@@ -29,15 +29,11 @@
             <td style="vertical-align:top;"><strong><?= h($r->product_name) ?></strong></td>
             <td style="vertical-align:top;"><?= h($r->user_name) ?></td>
             <td style="vertical-align:top;">
-              <div style="color:var(--gold);font-size:.8rem;">
-                <?= $r->getStarRating() ?>
-              </div>
+              <?= new \App\View\Components\StarRating((float)$r->rating, false, 'font-size:.8rem;') ?>
             </td>
             <td style="max-width:300px;vertical-align:top;"><?= nl2br(h($r->comment ?? '')) ?></td>
             <td style="vertical-align:top;">
-              <span class="badge <?= $r->getStatusBadgeClass() ?>">
-                <?= ucfirst($r->status) ?>
-              </span>
+              <?= new \App\View\Components\StatusBadge(ucfirst($r->status), $r->getStatusBadgeClass()) ?>
             </td>
             <td style="text-align:right;vertical-align:top;">
               <form action="/admin/reviews/update-status" method="post" style="display:inline-flex;gap:.25rem;">

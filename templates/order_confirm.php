@@ -27,7 +27,7 @@
       </div>
       <div>
         <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);">Status</div>
-        <span class="badge <?= $order->getStatusBadgeClass() ?>"><?= h(ucfirst($order->status)) ?></span>
+        <?= new \App\View\Components\StatusBadge(ucfirst($order->status), $order->getStatusBadgeClass()) ?>
       </div>
       <div>
         <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);">Total</div>
@@ -232,7 +232,7 @@
       <div style="margin-top:1.5rem;padding:1rem;background:var(--bg-highlight);border-radius:var(--radius);border:1px solid var(--line);">
         <strong style="color:var(--accent-2);display:block;margin-bottom:.25rem;">Refund Processed</strong>
         <div style="font-size:.875rem;">
-          Status: <span class="badge <?= $order->getStatusBadgeClass() ?>"><?= h(ucwords(str_replace('_', ' ', $order->status))) ?></span><br>
+          Status: <?= new \App\View\Components\StatusBadge(ucwords(str_replace('_', ' ', $order->status)), $order->getStatusBadgeClass()) ?><br>
           Amount: <strong><?= money($order->refunded_amount) ?></strong>
         </div>
       </div>

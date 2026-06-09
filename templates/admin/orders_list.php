@@ -34,9 +34,7 @@
             <td><?= h($o->user_name ?? 'Guest') ?></td>
             <td>£<?= number_format($o->total, 2) ?></td>
             <td>
-              <span class="badge <?= $o->getStatusBadgeClass() ?>">
-                <?= ucfirst($o->status) ?>
-              </span>
+              <?= new \App\View\Components\StatusBadge(ucfirst($o->status), $o->getStatusBadgeClass()) ?>
               <?php if ($o->status === 'cancelled' && $o->cancel_reason): ?>
                 <div class="text-xs text-muted mt-1" style="max-width:180px; white-space:normal; line-height:1.2;">
                   <?= h($o->cancel_reason) ?>

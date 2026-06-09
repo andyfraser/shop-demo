@@ -5,6 +5,11 @@ use Tests\TestCase;
 use App\View\Components\StatusBadge;
 use App\View\Components\Alert;
 use App\View\Components\ProductCard;
+use App\View\Components\StarRating;
+use App\View\Components\Pagination;
+use App\View\Components\Breadcrumbs;
+use App\View\Components\SearchBar;
+use App\View\Components\OrderSummary;
 use App\Models\Product;
 
 use Tests\NullLogger;
@@ -84,5 +89,89 @@ class ViewComponentTest extends TestCase {
         $this->assertStringContainsString('/product/test-product', $html);
         $this->assertStringContainsString('class="quickview-btn"', $html);
         $this->assertStringContainsString('data-slug="test-product"', $html);
+    }
+
+    public function testStarRatingRendersCorrectly() {
+        $rating = new StarRating(3.5, true);
+        $html = $rating->render();
+
+        $this->assertStringContainsString('★', $html);
+        $this->assertStringContainsString('½', $html);
+        $this->assertStringContainsString('☆', $html);
+        $this->assertStringContainsString('(3.5/5)', $html);
+    }
+
+    public function testPaginationRendersCorrectly() {
+        $pagination = new Pagination(2, 5, '/search', ['q' => 'shoes']);
+        $html = $pagination->render();
+
+        $this->assertStringContainsString('btn-primary', $html); // active page 2
+        $this->assertStringContainsString('/search?q=shoes&amp;page=1', $html);
+        $this->assertStringContainsString('/search?q=shoes&amp;page=2', $html);
+        $this->assertStringContainsString('/search?q=shoes&amp;page=5', $html);
+    }
+
+    public function testBreadcrumbsRendersCorrectly() {
+        $breadcrumbs = new Breadcrumbs([
+            'Home' => '/',
+            'Categories' => '/categories',
+            'Running Shoes'
+        ]);
+        $html = $breadcrumbs->render();
+
+        $this->assertStringContainsString('<a href="/">Home</a>', $html);
+        $this->assertStringContainsString('<a href="/categories">Categories</a>', $html);
+        $this->assertStringContainsString('<span>Running Shoes</span>', $html);
+        $this->assertStringContainsString('›', $html);
+    }
+
+    public function testSearchBarRendersCorrectly() {
+        // Desktop
+        $searchBar = new SearchBar('sneakers', false);
+        $html = $searchBar->render();
+        $this->assertStringContainsString('class="header-search"', $html);
+        $this->assertStringContainsString('value="sneakers"', $html);
+
+        // Mobile
+        $searchBarMobile = new SearchBar('sneakers', true);
+        $htmlMobile = $searchBarMobile->render();
+        $this->assertStringContainsString('class="mobile-search-bar"', $htmlMobile);
+        $this->assertStringContainsString('value="sneakers"', $htmlMobile);
+    }
+
+    public function testOrderSummaryRendersCorrectly() {
+        $cartMock = new class implements \App\Services\CartServiceInterface {
+            public function get(): array { return []; }
+            public function add(int $productId, int $qty = 1, ?int $variantId = null, ?array $metadata = null): void {}
+            public function isVirtualOnly(): bool { return false; }
+            public function remove(string $key): void {}
+            public function update(string $key, int $qty): void {}
+            public function clear(): void {}
+            public function count(): int { return 2; }
+            public function items(): array { return []; }
+            public function total(): float { return 100.00; }
+            public function totalVat(): float { return 20.00; }
+            public function applyPromoCode(string $code): bool { return true; }
+            public function removePromoCode(?string $code = null): void {}
+            public function getAppliedPromotions(): array { return []; }
+            public function getPromotionDiscount(\App\Models\Promotion $promo): float { return 10.0; }
+            public function discount(): float { return 10.00; }
+            public function grandTotal(): float { return 90.00; }
+            public function syncOnLogin(int $userId): void {}
+        };
+
+        // Cart mode
+        $summaryCart = new OrderSummary($cartMock, false);
+        $htmlCart = $summaryCart->render();
+        $this->assertStringContainsString('id="cart-subtotal"', $htmlCart);
+        $this->assertStringContainsString('id="cart-total"', $htmlCart);
+        $this->assertStringContainsString('id="cart-vat"', $htmlCart);
+
+        // Checkout mode
+        $summaryCheckout = new OrderSummary($cartMock, true);
+        $htmlCheckout = $summaryCheckout->render();
+        $this->assertStringContainsString('id="checkout-subtotal"', $htmlCheckout);
+        $this->assertStringContainsString('id="final-total"', $htmlCheckout);
+        $this->assertStringContainsString('id="vat-amount"', $htmlCheckout);
     }
 }
