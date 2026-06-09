@@ -1,6 +1,6 @@
 <?php
 namespace App\Core;
 
-interface ViewComponent {
+interface ViewComponent extends \Stringable {
     public function render(): string;
 }

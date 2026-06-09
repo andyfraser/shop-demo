@@ -33,7 +33,7 @@
     <h2 class="section-title">Featured Products</h2>
     <div class="product-grid">
       <?php foreach ($featured_products as $p): ?>
-        <?= (new \App\View\Components\ProductCard($p, true))->render() ?>
+        <?= new \App\View\Components\ProductCard($p, true) ?>
       <?php endforeach; ?>
     </div>
   </section>

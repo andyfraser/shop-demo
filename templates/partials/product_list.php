@@ -21,7 +21,7 @@
 
 <div class="product-grid">
   <?php foreach ($products as $p): ?>
-    <?= (new \App\View\Components\ProductCard($p, isset($category) && $p->cat_name !== $category->name))->render() ?>
+    <?= new \App\View\Components\ProductCard($p, isset($category) && $p->cat_name !== $category->name) ?>
   <?php endforeach; ?>
 </div>
 

@@ -1,20 +1,24 @@
 <?php
 namespace App\View\Components;
 
-use App\Core\ViewComponent;
+use App\Core\BaseComponent;
 
-class StatusBadge implements ViewComponent {
+class StatusBadge extends BaseComponent {
     public function __construct(
         private string $label,
         private string $class = 'badge-neutral',
         private string $style = ''
     ) {}
 
-    public function render(): string {
-        $label = h($this->label);
-        $class = h($this->class);
-        $style = $this->style ? ' style="' . h($this->style) . '"' : '';
-        
-        return "<span class=\"badge {$class}\"{$style}>{$label}</span>";
+    protected function getTemplate(): string {
+        return 'status_badge';
+    }
+
+    protected function getContext(): array {
+        return [
+            'label' => $this->label,
+            'class' => $this->class,
+            'style' => $this->style,
+        ];
     }
 }

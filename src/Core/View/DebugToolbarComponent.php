@@ -1043,4 +1043,8 @@ class DebugToolbarComponent implements ViewComponent {
         // Return the last N lines
         return array_slice($lines, -$limit);
     }
+
+    public function __toString(): string {
+        return $this->render();
+    }
 }

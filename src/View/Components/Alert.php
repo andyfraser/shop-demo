@@ -1,20 +1,24 @@
 <?php
 namespace App\View\Components;
 
-use App\Core\ViewComponent;
+use App\Core\BaseComponent;
 
-class Alert implements ViewComponent {
+class Alert extends BaseComponent {
     public function __construct(
         private string $message,
         private string $type = 'success',
         private bool $dismissible = true
     ) {}
 
-    public function render(): string {
-        $message = h($this->message);
-        $type = h($this->type);
-        $onclick = $this->dismissible ? ' onclick="this.remove()"' : '';
-        
-        return "<div class=\"alert alert-{$type}\"{$onclick}>{$message}</div>";
+    protected function getTemplate(): string {
+        return 'alert';
+    }
+
+    protected function getContext(): array {
+        return [
+            'message' => $this->message,
+            'type' => $this->type,
+            'dismissible' => $this->dismissible,
+        ];
     }
 }
