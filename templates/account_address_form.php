@@ -1,12 +1,10 @@
 <?php // templates/account_address_form.php ?>
 <div class="container">
-    <div class="breadcrumb">
-        <a href="/">Home</a>
-        <span class="sep">›</span>
-        <a href="/account">My Account</a>
-        <span class="sep">›</span>
-        <span><?= h($page_title) ?></span>
-    </div>
+    <?= new \App\View\Components\Breadcrumbs([
+        'Home' => '/',
+        'My Account' => '/account',
+        $page_title
+    ]) ?>
 
     <h1 class="page-title"><?= h($page_title) ?></h1>
 

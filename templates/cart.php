@@ -89,34 +89,7 @@
 
       <div class="order-summary">
         <div class="card">
-          <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem;">Order Summary</h2>
-          <div
-            style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--line);margin-bottom:.5rem;">
-            <span>Subtotal</span><strong id="cart-subtotal"><?= money($total) ?></strong>
-          </div>
-          
-          <div id="discount-row" style="display: <?= $discount > 0 ? 'block' : 'none' ?>; border-bottom:1px solid var(--line); margin-bottom:.5rem; color:var(--accent);">
-            <div id="discount-details">
-              <?php foreach ($applied_promotions as $promo): ?>
-                <div style="display:flex; justify-content:space-between; padding:.25rem 0;">
-                  <span><?= h($promo->name) ?></span>
-                  <strong>-<?= money($cartService->getPromotionDiscount($promo)) ?></strong>
-                </div>
-              <?php endforeach; ?>
-            </div>
-            <div id="discount-summary" style="display:none; justify-content:space-between; padding:.25rem 0; font-weight:bold;">
-              <span id="discount-label">Discount (<?= h(implode(', ', array_map(fn($p) => $p->name, $applied_promotions))) ?>)</span>
-              <strong id="cart-discount">-<?= money($discount) ?></strong>
-            </div>
-          </div>
-
-          <div
-            style="display:flex;justify-content:space-between;padding:.75rem 0;font-size:1.2rem;font-weight:700;margin-bottom:1.2rem;">
-            <span>Total</span><span id="cart-total" style="color:var(--accent-2)"><?= money($grand_total) ?></span>
-          </div>
-          <div style="font-size:.85rem;color:var(--ink-2);margin-bottom:1.2rem;text-align:right;">
-            Includes <span id="cart-vat"><?= money($total_vat) ?></span> VAT
-          </div>
+          <?= new \App\View\Components\OrderSummary($cartService, false) ?>
 
           <div class="promo-section" style="margin-bottom:1.5rem;">
             <form action="/cart/promo" method="POST">

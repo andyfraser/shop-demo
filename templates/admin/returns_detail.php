@@ -46,7 +46,7 @@
       
       <div style="margin-bottom:1.5rem;">
         <div style="font-size:.75rem;text-transform:uppercase;color:var(--ink-2);margin-bottom:.25rem;">Current Status</div>
-        <span class="badge <?= $return->getStatusBadgeClass() ?>"><?= h(ucfirst($return->status)) ?></span>
+        <?= new \App\View\Components\StatusBadge(ucfirst($return->status), $return->getStatusBadgeClass()) ?>
       </div>
 
       <?php if ($return->status === 'pending'): ?>

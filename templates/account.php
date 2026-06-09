@@ -111,9 +111,7 @@
                     <td><?= $o->item_count ?> item<?= $o->item_count != 1 ? 's' : '' ?></td>
                     <td><strong><?= money($o->total) ?></strong></td>
                     <td>
-                      <span class="badge <?= $o->getStatusBadgeClass() ?>">
-                        <?= ucfirst($o->status) ?>
-                      </span>
+                      <?= new \App\View\Components\StatusBadge(ucfirst($o->status), $o->getStatusBadgeClass()) ?>
                     </td>
                     <td style="display:flex;gap:0.5rem;justify-content:flex-end;">
                       <a href="/account/orders/<?= $o->id ?>" class="btn btn-outline btn-sm">View</a>

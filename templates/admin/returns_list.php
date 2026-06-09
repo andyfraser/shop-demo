@@ -34,7 +34,7 @@
             <td>#<?= $r->id ?></td>
             <td><a href="/admin/orders/detail?id=<?= $r->order_id ?>"><strong>#<?= str_pad($r->order_id, 6, '0', STR_PAD_LEFT) ?></strong></a></td>
             <td><?= h($r->customer_name) ?></td>
-            <td><span class="badge <?= $r->getStatusBadgeClass() ?>"><?= h(ucfirst($r->status)) ?></span></td>
+            <td><?= new \App\View\Components\StatusBadge(ucfirst($r->status), $r->getStatusBadgeClass()) ?></td>
             <td><?= date('d M Y', strtotime($r->created_at)) ?></td>
             <td style="text-align:right;">
               <a href="/admin/returns/detail?id=<?= $r->id ?>" class="btn btn-outline btn-sm">View Details</a>

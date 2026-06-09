@@ -25,27 +25,7 @@
   <?php endforeach; ?>
 </div>
 
-<?php if ($total_pages > 1): ?>
-  <div class="pagination" style="display:flex;gap:.5rem;justify-content:center;margin-top:2rem;">
-    <?php 
-      $base_url = $_SERVER['REDIRECT_URL'] ?? $_SERVER['REQUEST_URI'];
-      $base_url = explode('?', $base_url)[0];
-      $query_params = $_GET;
-      unset($query_params['ajax']);
-    ?>
-    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-      <?php 
-        $query_params['page'] = $i;
-        $url = $base_url . '?' . http_build_query($query_params);
-      ?>
-      <a href="<?= h($url) ?>"
-         data-page="<?= $i ?>"
-         class="btn <?= $i === $current_page ? 'btn-primary' : 'btn-outline' ?> btn-sm">
-        <?= $i ?>
-      </a>
-    <?php endfor; ?>
-  </div>
-<?php endif; ?>
+<?= new \App\View\Components\Pagination($current_page, $total_pages) ?>
 
 <?php if (empty($products)): ?>
     <div class="empty-state">
