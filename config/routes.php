@@ -197,4 +197,9 @@ return [
     ['method' => 'POST', 'path' => '/api/v1/auth/register',        'handler' => [\App\Controllers\Api\ApiAuthController::class, 'register']],
     ['method' => 'GET',  'path' => '/api/v1/auth/me',              'handler' => [\App\Controllers\Api\ApiAuthController::class, 'me'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
     ['method' => 'POST', 'path' => '/api/v1/auth/logout',          'handler' => [\App\Controllers\Api\ApiAuthController::class, 'logout'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'GET',  'path' => '/api/v1/products',             'handler' => [\App\Controllers\Api\ApiProductController::class, 'index']],
+    ['method' => 'GET',  'path' => '/api/v1/products/:slug',       'handler' => [\App\Controllers\Api\ApiProductController::class, 'show']],
+    ['method' => 'GET',  'path' => '/api/v1/products/:slug/related', 'handler' => [\App\Controllers\Api\ApiProductController::class, 'related']],
+    ['method' => 'POST', 'path' => '/api/v1/products/:slug/review', 'handler' => [\App\Controllers\Api\ApiProductController::class, 'submitReview'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'GET',  'path' => '/api/v1/categories',           'handler' => [\App\Controllers\Api\ApiProductController::class, 'categories']],
 ];

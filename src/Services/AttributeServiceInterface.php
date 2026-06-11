@@ -19,4 +19,5 @@ interface AttributeServiceInterface {
     
     public function getVariantAttributeValues(int $variantId): array;
     public function saveVariantAttributeValues(int $variantId, array $attributeValueIds): void;
+    public function getProductAttributeValuesWithDetails(int $productId): array;
 }

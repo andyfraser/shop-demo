@@ -18,4 +18,5 @@ interface AttributeRepositoryInterface {
     public function saveVariantAttributes(int $productId, array $attributeIds): void;
     public function getVariantAttributeValues(int $variantId): array;
     public function saveVariantAttributeValues(int $variantId, array $attributeValueIds): void;
+    public function getProductAttributeValuesWithDetails(int $productId): array;
 }

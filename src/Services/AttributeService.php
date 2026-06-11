@@ -88,4 +88,8 @@ class AttributeService implements AttributeServiceInterface {
     public function saveVariantAttributeValues(int $variantId, array $attributeValueIds): void {
         $this->repository->saveVariantAttributeValues($variantId, $attributeValueIds);
     }
+
+    public function getProductAttributeValuesWithDetails(int $productId): array {
+        return $this->repository->getProductAttributeValuesWithDetails($productId);
+    }
 }

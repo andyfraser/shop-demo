@@ -143,4 +143,17 @@ class AttributeRepository implements AttributeRepositoryInterface {
             throw $e;
         }
     }
+
+    public function getProductAttributeValuesWithDetails(int $productId): array {
+        $stmt = $this->db->prepare(
+            "SELECT av.*, a.name AS attribute_name
+             FROM product_attribute_values pav
+             JOIN attribute_values av ON av.id = pav.attribute_value_id
+             JOIN attributes a ON a.id = av.attribute_id
+             WHERE pav.product_id = ?
+             ORDER BY a.name ASC, av.sort_order ASC, av.value ASC"
+        );
+        $stmt->execute([$productId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }
