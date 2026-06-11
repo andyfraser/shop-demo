@@ -301,7 +301,8 @@ return function($c, array $config) {
                 $c->get(AddressServiceInterface::class),
                 $c->get(PricingServiceInterface::class),
                 $c->get(\App\Core\Validator::class),
-                $c->get(VirtualProductServiceInterface::class)
+                $c->get(VirtualProductServiceInterface::class),
+                $c->get(CurrencyServiceInterface::class)
             );
         },
     ];

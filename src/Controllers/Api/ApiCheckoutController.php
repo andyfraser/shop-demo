@@ -15,6 +15,7 @@ use App\Services\AddressServiceInterface;
 use App\Services\PricingServiceInterface;
 use App\Services\VirtualProductServiceInterface;
 use App\Services\Payment\PaymentServiceInterface;
+use App\Services\CurrencyServiceInterface;
 
 class ApiCheckoutController {
     public function __construct(
@@ -27,8 +28,34 @@ class ApiCheckoutController {
         private AddressServiceInterface $addressService,
         private PricingServiceInterface $pricingService,
         private Validator $validator,
-        private VirtualProductServiceInterface $virtualProductService
+        private VirtualProductServiceInterface $virtualProductService,
+        private CurrencyServiceInterface $currencyService
     ) {}
+
+    /**
+     * Get active delivery options.
+     */
+    public function getDeliveryOptions(Request $request): Response {
+        $total = $this->cart->total();
+        $user = $this->auth->currentUser();
+        $role = $user ? $user->role : null;
+        
+        $options = $this->delivery->active($total, $role);
+        $formatted = [];
+        foreach ($options as $opt) {
+            $formatted[] = [
+                'id' => $opt->id,
+                'name' => $opt->name,
+                'price' => $this->currencyService->convert((float)$opt->price),
+                'min_order_total' => $this->currencyService->convert((float)$opt->min_order_total)
+            ];
+        }
+        
+        return new JsonResponse([
+            'success' => true,
+            'data' => $formatted
+        ]);
+    }
 
     /**
      * Get saved addresses for the authenticated user.
@@ -264,14 +291,14 @@ class ApiCheckoutController {
                 $this->orderService->updatePaymentInfo(
                     $order_id, 
                     $activeGateway, 
-                    $paymentResult->status, 
+                    'paid', 
                     $paymentResult->transactionId
                 );
                 
                 $this->orderService->updateStatus(
                     $order_id, 
                     \App\Models\Order::STATUS_PAID, 
-                    $user?->id, 
+                    $user->id ?? null, 
                     'Paid via transaction ' . $paymentResult->transactionId
                 );
                 
@@ -289,14 +316,14 @@ class ApiCheckoutController {
                 ], 201);
             } else {
                 $this->orderService->updatePaymentInfo($order_id, $activeGateway, 'failed');
-                $this->orderService->updateStatus($order_id, \App\Models\Order::STATUS_FAILED, $user?->id, 'Payment failed: ' . $paymentResult->message);
+                $this->orderService->updateStatus($order_id, \App\Models\Order::STATUS_FAILED, $user->id ?? null, 'Payment failed: ' . $paymentResult->message);
                 
                 return new JsonResponse([
                     'success' => false,
                     'error' => [
                         'code' => 'PAYMENT_FAILED',
-                        'message' => 'Payment failed: ' . $paymentResult->message,
-                        'data' => [
+                        'message' => 'Payment processing failed: ' . $paymentResult->message,
+                        'details' => [
                             'order_id' => $order_id
                         ]
                     ]
@@ -325,7 +352,7 @@ class ApiCheckoutController {
             $formatted[] = [
                 'id' => $o->id,
                 'order_reference' => $o->getFormattedId(),
-                'total' => $o->total,
+                'total' => $this->currencyService->convert((float)$o->total),
                 'status' => $o->status,
                 'created_at' => $o->created_at
             ];
@@ -335,6 +362,50 @@ class ApiCheckoutController {
             'success' => true,
             'data' => $formatted
         ]);
+    }
+
+    /**
+     * Format a single order for REST response.
+     */
+    private function formatOrder(\App\Models\Order $order): array {
+        $items = [];
+        foreach ($order->items as $item) {
+            $items[] = [
+                'product_id' => $item->product_id,
+                'variant_id' => $item->variant_id,
+                'variant_name' => $item->variant_name,
+                'name' => $item->product_name ?? $item->name ?? 'Deleted Product',
+                'sku' => $item->sku,
+                'qty' => $item->quantity,
+                'quantity' => $item->quantity,
+                'price' => $this->currencyService->convert((float)$item->unit_price),
+                'unit_price' => $this->currencyService->convert((float)$item->unit_price),
+                'total' => $this->currencyService->convert((float)$item->getSubtotal()),
+                'is_bundle' => (bool)$item->is_bundle,
+                'bundle_components' => array_map(fn($bc) => [
+                    'qty' => $bc['qty'],
+                    'name' => $bc['name']
+                ], $item->bundle_components)
+            ];
+        }
+
+        return [
+            'id' => $order->id,
+            'order_reference' => $order->getFormattedId(),
+            'status' => $order->status,
+            'customer_name' => $order->customer_name,
+            'name' => $order->customer_name, // alias
+            'customer_email' => $order->customer_email,
+            'email' => $order->customer_email, // alias
+            'total' => $this->currencyService->convert((float)$order->total),
+            'total_vat' => $this->currencyService->convert((float)$order->total_vat_amount),
+            'discount' => $this->currencyService->convert((float)$order->discount_amount),
+            'shipping_address' => $order->shipping_address,
+            'delivery_method' => $order->delivery_method,
+            'delivery_cost' => $this->currencyService->convert((float)$order->delivery_cost),
+            'created_at' => $order->created_at,
+            'items' => $items
+        ];
     }
 
     /**
@@ -354,36 +425,9 @@ class ApiCheckoutController {
             ], 404);
         }
 
-        $items = [];
-        foreach ($order->items as $item) {
-            $items[] = [
-                'product_id' => $item->product_id,
-                'variant_id' => $item->variant_id,
-                'name' => $item->name,
-                'sku' => $item->sku,
-                'qty' => $item->qty,
-                'price' => $item->price,
-                'total' => $item->qty * $item->price
-            ];
-        }
-
         return new JsonResponse([
             'success' => true,
-            'data' => [
-                'id' => $order->id,
-                'order_reference' => $order->getFormattedId(),
-                'status' => $order->status,
-                'customer_name' => $order->customer_name,
-                'customer_email' => $order->customer_email,
-                'total' => $order->total,
-                'total_vat' => $order->total_vat_amount,
-                'discount' => $order->discount_amount,
-                'shipping_address' => $order->shipping_address,
-                'delivery_method' => $order->delivery_method,
-                'delivery_cost' => $order->delivery_cost,
-                'created_at' => $order->created_at,
-                'items' => $items
-            ]
+            'data' => $this->formatOrder($order)
         ]);
     }
 
@@ -419,29 +463,9 @@ class ApiCheckoutController {
             ], 404);
         }
 
-        $items = [];
-        foreach ($order->items as $item) {
-            $items[] = [
-                'product_id' => $item->product_id,
-                'variant_id' => $item->variant_id,
-                'name' => $item->name,
-                'sku' => $item->sku,
-                'qty' => $item->qty,
-                'price' => $item->price,
-                'total' => $item->qty * $item->price
-            ];
-        }
-
         return new JsonResponse([
             'success' => true,
-            'data' => [
-                'id' => $order->id,
-                'order_reference' => $order->getFormattedId(),
-                'status' => $order->status,
-                'total' => $order->total,
-                'created_at' => $order->created_at,
-                'items' => $items
-            ]
+            'data' => $this->formatOrder($order)
         ]);
     }
 }

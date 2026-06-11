@@ -7,11 +7,15 @@ use App\Core\Response;
 use App\Core\Responses\JsonResponse;
 use App\Services\CartServiceInterface;
 use App\Services\ProductServiceInterface;
+use App\Services\ImageServiceInterface;
+use App\Services\CurrencyServiceInterface;
 
 class ApiCartController {
     public function __construct(
         private CartServiceInterface $cartService,
-        private ProductServiceInterface $productService
+        private ProductServiceInterface $productService,
+        private ImageServiceInterface $imageService,
+        private CurrencyServiceInterface $currencyService
     ) {}
 
     public function show(Request $request): Response {
@@ -134,10 +138,13 @@ class ApiCartController {
                 'variant_id' => $item->variant_id,
                 'name' => $item->name,
                 'sku' => $item->sku,
-                'image' => $item->image,
+                'image' => $this->imageService->getUrl($item->image, 'original'),
+                'image_thumb' => $this->imageService->getUrl($item->image, 'thumb'),
+                'image_medium' => $this->imageService->getUrl($item->image, 'medium'),
+                'image_large' => $this->imageService->getUrl($item->image, 'large'),
                 'quantity' => $item->qty,
-                'unit_price' => $item->unit_price,
-                'subtotal' => $item->getSubtotal(),
+                'unit_price' => $this->currencyService->convert((float)$item->unit_price),
+                'subtotal' => $this->currencyService->convert((float)$item->getSubtotal()),
                 'is_virtual' => (bool)($item->product->is_virtual ?? false)
             ];
         }
@@ -147,7 +154,7 @@ class ApiCartController {
             $promos[] = [
                 'name' => $p->name,
                 'code' => $p->code,
-                'discount' => $this->cartService->getPromotionDiscount($p)
+                'discount' => $this->currencyService->convert((float)$this->cartService->getPromotionDiscount($p))
             ];
         }
 
@@ -155,11 +162,15 @@ class ApiCartController {
             'items' => $formattedItems,
             'applied_promotions' => $promos,
             'summary' => [
-                'subtotal' => $this->cartService->total(),
-                'discount' => $this->cartService->discount(),
-                'total_vat' => $this->cartService->totalVat(),
-                'grand_total' => $this->cartService->grandTotal(),
+                'subtotal' => $this->currencyService->convert((float)$this->cartService->total()),
+                'discount' => $this->currencyService->convert((float)$this->cartService->discount()),
+                'total_vat' => $this->currencyService->convert((float)$this->cartService->totalVat()),
+                'grand_total' => $this->currencyService->convert((float)$this->cartService->grandTotal()),
                 'item_count' => $this->cartService->count()
+            ],
+            'currency' => [
+                'code' => $this->currencyService->getCurrentCurrency()->code,
+                'symbol' => $this->currencyService->getCurrentCurrency()->symbol
             ]
         ];
 

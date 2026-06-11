@@ -209,7 +209,7 @@ class OrderRepository implements OrderRepositoryInterface {
 
     public function getItems(int $orderId): array {
         $stmt = $this->db->prepare(
-            "SELECT oi.*, p.name as product_name, p.slug, pv.name as variant_name, p.is_bundle
+            "SELECT oi.*, p.name as product_name, p.slug, pv.name as variant_name, p.is_bundle, COALESCE(pv.sku, p.sku) as sku
              FROM order_items oi
              LEFT JOIN products p ON oi.product_id = p.id
              LEFT JOIN product_variants pv ON oi.variant_id = pv.id

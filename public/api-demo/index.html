@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demoshop API Storefront SPA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <!-- Background glow elements -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <header class="app-header">
+        <div class="container header-container">
+            <a href="#/" class="logo">
+                <span class="logo-emoji">⚡</span>
+                <span class="logo-text">Demo<span class="highlight">API</span></span>
+            </a>
+            
+            <nav class="main-nav">
+                <a href="#/" class="nav-link" id="nav-products">Catalog</a>
+                <a href="#/wishlist" class="nav-link" id="nav-wishlist">Wishlist</a>
+                <a href="#/orders" class="nav-link" id="nav-orders">Track Orders</a>
+            </nav>
+
+            <div class="header-actions">
+                <a href="#/cart" class="cart-btn" id="nav-cart">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge" id="cart-count">0</span>
+                </a>
+
+                <div class="auth-widget" id="auth-widget">
+                    <!-- Loaded dynamically via app.js -->
+                    <a href="#/login" class="btn btn-outline btn-sm">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="container" id="app-view">
+            <!-- Dynamic SPA Content Injector -->
+            <div class="loading-view">
+                <div class="spinner"></div>
+                <p>Initializing storefront...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <div class="container">
+            <p>&copy; 2026 Demoshop API Client. Built with pure HTML5, Vanilla CSS, and JavaScript.</p>
+            <p class="footer-note">Decoupled SPA interacting with <code>/api/v1</code> endpoints.</p>
+        </div>
+    </footer>
+
+    <!-- Global Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

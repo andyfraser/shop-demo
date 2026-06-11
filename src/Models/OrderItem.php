@@ -18,6 +18,7 @@ class OrderItem extends Model {
     public ?string $product_name = null; // some queries use product_name
     public ?string $variant_name = null;
     public ?string $slug = null; // product slug
+    public ?string $sku = null;
     public bool|int $is_bundle = 0;
     public array $bundle_components = [];
 

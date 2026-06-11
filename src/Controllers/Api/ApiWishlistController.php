@@ -8,12 +8,16 @@ use App\Core\Responses\JsonResponse;
 use App\Services\WishlistServiceInterface;
 use App\Services\AuthServiceInterface;
 use App\Services\ProductServiceInterface;
+use App\Services\ImageServiceInterface;
+use App\Services\CurrencyServiceInterface;
 
 class ApiWishlistController {
     public function __construct(
         private WishlistServiceInterface $wishlistService,
         private AuthServiceInterface $authService,
-        private ProductServiceInterface $productService
+        private ProductServiceInterface $productService,
+        private ImageServiceInterface $imageService,
+        private CurrencyServiceInterface $currencyService
     ) {}
 
     public function index(Request $request): Response {
@@ -28,9 +32,12 @@ class ApiWishlistController {
                 'name' => $p->name,
                 'slug' => $p->slug,
                 'sku' => $p->sku,
-                'price' => $p->price,
+                'price' => $this->currencyService->convert((float)$p->price),
                 'stock' => $p->stock,
-                'image' => $p->image,
+                'image' => $this->imageService->getUrl($p->image, 'original'),
+                'image_thumb' => $this->imageService->getUrl($p->image, 'thumb'),
+                'image_medium' => $this->imageService->getUrl($p->image, 'medium'),
+                'image_large' => $this->imageService->getUrl($p->image, 'large'),
                 'is_purchasable' => (bool)$p->is_purchasable
             ];
         }
@@ -42,7 +49,11 @@ class ApiWishlistController {
             'data' => [
                 'items' => $formattedProducts,
                 'is_public' => (bool)$settings['is_public'],
-                'share_url' => $shareUrl
+                'share_url' => $shareUrl,
+                'currency' => [
+                    'code' => $this->currencyService->getCurrentCurrency()->code,
+                    'symbol' => $this->currencyService->getCurrentCurrency()->symbol
+                ]
             ]
         ]);
     }

@@ -11,6 +11,8 @@ use App\Services\CategoryServiceInterface;
 use App\Services\ReviewServiceInterface;
 use App\Services\AttributeServiceInterface;
 use App\Services\AuthServiceInterface;
+use App\Services\ImageServiceInterface;
+use App\Services\CurrencyServiceInterface;
 
 class ApiProductController {
     public function __construct(
@@ -18,7 +20,9 @@ class ApiProductController {
         private CategoryServiceInterface $categoryService,
         private ReviewServiceInterface $reviewService,
         private AttributeServiceInterface $attributeService,
-        private AuthServiceInterface $authService
+        private AuthServiceInterface $authService,
+        private ImageServiceInterface $imageService,
+        private CurrencyServiceInterface $currencyService
     ) {}
 
     public function index(Request $request): Response {
@@ -75,6 +79,10 @@ class ApiProductController {
             'success' => true,
             'data' => [
                 'products' => $data,
+                'currency' => [
+                    'code' => $this->currencyService->getCurrentCurrency()->code,
+                    'symbol' => $this->currencyService->getCurrentCurrency()->symbol
+                ],
                 'pagination' => [
                     'current_page' => $criteria->getPage(),
                     'total_pages' => $totalPages,
@@ -106,6 +114,10 @@ class ApiProductController {
         $reviews = $this->reviewService->getByProductId($product->id);
 
         $formattedProduct = $this->formatProductDetails($product, $variants, $attributes, $avgRating, $reviews);
+        $formattedProduct['currency'] = [
+            'code' => $this->currencyService->getCurrentCurrency()->code,
+            'symbol' => $this->currencyService->getCurrentCurrency()->symbol
+        ];
 
         return new JsonResponse([
             'success' => true,
@@ -136,7 +148,11 @@ class ApiProductController {
 
         return new JsonResponse([
             'success' => true,
-            'data' => $data
+            'data' => $data,
+            'currency' => [
+                'code' => $this->currencyService->getCurrentCurrency()->code,
+                'symbol' => $this->currencyService->getCurrentCurrency()->symbol
+            ]
         ]);
     }
 
@@ -200,11 +216,15 @@ class ApiProductController {
             'name' => $p->name,
             'slug' => $p->slug,
             'sku' => $p->sku,
-            'price' => $p->price,
+            'price' => $this->currencyService->convert((float)$p->price),
             'stock' => $p->stock,
-            'image' => $p->image,
+            'image' => $this->imageService->getUrl($p->image, 'original'),
+            'image_thumb' => $this->imageService->getUrl($p->image, 'thumb'),
+            'image_medium' => $this->imageService->getUrl($p->image, 'medium'),
+            'image_large' => $this->imageService->getUrl($p->image, 'large'),
             'featured' => (bool)$p->featured,
             'is_purchasable' => (bool)$p->is_purchasable,
+            'force_variant' => (bool)$p->force_variant,
             'active_promotions' => $promos
         ];
     }
@@ -216,7 +236,7 @@ class ApiProductController {
                 'id' => $v->id,
                 'sku' => $v->sku,
                 'name' => $v->name,
-                'price_modifier' => $v->price_modifier,
+                'price_modifier' => $this->currencyService->convert((float)$v->price_modifier),
                 'stock' => $v->stock
             ];
         }
@@ -257,7 +277,7 @@ class ApiProductController {
             foreach ($p->tiers as $t) {
                 $details['tiers'][] = [
                     'min_qty' => (int)$t['min_qty'],
-                    'discount' => (float)$t['discount']
+                    'discount' => $this->currencyService->convert((float)$t['discount'])
                 ];
             }
         }
@@ -270,7 +290,7 @@ class ApiProductController {
                     'product_id' => (int)$item['product_id'],
                     'name' => $item['name'] ?? '',
                     'sku' => $item['sku'] ?? '',
-                    'price' => (float)($item['price'] ?? 0.0),
+                    'price' => $this->currencyService->convert((float)($item['price'] ?? 0.0)),
                     'quantity' => (int)$item['qty']
                 ];
             }

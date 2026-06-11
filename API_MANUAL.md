@@ -128,13 +128,25 @@ Frontend                          API Endpoint
             "price": 120.00,
             "sku": "BAG-LTHR-01",
             "stock": 15,
-            "thumbnail": "/uploads/products/bag.jpg"
+            "image": "/uploads/bag.jpg",
+            "image_thumb": "/uploads/bag_thumb.webp",
+            "image_medium": "/uploads/bag_medium.webp",
+            "image_large": "/uploads/bag_large.webp",
+            "featured": false,
+            "is_purchasable": true,
+            "force_variant": false,
+            "active_promotions": []
           }
         ],
+        "currency": {
+          "code": "GBP",
+          "symbol": "£"
+        },
         "pagination": {
           "current_page": 1,
           "total_pages": 3,
-          "total_items": 15
+          "total_items": 15,
+          "limit": 12
         }
       }
     }
@@ -150,15 +162,37 @@ Frontend                          API Endpoint
       "data": {
         "id": 4,
         "name": "Minimalist Leather Backpack",
-        "description": "Premium leather, everyday companion.",
+        "slug": "minimalist-leather-backpack",
+        "sku": "BAG-LTHR-01",
         "price": 120.00,
+        "stock": 15,
+        "image": "/uploads/bag.jpg",
+        "image_thumb": "/uploads/bag_thumb.webp",
+        "image_medium": "/uploads/bag_medium.webp",
+        "image_large": "/uploads/bag_large.webp",
+        "featured": false,
+        "is_purchasable": true,
+        "force_variant": false,
+        "active_promotions": [],
+        "description": "Premium leather, everyday companion.",
+        "is_bundle": false,
+        "is_virtual": false,
+        "average_rating": 4.5,
         "variants": [
-          { "id": 12, "name": "Color: Black", "price_modifier": 0.00, "stock": 5 },
-          { "id": 13, "name": "Color: Tan", "price_modifier": 10.00, "stock": 10 }
+          { "id": 12, "sku": "BAG-LTHR-01-BLK", "name": "Color: Black", "price_modifier": 0.00, "stock": 5 },
+          { "id": 13, "sku": "BAG-LTHR-01-TAN", "name": "Color: Tan", "price_modifier": 10.00, "stock": 10 }
         ],
-        "attributes": {
-          "Brand": "Aether",
-          "Material": "Full Grain Leather"
+        "attributes": [
+          { "attribute_id": 1, "attribute_name": "Brand", "value_id": 2, "value": "Aether" }
+        ],
+        "reviews": [
+          { "id": 1, "user_name": "Jane Doe", "rating": 5, "comment": "Great bag!", "created_at": "2026-06-11 10:00:00" }
+        ],
+        "tiers": [],
+        "bundle_items": [],
+        "currency": {
+          "code": "GBP",
+          "symbol": "£"
         }
       }
     }
@@ -178,21 +212,34 @@ Frontend                          API Endpoint
     {
       "success": true,
       "data": {
-        "cart_uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
         "items": [
           {
+            "key": "4_12",
             "product_id": 4,
+            "variant_id": 12,
             "name": "Minimalist Leather Backpack (Black)",
+            "sku": "BAG-LTHR-01-BLK",
+            "image": "/uploads/bag.jpg",
+            "image_thumb": "/uploads/bag_thumb.webp",
+            "image_medium": "/uploads/bag_medium.webp",
+            "image_large": "/uploads/bag_large.webp",
             "quantity": 1,
-            "price": 120.00,
-            "total": 120.00
+            "unit_price": 120.00,
+            "subtotal": 120.00,
+            "is_virtual": false
           }
         ],
+        "applied_promotions": [],
         "summary": {
           "subtotal": 120.00,
-          "vat": 24.00,
           "discount": 0.00,
-          "total": 144.00
+          "total_vat": 20.00,
+          "grand_total": 120.00,
+          "item_count": 1
+        },
+        "currency": {
+          "code": "GBP",
+          "symbol": "£"
         }
       }
     }
@@ -345,7 +392,7 @@ curl -i -X POST \
 *   **Method**: `GET`
 *   **Path**: `/api/v1/orders`
 *   **Headers**:
-    *   `Authorization: Bearer <token>`
+*   `Authorization: Bearer <token>`
 *   **Response (200 OK)**:
     ```json
     {
@@ -380,20 +427,58 @@ curl -i -X POST \
         "id": 12,
         "order_reference": "#000012",
         "status": "paid",
+        "customer_name": "John Doe",
+        "name": "John Doe",
+        "customer_email": "customer@example.com",
+        "email": "customer@example.com",
         "total": 120.00,
+        "total_vat": 20.00,
+        "discount": 0.00,
+        "shipping_address": "123 Main St\nLondon\nSW1A 1AA\nUnited Kingdom",
+        "delivery_method": "Standard Delivery",
+        "delivery_cost": 5.00,
         "created_at": "2026-06-11 08:30:00",
         "items": [
           {
             "product_id": 4,
-            "variant_id": null,
+            "variant_id": 2,
+            "variant_name": "Black",
             "name": "Minimalist Leather Backpack",
             "sku": "BAG-LTHR-01",
             "qty": 1,
+            "quantity": 1,
             "price": 120.00,
-            "total": 120.00
+            "unit_price": 120.00,
+            "total": 120.00,
+            "is_bundle": false,
+            "bundle_components": []
           }
         ]
       }
+    }
+    ```
+
+#### Get Delivery Options
+*   **Method**: `GET`
+*   **Path**: `/api/v1/delivery-options`
+*   **Response (200 OK)**:
+    ```json
+    {
+      "success": true,
+      "data": [
+        {
+          "id": 1,
+          "name": "Standard Delivery",
+          "price": 5.00,
+          "min_order_total": 0.00
+        },
+        {
+          "id": 2,
+          "name": "Next Day Express",
+          "price": 10.00,
+          "min_order_total": 50.00
+        }
+      ]
     }
     ```
 

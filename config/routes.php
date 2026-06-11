@@ -216,6 +216,7 @@ return [
     ['method' => 'POST', 'path' => '/api/v1/wishlist/toggle-privacy', 'handler' => [\App\Controllers\Api\ApiWishlistController::class, 'togglePrivacy'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
 
     // Checkout & Order APIs
+    ['method' => 'GET',  'path' => '/api/v1/delivery-options',      'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'getDeliveryOptions']],
     ['method' => 'GET',  'path' => '/api/v1/account/addresses',    'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'getAddresses'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
     ['method' => 'POST', 'path' => '/api/v1/account/addresses/save', 'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'saveAddress'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
     ['method' => 'POST', 'path' => '/api/v1/checkout',             'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'process']],
