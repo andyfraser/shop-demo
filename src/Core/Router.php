@@ -32,6 +32,17 @@ class Router {
     public function dispatch(Request $request): Response {
         $uri = $request->getUri();
         $method = $request->getMethod();
+        $path = parse_url($uri, PHP_URL_PATH) ?: '';
+        $isApi = str_starts_with($path, '/api/') || $path === '/api';
+        
+        $cors = null;
+        if ($isApi) {
+            $cors = $this->container ? $this->container->get(\App\Middleware\CorsMiddleware::class) : new \App\Middleware\CorsMiddleware();
+            if ($method === 'OPTIONS') {
+                return $cors->handle($request);
+            }
+        }
+
         $route = $this->match($uri, $method);
         
         if ($route) {
@@ -43,6 +54,9 @@ class Router {
                 $middlewareInst = $this->container ? $this->container->get($middleware) : new $middleware();
                 $response = $middlewareInst->handle($request);
                 if ($response instanceof Response) {
+                    if ($isApi && $cors) {
+                        $cors->addCorsHeaders($request, $response);
+                    }
                     return $response;
                 }
             }
@@ -57,15 +71,21 @@ class Router {
             $response = call_user_func_array([$controller, $action], $params);
             
             if ($response instanceof Response) {
+                if ($isApi && $cors) {
+                    $cors->addCorsHeaders($request, $response);
+                }
                 return $response;
             }
             
             // Fallback if the controller doesn't return a Response (during transition)
-            return new \App\Core\Responses\HtmlResponse((string)$response);
+            $response = new \App\Core\Responses\HtmlResponse((string)$response);
+            if ($isApi && $cors) {
+                $cors->addCorsHeaders($request, $response);
+            }
+            return $response;
         }
 
         // Avoid warning logging for common static assets to prevent log pollution
-        $path = parse_url($uri, PHP_URL_PATH) ?: '';
         $isAsset = strpos($path, '/public/') === 0 
             || strpos($path, '/css/') === 0 
             || strpos($path, '/js/') === 0 
@@ -82,6 +102,20 @@ class Router {
             ]);
         }
         
+        if ($isApi) {
+            $response = new \App\Core\Responses\JsonResponse([
+                'success' => false,
+                'error' => [
+                    'code' => 'NOT_FOUND',
+                    'message' => 'API route not found'
+                ]
+            ], 404);
+            if ($cors) {
+                $cors->addCorsHeaders($request, $response);
+            }
+            return $response;
+        }
+
         if ($this->container) {
             try {
                 $renderer = $this->container->get(Renderer::class);

@@ -70,6 +70,40 @@ $exceptionHandler = function ($exception) use ($isDebug, $config) {
         // If logging fails, we can't do much more
     }
 
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+    $isApi = str_starts_with($path, '/api/') || $path === '/api';
+
+    if ($isApi) {
+        $allowedOrigins = $config['api']['allowed_cors_origins'] ?? ['*'];
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        if (in_array('*', $allowedOrigins)) {
+            header('Access-Control-Allow-Origin: *');
+        } elseif (in_array($origin, $allowedOrigins)) {
+            header("Access-Control-Allow-Origin: $origin");
+            header('Access-Control-Allow-Credentials: true');
+        }
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Cart-UUID');
+        header('Content-Type: application/json');
+
+        $code = 500;
+        $response = [
+            'success' => false,
+            'error' => [
+                'code' => 'SERVER_ERROR',
+                'message' => $isDebug ? $exception->getMessage() : 'Internal Server Error'
+            ]
+        ];
+        if ($isDebug) {
+            $response['error']['file'] = $exception->getFile();
+            $response['error']['line'] = $exception->getLine();
+            $response['error']['trace'] = explode(PHP_EOL, $exception->getTraceAsString());
+        }
+        http_response_code($code);
+        echo json_encode($response);
+        exit(1);
+    }
+
     if ($isDebug) {
         echo "<h1>Fatal Error</h1>";
         echo "<p>" . $exception->getMessage() . "</p>";

@@ -12,7 +12,16 @@ class Request {
     ) {}
 
     public static function createFromGlobals(): self {
-        return new self($_GET, $_POST, $_SERVER, $_FILES, $_COOKIE, $_SESSION ?? []);
+        $post = $_POST;
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        if (str_contains(strtolower($contentType), 'application/json')) {
+            $rawBody = file_get_contents('php://input');
+            $data = json_decode($rawBody, true);
+            if (is_array($data)) {
+                $post = array_merge($post, $data);
+            }
+        }
+        return new self($_GET, $post, $_SERVER, $_FILES, $_COOKIE, $_SESSION ?? []);
     }
 
     public function getQuery(?string $key = null, mixed $default = null): mixed {

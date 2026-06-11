@@ -190,4 +190,7 @@ return [
 
     // Public Web Cron route
     ['method' => 'GET',  'path' => '/api/cron',                    'handler' => [AdminSchedulerController::class, 'runWebCron']],
+
+    // API v1 routes
+    ['method' => 'GET',  'path' => '/api/v1/ping',                 'handler' => [\App\Controllers\Api\ApiController::class, 'ping']],
 ];
