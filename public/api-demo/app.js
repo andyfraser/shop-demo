@@ -1068,7 +1068,7 @@ const App = {
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary" style="margin-top:16px;align-self:flex-start">Place Order (${this.state.currencySymbol}${grandTotal.toFixed(2)})</button>
+                        <button type="submit" id="place-order-btn" class="btn btn-primary" style="margin-top:16px;align-self:flex-start">Place Order (${this.state.currencySymbol}${grandTotal.toFixed(2)})</button>
                     </form>
                 </div>
 
@@ -1092,9 +1092,13 @@ const App = {
                         <span>Tax</span>
                         <span>${this.state.currencySymbol}${vat.toFixed(2)}</span>
                     </div>
+                    <div class="summary-row" id="delivery-summary-row" style="display: ${hasPhysical ? 'flex' : 'none'}">
+                        <span>Delivery</span>
+                        <span id="delivery-summary-value">${this.state.currencySymbol}0.00</span>
+                    </div>
                     <div class="summary-row">
                         <span>Total</span>
-                        <span style="font-weight:700;color:var(--accent-secondary)">${this.state.currencySymbol}${grandTotal.toFixed(2)}</span>
+                        <span id="summary-grand-total" style="font-weight:700;color:var(--accent-secondary)">${this.state.currencySymbol}${grandTotal.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
@@ -1121,6 +1125,39 @@ const App = {
                     fillAddress(e.currentTarget);
                 });
             });
+        }
+
+        // Handle delivery option changes and update total
+        const deliverySelect = document.getElementById('delivery-option-select');
+        const updateTotals = () => {
+            if (!deliverySelect) return;
+            const selectedOpt = deliverySelect.options[deliverySelect.selectedIndex];
+            if (!selectedOpt) return;
+            const deliveryPrice = parseFloat(selectedOpt.getAttribute('data-price') || 0);
+            
+            // Update summary delivery row
+            const deliveryValueSpan = document.getElementById('delivery-summary-value');
+            if (deliveryValueSpan) {
+                deliveryValueSpan.textContent = `${this.state.currencySymbol}${deliveryPrice.toFixed(2)}`;
+            }
+            
+            // Update grand total
+            const updatedGrandTotal = grandTotal + deliveryPrice;
+            const grandTotalSpan = document.getElementById('summary-grand-total');
+            if (grandTotalSpan) {
+                grandTotalSpan.textContent = `${this.state.currencySymbol}${updatedGrandTotal.toFixed(2)}`;
+            }
+            
+            // Update button
+            const placeOrderBtn = document.getElementById('place-order-btn');
+            if (placeOrderBtn) {
+                placeOrderBtn.textContent = `Place Order (${this.state.currencySymbol}${updatedGrandTotal.toFixed(2)})`;
+            }
+        };
+
+        if (deliverySelect) {
+            deliverySelect.addEventListener('change', updateTotals);
+            updateTotals(); // Initialize
         }
 
         // Card inputs formatting
