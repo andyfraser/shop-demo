@@ -60,6 +60,13 @@ class ApiAuthTest extends TestCase {
         $this->userService = $this->container->get(UserServiceInterface::class);
     }
 
+    public function tearDown() {
+        unset($_SERVER['HTTP_AUTHORIZATION']);
+        unset($_SERVER['HTTP_X_CART_UUID']);
+        unset($_SERVER['HTTP_CART_TOKEN']);
+        unset($_SERVER['X_GENERATED_CART_UUID']);
+    }
+
     public function testApiRegisterAndLoginFlow() {
         $email = 'api_user_' . rand(1000, 9999) . '@example.com';
         

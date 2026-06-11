@@ -46,5 +46,10 @@ class CorsMiddleware {
         $response->setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         $response->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Cart-UUID');
         $response->setHeader('Access-Control-Max-Age', '86400');
+
+        if (isset($_SERVER['X_GENERATED_CART_UUID'])) {
+            $response->setHeader('X-Cart-UUID', $_SERVER['X_GENERATED_CART_UUID']);
+            $response->setHeader('Access-Control-Expose-Headers', 'X-Cart-UUID');
+        }
     }
 }

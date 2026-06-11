@@ -286,6 +286,12 @@ class CartService implements CartServiceInterface {
         $sessionId = session_id();
         
         $sessionCartId = $this->repository->findCartBySessionId($sessionId);
+        if (!$sessionCartId) {
+            $uuid = $_SERVER['HTTP_X_CART_UUID'] ?? $_SERVER['HTTP_CART_TOKEN'] ?? null;
+            if ($uuid) {
+                $sessionCartId = $this->repository->findCartBySessionId($uuid);
+            }
+        }
         $userCartId = $this->repository->findCartByUserId($userId);
 
         if (!$userCartId) {
@@ -322,24 +328,40 @@ class CartService implements CartServiceInterface {
     private function getCartId(): ?int {
         $this->auth->sessionStart();
         $user = $this->auth->currentUser();
-        $sessionId = session_id();
-
+        
         if ($user) {
             return $this->repository->findCartByUserId($user->id);
-        } else {
-            return $this->repository->findCartBySessionId($sessionId);
         }
+
+        $uuid = $_SERVER['HTTP_X_CART_UUID'] ?? $_SERVER['HTTP_CART_TOKEN'] ?? null;
+        if ($uuid) {
+            return $this->repository->findCartBySessionId($uuid);
+        }
+
+        $sessionId = session_id();
+        if (!$sessionId) {
+            return null;
+        }
+        return $this->repository->findCartBySessionId($sessionId);
     }
 
     private function ensureCart(): int {
         $this->auth->sessionStart();
         $user = $this->auth->currentUser();
-        $sessionId = session_id();
 
         $cartId = $this->getCartId();
         if ($cartId) return (int)$cartId;
 
-        return $this->repository->createCart($user ? $user->id : null, $sessionId);
+        $uuid = $_SERVER['HTTP_X_CART_UUID'] ?? $_SERVER['HTTP_CART_TOKEN'] ?? null;
+        $idOrUuid = $uuid ?: session_id() ?: '';
+        if (!$idOrUuid) {
+            // Force session start if needed
+            if (session_status() === PHP_SESSION_NONE) {
+                @session_start();
+            }
+            $idOrUuid = session_id() ?: 'temp-' . uniqid();
+        }
+        return $this->repository->createCart($user ? $user->id : null, $idOrUuid);
     }
 
     private function generateKey(int $productId, ?int $variantId = null, ?string $metadata = null): string {

@@ -41,6 +41,30 @@ class Router {
             if ($method === 'OPTIONS') {
                 return $cors->handle($request);
             }
+
+            // Auto-generate guest cart UUID if not present and user is guest
+            $uuid = $_SERVER['HTTP_X_CART_UUID'] ?? $_SERVER['HTTP_CART_TOKEN'] ?? null;
+            $user = null;
+            if ($this->container) {
+                try {
+                    $auth = $this->container->get(\App\Services\AuthServiceInterface::class);
+                    $user = $auth ? $auth->currentUser() : null;
+                } catch (\Exception $e) {
+                    // AuthService not registered in minimal containers
+                }
+            }
+
+            if (!$uuid && !$user) {
+                $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                    mt_rand(0, 0xffff),
+                    mt_rand(0, 0x0C2f) | 0x4000,
+                    mt_rand(0, 0x3fff) | 0x8000,
+                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+                );
+                $_SERVER['HTTP_X_CART_UUID'] = $uuid;
+                $_SERVER['X_GENERATED_CART_UUID'] = $uuid;
+            }
         }
 
         $route = $this->match($uri, $method);

@@ -202,4 +202,16 @@ return [
     ['method' => 'GET',  'path' => '/api/v1/products/:slug/related', 'handler' => [\App\Controllers\Api\ApiProductController::class, 'related']],
     ['method' => 'POST', 'path' => '/api/v1/products/:slug/review', 'handler' => [\App\Controllers\Api\ApiProductController::class, 'submitReview'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
     ['method' => 'GET',  'path' => '/api/v1/categories',           'handler' => [\App\Controllers\Api\ApiProductController::class, 'categories']],
+    
+    // Cart APIs
+    ['method' => 'GET',  'path' => '/api/v1/cart',                 'handler' => [\App\Controllers\Api\ApiCartController::class, 'show']],
+    ['method' => 'POST', 'path' => '/api/v1/cart/add',             'handler' => [\App\Controllers\Api\ApiCartController::class, 'add']],
+    ['method' => 'POST', 'path' => '/api/v1/cart/update',          'handler' => [\App\Controllers\Api\ApiCartController::class, 'update']],
+    ['method' => 'POST', 'path' => '/api/v1/cart/promo',           'handler' => [\App\Controllers\Api\ApiCartController::class, 'applyPromo']],
+
+    // Wishlist APIs (Auth Required)
+    ['method' => 'GET',  'path' => '/api/v1/wishlist',             'handler' => [\App\Controllers\Api\ApiWishlistController::class, 'index'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'POST', 'path' => '/api/v1/wishlist/add/:productId', 'handler' => [\App\Controllers\Api\ApiWishlistController::class, 'add'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'POST', 'path' => '/api/v1/wishlist/remove/:productId', 'handler' => [\App\Controllers\Api\ApiWishlistController::class, 'remove'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'POST', 'path' => '/api/v1/wishlist/toggle-privacy', 'handler' => [\App\Controllers\Api\ApiWishlistController::class, 'togglePrivacy'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
 ];
