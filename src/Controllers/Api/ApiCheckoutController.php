@@ -437,6 +437,7 @@ class ApiCheckoutController {
     public function lookup(Request $request): Response {
         $post = $request->getPost();
         $reference = trim($post['order_reference'] ?? '');
+        $reference = urldecode($reference);
         $email = trim($post['email'] ?? '');
 
         if (!$reference || !$email) {

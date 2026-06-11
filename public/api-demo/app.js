@@ -228,8 +228,8 @@ const App = {
             this.renderWishlistView(viewContainer);
         } else if (hash === '#/orders' || hash.startsWith('#/orders/')) {
             document.getElementById('nav-orders')?.classList.add('active');
-            const parts = hash.replace('#/orders/', '').split('?');
-            const orderId = parts[0] ? parts[0] : null;
+            const parts = hash.startsWith('#/orders/') ? hash.substring(9).split('?') : [null];
+            const orderId = parts[0] ? decodeURIComponent(parts[0]) : null;
             let email = null;
             if (parts[1]) {
                 const params = new URLSearchParams(parts[1]);
@@ -1331,15 +1331,17 @@ const App = {
             try {
                 // If it is authenticated, fetch details, otherwise check payload lookup
                 let order = null;
+                const decodedOrderId = decodeURIComponent(orderId);
                 if (this.state.user) {
-                    const response = await this.api(`/orders/${orderId}`);
+                    const cleanId = String(decodedOrderId).replace('#', '');
+                    const response = await this.api(`/orders/${cleanId}`);
                     order = response.data;
                 } else {
                     // Try tracking endpoint /api/v1/orders/lookup
                     const response = await this.api('/orders/lookup', {
                         method: 'POST',
                         body: JSON.stringify({ 
-                            order_reference: orderId,
+                            order_reference: decodedOrderId,
                             email: lookupEmail
                         })
                     });
