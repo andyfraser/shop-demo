@@ -290,5 +290,19 @@ return function($c, array $config) {
         QueueServiceInterface::class => function($c) {
             return new QueueService($c->get(\App\Repositories\JobRepositoryInterface::class));
         },
+        \App\Controllers\Api\ApiCheckoutController::class => function($c) {
+            return new \App\Controllers\Api\ApiCheckoutController(
+                $c->get(OrderServiceInterface::class),
+                $c->get(CartServiceInterface::class),
+                $c->get(AuthServiceInterface::class),
+                $c->get(DeliveryServiceInterface::class),
+                $c->get(SettingsServiceInterface::class),
+                $c->get(PaymentServiceInterface::class),
+                $c->get(AddressServiceInterface::class),
+                $c->get(PricingServiceInterface::class),
+                $c->get(\App\Core\Validator::class),
+                $c->get(VirtualProductServiceInterface::class)
+            );
+        },
     ];
 };

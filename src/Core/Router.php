@@ -35,36 +35,9 @@ class Router {
         $path = parse_url($uri, PHP_URL_PATH) ?: '';
         $isApi = str_starts_with($path, '/api/') || $path === '/api';
         
-        $cors = null;
-        if ($isApi) {
-            $cors = $this->container ? $this->container->get(\App\Middleware\CorsMiddleware::class) : new \App\Middleware\CorsMiddleware();
-            if ($method === 'OPTIONS') {
-                return $cors->handle($request);
-            }
-
-            // Auto-generate guest cart UUID if not present and user is guest
-            $uuid = $_SERVER['HTTP_X_CART_UUID'] ?? $_SERVER['HTTP_CART_TOKEN'] ?? null;
-            $user = null;
-            if ($this->container) {
-                try {
-                    $auth = $this->container->get(\App\Services\AuthServiceInterface::class);
-                    $user = $auth ? $auth->currentUser() : null;
-                } catch (\Exception $e) {
-                    // AuthService not registered in minimal containers
-                }
-            }
-
-            if (!$uuid && !$user) {
-                $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-                    mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-                    mt_rand(0, 0xffff),
-                    mt_rand(0, 0x0C2f) | 0x4000,
-                    mt_rand(0, 0x3fff) | 0x8000,
-                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-                );
-                $_SERVER['HTTP_X_CART_UUID'] = $uuid;
-                $_SERVER['X_GENERATED_CART_UUID'] = $uuid;
-            }
+        $cors = $this->checkApiAndCors($request, $isApi);
+        if ($cors && $method === 'OPTIONS') {
+            return $cors->handle($request);
         }
 
         $route = $this->match($uri, $method);
@@ -109,7 +82,45 @@ class Router {
             return $response;
         }
 
-        // Avoid warning logging for common static assets to prevent log pollution
+        return $this->handleNotFound($request, $isApi, $path, $method, $uri, $cors);
+    }
+
+    private function checkApiAndCors(Request $request, bool $isApi): ?\App\Middleware\CorsMiddleware {
+        if (!$isApi) {
+            return null;
+        }
+
+        $cors = $this->container ? $this->container->get(\App\Middleware\CorsMiddleware::class) : new \App\Middleware\CorsMiddleware();
+        $this->generateGuestCartUuidIfNeeded();
+        return $cors;
+    }
+
+    private function generateGuestCartUuidIfNeeded(): void {
+        $uuid = $_SERVER['HTTP_X_CART_UUID'] ?? $_SERVER['HTTP_CART_TOKEN'] ?? null;
+        $user = null;
+        if ($this->container) {
+            try {
+                $auth = $this->container->get(\App\Services\AuthServiceInterface::class);
+                $user = $auth ? $auth->currentUser() : null;
+            } catch (\Exception $e) {
+                // AuthService not registered in minimal containers
+            }
+        }
+
+        if (!$uuid && !$user) {
+            $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                mt_rand(0, 0xffff),
+                mt_rand(0, 0x0C2f) | 0x4000,
+                mt_rand(0, 0x3fff) | 0x8000,
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            );
+            $_SERVER['HTTP_X_CART_UUID'] = $uuid;
+            $_SERVER['X_GENERATED_CART_UUID'] = $uuid;
+        }
+    }
+
+    private function handleNotFound(Request $request, bool $isApi, string $path, string $method, string $uri, ?\App\Middleware\CorsMiddleware $cors): Response {
         $isAsset = strpos($path, '/public/') === 0 
             || strpos($path, '/css/') === 0 
             || strpos($path, '/js/') === 0 

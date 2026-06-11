@@ -214,4 +214,12 @@ return [
     ['method' => 'POST', 'path' => '/api/v1/wishlist/add/:productId', 'handler' => [\App\Controllers\Api\ApiWishlistController::class, 'add'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
     ['method' => 'POST', 'path' => '/api/v1/wishlist/remove/:productId', 'handler' => [\App\Controllers\Api\ApiWishlistController::class, 'remove'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
     ['method' => 'POST', 'path' => '/api/v1/wishlist/toggle-privacy', 'handler' => [\App\Controllers\Api\ApiWishlistController::class, 'togglePrivacy'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+
+    // Checkout & Order APIs
+    ['method' => 'GET',  'path' => '/api/v1/account/addresses',    'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'getAddresses'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'POST', 'path' => '/api/v1/account/addresses/save', 'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'saveAddress'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'POST', 'path' => '/api/v1/checkout',             'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'process']],
+    ['method' => 'GET',  'path' => '/api/v1/orders',               'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'index'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'GET',  'path' => '/api/v1/orders/:id',           'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'show'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'POST', 'path' => '/api/v1/orders/lookup',         'handler' => [\App\Controllers\Api\ApiCheckoutController::class, 'lookup']],
 ];

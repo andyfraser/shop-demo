@@ -248,3 +248,152 @@ curl -i -X POST \
   -d '{"email":"admin@demoshop.com","password":"password"}' \
   http://localhost:8000/api/v1/auth/login
 ```
+
+---
+
+### 4. Checkout & Orders
+
+#### Saved Addresses
+*   **Method**: `GET`
+*   **Path**: `/api/v1/account/addresses`
+*   **Headers**:
+    *   `Authorization: Bearer <token>`
+*   **Response (200 OK)**:
+    ```json
+    {
+      "success": true,
+      "data": [
+        {
+          "id": 1,
+          "label": "Home",
+          "name": "John Doe",
+          "address": "123 Main St",
+          "city": "Metropolis",
+          "postcode": "12345",
+          "country": "US",
+          "is_default": true
+        }
+      ]
+    }
+    ```
+
+#### Save Address
+*   **Method**: `POST`
+*   **Path**: `/api/v1/account/addresses/save`
+*   **Headers**:
+    *   `Authorization: Bearer <token>`
+*   **Payload**:
+    ```json
+    {
+      "id": 0,
+      "label": "Office",
+      "name": "John Office",
+      "address": "456 Corp Blvd",
+      "city": "Gotham",
+      "postcode": "54321",
+      "country": "US",
+      "is_default": false
+    }
+    ```
+*   **Response (201 Created)**:
+    ```json
+    {
+      "success": true,
+      "message": "Address created.",
+      "data": {
+        "id": 2
+      }
+    }
+    ```
+
+#### Checkout Process
+*   **Method**: `POST`
+*   **Path**: `/api/v1/checkout`
+*   **Headers**:
+    *   `Authorization: Bearer <token>` (optional, required if placing order for user account)
+    *   `X-Cart-UUID: <uuid>` (optional, required if guest cart is used)
+*   **Payload**:
+    ```json
+    {
+      "name": "Jane Doe",
+      "email": "customer@example.com",
+      "address": "123 Main St",
+      "city": "Metropolis",
+      "postcode": "12345",
+      "country": "US",
+      "delivery_option_id": 1,
+      "card_number": "4111111111111111",
+      "card_expiry": "12/28",
+      "card_cvc": "123"
+    }
+    ```
+*   **Response (201 Created)**:
+    ```json
+    {
+      "success": true,
+      "message": "Order placed successfully.",
+      "data": {
+        "order_id": 12,
+        "order_reference": "#000012",
+        "status": "paid",
+        "transaction_id": "ch_mock_..."
+      }
+    }
+    ```
+
+#### Get User Orders
+*   **Method**: `GET`
+*   **Path**: `/api/v1/orders`
+*   **Headers**:
+    *   `Authorization: Bearer <token>`
+*   **Response (200 OK)**:
+    ```json
+    {
+      "success": true,
+      "data": [
+        {
+          "id": 12,
+          "order_reference": "#000012",
+          "total": 120.00,
+          "status": "paid",
+          "created_at": "2026-06-11 08:30:00"
+        }
+      ]
+    }
+    ```
+
+#### Guest Order Lookup
+*   **Method**: `POST`
+*   **Path**: `/api/v1/orders/lookup`
+*   **Payload**:
+    ```json
+    {
+      "order_reference": "#000012",
+      "email": "customer@example.com"
+    }
+    ```
+*   **Response (200 OK)**:
+    ```json
+    {
+      "success": true,
+      "data": {
+        "id": 12,
+        "order_reference": "#000012",
+        "status": "paid",
+        "total": 120.00,
+        "created_at": "2026-06-11 08:30:00",
+        "items": [
+          {
+            "product_id": 4,
+            "variant_id": null,
+            "name": "Minimalist Leather Backpack",
+            "sku": "BAG-LTHR-01",
+            "qty": 1,
+            "price": 120.00,
+            "total": 120.00
+          }
+        ]
+      }
+    }
+    ```
+
