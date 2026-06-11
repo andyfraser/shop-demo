@@ -22,8 +22,11 @@ return function($c, array $config) {
 
         // File-based cache
         CacheInterface::class => function() use ($config) {
-            $cachePath = $config['app']['cache_path'] ?? __DIR__ . '/../../storage/cache';
+            $cachePath = (defined('TESTING') && TESTING)
+                ? __DIR__ . '/../../storage/cache_test'
+                : ($config['app']['cache_path'] ?? __DIR__ . '/../../storage/cache');
             return new FileCache($cachePath);
         },
+
     ];
 };

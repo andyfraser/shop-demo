@@ -3,6 +3,9 @@
 // Start output buffering to prevent early output from locking session_id() calls in tests
 ob_start();
 
+define('TESTING', true);
+
+
 require_once __DIR__ . '/../src/Core/Autoloader.php';
 \App\Core\Autoloader::register();
 
@@ -224,5 +227,20 @@ echo "Tests: " . ($passed + $failed) . ", Assertions: $assertions, Failures: $fa
 if (file_exists($testDbPath)) {
     unlink($testDbPath);
 }
+
+// Cleanup test cache
+$testCachePath = __DIR__ . '/../storage/cache_test';
+if (is_dir($testCachePath)) {
+    $files = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($testCachePath, RecursiveDirectoryIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST
+    );
+    foreach ($files as $fileinfo) {
+        $todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
+        $todo($fileinfo->getRealPath());
+    }
+    rmdir($testCachePath);
+}
+
 
 exit($failed > 0 ? 1 : 0);

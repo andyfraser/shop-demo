@@ -44,6 +44,9 @@ class ApiCheckoutTest extends TestCase {
                 $this->container->set($id, $factory);
             }
         }
+
+        // Use NullCache to prevent stale cache leakage between test suites
+        $this->container->set(\App\Core\Cache\CacheInterface::class, fn() => new \Tests\NullCache());
         
         // Ensure the Container has itself registered as Container::class so static lookups work
         $this->container->set(Container::class, fn() => $this->container);

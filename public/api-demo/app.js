@@ -1056,15 +1056,15 @@ const App = {
                         <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:16px">
                             <div class="form-group">
                                 <label class="form-label">Card Number</label>
-                                <input type="text" class="form-control" placeholder="4242 4242 4242 4242" required>
+                                <input type="text" class="form-control" name="card_number" id="card-number-input" placeholder="4242 4242 4242 4242" maxlength="19" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Expiry</label>
-                                <input type="text" class="form-control" placeholder="MM/YY" required>
+                                <input type="text" class="form-control" name="card_expiry" id="card-expiry-input" placeholder="MM/YY" maxlength="5" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">CVC</label>
-                                <input type="text" class="form-control" placeholder="123" required>
+                                <input type="text" class="form-control" name="card_cvc" id="card-cvc-input" placeholder="123" maxlength="4" required>
                             </div>
                         </div>
 
@@ -1123,6 +1123,36 @@ const App = {
             });
         }
 
+        // Card inputs formatting
+        const cardNumInput = document.getElementById('card-number-input');
+        const cardExpInput = document.getElementById('card-expiry-input');
+        const cardCvcInput = document.getElementById('card-cvc-input');
+
+        if (cardNumInput) {
+            cardNumInput.addEventListener('input', (e) => {
+                let val = e.target.value.replace(/\D/g, '');
+                let formatted = val.match(/.{1,4}/g);
+                e.target.value = formatted ? formatted.join(' ') : '';
+            });
+        }
+
+        if (cardExpInput) {
+            cardExpInput.addEventListener('input', (e) => {
+                let val = e.target.value.replace(/\D/g, '');
+                if (val.length >= 2) {
+                    e.target.value = val.substring(0, 2) + '/' + val.substring(2, 4);
+                } else {
+                    e.target.value = val;
+                }
+            });
+        }
+
+        if (cardCvcInput) {
+            cardCvcInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+        }
+
         // Checkout submission Form
         const checkoutForm = document.getElementById('checkout-form');
         checkoutForm.addEventListener('submit', async (e) => {
@@ -1132,6 +1162,9 @@ const App = {
             const postBody = {
                 name: formData.get('name'),
                 email: formData.get('email'),
+                card_number: formData.get('card_number') ? formData.get('card_number').replace(/\s/g, '') : '',
+                card_expiry: formData.get('card_expiry') || '',
+                card_cvc: formData.get('card_cvc') || '',
             };
 
             if (hasPhysical) {
