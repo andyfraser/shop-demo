@@ -32,6 +32,16 @@ class AuthService implements AuthServiceInterface {
             return $this->cachedUser;
         }
 
+        // Check for Bearer token first
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            $user = $this->verifyApiToken($matches[1]);
+            if ($user) {
+                $this->cachedUser = $user;
+                return $user;
+            }
+        }
+
         $this->sessionStart();
         
         $user = null;
@@ -141,5 +151,27 @@ class AuthService implements AuthServiceInterface {
                 'samesite' => 'Lax',
             ]
         );
+    }
+
+    public function generateApiTokenForUser(User $user): string {
+        $token = bin2hex(random_bytes(32));
+        $hash = hash('sha256', $token);
+        
+        $createdAt = date('Y-m-d H:i:s');
+        $expiresAt = date('Y-m-d H:i:s', time() + (30 * 86400));
+        
+        $this->repository->saveApiToken($user->id, $hash, $createdAt, $expiresAt);
+        return $token;
+    }
+
+    public function verifyApiToken(string $token): ?User {
+        $hash = hash('sha256', $token);
+        return $this->repository->findUserByApiTokenHash($hash);
+    }
+
+    public function revokeApiToken(string $token): bool {
+        $hash = hash('sha256', $token);
+        $this->cachedUser = null;
+        return $this->repository->deleteApiTokenHash($hash);
     }
 }

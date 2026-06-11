@@ -193,4 +193,8 @@ return [
 
     // API v1 routes
     ['method' => 'GET',  'path' => '/api/v1/ping',                 'handler' => [\App\Controllers\Api\ApiController::class, 'ping']],
+    ['method' => 'POST', 'path' => '/api/v1/auth/login',           'handler' => [\App\Controllers\Api\ApiAuthController::class, 'login']],
+    ['method' => 'POST', 'path' => '/api/v1/auth/register',        'handler' => [\App\Controllers\Api\ApiAuthController::class, 'register']],
+    ['method' => 'GET',  'path' => '/api/v1/auth/me',              'handler' => [\App\Controllers\Api\ApiAuthController::class, 'me'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
+    ['method' => 'POST', 'path' => '/api/v1/auth/logout',          'handler' => [\App\Controllers\Api\ApiAuthController::class, 'logout'], 'middlewares' => [\App\Middleware\ApiAuthMiddleware::class]],
 ];

@@ -50,4 +50,35 @@ class AuthRepository implements AuthRepositoryInterface {
         $this->db->prepare("DELETE FROM remember_tokens WHERE token = ?")
             ->execute([$token]);
     }
+
+    public function saveApiToken(int $userId, string $tokenHash, string $createdAt, ?string $expiresAt): void {
+        $stmt = $this->db->prepare("INSERT INTO user_tokens (user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$userId, $tokenHash, $createdAt, $expiresAt]);
+    }
+
+    public function findUserByApiTokenHash(string $tokenHash): ?User {
+        $now = date('Y-m-d H:i:s');
+        $stmt = $this->db->prepare(
+            "SELECT u.*
+             FROM user_tokens ut
+             JOIN users u ON u.id = ut.user_id
+             WHERE ut.token_hash = ? AND (ut.expires_at IS NULL OR ut.expires_at > ?)"
+        );
+        $stmt->setFetchMode(\PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE, User::class, [$this->logger]);
+        $stmt->execute([$tokenHash, $now]);
+        
+        $user = $stmt->fetch() ?: null;
+        if ($user) {
+            // Update last_used_at
+            $this->db->prepare("UPDATE user_tokens SET last_used_at = ? WHERE token_hash = ?")
+                ->execute([$now, $tokenHash]);
+        }
+        return $user;
+    }
+
+    public function deleteApiTokenHash(string $tokenHash): bool {
+        $stmt = $this->db->prepare("DELETE FROM user_tokens WHERE token_hash = ?");
+        $stmt->execute([$tokenHash]);
+        return $stmt->rowCount() > 0;
+    }
 }

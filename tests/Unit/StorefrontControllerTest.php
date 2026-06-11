@@ -79,6 +79,9 @@ class StorefrontControllerTest extends TestCase {
             public function isAdmin(): bool { return false; }
             public function login(array|\App\Models\User $user, bool $remember = false): void {}
             public function logout(): void {}
+            public function generateApiTokenForUser(\App\Models\User $user): string { return ''; }
+            public function verifyApiToken(string $token): ?\App\Models\User { return null; }
+            public function revokeApiToken(string $token): bool { return true; }
         };
 
         $reviewService = new class implements \App\Services\ReviewServiceInterface {

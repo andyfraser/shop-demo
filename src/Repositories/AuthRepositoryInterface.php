@@ -8,4 +8,7 @@ interface AuthRepositoryInterface {
     public function findUserByRememberToken(string $token): ?User;
     public function setRememberToken(int $userId, string $token, int $expires, ?string $oldToken = null): void;
     public function clearRememberToken(string $token): void;
+    public function saveApiToken(int $userId, string $tokenHash, string $createdAt, ?string $expiresAt): void;
+    public function findUserByApiTokenHash(string $tokenHash): ?User;
+    public function deleteApiTokenHash(string $tokenHash): bool;
 }
