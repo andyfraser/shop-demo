@@ -51,7 +51,7 @@ return function($c, array $config) {
             return new SeedCommand($c->get(DatabaseSeedServiceInterface::class), $c->get(LoggerInterface::class));
         },
         RecoverCartsCommand::class => function($c) {
-            return new RecoverCartsCommand($c->get(PDO::class), $c->get(\App\Core\Events\EventDispatcherInterface::class), $c->get(LoggerInterface::class));
+            return new RecoverCartsCommand($c->get(\App\Repositories\CartRepositoryInterface::class), $c->get(\App\Core\Events\EventDispatcherInterface::class), $c->get(LoggerInterface::class));
         },
         MaintenanceDownCommand::class => function($c) {
             return new MaintenanceDownCommand($c->get(SettingsServiceInterface::class));

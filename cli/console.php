@@ -84,10 +84,10 @@ foreach ($files as $file) {
     }
 }
 
-$db = $container->get(PDO::class);
+$taskRepository = $container->get(\App\Repositories\ScheduledTaskRepositoryInterface::class);
 $logger = $container->get(\Psr\Log\LoggerInterface::class);
 $settings = $container->get(\App\Services\SettingsServiceInterface::class);
-$scheduler = new Scheduler($db, $settings, array_values($commands), $logger);
+$scheduler = new Scheduler($taskRepository, $settings, array_values($commands), $logger);
 
 // CLI Router
 $action = $argv[1] ?? 'list';

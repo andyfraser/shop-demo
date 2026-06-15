@@ -110,4 +110,23 @@ class CartRepository implements CartRepositoryInterface {
     public function deleteCart(int $cartId): void {
         $this->db->prepare("DELETE FROM carts WHERE id = ?")->execute([$cartId]);
     }
+
+    public function findAbandonedCarts(string $threshold): array {
+        $sql = "
+            SELECT c.id, u.email, u.name 
+            FROM carts c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.last_activity < ?
+                AND c.recovery_email_sent_at IS NULL
+                AND EXISTS (SELECT 1 FROM cart_items ci WHERE ci.cart_id = c.id)
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$threshold]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function updateRecoveryEmailSentAt(int $cartId, string $sentAt): void {
+        $this->db->prepare("UPDATE carts SET recovery_email_sent_at = ? WHERE id = ?")
+            ->execute([$sentAt, $cartId]);
+    }
 }

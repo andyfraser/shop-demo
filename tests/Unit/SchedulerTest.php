@@ -33,6 +33,7 @@ class MockCommand implements CommandInterface {
 
 class SchedulerTest extends TestCase {
     private ?PDO $db = null;
+    private ?\App\Repositories\ScheduledTaskRepository $taskRepository = null;
 
     public function setUp(): void {
         $this->db = new PDO('sqlite::memory:');
@@ -42,6 +43,7 @@ class SchedulerTest extends TestCase {
             name TEXT NOT NULL,
             last_run_at DATETIME
         )");
+        $this->taskRepository = new \App\Repositories\ScheduledTaskRepository($this->db);
     }
 
     public function testSchedulerExecutesFirstTime(): void {
@@ -49,7 +51,7 @@ class SchedulerTest extends TestCase {
         $command->schedule = 'daily';
         
         $settings = new SchedulerMockSettingsService();
-        $scheduler = new Scheduler($this->db, $settings, [$command]);
+        $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
         
         // Suppress output for tests
         ob_start();
@@ -74,7 +76,7 @@ class SchedulerTest extends TestCase {
         $stmt->execute([$command->name, date('Y-m-d H:i:s')]);
         
         $settings = new SchedulerMockSettingsService();
-        $scheduler = new Scheduler($this->db, $settings, [$command]);
+        $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
         
         ob_start();
         $scheduler->run();
@@ -93,7 +95,7 @@ class SchedulerTest extends TestCase {
         $stmt->execute([$command->name, $sixMinsAgo]);
         
         $settings = new SchedulerMockSettingsService();
-        $scheduler = new Scheduler($this->db, $settings, [$command]);
+        $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
         
         ob_start();
         $scheduler->run();
@@ -112,7 +114,7 @@ class SchedulerTest extends TestCase {
         $stmt->execute([$command->name, $fourMinsAgo]);
         
         $settings = new SchedulerMockSettingsService();
-        $scheduler = new Scheduler($this->db, $settings, [$command]);
+        $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
         
         ob_start();
         $scheduler->run();
@@ -131,7 +133,7 @@ class SchedulerTest extends TestCase {
         $stmt->execute([$command->name, $thirteenHoursAgo]);
         
         $settings = new SchedulerMockSettingsService();
-        $scheduler = new Scheduler($this->db, $settings, [$command]);
+        $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
         
         ob_start();
         $scheduler->run();
@@ -150,7 +152,7 @@ class SchedulerTest extends TestCase {
         $stmt->execute([$command->name, $elevenHoursAgo]);
         
         $settings = new SchedulerMockSettingsService();
-        $scheduler = new Scheduler($this->db, $settings, [$command]);
+        $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
         
         ob_start();
         $scheduler->run();
@@ -166,7 +168,7 @@ class SchedulerTest extends TestCase {
         $settings = new SchedulerMockSettingsService();
         $settings->set('scheduler_paused', '1');
         
-        $scheduler = new Scheduler($this->db, $settings, [$command]);
+        $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
         
         ob_start();
         $scheduler->run();
@@ -185,7 +187,7 @@ class SchedulerTest extends TestCase {
         };
 
         $settings = new SchedulerMockSettingsService();
-        $scheduler = new Scheduler($this->db, $settings, [$command]);
+        $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
 
         ob_start();
         $scheduler->run();
@@ -206,7 +208,7 @@ class SchedulerTest extends TestCase {
             $command->schedule = 'everyMinute';
             
             $settings = new SchedulerMockSettingsService();
-            $scheduler = new Scheduler($this->db, $settings, [$command]);
+            $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
             
             ob_start();
             $scheduler->run();
@@ -239,7 +241,7 @@ class SchedulerTest extends TestCase {
 
         try {
             $settings = new SchedulerMockSettingsService();
-            $scheduler = new Scheduler($this->db, $settings, [$command]);
+            $scheduler = new Scheduler($this->taskRepository, $settings, [$command]);
             
             ob_start();
             $scheduler->run();

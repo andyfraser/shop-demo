@@ -16,4 +16,6 @@ interface CartRepositoryInterface {
     public function updateLastActivity(int $cartId): void;
     public function attachCartToUser(int $cartId, int $userId): void;
     public function deleteCart(int $cartId): void;
+    public function findAbandonedCarts(string $threshold): array;
+    public function updateRecoveryEmailSentAt(int $cartId, string $sentAt): void;
 }

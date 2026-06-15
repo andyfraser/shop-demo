@@ -81,4 +81,10 @@ class AuthRepository implements AuthRepositoryInterface {
         $stmt->execute([$tokenHash]);
         return $stmt->rowCount() > 0;
     }
+
+    public function cleanupExpiredRememberTokens(int $now): int {
+        $stmt = $this->db->prepare("DELETE FROM remember_tokens WHERE expires_at < ?");
+        $stmt->execute([$now]);
+        return $stmt->rowCount();
+    }
 }

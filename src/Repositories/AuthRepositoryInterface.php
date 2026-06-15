@@ -11,4 +11,5 @@ interface AuthRepositoryInterface {
     public function saveApiToken(int $userId, string $tokenHash, string $createdAt, ?string $expiresAt): void;
     public function findUserByApiTokenHash(string $tokenHash): ?User;
     public function deleteApiTokenHash(string $tokenHash): bool;
+    public function cleanupExpiredRememberTokens(int $now): int;
 }

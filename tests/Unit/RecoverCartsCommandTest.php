@@ -46,7 +46,8 @@ class RecoverCartsCommandTest extends TestCase {
         $stmt->execute([$cartId, 1, 2]);
 
         $dispatcher = new RecoverCartsMockEventDispatcher();
-        $command = new RecoverCartsCommand($this->db, $dispatcher, new NullLogger());
+        $cartRepository = new \App\Repositories\CartRepository($this->db);
+        $command = new RecoverCartsCommand($cartRepository, $dispatcher, new NullLogger());
 
         ob_start();
         $exitCode = $command->execute();

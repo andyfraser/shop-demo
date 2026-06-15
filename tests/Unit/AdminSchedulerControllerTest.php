@@ -81,10 +81,11 @@ class AdminSchedulerControllerTest extends TestCase {
         $this->command = new ControllerMockCommand();
         $this->command->schedule = 'hourly';
 
+        $taskRepository = new \App\Repositories\ScheduledTaskRepository($this->db);
         $this->controller = new TestAdminSchedulerController(
             $renderer,
             $this->settings,
-            $this->db,
+            $taskRepository,
             $this->container,
             new \Tests\NullLogger()
         );

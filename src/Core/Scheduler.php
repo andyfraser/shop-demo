@@ -3,28 +3,28 @@
 namespace App\Core;
 
 use App\Commands\CommandInterface;
-use PDO;
+use App\Repositories\ScheduledTaskRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
 class Scheduler {
     private array $commands;
-    private PDO $db;
+    private ScheduledTaskRepositoryInterface $taskRepository;
     private ?\Psr\Log\LoggerInterface $logger;
     private \App\Services\SettingsServiceInterface $settingsService;
 
     /**
-     * @param PDO $db
+     * @param ScheduledTaskRepositoryInterface $taskRepository
      * @param \App\Services\SettingsServiceInterface $settingsService
      * @param CommandInterface[] $commands
      * @param \Psr\Log\LoggerInterface|null $logger
      */
     public function __construct(
-        PDO $db,
+        ScheduledTaskRepositoryInterface $taskRepository,
         \App\Services\SettingsServiceInterface $settingsService,
         array $commands = [],
         ?\Psr\Log\LoggerInterface $logger = null
     ) {
-        $this->db = $db;
+        $this->taskRepository = $taskRepository;
         $this->settingsService = $settingsService;
         $this->commands = $commands;
         $this->logger = $logger;
@@ -128,17 +128,13 @@ class Scheduler {
     }
 
     public function isDue(string $name, string $frequency): bool {
-        $stmt = $this->db->prepare("SELECT last_run_at FROM scheduled_tasks WHERE name = ?");
-        $stmt->execute([$name]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$row) {
+        if (!$this->taskRepository->exists($name)) {
             // First time running, insert record
-            $this->db->prepare("INSERT INTO scheduled_tasks (name) VALUES (?)")->execute([$name]);
+            $this->taskRepository->createTask($name);
             return true;
         }
 
-        $lastRunAt = $row['last_run_at'];
+        $lastRunAt = $this->taskRepository->getLastRunAt($name);
         if (!$lastRunAt) return true;
 
         $lastRun = strtotime($lastRunAt);
@@ -173,7 +169,6 @@ class Scheduler {
     }
 
     private function updateLastRun(string $name): void {
-        $stmt = $this->db->prepare("UPDATE scheduled_tasks SET last_run_at = ? WHERE name = ?");
-        $stmt->execute([date('Y-m-d H:i:s'), $name]);
+        $this->taskRepository->updateLastRun($name, date('Y-m-d H:i:s'));
     }
 }

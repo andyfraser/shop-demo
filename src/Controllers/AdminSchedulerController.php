@@ -22,7 +22,7 @@ class AdminSchedulerController {
     public function __construct(
         private Renderer $renderer,
         private SettingsServiceInterface $settingsService,
-        private PDO $db,
+        private \App\Repositories\ScheduledTaskRepositoryInterface $taskRepository,
         private Container $container,
         private LoggerInterface $logger
     ) {}
@@ -36,7 +36,7 @@ class AdminSchedulerController {
         }
 
         $commands = $this->getCommands();
-        $scheduler = new \App\Core\Scheduler($this->db, $this->settingsService, array_values($commands), $this->logger);
+        $scheduler = new \App\Core\Scheduler($this->taskRepository, $this->settingsService, array_values($commands), $this->logger);
         
         $tasks = [];
         foreach ($commands as $command) {
@@ -102,7 +102,7 @@ class AdminSchedulerController {
         $frequency = $command->getSchedule();
 
         // Enforce scheduling guard: Do not run tasks before their next scheduled run time.
-        $scheduler = new \App\Core\Scheduler($this->db, $this->settingsService, [$command], $this->logger);
+        $scheduler = new \App\Core\Scheduler($this->taskRepository, $this->settingsService, [$command], $this->logger);
         if ($frequency && !$scheduler->isDue($taskName, $frequency)) {
             $lastRunAt = $this->getLastRunAt($taskName);
             $nextDue = $this->calculateNextDue($frequency, $lastRunAt);
@@ -139,7 +139,7 @@ class AdminSchedulerController {
 
     public function runAllDue(Request $request): Response {
         $commands = $this->getCommands();
-        $scheduler = new \App\Core\Scheduler($this->db, $this->settingsService, array_values($commands), $this->logger);
+        $scheduler = new \App\Core\Scheduler($this->taskRepository, $this->settingsService, array_values($commands), $this->logger);
 
         ob_start();
         try {
@@ -176,7 +176,7 @@ class AdminSchedulerController {
         }
 
         $commands = $this->getCommands();
-        $scheduler = new \App\Core\Scheduler($this->db, $this->settingsService, array_values($commands), $this->logger);
+        $scheduler = new \App\Core\Scheduler($this->taskRepository, $this->settingsService, array_values($commands), $this->logger);
 
         ob_start();
         $time = date('Y-m-d H:i:s');
@@ -221,15 +221,11 @@ class AdminSchedulerController {
     }
 
     private function getLastRunAt(string $name): ?string {
-        $stmt = $this->db->prepare("SELECT last_run_at FROM scheduled_tasks WHERE name = ?");
-        $stmt->execute([$name]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['last_run_at'] ?? null;
+        return $this->taskRepository->getLastRunAt($name);
     }
 
     private function updateLastRun(string $name): void {
-        $stmt = $this->db->prepare("UPDATE scheduled_tasks SET last_run_at = ? WHERE name = ?");
-        $stmt->execute([date('Y-m-d H:i:s'), $name]);
+        $this->taskRepository->updateLastRun($name, date('Y-m-d H:i:s'));
     }
 
     private function calculateNextDue(string $frequency, ?string $lastRunAt): ?int {

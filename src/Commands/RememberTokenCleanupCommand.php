@@ -2,12 +2,12 @@
 
 namespace App\Commands;
 
-use PDO;
+use App\Repositories\AuthRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
 class RememberTokenCleanupCommand implements CommandInterface {
     public function __construct(
-        private PDO $db,
+        private AuthRepositoryInterface $authRepository,
         private ?LoggerInterface $logger = null
     ) {}
 
@@ -27,10 +27,8 @@ class RememberTokenCleanupCommand implements CommandInterface {
         echo "Cleaning up expired remember tokens...\n";
         
         $now = time();
-        $stmt = $this->db->prepare("DELETE FROM remember_tokens WHERE expires_at < ?");
-        $stmt->execute([$now]);
+        $deleted = $this->authRepository->cleanupExpiredRememberTokens($now);
         
-        $deleted = $stmt->rowCount();
         echo "Deleted {$deleted} expired remember tokens.\n";
         
         if ($this->logger) {

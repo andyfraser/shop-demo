@@ -112,5 +112,8 @@ return function($c, array $config) {
         VirtualProductRepositoryInterface::class => function($c) {
             return new VirtualProductRepository($c->get(\PDO::class), $c->get(LoggerInterface::class));
         },
+        \App\Repositories\ScheduledTaskRepositoryInterface::class => function($c) {
+            return new \App\Repositories\ScheduledTaskRepository($c->get(\PDO::class));
+        },
     ];
 };

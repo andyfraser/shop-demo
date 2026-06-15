@@ -2,14 +2,14 @@
 
 namespace App\Commands;
 
+use App\Repositories\CartRepositoryInterface;
 use App\Core\Events\EventDispatcherInterface;
 use App\Events\AbandonCartDetected;
 use Psr\Log\LoggerInterface;
-use PDO;
 
 class RecoverCartsCommand implements CommandInterface {
     public function __construct(
-        private PDO $db,
+        private CartRepositoryInterface $cartRepository,
         private EventDispatcherInterface $eventDispatcher,
         private ?LoggerInterface $logger = null
     ) {}
@@ -29,18 +29,7 @@ class RecoverCartsCommand implements CommandInterface {
     public function execute(): int {
         $threshold = date('Y-m-d H:i:s', strtotime('-24 hours'));
 
-        $sql = "
-            SELECT c.id, u.email, u.name 
-            FROM carts c
-            JOIN users u ON c.user_id = u.id
-            WHERE c.last_activity < ?
-                AND c.recovery_email_sent_at IS NULL
-                AND EXISTS (SELECT 1 FROM cart_items ci WHERE ci.cart_id = c.id)
-        ";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$threshold]);
-        $abandonedCarts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $abandonedCarts = $this->cartRepository->findAbandonedCarts($threshold);
 
         $count = count($abandonedCarts);
         echo "Found {$count} abandoned carts.\n";
@@ -53,8 +42,7 @@ class RecoverCartsCommand implements CommandInterface {
             
             try {
                 // Update timestamp first to prevent double queueing
-                $update = $this->db->prepare("UPDATE carts SET recovery_email_sent_at = ? WHERE id = ?");
-                $update->execute([date('Y-m-d H:i:s'), $cart['id']]);
+                $this->cartRepository->updateRecoveryEmailSentAt($cart['id'], date('Y-m-d H:i:s'));
 
                 // Dispatch event (which will be queued via RecoverCartListener implementing ShouldQueue)
                 $event = new AbandonCartDetected($cart['id'], $cart['email'], $cart['name']);
