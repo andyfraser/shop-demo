@@ -259,6 +259,25 @@ const App = {
         `;
     },
 
+    getPromotionBadgeLabel(product) {
+        if (!product.active_promotions || product.active_promotions.length === 0) {
+            return null;
+        }
+        const promos = [...product.active_promotions].sort((a, b) => b.value - a.value);
+        const promo = promos[0];
+        
+        if (promo.type === 'percentage') {
+            return `${parseInt(promo.value, 10)}% OFF`;
+        } else if (promo.type === 'fixed_amount') {
+            return 'SALE';
+        } else if (promo.type === 'free_shipping') {
+            return 'FREE SHIPPING';
+        } else if (promo.type === 'buy_x_get_y') {
+            return `BUY ${promo.buy_qty} GET ${promo.get_qty}`;
+        }
+        return null;
+    },
+
     /* =========================================================================
        VIEW 1: Catalog (Products & Filters)
        ========================================================================= */
@@ -302,10 +321,22 @@ const App = {
             } else {
                 products.forEach(p => {
                     const imgUrl = p.image_thumb || p.image || '/images/placeholder.svg';
+                    
+                    let badgeHtml = '';
+                    const promoLabel = this.getPromotionBadgeLabel(p);
+                    if (promoLabel) {
+                        badgeHtml = `<span class="product-badge badge-promo">${promoLabel}</span>`;
+                    } else if (p.featured) {
+                        badgeHtml = `<span class="product-badge badge-featured">Featured</span>`;
+                    } else if (p.is_new) {
+                        badgeHtml = `<span class="product-badge badge-new">New</span>`;
+                    }
+
                     productsHtml += `
                         <div class="glass-panel product-card">
                             <a href="#/product/${p.slug}" style="text-decoration:none">
                                 <div class="product-image-wrapper">
+                                    ${badgeHtml}
                                     <img src="${imgUrl}" class="product-image" alt="${p.name}">
                                 </div>
                             </a>
@@ -596,6 +627,62 @@ const App = {
                 relatedHtml += `</div></div>`;
             }
 
+            // Active Promotion callout
+            let promoHtml = '';
+            if (product.active_promotions && product.active_promotions.length > 0) {
+                const promos = [...product.active_promotions].sort((a, b) => b.value - a.value);
+                const promo = promos[0];
+                
+                let badgeLabel = 'OFFER';
+                if (promo.type === 'percentage') {
+                    badgeLabel = `${parseInt(promo.value, 10)}% OFF`;
+                } else if (promo.type === 'fixed_amount') {
+                    badgeLabel = 'SALE';
+                } else if (promo.type === 'buy_x_get_y') {
+                    badgeLabel = 'BOGO';
+                } else if (promo.type === 'free_shipping') {
+                    badgeLabel = 'SHIP';
+                }
+
+                let detailsText = '';
+                if (promo.type === 'buy_x_get_y') {
+                    const freeOrOff = promo.value >= 100 ? 'FREE' : `${parseInt(promo.value, 10)}% OFF`;
+                    detailsText = `<strong>Buy ${promo.buy_qty}, Get ${promo.get_qty} ${freeOrOff}</strong>`;
+                    if (promo.description) {
+                        detailsText += `<br>${promo.description}`;
+                    }
+                } else {
+                    detailsText = promo.description || '';
+                }
+
+                if (promo.min_order_amount > 0) {
+                    const separator = (promo.description || promo.type === 'buy_x_get_y') ? ' &bull; ' : '';
+                    detailsText += `${separator}Min. spend ${this.state.currencySymbol}${parseFloat(promo.min_order_amount).toFixed(2)}`;
+                }
+
+                let promoCodeBox = '';
+                if (promo.code) {
+                    promoCodeBox = `
+                        <div class="promo-code-box">
+                            <span class="promo-code-label">Use code:</span>
+                            <span class="promo-code-value">${promo.code}</span>
+                        </div>
+                    `;
+                }
+
+                promoHtml = `
+                    <div class="promo-callout">
+                        <div class="promo-icon">🏷️</div>
+                        <div class="promo-text">
+                            <h4>${promo.name}</h4>
+                            <p>${detailsText}</p>
+                            ${promoCodeBox}
+                        </div>
+                        <div class="promo-badge">${badgeLabel}</div>
+                    </div>
+                `;
+            }
+
             container.innerHTML = `
                 <div style="margin-bottom: 24px;">
                     <a href="#/" class="btn btn-outline btn-sm">← Back to Catalog</a>
@@ -611,6 +698,7 @@ const App = {
                         <div class="detail-price" id="detail-display-price">${this.state.currencySymbol}${parseFloat(product.price).toFixed(2)}</div>
                         <p class="detail-description">${product.description || 'No description available for this product.'}</p>
                         
+                        ${promoHtml}
                         ${variantsHtml}
                         ${tiersHtml}
 

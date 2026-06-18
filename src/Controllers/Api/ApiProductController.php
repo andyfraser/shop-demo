@@ -206,8 +206,13 @@ class ApiProductController {
             $promos[] = [
                 'name' => $promo->name,
                 'code' => $promo->code,
-                'discount_type' => $promo->discount_type,
-                'value' => $promo->value
+                'type' => $promo->type,
+                'discount_type' => $promo->type,
+                'value' => $promo->value,
+                'buy_qty' => $promo->buy_qty,
+                'get_qty' => $promo->get_qty,
+                'min_order_amount' => $promo->min_order_amount,
+                'description' => $promo->description
             ];
         }
 
@@ -223,6 +228,7 @@ class ApiProductController {
             'image_medium' => $this->imageService->getUrl($p->image, 'medium'),
             'image_large' => $this->imageService->getUrl($p->image, 'large'),
             'featured' => (bool)$p->featured,
+            'is_new' => (bool)$p->isNew(),
             'is_purchasable' => (bool)$p->is_purchasable,
             'force_variant' => (bool)$p->force_variant,
             'active_promotions' => $promos
