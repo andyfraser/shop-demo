@@ -130,6 +130,24 @@ class DebugLogsTest extends TestCase {
         $this->assertEquals('[2026-05-23 12:00:00] ERROR: Error message number 10', reset($errorTail));
     }
 
+    public function testDebugCollectorCacheOperations() {
+        $collector = new DebugCollector();
+        $collector->logCache('get', 'key1', true);
+        $collector->logCache('get', 'key2', false);
+        $collector->logCache('set', 'key3', true);
+        $collector->logCache('delete', 'key4', true);
+
+        $this->assertEquals(1, $collector->getCacheHits(), 'Should have 1 cache hit');
+        $this->assertEquals(1, $collector->getCacheMisses(), 'Should have 1 cache miss');
+
+        $toolbar = new DebugToolbarComponent();
+        $html = $toolbar->render();
+
+        $this->assertStringContainsString('UPDATED', $html);
+        $this->assertStringContainsString('key3', $html);
+        $this->assertStringContainsString('key4', $html);
+    }
+
     public function tearDown(): void {
         DebugCollector::forceEnable(null);
 

@@ -56,10 +56,12 @@ class DebugCollector {
         if (!$this->isDebugEnabled()) {
             return;
         }
-        if ($isHit) {
-            $this->cacheHits++;
-        } else {
-            $this->cacheMisses++;
+        if (strtolower($operation) === 'get') {
+            if ($isHit) {
+                $this->cacheHits++;
+            } else {
+                $this->cacheMisses++;
+            }
         }
         $this->cacheOperations[] = [
             'operation' => $operation,

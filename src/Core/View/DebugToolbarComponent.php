@@ -640,7 +640,12 @@ class DebugToolbarComponent implements ViewComponent {
             $rows = "<tr><td colspan='4' style='color:#64748b; font-style:italic; text-align:center;'>No cache interactions on this request</td></tr>";
         } else {
             foreach ($ops as $idx => $op) {
-                $statusBadge = $op['status'] === 'hit' ? "<span class='debug-badge debug-badge-success'>HIT</span>" : ($op['status'] === 'miss' ? "<span class='debug-badge debug-badge-danger'>MISS</span>" : "<span class='debug-badge debug-badge-info'>OK</span>");
+                $opUpper = strtoupper($op['operation']);
+                if ($opUpper === 'DELETE' || $opUpper === 'SET') {
+                    $statusBadge = "<span class='debug-badge debug-badge-info'>UPDATED</span>";
+                } else {
+                    $statusBadge = $op['status'] === 'hit' ? "<span class='debug-badge debug-badge-success'>HIT</span>" : ($op['status'] === 'miss' ? "<span class='debug-badge debug-badge-danger'>MISS</span>" : "<span class='debug-badge debug-badge-info'>OK</span>");
+                }
                 $timeFormatted = number_format($op['time'] * 1000, 2) . 'ms';
                 $rows .= "
                 <tr>
