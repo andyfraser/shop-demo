@@ -143,7 +143,7 @@ class AdminBackupController {
                 flash('msg', 'Database restored successfully.');
 
                 echo "data: " . json_encode(['progress' => 100, 'message' => 'Restore complete!', 'done' => true]) . "\n\n";
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 @unlink($tempFile);
                 $this->logger->error("Admin database restore failed: {error}", ['error' => $e->getMessage()]);
                 echo "data: " . json_encode(['error' => 'Restore failed: ' . $e->getMessage()]) . "\n\n";

@@ -28,7 +28,7 @@ return new class {
                     FOREIGN KEY (promotion_id) REFERENCES promotions(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB;
 
-                ALTER TABLE orders ADD COLUMN promotion_id INT REFERENCES promotions(id) ON DELETE SET NULL;
+                ALTER TABLE orders ADD COLUMN promotion_id INT, ADD CONSTRAINT fk_orders_promotion_id FOREIGN KEY (promotion_id) REFERENCES promotions(id) ON DELETE SET NULL;
                 ALTER TABLE orders ADD COLUMN discount_amount DOUBLE DEFAULT 0.0;
                 ALTER TABLE carts ADD COLUMN applied_promo_code VARCHAR(50);
             ";

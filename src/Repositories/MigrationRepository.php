@@ -47,6 +47,11 @@ class MigrationRepository implements MigrationRepositoryInterface {
     public function executeSql(string|array $sql, string $driver): void {
         if (is_string($sql)) {
             if ($driver === 'mysql') {
+                // Re-assert FK checks disabled before each migration's DDL. MySQL DDL statements
+                // (CREATE TABLE, DROP TABLE) cause implicit commits which reset session-level
+                // FOREIGN_KEY_CHECKS back to ON. Re-asserting here ensures FK constraints are
+                // not validated mid-migration when referenced tables may not exist yet.
+                try { $this->db->exec('SET FOREIGN_KEY_CHECKS = 0'); } catch (\Throwable $e) {}
                 $statements = array_filter(array_map('trim', explode(';', $sql)));
                 foreach ($statements as $s) {
                     if (!empty($s)) {
@@ -88,6 +93,29 @@ class MigrationRepository implements MigrationRepositoryInterface {
     public function dropTable(string $tableName): void {
         $this->validateIdentifier($tableName);
         $this->db->exec("DROP TABLE IF EXISTS `{$tableName}`");
+    }
+
+    public function resetDatabase(string $driver): void {
+        if ($driver === 'mysql') {
+            // For MySQL/MariaDB, DROP and recreate the database entirely.
+            // Dropping individual tables leaves stale FK constraint metadata in InnoDB's internal
+            // data dictionary, causing error 1823 when migrations try to recreate the same
+            // auto-generated FK names (e.g. orders_ibfk_1). A full database DROP + CREATE
+            // cleanly wipes all FK metadata and avoids this MariaDB/MySQL-specific issue.
+            $config  = \App\Core\Database::getConfig();
+            $dbname  = $config['dbname'] ?? 'shop_demo';
+            $charset = $config['charset'] ?? 'utf8mb4';
+            $this->validateIdentifier($dbname);
+            $this->db->exec("DROP DATABASE IF EXISTS `{$dbname}`");
+            $this->db->exec("CREATE DATABASE `{$dbname}` CHARACTER SET {$charset} COLLATE {$charset}_unicode_ci");
+            $this->db->exec("USE `{$dbname}`");
+        } else {
+            // SQLite: drop tables one by one (no concept of separate databases)
+            $tables = $this->getTables();
+            foreach ($tables as $table) {
+                $this->dropTable($table);
+            }
+        }
     }
 
     public function setForeignKeyChecks(bool $enable, string $driver): void {

@@ -14,6 +14,11 @@ class AuditLogMiddleware {
     ) {}
 
     public function handle(Request $request): ?Response {
+        $lockFile = sys_get_temp_dir() . '/demoshop_backup_restore.lock';
+        if (file_exists($lockFile)) {
+            return null;
+        }
+
         $user = $this->authService->currentUser();
         if ($user && $user->isAdmin() && in_array($request->getMethod(), ['POST', 'PUT', 'DELETE'])) {
             $path = $request->getPath();

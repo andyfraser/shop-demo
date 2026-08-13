@@ -50,6 +50,12 @@ class AuthService implements AuthServiceInterface {
             $userId = ($userSession instanceof User) ? $userSession->id : ($userSession['id'] ?? 0);
             
             if ($userId) {
+                $lockFile = sys_get_temp_dir() . '/demoshop_backup_restore.lock';
+                if (file_exists($lockFile) && $userSession instanceof User) {
+                    $this->cachedUser = $userSession;
+                    return $userSession;
+                }
+
                 // Reload from DB to ensure role and other data are fresh
                 $user = $this->repository->findUserById($userId);
                 

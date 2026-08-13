@@ -91,16 +91,19 @@ class BackupService implements BackupServiceInterface {
                 }
             }
 
-            $this->repository->beginTransaction();
-
-            // Disable foreign key checks for import
+            // Disable foreign key checks before everything - this is session-scoped in MySQL/MariaDB.
+            // For MySQL/MariaDB we also use resetDatabase() (DROP + CREATE DATABASE) rather than
+            // dropping tables individually, to fully purge stale InnoDB FK metadata which would
+            // otherwise cause error 1823 when migrations recreate the same FK constraint names.
             $this->repository->setForeignKeyChecks(false, $driver);
 
-            // 1. Reset database (drop all tables)
+            $this->repository->beginTransaction();
+
+            // 1. Reset database (drop all tables, or drop+recreate database for MySQL/MariaDB)
             if ($onProgress) {
                 $onProgress(10, "Resetting database...");
             }
-            $this->dropAllTables();
+            $this->repository->resetDatabase($driver);
             usleep(50000);
 
             // 2. Re-run migrations
@@ -110,9 +113,9 @@ class BackupService implements BackupServiceInterface {
             $this->migrationService->applyMigrations();
             usleep(50000);
 
-            // In MySQL/DDL environments, the transaction may have been implicitly committed by DDL.
-            // If so, we want to start a new transaction for the inserts to ensure transactional safety
-            // of the data restoration phase.
+            // DDL causes implicit commits in MySQL/MariaDB; re-assert FK checks off and
+            // start a fresh transaction for the data restoration phase.
+            $this->repository->setForeignKeyChecks(false, $driver);
             if (!$this->repository->inTransaction()) {
                 $this->repository->beginTransaction();
             }
@@ -171,14 +174,6 @@ class BackupService implements BackupServiceInterface {
         }
 
         return true;
-    }
-
-    private function dropAllTables(): void {
-        $tables = $this->repository->getTables();
-        
-        foreach ($tables as $table) {
-            $this->repository->dropTable($table);
-        }
     }
 
     private function getDriver(): string {

@@ -10,6 +10,7 @@ interface MigrationRepositoryInterface {
     public function executeSql(string|array $sql, string $driver): void;
     public function getTables(): array;
     public function dropTable(string $tableName): void;
+    public function resetDatabase(string $driver): void;
     public function setForeignKeyChecks(bool $enable, string $driver): void;
     public function truncateTable(string $tableName): void;
     public function insertRow(string $table, array $data): void;

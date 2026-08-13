@@ -12,6 +12,11 @@ class AuditLogService {
     ) {}
 
     public function log(string $action, ?string $resourceType = null, ?string $resourceId = null, ?array $details = null): void {
+        $lockFile = sys_get_temp_dir() . '/demoshop_backup_restore.lock';
+        if (file_exists($lockFile)) {
+            return;
+        }
+
         $user = $this->authService->currentUser();
         
         $this->repository->log([

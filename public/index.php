@@ -168,8 +168,13 @@ try {
     }
 
     if (!$isInitialized) {
-        include __DIR__ . '/../templates/setup_guide.php';
-        exit;
+        // If a restore is in progress the database will be temporarily empty — don't show the
+        // setup wizard.
+        $restoreLock = sys_get_temp_dir() . '/demoshop_backup_restore.lock';
+        if (!file_exists($restoreLock)) {
+            include __DIR__ . '/../templates/setup_guide.php';
+            exit;
+        }
     }
 
     // Load settings and define core constants
@@ -227,8 +232,13 @@ try {
 
 } catch (\PDOException $e) {
     $error_message = $e->getMessage();
-    include __DIR__ . '/../templates/setup_guide.php';
-    exit;
+    // If a restore is in progress the database will be temporarily unavailable — don't show
+    // the setup wizard.
+    $restoreLock = sys_get_temp_dir() . '/demoshop_backup_restore.lock';
+    if (!file_exists($restoreLock)) {
+        include __DIR__ . '/../templates/setup_guide.php';
+        exit;
+    }
 } catch (\Exception $e) {
     // Re-throw other exceptions to be handled by the global exception handler
     throw $e;

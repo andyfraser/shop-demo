@@ -9,18 +9,22 @@ class AuditLogRepository implements AuditLogRepositoryInterface {
     public function __construct(private PDO $db) {}
 
     public function log(array $data): void {
-        $sql = "INSERT INTO audit_logs (user_id, action, resource_type, resource_id, details, ip_address) 
-                VALUES (:user_id, :action, :resource_type, :resource_id, :details, :ip_address)";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            'user_id'       => $data['user_id'] ?? null,
-            'action'        => $data['action'],
-            'resource_type' => $data['resource_type'] ?? null,
-            'resource_id'   => $data['resource_id'] ?? null,
-            'details'       => $data['details'] ?? null,
-            'ip_address'    => $data['ip_address'] ?? null,
-        ]);
+        try {
+            $sql = "INSERT INTO audit_logs (user_id, action, resource_type, resource_id, details, ip_address) 
+                    VALUES (:user_id, :action, :resource_type, :resource_id, :details, :ip_address)";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'user_id'       => $data['user_id'] ?? null,
+                'action'        => $data['action'],
+                'resource_type' => $data['resource_type'] ?? null,
+                'resource_id'   => $data['resource_id'] ?? null,
+                'details'       => $data['details'] ?? null,
+                'ip_address'    => $data['ip_address'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            // Silently ignore audit log failures (e.g. during database restore or missing audit_logs table)
+        }
     }
 
     public function find(array $criteria = [], int $limit = 50, int $offset = 0): array {
